@@ -115,7 +115,7 @@ class Deck:
         self._cards = [c for c in self._cards if c.code not in codes]
 
     def remaining(self) -> int:
-        return 52 - self._index
+        return len(self._cards) - self._index
 
     def reset(self) -> None:
         self.__init__()
