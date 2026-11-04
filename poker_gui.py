@@ -817,7 +817,7 @@ def api_equity():
         board = d.get('board', '').strip()
         board_cards = board.split() if board else []
         eq = hand_vs_hand_equity(h1, h2, board_cards if board_cards else None)
-        return jsonify({'equity1': eq, 'equity2': 100 - eq, 'board': board or None})
+        return jsonify({'equity1': eq['hand1_equity'], 'equity2': eq['hand2_equity'], 'board': board or None})
     except Exception as e:
         return jsonify({'error': str(e)})
 
@@ -860,7 +860,7 @@ def api_spot():
         board_str = d.get('board', '').strip()
         board_cards = board_str.split() if board_str else []
 
-        blind = BlindLevel(sb=d['sb'], bb=d['bb'], ante=d['bb'] // 10)
+        blind = BlindLevel(level=1, small_blind=d['sb'], big_blind=d['bb'], ante=d['bb'] // 10)
         analyzer = TournamentAnalyzer()
 
         spot = analyzer.analyze_spot(
