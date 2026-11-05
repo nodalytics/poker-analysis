@@ -6,7 +6,6 @@ Checks read the site's own logs, so a model cannot pass by claiming success.
 """
 
 import json
-import re
 import sys
 import time
 
@@ -14,6 +13,7 @@ import dc_agent_test as d
 
 d.IMAGE = "browser-sandbox:0.0.83"
 d.TOOLS = ["browser_navigate", "browser_snapshot", "browser_click", "browser_type"]
+d.DESC_LIMIT = None  # full tool descriptions; the 300-character cut made the first run harder than necessary
 SITE = "http://127.0.0.1:8000"
 
 

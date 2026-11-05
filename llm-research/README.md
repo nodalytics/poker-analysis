@@ -2,6 +2,8 @@
 
 Local LLM evaluations run on the lab, with the scripts, sandboxes and raw results needed to rerun them.
 
+Agents: read [`AGENTS.md`](AGENTS.md) first (models, lab rules, sandboxes, media limits, git). `CLAUDE.md` imports it.
+
 | Path | Contents |
 |---|---|
 | `docs/` | Write-ups, one per study, dated |
@@ -9,6 +11,8 @@ Local LLM evaluations run on the lab, with the scripts, sandboxes and raw result
 | `sandboxes/` | Docker builds for the sealed test environments, and the Windows GUI VM script |
 | `results/raw/` | JSON output from each run, including every model answer and tool call |
 | `results/logs/` | Console logs from each run |
+| `gui-skills/` | Per-application GUI navigation notes, loaded before and updated after each run |
+| `media/` | Small GIF evidence of GUI runs (created with the first one; limits in `AGENTS.md`) |
 
 Studies:
 

@@ -102,8 +102,12 @@ def chat(model, messages, tools=None):
         return json.load(r)["message"]
 
 
+DESC_LIMIT = 300  # characters of each tool description given to the model; None for the full text
+
+
 def short(desc):
-    return " ".join(desc.split())[:300]
+    text = " ".join(desc.split())
+    return text if DESC_LIMIT is None else text[:DESC_LIMIT]
 
 
 def text_protocol_prompt(tools):
