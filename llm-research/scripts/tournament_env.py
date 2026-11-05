@@ -84,6 +84,10 @@ def chart_advice(state, i, n, bb):
 
 def act(entrant, state, i, n, bb, ctx, history):
     b = base(entrant)
+    if b == "tinaplus":
+        import poker_tina_plus
+
+        return poker_tina_plus.reply(state, i)
     if b in ps.PERSONAS:
         return ps.bot_reply(b, state, i)
     if b == "monte":

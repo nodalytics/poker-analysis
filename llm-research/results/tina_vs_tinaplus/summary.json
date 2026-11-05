@@ -1,0 +1,128 @@
+{
+ "tina#1": {
+  "tournaments": 60,
+  "mean_prize": 123.0,
+  "in_the_money": 0.25,
+  "mean_finish": 8.58,
+  "wins": 1
+ },
+ "tina#2": {
+  "tournaments": 60,
+  "mean_prize": 108.0,
+  "in_the_money": 0.217,
+  "mean_finish": 9.53,
+  "wins": 1
+ },
+ "tina#3": {
+  "tournaments": 60,
+  "mean_prize": 105.0,
+  "in_the_money": 0.217,
+  "mean_finish": 9.13,
+  "wins": 1
+ },
+ "tinaplus#1": {
+  "tournaments": 60,
+  "mean_prize": 111.0,
+  "in_the_money": 0.15,
+  "mean_finish": 10.65,
+  "wins": 5
+ },
+ "tinaplus#2": {
+  "tournaments": 60,
+  "mean_prize": 237.0,
+  "in_the_money": 0.317,
+  "mean_finish": 7.48,
+  "wins": 12
+ },
+ "tinaplus#3": {
+  "tournaments": 60,
+  "mean_prize": 198.0,
+  "in_the_money": 0.283,
+  "mean_finish": 8.95,
+  "wins": 10
+ },
+ "bob#1": {
+  "tournaments": 60,
+  "mean_prize": 63.0,
+  "in_the_money": 0.133,
+  "mean_finish": 8.17,
+  "wins": 0
+ },
+ "bob#2": {
+  "tournaments": 60,
+  "mean_prize": 30.0,
+  "in_the_money": 0.067,
+  "mean_finish": 9.27,
+  "wins": 0
+ },
+ "max#1": {
+  "tournaments": 60,
+  "mean_prize": 60.0,
+  "in_the_money": 0.067,
+  "mean_finish": 14.72,
+  "wins": 4
+ },
+ "max#2": {
+  "tournaments": 60,
+  "mean_prize": 135.0,
+  "in_the_money": 0.167,
+  "mean_finish": 12.77,
+  "wins": 8
+ },
+ "carl#1": {
+  "tournaments": 60,
+  "mean_prize": 66.0,
+  "in_the_money": 0.15,
+  "mean_finish": 8.23,
+  "wins": 0
+ },
+ "carl#2": {
+  "tournaments": 60,
+  "mean_prize": 54.0,
+  "in_the_money": 0.133,
+  "mean_finish": 8.23,
+  "wins": 0
+ },
+ "nora#1": {
+  "tournaments": 60,
+  "mean_prize": 45.0,
+  "in_the_money": 0.083,
+  "mean_finish": 8.12,
+  "wins": 1
+ },
+ "nora#2": {
+  "tournaments": 60,
+  "mean_prize": 75.0,
+  "in_the_money": 0.167,
+  "mean_finish": 8.95,
+  "wins": 0
+ },
+ "monte#1": {
+  "tournaments": 60,
+  "mean_prize": 183.0,
+  "in_the_money": 0.233,
+  "mean_finish": 9.72,
+  "wins": 11
+ },
+ "monte#2": {
+  "tournaments": 60,
+  "mean_prize": 105.0,
+  "in_the_money": 0.133,
+  "mean_finish": 10.63,
+  "wins": 6
+ },
+ "bob#3": {
+  "tournaments": 60,
+  "mean_prize": 63.0,
+  "in_the_money": 0.15,
+  "mean_finish": 9.03,
+  "wins": 0
+ },
+ "carl#3": {
+  "tournaments": 60,
+  "mean_prize": 39.0,
+  "in_the_money": 0.083,
+  "mean_finish": 8.67,
+  "wins": 0
+ }
+}
