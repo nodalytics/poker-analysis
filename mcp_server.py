@@ -9,6 +9,7 @@ authentication, so keep it on 127.0.0.1 and reach it through an SSH tunnel.
 """
 
 import argparse
+import json
 import os
 import sys
 
@@ -25,6 +26,15 @@ from src.icm.calculator import bubble_factor as _bubble_factor  # noqa: E402
 from src.icm.calculator import icm_equity  # noqa: E402
 from src.mtt.tournament import BlindLevel, categorize_stack, push_fold_range  # noqa: E402
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "llm-research", "scripts"))
+import poker_math  # noqa: E402
+
+NASH_CHARTS = os.environ.get(
+    "PUSH_FOLD_NASH",
+    os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "llm-research", "results", "preflop", "push_fold_nash.json"
+    ),
+)
 MAX_ICM_PLAYERS = 10  # the ICM recursion is factorial in the number of paid places
 MAX_SIMULATIONS = 500_000
 POSITIONS = ("utg", "mp", "co", "btn", "sb")
@@ -261,6 +271,57 @@ def final_table(
         p["zone"] = p["zone"]["zone"]
         p["m_ratio"] = round(level.m_ratio(p["chips"], num_players=n), 1)
     return {"players": report["players"], "prize_pool": report["total_prizes"]}
+
+
+@mcp.tool()
+def equity_multiway(
+    hand: str, villain_ranges: list[str], board: str = "", dead: str = "", simulations: int = 200_000
+) -> dict:
+    """Hero's equity against several opponents at once, each with its own range.
+
+    villain_ranges: one entry per opponent, a PokerStove range ('TT+, AQs+') or 'random'. board: '' or 3-5 cards;
+    dead: cards known to be out (folded or burned). Monte Carlo over `simulations` run-outs split across CPU cores;
+    returns equity, tie share and a 95% interval.
+    """
+    h, b = _cards(hand, 2, "hand"), _board(board)
+    d = _cards(dead, what="dead") if dead else []
+    _no_duplicates(h, b, d)
+    if not 1 <= len(villain_ranges) <= 9:
+        raise ToolError("villain_ranges: 1 to 9 opponents")
+    sims = max(10_000, min(simulations, 5_000_000))
+    try:
+        return poker_math.equity_multiway(h, villain_ranges, b, d, sims)
+    except Exception as e:  # a malformed range string
+        raise ToolError(f"could not run the simulation: {e}") from None
+
+
+@mcp.tool()
+def push_fold_nash(big_blinds: float, hand: str = "") -> dict:
+    """Heads-up push/fold equilibrium (blinds 0.5/1, no ante) at an effective stack of 1-25 big blinds.
+
+    Returns the small blind's shove range and the big blind's call range, solved by fictitious play over all 169
+    hand classes (card removal ignored). With `hand`, also says whether that hand shoves and calls.
+    """
+    if not os.path.exists(NASH_CHARTS):
+        raise ToolError("push/fold charts not built yet: run llm-research/scripts/poker_math.py nash")
+    charts = json.load(open(NASH_CHARTS))["charts"]
+    s = max(1, min(25, round(big_blinds)))
+    c = next(x for x in charts if x["stack_bb"] == s)
+    out = {
+        "stack_bb": s,
+        "shove_share": c["push_share"],
+        "call_share": c["call_share"],
+        "shove_range": ", ".join(c["push"]),
+        "call_range": ", ".join(c["call"]),
+    }
+    if hand:
+        h = _cards(hand, 2, "hand")
+        r1, r2 = h[0][0], h[1][0]
+        order = "23456789TJQKA"
+        hi, lo = sorted((r1, r2), key=order.index, reverse=True)
+        cls = hi + lo if hi == lo else hi + lo + ("s" if h[0][1] == h[1][1] else "o")
+        out.update({"hand_class": cls, "shove": cls in c["push"], "call": cls in c["call"]})
+    return out
 
 
 if __name__ == "__main__":

@@ -35,6 +35,9 @@ To do:
 
 - **Post-session hand review:** load your own saved hand histories after play ends and have TexasSolver mark the
   mistakes, as a study tool. Offline only: no live client is read while a hand is being played.
+- **Post-flop solver library (layer 3):** batch TexasSolver solves over a representative set of flops, stack
+  depths and range pairs, stored in a database and served to the LLM as the nearest solved spot. Start with
+  about 100 flops × 2 depths × 2 range pairs (~400 solves, a few days on the lab), then grow it.
 
 Sources:
 
