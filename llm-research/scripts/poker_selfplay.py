@@ -10,13 +10,18 @@ and replaced by check (if allowed) or fold. Blinds 1/2, 200-chip stacks (100 big
 
 import json
 import os
+import random
 import re
 import sys
 import time
+import urllib.error
 import urllib.request
 import warnings
 
-from pokerkit import Automation, Mode, NoLimitTexasHoldem
+from pokerkit import Automation, Mode, NoLimitTexasHoldem, StandardHighHand
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import poker_agents as pa  # noqa: E402
 
 warnings.filterwarnings("ignore", message="There is no reason for this player to fold")
 
@@ -38,7 +43,16 @@ AUTO = (
 
 
 def short(model):
-    return model.split("/")[-1].split(":")[0].replace("-GGUF", "")
+    """Display name; keeps an entrant tag such as '#learn'."""
+    base, _, tag = model.partition("#")
+    name = base.split("/")[-1].split(":")[0].replace("-GGUF", "")
+    return f"{name}#{tag}" if tag else name
+
+
+def notes_block(notes, who):
+    """The entrant's own skill and memory notes, if any, as a prompt prefix. Entrant ids are 'model#tag'."""
+    text = (notes or {}).get(who, "").strip()
+    return f"Your own notes from earlier games (you wrote these; use them if they help):\n{text}\n\n" if text else ""
 
 
 def cards(cs):
@@ -52,7 +66,7 @@ def street(state):
 
 def ask(model, prompt):
     body = {
-        "model": model,
+        "model": model.partition("#")[0],
         "stream": False,
         "messages": [{"role": "user", "content": prompt}],
         "options": {"temperature": 0.7, "num_predict": 120},
@@ -61,9 +75,105 @@ def ask(model, prompt):
         OLLAMA + "/api/chat", data=json.dumps(body).encode(), headers={"Content-Type": "application/json"}
     )
     t0 = time.time()
-    with urllib.request.urlopen(req, timeout=600) as r:
-        text = json.load(r)["message"]["content"]
+    try:
+        with urllib.request.urlopen(req, timeout=600) as r:
+            text = json.load(r)["message"]["content"]
+    except urllib.error.HTTPError:  # e.g. a 2k-context model overflowing: an invalid move, not a crash
+        text = ""
     return text, round(time.time() - t0, 1)
+
+
+# --- Simulated humans: rule-based personalities, not language models ---------------------------------------
+# Each plays a classic human type with some randomness. None of them learns, so they are fixed anchors on any
+# ladder. Parameters: raise/call/limp are Chen-score thresholds preflop; cap is the most (in big blinds) they will
+# call preflop; bluff is the chance to bet with nothing; sticky the chance to call a big bet with one pair;
+# size the bet as a fraction of the pot.
+PERSONAS = {
+    "bob": dict(kind="recreational", raise_=10, call=7, limp=5, cap=3, bluff=0.08, sticky=0.2, size=0.5),
+    "tina": dict(kind="tight-aggressive", raise_=8, call=99, limp=99, cap=0, bluff=0.12, sticky=0.1, size=0.75),
+    "max": dict(kind="maniac", raise_=4, call=2, limp=0, cap=10, bluff=0.35, sticky=0.4, size=1.0),
+    "carl": dict(kind="calling station", raise_=13, call=3, limp=2, cap=8, bluff=0.02, sticky=0.8, size=0.33),
+    "nora": dict(kind="nit", raise_=12, call=11, limp=99, cap=0, bluff=0.0, sticky=0.05, size=0.5),
+}
+BOB = "bob"
+MAX_HUMANS_PER_TABLE = 2  # capped for now: Bob plus one rotating personality
+_BOT_RNG = random.Random(2026)
+_HIGH = {"A": 10, "K": 8, "Q": 7, "J": 6}
+_VALUE = {r: i for i, r in enumerate("23456789TJQKA", 2)}
+
+
+def is_bot(entrant):
+    """Rule-based or algorithmic players: no language model behind them."""
+    return entrant in PERSONAS or entrant in pa.ALGOS
+
+
+def kind_of(entrant):
+    if entrant in PERSONAS:
+        return PERSONAS[entrant]["kind"] + ", simulated human"
+    if entrant in pa.ALGOS:
+        return pa.ALGOS[entrant]
+    return "poker-analysis toolkit via tool calls" if entrant.endswith("#toolkit") else "language model"
+
+
+def bots_for_round(rnd):
+    """Bob every round plus one rotating personality (capped at MAX_HUMANS_PER_TABLE), then Monte and Sol."""
+    others = [b for b in PERSONAS if b != BOB]
+    k = MAX_HUMANS_PER_TABLE - 1
+    start = (rnd - 1) * k % len(others)
+    return [BOB] + [others[(start + j) % len(others)] for j in range(k)] + list(pa.ALGOS)
+
+
+def _chen(hole):
+    (r1, s1), (r2, s2) = [(repr(c)[0], repr(c)[1]) for c in hole]
+    v1, v2 = _VALUE[r1], _VALUE[r2]
+    hi = max(v1, v2)
+    score = _HIGH.get("23456789TJQKA"[hi - 2], hi / 2)
+    if v1 == v2:
+        return max(5.0, score * 2)
+    score += 2 if s1 == s2 else 0
+    gap = abs(v1 - v2) - 1
+    score -= {0: 0, 1: 1, 2: 2, 3: 4}.get(gap, 5)
+    if gap <= 1 and hi < 12:
+        score += 1
+    return score
+
+
+def bot_reply(name, state, i):
+    p, rng = PERSONAS[name], _BOT_RNG
+    hole = list(state.hole_cards[i])
+    board = list(state.get_board_cards(0)) if state.board_count else []
+    to_call = state.checking_or_calling_amount
+    pot = state.total_pot_amount
+    can_raise = state.can_complete_bet_or_raise_to()
+    lo = state.min_completion_betting_or_raising_to_amount if can_raise else 0
+    hi = state.max_completion_betting_or_raising_to_amount if can_raise else 0
+
+    def raise_to(amount):
+        return json.dumps({"action": "raise", "amount": int(max(lo, min(hi, amount)))}) if can_raise else call
+
+    call = json.dumps({"action": "call" if to_call else "check"})
+    fold = json.dumps({"action": "fold" if to_call else "check"})
+    bet = int(max(BB, pot * p["size"]))
+    if not board:
+        c = _chen(hole)
+        if c >= p["raise_"]:
+            return raise_to(to_call + 3 * BB)
+        if c >= p["call"] and to_call <= p["cap"] * BB:
+            return call
+        if c >= p["limp"] and to_call <= BB:
+            return call
+        return call if to_call <= 2 * BB and rng.random() < p["bluff"] / 2 else fold
+    label = StandardHighHand.from_game("".join(map(repr, hole)), "".join(map(repr, board))).entry.label
+    strength = list(type(label)).index(label)  # 0 high card, 1 pair, 2 two pair, 3+ trips and better
+    if strength >= 2:
+        return raise_to(to_call + bet)
+    if strength == 1:
+        if not to_call:
+            return raise_to(bet) if rng.random() < 0.3 + p["bluff"] else call
+        return call if to_call <= pot // 2 or rng.random() < p["sticky"] else fold
+    if not to_call:
+        return raise_to(bet) if rng.random() < p["bluff"] else call
+    return call if rng.random() < p["sticky"] / 4 else fold
 
 
 def parse(text):
@@ -84,7 +194,7 @@ def parse(text):
     return None, None
 
 
-def main(outdir, hands, models):
+def main(outdir, hands, models, notes=None):
     os.makedirs(outdir, exist_ok=True)
     log = open(os.path.join(outdir, "table.log"), "a", buffering=1)
     jl = open(os.path.join(outdir, "hands.jsonl"), "a", buffering=1)
@@ -110,12 +220,16 @@ def main(outdir, hands, models):
         for i, m in enumerate(seat):
             stats[m]["hands"] += 1
         history, voluntarily = [], set()
+        ctx, street_now = {"hand": h, "street_actions": [], "street_pot": 0}, None
         while state.status:
             i = state.actor_index
             if i is None:
                 break
             m = seat[i]
             hole, st = cards(state.hole_cards[i]), street(state)
+            if st != street_now:
+                street_now, ctx["street_actions"], ctx["street_pot"] = st, [], state.total_pot_amount
+            bet_before = state.bets[i]
             board = cards(list(state.get_board_cards(0))) if state.board_count else "-"
             to_call = state.checking_or_calling_amount
             can_raise = state.can_complete_bet_or_raise_to()
@@ -127,7 +241,8 @@ def main(outdir, hands, models):
                 + ([f"raise (to between {lo} and {hi})"] if can_raise else [])
             )
             prompt = (
-                f"You are playing No-Limit Texas Hold'em for play chips against other AI players.\n"
+                notes_block(notes, m)
+                + "You are playing No-Limit Texas Hold'em for play chips against other AI players.\n"
                 f"Street: {street(state)}. Your cards: {cards(state.hole_cards[i])}. Board: {board}.\n"
                 f"Pot: {state.total_pot_amount}. Your stack: {state.stacks[i]}. To call: {to_call}.\n"
                 f"Players: "
@@ -141,7 +256,19 @@ def main(outdir, hands, models):
                 f"Legal actions: {', '.join(legal)}.\n"
                 'Reply with ONLY JSON: {"action": "fold"|"check"|"call"|"raise", "amount": <raise-to total, raise only>}'
             )
-            text, secs = ask(m, prompt)
+            t_start = time.time()
+            if m in PERSONAS:
+                text = bot_reply(m, state, i)
+            elif m in pa.ALGOS:
+                text = pa.monte_reply(state, i) if m == "monte" else pa.sol_reply(state, i, ctx)
+            elif m.endswith("#toolkit"):
+                text = pa.toolkit_reply(m, prompt)
+            else:
+                text = None
+            if text is None:
+                text, secs = ask(m, prompt)
+            else:
+                secs = round(time.time() - t_start, 2)
             stats[m]["decisions"] += 1
             stats[m]["seconds"] += secs
             act, amt = parse(text)
@@ -172,6 +299,9 @@ def main(outdir, hands, models):
             if st == "preflop" and done.startswith(("calls", "raises")):
                 voluntarily.add(m)
             history.append(f"{short(m)} {done}")
+            kind = done.split()[0].rstrip("s")
+            added = to_call if kind == "call" else (state.bets[i] - bet_before if kind == "raise" else 0)
+            ctx["street_actions"].append((kind, added))
             say(f"  [{st:7}] {short(m):22} {hole}  {done}{note}  ({secs}s)")
             jl.write(
                 json.dumps(
@@ -230,6 +360,7 @@ def main(outdir, hands, models):
             f"decisions {s['decisions']}, invalid {s['invalid']}, avg {s['seconds'] / max(1, s['decisions']):.1f}s"
         )
     json.dump({"chips": chips, "stats": stats}, open(os.path.join(outdir, "summary.json"), "w"), indent=1)
+    return chips, stats
 
 
 if __name__ == "__main__":
