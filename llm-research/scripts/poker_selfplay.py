@@ -104,10 +104,12 @@ _VALUE = {r: i for i, r in enumerate("23456789TJQKA", 2)}
 
 def is_bot(entrant):
     """Rule-based or algorithmic players: no language model behind them."""
-    return entrant in PERSONAS or entrant in pa.ALGOS
+    return entrant in PERSONAS or entrant in pa.ALGOS or entrant.split("#")[0] == "tinaplus"
 
 
 def kind_of(entrant):
+    if entrant.split("#")[0] == "tinaplus":
+        return "tight-aggressive, stack-aware and balanced (Tina+), simulated human"
     if entrant in PERSONAS:
         return PERSONAS[entrant]["kind"] + ", simulated human"
     if entrant in pa.ALGOS:
@@ -269,7 +271,11 @@ def main(outdir, hands, models, notes=None, short_stack=None):
                 'Reply with ONLY JSON: {"action": "fold"|"check"|"call"|"raise", "amount": <raise-to total, raise only>}'
             )
             t_start = time.time()
-            if m in PERSONAS:
+            if m.split("#")[0] == "tinaplus":
+                import poker_tina_plus
+
+                text = poker_tina_plus.reply(state, i)
+            elif m in PERSONAS:
                 text = bot_reply(m, state, i)
             elif m in pa.ALGOS:
                 text = pa.monte_reply(state, i) if m == "monte" else pa.sol_reply(state, i, ctx)

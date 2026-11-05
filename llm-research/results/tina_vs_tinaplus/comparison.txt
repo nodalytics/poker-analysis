@@ -1,0 +1,8 @@
+60 tournaments, 18 players, prize pool 1800 (fair share 100 per entry)
+  tinaplus  mean prize  182.0  95% CI [ 134.0,  234.0]  ITM 25%  mean finish 9.0  (entries 180)
+  monte     mean prize  144.0  95% CI [  90.0,  202.5]  ITM 18%  mean finish 10.2  (entries 120)
+  tina      mean prize  112.0  95% CI [  81.0,  144.0]  ITM 23%  mean finish 9.1  (entries 180)
+  max       mean prize   97.5  95% CI [  49.5,  151.5]  ITM 12%  mean finish 13.7  (entries 120)
+  nora      mean prize   60.0  95% CI [  33.0,   90.0]  ITM 12%  mean finish 8.5  (entries 120)
+  carl      mean prize   53.0  95% CI [  33.0,   75.0]  ITM 12%  mean finish 8.4  (entries 180)
+  bob       mean prize   52.0  95% CI [  32.0,   74.0]  ITM 12%  mean finish 8.8  (entries 180)
