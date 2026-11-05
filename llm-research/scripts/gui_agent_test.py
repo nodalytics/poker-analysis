@@ -85,13 +85,27 @@ class WinMCP:
         return self.call("PowerShell", {"command": command})
 
 
+class DesktopBroken(RuntimeError):
+    pass
+
+
 def reset(w):
+    """Close the test apps and delete test files without touching the Windows shell, then prove the desktop works.
+
+    File Explorer windows live inside the shell process (explorer.exe) on Windows 11, so they are closed through
+    Shell.Application, never by killing explorer: killing it broke UI Automation ("The RPC server is unavailable")
+    and invalidated a whole run on 2026-11-05.
+    """
     w.ps(
-        "Get-Process notepad, CalculatorApp, explorer -ErrorAction SilentlyContinue | "
-        "Where-Object { $_.MainWindowTitle } | Stop-Process -Force -ErrorAction SilentlyContinue; "
+        "(New-Object -ComObject Shell.Application).Windows() | ForEach-Object { $_.Quit() }; "
+        "Get-Process notepad, CalculatorApp -ErrorAction SilentlyContinue | Stop-Process -Force "
+        "-ErrorAction SilentlyContinue; "
         f"Remove-Item -Recurse -Force '{DESK}\\gui_test.txt', '{DESK}\\agent-test' -ErrorAction SilentlyContinue"
     )
     time.sleep(2)
+    snap = w.call("Snapshot", {})
+    if "Error capturing desktop state" in snap or snap.startswith("ERROR"):
+        raise DesktopBroken(snap[:200])
 
 
 TASKS = [
@@ -206,7 +220,12 @@ if __name__ == "__main__":
         for model in models:
             r = {"model": model, "harness": use_harness, "skills": use_skills, "tasks": []}
             for t in TASKS:
-                reset(w)
+                try:
+                    reset(w)
+                except DesktopBroken as e:
+                    r["tasks"].append({"task": t["id"], "passed": None, "environment_error": str(e)})
+                    print(f"{model} {t['id']}: ENVIRONMENT ERROR, not scored: {e}", flush=True)
+                    raise SystemExit("desktop broken; stopping so no model is graded on it") from e
                 t0 = time.time()
                 res = run_task(model, w, t, use_harness, use_skills)
                 res["seconds"] = round(time.time() - t0, 1)
