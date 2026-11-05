@@ -71,6 +71,8 @@ def spots(h):
             "action": p[1],
             "opp_holes": [holes.get(j) for j in range(n) if j != i and j not in folded],
             "live_opponents": sum(1 for j in range(n) if j != i and j not in folded),
+            # opponents who have put chips in this hand (blinds count): the ones a range should be drawn for
+            "in_pot": sum(1 for j in range(n) if j != i and j not in folded and (bets[j] or pot_prev)),
         }
         if p[1] == "f":
             folded.add(i)
@@ -146,13 +148,13 @@ def decide(flow, s):
     )
     if mode == "advised":
         hero = [eval7.Card(s["hole"][:2]), eval7.Card(s["hole"][2:])]
-        eq = pa.equity_vs_random(hero, [eval7.Card(c) for c in s["board"]], max(1, s["live_opponents"]))
+        opp = max(1, s.get("in_pot", s["live_opponents"]))
+        eq = pa.equity_vs_random(hero, [eval7.Card(c) for c in s["board"]], opp)
         odds = s["to_call"] / (s["pot"] + s["to_call"]) if s["to_call"] else 0
-        prompt += (
-            f"Simulation: your equity vs {s['live_opponents']} random hand(s) is {eq:.0%}; calling needs {odds:.0%}.\n"
-        )
+        prompt += f"Simulation: your equity vs {opp} random hand(s) in the pot is {eq:.0%}; calling needs {odds:.0%}.\n"
     prompt += f'Legal: {legal}. Reply with ONLY JSON: {{"action": "fold"|"check"|"call"|"raise"}}'
-    return kind_of(ask(model, prompt))
+    k = kind_of(ask(model, prompt))
+    return "passive" if k == "fold" and not s["to_call"] else k  # folding when checking is free is a check
 
 
 def main(phh_dir, outdir, n_spots, flows):
