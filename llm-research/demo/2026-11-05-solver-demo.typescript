@@ -1,0 +1,38 @@
+Script started on 2026-11-05 14:27:35-05:00 [COMMAND="bash solver_demo.sh" <not executed on terminal>]
+
+[1;33mTexasSolver (github.com/bupticybee/TexasSolver), built on the lab:[0m
+WARNING: terminal is not fully functional
+Press RETURN to continue 
+  commit 6dfb65b  Merge pull request #229 from Tommyeth/fix/river-range-manager-data-race[m
+  build/console_solver 2339856 bytes
+
+[1;33mTextbook river game: AA (nuts) or 76 (air) vs KQ (bluff-catcher), pot 100, all-in 100[0m
+  Theory: always bet AA; bluff 9.4% of 76; KQ calls 50%.
+
+[1;33mSolving...[0m
+  player 0 exploitability 89.47367
+  player 1 exploitability -26.315786
+  Total exploitability 31.57894 precent
+  player 0 exploitability 26.81404
+  player 1 exploitability -26.315687
+  Total exploitability 0.24917603 precent
+  time used: 0.011
+  player 0 exploitability 26.832022
+  player 1 exploitability -26.310558
+  Total exploitability 0.2607317 precent
+  time used: 0.023
+  player 0 exploitability 26.840696
+  player 1 exploitability -26.237656
+  Total exploitability 0.30152035 precent
+  time used: 0.034
+  player 0 exploitability 26.386345
+  player 1 exploitability -26.25852
+  Total exploitability 0.06391239 precent
+  time used: 0.045
+
+[1;33mSolver vs theory:[0m
+  bets AA         100.0%   theory 100.0%
+  bluffs 76         9.9%   theory   9.4%
+  KQ calls         50.0%   theory  50.0%
+
+Script done on 2026-11-05 14:27:51-05:00 [COMMAND_EXIT_CODE="0"]

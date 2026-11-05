@@ -38,6 +38,10 @@ To do:
 
 - **Post-session hand review:** load your own saved hand histories after play ends and have TexasSolver mark the
   mistakes, as a study tool. Offline only: no live client is read while a hand is being played.
+- **TexasSolver GPU** (github.com/bupticybee/TexasSolverGPU): the author says 20x+ faster, which could make live
+  flop solves real time. Closed source (binary distribution, no open licence), Windows with an NVIDIA GPU only:
+  needs one of the lab's idle GPUs passed through to the Windows VM (VFIO, needs root on the lab). Then benchmark
+  it against the CPU solver on the same spots, including the textbook river game.
 
 Sources:
 
