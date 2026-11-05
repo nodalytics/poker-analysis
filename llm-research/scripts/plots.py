@@ -10,10 +10,12 @@ Writes PNGs (small enough to commit) from whatever results exist:
   chess-failures.png              share of moves where a model named no legal move
   agent-suites.png                pass rate per model on each agent test (shell, browser, Windows GUI)
   model-speed.png                 decode speed per model
+  trading-r.png                   total R after costs per trading entrant, with every episode as a dot
 Colours: the validated reference categorical order, fixed per model; every line and bar is direct-labelled
 because three of the five colours sit under 3:1 contrast. Data tables: ladder.md and results/raw.
 """
 
+import collections
 import glob
 import json
 import os
@@ -77,6 +79,12 @@ def spread_labels(ax, items):
         ax.annotate(
             text, (x, y), xytext=(x + 0.05 + 0.03 * x, y2), fontsize=7, color=INK2, va="center", annotation_clip=False
         )
+
+
+def short(e):
+    base, _, tag = e.partition("#")
+    name = base.split("/")[-1].split(":")[0].replace("-GGUF", "")
+    return f"{name}#{tag}" if tag else name
 
 
 def model_of(entrant):
@@ -323,6 +331,38 @@ def speed(out):
     save(fig, out, "model-speed.png")
 
 
+def trading(tdir, out):
+    eps = sorted(glob.glob(os.path.join(tdir, "episodes", "*", "trades.json")))
+    if not eps:
+        return
+    per = collections.defaultdict(list)
+    for p in eps:
+        d = json.load(open(p))
+        for e, r in d["totals"].items():
+            per[e].append(r)
+    order = sorted(per, key=lambda e: sum(per[e]))
+    fig, ax = plt.subplots(figsize=(6.6, 0.32 * len(order) + 1.4))
+    for i, e in enumerate(order):
+        m = model_of(e)
+        col = COLOR.get(m, MUTED) if m else MUTED
+        ax.barh(i, sum(per[e]), color=col, height=0.6)
+        ax.scatter(per[e], [i] * len(per[e]), s=14, color=INK2, zorder=3)
+        ax.annotate(
+            f"{sum(per[e]):+.1f}R",
+            (sum(per[e]), i),
+            xytext=(4 if sum(per[e]) >= 0 else -4, 0),
+            textcoords="offset points",
+            va="center",
+            ha="left" if sum(per[e]) >= 0 else "right",
+            fontsize=7,
+        )
+    ax.axvline(0, color=INK2, linewidth=1)
+    ax.set_yticks(range(len(order)), [short(e) for e in order], fontsize=7)
+    ax.set_xlabel("total R after costs across episodes (dots: single episodes)")
+    ax.set_title(f"Trading: {len(eps)} replayed episodes, same windows for everyone", loc="left")
+    save(fig, out, "trading-r.png")
+
+
 if __name__ == "__main__":
     arena = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, "results", "arena")
     out = sys.argv[2] if len(sys.argv) > 2 else os.path.join(ROOT, "media", "plots")
@@ -333,3 +373,4 @@ if __name__ == "__main__":
     chess_failures(arena, out)
     agent_suites(out)
     speed(out)
+    trading(sys.argv[3] if len(sys.argv) > 3 else os.path.join(ROOT, "results", "trading"), out)
