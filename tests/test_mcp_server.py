@@ -107,3 +107,14 @@ def test_bad_input_is_an_error_not_a_guess():
         ]
     )
     assert all(err for err, _ in res), res
+
+
+def test_multiway_equity_and_nash_charts():
+    _, res = call_all([
+        ("equity_multiway", {"hand": "AhAd", "villain_ranges": ["KhKd"], "simulations": 40000}),
+        ("equity_multiway", {"hand": "AhKh", "villain_ranges": ["random", "random", "random"], "board": "Qh9h3d",
+                             "simulations": 20000}),
+    ])
+    assert not any(err for err, _ in res), res
+    assert 0.81 <= res[0][1]["equity"] <= 0.835
+    assert res[1][1]["opponents"] == 3 and res[1][1]["ci95"][0] < res[1][1]["equity"] < res[1][1]["ci95"][1]
