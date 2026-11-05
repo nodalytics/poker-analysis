@@ -1,0 +1,28 @@
+tournament 1: 1. tina#1, 2. qwen2.5vl#advised, 3. monte#2, 4. bob#2, 5. monte#1, 6. Big-Tiger-Gemma-27B-v3#plain (105 rounds)
+tournament 2: 1. max#2, 2. tina#1, 3. Tiger-Gemma-9B-v3#advised, 4. monte#1, 5. Big-Tiger-Gemma-27B-v3#plain, 6. bob#2 (94 rounds)
+tournament 3: 1. tina#2, 2. bob#2, 3. tina#1, 4. qwen2.5vl#advised, 5. bob#1, 6. monte#2 (120 rounds)
+tournament 4: 1. max#1, 2. tina#1, 3. nora#2, 4. carl#2, 5. Big-Tiger-Gemma-27B-v3#plain, 6. Big-Tiger-Gemma-27B-v3#advised (87 rounds)
+tournament 5: 1. max#1, 2. bob#2, 3. qwen2.5vl#advised, 4. bob#1, 5. Tiger-Gemma-9B-v3#advised, 6. monte#2 (81 rounds)
+tournament 6: 1. tina#1, 2. nora#1, 3. qwen2.5vl#plain, 4. tina#2, 5. carl#1, 6. Big-Tiger-Gemma-27B-v3#advised (217 rounds)
+tournament 7: 1. max#2, 2. qwen2.5vl#plain, 3. tina#1, 4. carl#2, 5. tina#2, 6. nora#2 (85 rounds)
+tournament 8: 1. bob#2, 2. qwen2.5vl#plain, 3. monte#2, 4. nora#2, 5. Tiger-Gemma-9B-v3#advised, 6. Big-Tiger-Gemma-27B-v3#advised (95 rounds)
+tournament 9: 1. max#2, 2. bob#1, 3. nora#2, 4. tina#2, 5. tina#1, 6. Big-Tiger-Gemma-27B-v3#plain (84 rounds)
+tournament 10: 1. tina#2, 2. bob#1, 3. nora#2, 4. nora#1, 5. Tiger-Gemma-9B-v3#advised, 6. bob#2 (211 rounds)
+  tina#1                       prize   360.0  ITM 60%  finish  5.70  wins 2
+  max#2                        prize   270.0  ITM 30%  finish 11.80  wins 3
+  bob#2                        prize   198.0  ITM 30%  finish  7.50  wins 1
+  tina#2                       prize   180.0  ITM 20%  finish  8.20  wins 2
+  max#1                        prize   180.0  ITM 20%  finish 13.30  wins 2
+  qwen2.5vl#plain              prize   144.0  ITM 30%  finish 10.90  wins 0
+  bob#1                        prize   108.0  ITM 20%  finish  7.90  wins 0
+  nora#2                       prize   108.0  ITM 30%  finish  7.80  wins 0
+  qwen2.5vl#advised            prize    90.0  ITM 20%  finish  7.90  wins 0
+  monte#2                      prize    72.0  ITM 20%  finish 10.80  wins 0
+  nora#1                       prize    54.0  ITM 10%  finish  9.00  wins 0
+  Tiger-Gemma-9B-v3#advised    prize    36.0  ITM 10%  finish  7.90  wins 0
+  Big-Tiger-Gemma-27B-v3#plain prize     0.0  ITM 0%  finish  8.30  wins 0
+  Big-Tiger-Gemma-27B-v3#advised prize     0.0  ITM 0%  finish  8.30  wins 0
+  Tiger-Gemma-9B-v3#plain      prize     0.0  ITM 0%  finish 13.20  wins 0
+  carl#1                       prize     0.0  ITM 0%  finish  9.50  wins 0
+  carl#2                       prize     0.0  ITM 0%  finish 10.80  wins 0
+  monte#1                      prize     0.0  ITM 0%  finish 12.20  wins 0
