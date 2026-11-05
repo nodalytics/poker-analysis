@@ -99,7 +99,11 @@ def reset(w):
     w.ps(
         "(New-Object -ComObject Shell.Application).Windows() | ForEach-Object { $_.Quit() }; "
         "Get-Process notepad, CalculatorApp -ErrorAction SilentlyContinue | Stop-Process -Force "
-        "-ErrorAction SilentlyContinue; "
+        "-ErrorAction SilentlyContinue; Start-Sleep 1; "
+        # Windows 11 Notepad restores unsaved tabs after a kill; clear its session so every task starts empty.
+        'Remove-Item -Recurse -Force "$env:LOCALAPPDATA\\Packages\\Microsoft.WindowsNotepad_8wekyb3d8bbwe\\LocalState\\'
+        'TabState\\*", "$env:LOCALAPPDATA\\Packages\\Microsoft.WindowsNotepad_8wekyb3d8bbwe\\LocalState\\'
+        'WindowState\\*" -ErrorAction SilentlyContinue; '
         f"Remove-Item -Recurse -Force '{DESK}\\gui_test.txt', '{DESK}\\agent-test', '{DESK}\\New folder' -ErrorAction SilentlyContinue"
     )
     time.sleep(2)

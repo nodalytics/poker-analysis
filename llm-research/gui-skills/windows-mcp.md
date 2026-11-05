@@ -1,7 +1,8 @@
 # Windows-MCP (0.8.8) — GUI skills
 
 - **Version tested:** Windows-MCP 0.8.8 (server reports 4.1.6) on Windows 11 Enterprise Evaluation, `win11-gui`
-- **Last verified:** 2026-11-05, GUI baseline run (`results/raw/gui_results.json`)
+- **Last verified:** 2026-11-05: GUI runs (`results/raw/gui_results*.json`) and the task sequences below, stepped
+  through by hand (`scripts/gui_probe.py`)
 - **Control path:** Windows-MCP over streamable HTTP, `Authorization: Bearer <key>`
 
 ## Rules that decide whether a task works
@@ -24,27 +25,32 @@
 
 ## Tasks
 
-### Type into Notepad and save — typing verified 2026-11-05 (Qwen, `Type` with `label`); saving not yet
-1. `App` launch Notepad, then `Snapshot`.
-2. Find the text area in the snapshot; `Type` with its `label` (or `loc`) and the text.
-3. `Shortcut` ctrl+s, then `Snapshot` to find the file-name box in the Save dialog.
-4. `Type` the full path into that box with its `label` and `press_enter: true`.
-5. `Snapshot` again: the window title should show the file name.
+### Type into Notepad and save — verified 2026-11-05 (by hand through Windows-MCP)
+1. `App` launch Notepad, then `Snapshot`. Find `document "Text editor"` and its coordinates.
+2. `Type` with `loc` set to those coordinates and the text.
+3. `Shortcut` ctrl+s, then `Snapshot`. The Save dialog's `edit "File name:"` is **already focused and pre-filled**
+   (with the first line of the text, e.g. "hello from the model.txt").
+4. `Type` the full path with `loc` set to that edit box, **`clear: true`** (or the path is appended to the pre-filled
+   name) and `press_enter: true`.
+5. `Snapshot`: the window title must now read `gui_test.txt - Notepad`. Only then is it saved.
 
-### Calculator — verified 2026-11-05 (Qwen2.5-VL)
+### Calculator — verified 2026-11-05 (Qwen2.5-VL, Big-Tiger-Gemma)
 1. `App` launch Calculator, `Snapshot`, then `Click` each button by its element number from the Snapshot, one digit
    or operator at a time (1, 2, 3, ×, 4, 5, =).
 2. Read the display from a `Snapshot`; report only the number it shows.
 
-### New folder in Explorer — the rename step fails, verified 2026-11-05
-1. `App` launch File Explorer; `Snapshot`; `Click` "Desktop" in the navigation pane.
-2. `Shortcut` ctrl+shift+n creates "New folder" with its name selected.
-3. `Snapshot`, then `Type` the name into the selected name box by `label`, `press_enter: true`.
-4. `Snapshot` again and check the folder shows the new name. Qwen2.5-VL pressed ctrl+shift+n, then reported the
-   folder as created while it was still called "New folder": the rename never happened. Do not report success
-   until a Snapshot shows the new name. — verified 2026-11-05
+### New folder in Explorer — verified 2026-11-05 (by hand through Windows-MCP)
+1. `App` launch File Explorer, `Snapshot`, find `edit "Address Bar"`.
+2. `Type` the folder path (e.g. `C:\Users\tester\Desktop`) into the address bar with `clear: true` and
+   `press_enter: true`. The window title becomes `Desktop - File Explorer`. A single `Click` on "Desktop" in the Home
+   view only selects it and does not open it.
+3. `Shortcut` ctrl+shift+n, then `Snapshot`: there is now an `edit "New folder"` marked `[focused]`.
+4. `Type` the new name with `loc` set to that focused edit box, `clear: true` and `press_enter: true`.
+5. `Snapshot`: the list must show the new name, not "New folder".
 
 ## Pitfalls
+- Windows 11 Notepad reopens unsaved tabs after it is closed or killed, so it can start with old text.
+  Check the window title is "Untitled - Notepad" before typing. — verified 2026-11-05
 - Notepad: Qwen typed the text by `label` correctly, then reported the file saved; no gui_test.txt existed
   anywhere under C:\Users\tester. The Save dialog step is the open problem. — verified 2026-11-05
 - A skills file can derail a model: with this file in its system prompt, Big-Tiger-Gemma stopped after its first
