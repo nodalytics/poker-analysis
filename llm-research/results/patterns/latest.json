@@ -1,0 +1,1200 @@
+{
+ "chess": {
+  "players": [
+   {
+    "entrant": "Big-Tiger-Gemma-27B-v3#frozen",
+    "moves": 396,
+    "repeat_rate": 0.139,
+    "shuffle_rate": 0.457,
+    "no_legal_move_rate": 0.0,
+    "openings": {
+     "e5": 4,
+     "e4": 3,
+     "Nf6": 1
+    }
+   },
+   {
+    "entrant": "Big-Tiger-Gemma-27B-v3#learn",
+    "moves": 441,
+    "repeat_rate": 0.059,
+    "shuffle_rate": 0.605,
+    "no_legal_move_rate": 0.0,
+    "openings": {
+     "e4": 5,
+     "Nf6": 2,
+     "e5": 1
+    }
+   },
+   {
+    "entrant": "Tiger-Gemma-9B-v3#frozen",
+    "moves": 431,
+    "repeat_rate": 0.09,
+    "shuffle_rate": 0.248,
+    "no_legal_move_rate": 0.028,
+    "openings": {
+     "Nf6": 5,
+     "e4": 3
+    }
+   },
+   {
+    "entrant": "Tiger-Gemma-9B-v3#learn",
+    "moves": 429,
+    "repeat_rate": 0.098,
+    "shuffle_rate": 0.259,
+    "no_legal_move_rate": 0.105,
+    "openings": {
+     "Nf6": 5,
+     "e4": 3
+    }
+   },
+   {
+    "entrant": "qwen2.5vl#frozen",
+    "moves": 400,
+    "repeat_rate": 0.013,
+    "shuffle_rate": 0.198,
+    "no_legal_move_rate": 0.003,
+    "openings": {
+     "e4": 7,
+     "e5": 1
+    }
+   },
+   {
+    "entrant": "qwen2.5vl#learn",
+    "moves": 398,
+    "repeat_rate": 0.01,
+    "shuffle_rate": 0.204,
+    "no_legal_move_rate": 0.003,
+    "openings": {
+     "e5": 3,
+     "Nf6": 2,
+     "e4": 2
+    }
+   },
+   {
+    "entrant": "wizard-vicuna-uncensored#frozen",
+    "moves": 427,
+    "repeat_rate": 0.101,
+    "shuffle_rate": 0.433,
+    "no_legal_move_rate": 0.019,
+    "openings": {
+     "Nh6": 4,
+     "Nh3": 3,
+     "Nc3": 1
+    }
+   },
+   {
+    "entrant": "wizard-vicuna-uncensored#learn",
+    "moves": 432,
+    "repeat_rate": 0.132,
+    "shuffle_rate": 0.498,
+    "no_legal_move_rate": 0.007,
+    "openings": {
+     "Nh6": 4,
+     "Nh3": 3,
+     "Nc3": 1
+    }
+   }
+  ],
+  "endings": {
+   "adjudicated": 23,
+   "fivefold_repetition": 6,
+   "checkmate": 3
+  },
+  "skill_adherence": [
+   {
+    "entrant": "qwen2.5vl#learn",
+    "rule": "skill file mentions avoiding repetition",
+    "repeat_rate_round_1": 0.0,
+    "repeat_rate_later": 0.01,
+    "followed": false
+   },
+   {
+    "entrant": "wizard-vicuna-uncensored#learn",
+    "rule": "skill file mentions avoiding repetition",
+    "repeat_rate_round_1": 0.05,
+    "repeat_rate_later": 0.145,
+    "followed": false
+   }
+  ]
+ },
+ "poker": {
+  "players": [
+   {
+    "entrant": "Big-Tiger-Gemma-27B-v3#frozen",
+    "kind": "language model",
+    "hands": 192,
+    "vpip": 0.219,
+    "pfr": 0.01,
+    "aggression": 0.0,
+    "fold_to_bet": 0.583,
+    "allin_rate": 0.0,
+    "favourite_raise_sizes_x_pot": {
+     "2.0": 1,
+     "3.3": 1
+    },
+    "betting": {
+     "limp_rate": 0.182,
+     "cbet_rate": 0.0,
+     "cbet_chances": 1,
+     "check_raise_rate": 0.0,
+     "overbets": 0,
+     "min_raises": 0,
+     "raises_by_street": {
+      "preflop": 2
+     },
+     "allins_by_street": {},
+     "postflop_bets_sized": 0,
+     "bluff_share": null,
+     "sizing_tell": {
+      "mean_strength_big_bets": null,
+      "mean_strength_small_bets": null,
+      "n_big": 0,
+      "n_small": 0
+     },
+     "median_size_x_pot": 3.33
+    },
+    "vpip_by_position": {
+     "early/middle": 0.198,
+     "big blind": 0.036,
+     "small blind": 0.417,
+     "button": 0.333
+    },
+    "tilt": {
+     "vpip_after_big_loss": 0.333,
+     "vpip_otherwise": 0.215,
+     "hands_after_big_loss": 6
+    },
+    "plays_most_like": "bob (recreational)"
+   },
+   {
+    "entrant": "Big-Tiger-Gemma-27B-v3#learn",
+    "kind": "language model",
+    "hands": 192,
+    "vpip": 0.016,
+    "pfr": 0.005,
+    "aggression": null,
+    "fold_to_bet": null,
+    "allin_rate": 0.0,
+    "favourite_raise_sizes_x_pot": {
+     "3.3": 1
+    },
+    "betting": {
+     "limp_rate": 0.005,
+     "cbet_rate": 0.0,
+     "cbet_chances": 1,
+     "check_raise_rate": null,
+     "overbets": 0,
+     "min_raises": 0,
+     "raises_by_street": {
+      "preflop": 1
+     },
+     "allins_by_street": {},
+     "postflop_bets_sized": 0,
+     "bluff_share": null,
+     "sizing_tell": {
+      "mean_strength_big_bets": null,
+      "mean_strength_small_bets": null,
+      "n_big": 0,
+      "n_small": 0
+     },
+     "median_size_x_pot": 3.33
+    },
+    "vpip_by_position": {
+     "small blind": 0.0,
+     "button": 0.04,
+     "early/middle": 0.018,
+     "big blind": 0.0
+    },
+    "tilt": {
+     "vpip_after_big_loss": null,
+     "vpip_otherwise": 0.016,
+     "hands_after_big_loss": 0
+    },
+    "plays_most_like": "nora (nit)"
+   },
+   {
+    "entrant": "Tiger-Gemma-9B-v3#frozen",
+    "kind": "language model",
+    "hands": 108,
+    "vpip": 0.611,
+    "pfr": 0.037,
+    "aggression": 0.14,
+    "fold_to_bet": 0.102,
+    "allin_rate": 0.019,
+    "favourite_raise_sizes_x_pot": {
+     "1.0": 2,
+     "25.0": 1,
+     "50.0": 1
+    },
+    "betting": {
+     "limp_rate": 0.417,
+     "cbet_rate": 0.333,
+     "cbet_chances": 3,
+     "check_raise_rate": 0.0,
+     "overbets": 4,
+     "min_raises": 0,
+     "raises_by_street": {
+      "preflop": 4,
+      "flop": 5,
+      "turn": 1
+     },
+     "allins_by_street": {
+      "flop": 1,
+      "turn": 1
+     },
+     "postflop_bets_sized": 6,
+     "bluff_share": 0.0,
+     "sizing_tell": {
+      "mean_strength_big_bets": 1.2,
+      "mean_strength_small_bets": 1.0,
+      "n_big": 5,
+      "n_small": 1
+     },
+     "median_size_x_pot": 4.35
+    },
+    "vpip_by_position": {
+     "big blind": 0.312,
+     "small blind": 0.824,
+     "button": 0.611,
+     "early/middle": 0.632
+    },
+    "tilt": {
+     "vpip_after_big_loss": 0.833,
+     "vpip_otherwise": 0.598,
+     "hands_after_big_loss": 6
+    },
+    "plays_most_like": "carl (calling station)"
+   },
+   {
+    "entrant": "Tiger-Gemma-9B-v3#learn",
+    "kind": "language model",
+    "hands": 106,
+    "vpip": 0.17,
+    "pfr": 0.038,
+    "aggression": 0.45,
+    "fold_to_bet": 0.0,
+    "allin_rate": 0.009,
+    "favourite_raise_sizes_x_pot": {
+     "3.3": 2,
+     "26.2": 1,
+     "1.3": 1
+    },
+    "betting": {
+     "limp_rate": 0.073,
+     "cbet_rate": 0.667,
+     "cbet_chances": 3,
+     "check_raise_rate": 0.0,
+     "overbets": 2,
+     "min_raises": 1,
+     "raises_by_street": {
+      "river": 1,
+      "preflop": 4,
+      "flop": 2,
+      "turn": 2
+     },
+     "allins_by_street": {
+      "turn": 1
+     },
+     "postflop_bets_sized": 5,
+     "bluff_share": 0.4,
+     "sizing_tell": {
+      "mean_strength_big_bets": 1.25,
+      "mean_strength_small_bets": 0.0,
+      "n_big": 4,
+      "n_small": 1
+     },
+     "median_size_x_pot": 1.33
+    },
+    "vpip_by_position": {
+     "early/middle": 0.145,
+     "big blind": 0.25,
+     "small blind": 0.154,
+     "button": 0.2
+    },
+    "tilt": {
+     "vpip_after_big_loss": 0.5,
+     "vpip_otherwise": 0.15,
+     "hands_after_big_loss": 6
+    },
+    "plays_most_like": "bob (recreational)"
+   },
+   {
+    "entrant": "bob",
+    "kind": "recreational, simulated human",
+    "hands": 348,
+    "vpip": 0.359,
+    "pfr": 0.052,
+    "aggression": 3.77,
+    "fold_to_bet": 0.303,
+    "allin_rate": 0.011,
+    "favourite_raise_sizes_x_pot": {
+     "0.5": 73,
+     "1.0": 29,
+     "0.9": 16
+    },
+    "betting": {
+     "limp_rate": 0.263,
+     "cbet_rate": 0.4,
+     "cbet_chances": 5,
+     "check_raise_rate": 0.0,
+     "overbets": 8,
+     "min_raises": 5,
+     "raises_by_street": {
+      "turn": 43,
+      "river": 52,
+      "flop": 22,
+      "preflop": 57
+     },
+     "allins_by_street": {
+      "river": 2,
+      "preflop": 2
+     },
+     "postflop_bets_sized": 117,
+     "bluff_share": 0.06,
+     "sizing_tell": {
+      "mean_strength_big_bets": 3.93,
+      "mean_strength_small_bets": 1.88,
+      "n_big": 28,
+      "n_small": 89
+     },
+     "median_size_x_pot": 0.67
+    },
+    "vpip_by_position": {
+     "early/middle": 0.431,
+     "big blind": 0.065,
+     "small blind": 0.367,
+     "button": 0.333
+    },
+    "tilt": {
+     "vpip_after_big_loss": 0.333,
+     "vpip_otherwise": 0.36,
+     "hands_after_big_loss": 12
+    }
+   },
+   {
+    "entrant": "carl",
+    "kind": "calling station, simulated human",
+    "hands": 52,
+    "vpip": 0.692,
+    "pfr": 0.019,
+    "aggression": 3.0,
+    "fold_to_bet": 0.154,
+    "allin_rate": 0.019,
+    "favourite_raise_sizes_x_pot": {
+     "0.3": 17,
+     "0.2": 6,
+     "0.8": 3
+    },
+    "betting": {
+     "limp_rate": 0.593,
+     "cbet_rate": null,
+     "cbet_chances": 0,
+     "check_raise_rate": 0.0,
+     "overbets": 4,
+     "min_raises": 3,
+     "raises_by_street": {
+      "flop": 9,
+      "turn": 13,
+      "river": 14,
+      "preflop": 1
+     },
+     "allins_by_street": {
+      "turn": 1
+     },
+     "postflop_bets_sized": 36,
+     "bluff_share": 0.0,
+     "sizing_tell": {
+      "mean_strength_big_bets": 2.5,
+      "mean_strength_small_bets": 1.86,
+      "n_big": 8,
+      "n_small": 28
+     },
+     "median_size_x_pot": 0.32
+    },
+    "vpip_by_position": {
+     "early/middle": 0.786,
+     "big blind": 0.222,
+     "small blind": 1.0,
+     "button": 0.625
+    },
+    "tilt": {
+     "vpip_after_big_loss": 0.75,
+     "vpip_otherwise": 0.688,
+     "hands_after_big_loss": 4
+    }
+   },
+   {
+    "entrant": "max",
+    "kind": "maniac, simulated human",
+    "hands": 32,
+    "vpip": 0.812,
+    "pfr": 0.5,
+    "aggression": 7.0,
+    "fold_to_bet": 0.333,
+    "allin_rate": 0.125,
+    "favourite_raise_sizes_x_pot": {
+     "1.0": 38,
+     "2.7": 11,
+     "0.9": 6
+    },
+    "betting": {
+     "limp_rate": 0.15,
+     "cbet_rate": 0.7,
+     "cbet_chances": 10,
+     "check_raise_rate": 0.0,
+     "overbets": 1,
+     "min_raises": 0,
+     "raises_by_street": {
+      "preflop": 41,
+      "flop": 14,
+      "turn": 11,
+      "river": 10
+     },
+     "allins_by_street": {
+      "flop": 2,
+      "turn": 2
+     },
+     "postflop_bets_sized": 35,
+     "bluff_share": 0.229,
+     "sizing_tell": {
+      "mean_strength_big_bets": 1.06,
+      "mean_strength_small_bets": 1.5,
+      "n_big": 31,
+      "n_small": 4
+     },
+     "median_size_x_pot": 1.0
+    },
+    "vpip_by_position": {
+     "early/middle": 0.9,
+     "big blind": 0.0,
+     "small blind": 1.0,
+     "button": 1.0
+    },
+    "tilt": {
+     "vpip_after_big_loss": 1.0,
+     "vpip_otherwise": 0.727,
+     "hands_after_big_loss": 10
+    }
+   },
+   {
+    "entrant": "monte",
+    "kind": "Monte Carlo equity (eval7, poker-analysis toolkit)",
+    "hands": 360,
+    "vpip": 0.189,
+    "pfr": 0.017,
+    "aggression": 0.74,
+    "fold_to_bet": 0.367,
+    "allin_rate": 0.008,
+    "favourite_raise_sizes_x_pot": {
+     "0.7": 12,
+     "1.0": 5,
+     "1.3": 4
+    },
+    "betting": {
+     "limp_rate": 0.135,
+     "cbet_rate": 0.5,
+     "cbet_chances": 4,
+     "check_raise_rate": 0.0,
+     "overbets": 6,
+     "min_raises": 3,
+     "raises_by_street": {
+      "river": 9,
+      "preflop": 8,
+      "flop": 6,
+      "turn": 8
+     },
+     "allins_by_street": {
+      "river": 2,
+      "turn": 1
+     },
+     "postflop_bets_sized": 23,
+     "bluff_share": 0.0,
+     "sizing_tell": {
+      "mean_strength_big_bets": 3.09,
+      "mean_strength_small_bets": 2.5,
+      "n_big": 11,
+      "n_small": 12
+     },
+     "median_size_x_pot": 0.75
+    },
+    "vpip_by_position": {
+     "big blind": 0.208,
+     "small blind": 0.816,
+     "button": 0.204,
+     "early/middle": 0.037
+    },
+    "tilt": {
+     "vpip_after_big_loss": 0.2,
+     "vpip_otherwise": 0.188,
+     "hands_after_big_loss": 15
+    },
+    "plays_most_like": "bob (recreational)"
+   },
+   {
+    "entrant": "nora",
+    "kind": "nit, simulated human",
+    "hands": 76,
+    "vpip": 0.053,
+    "pfr": 0.053,
+    "aggression": 7.33,
+    "fold_to_bet": 0.118,
+    "allin_rate": 0.026,
+    "favourite_raise_sizes_x_pot": {
+     "1.0": 9,
+     "0.5": 8,
+     "2.7": 2
+    },
+    "betting": {
+     "limp_rate": 0.0,
+     "cbet_rate": 0.333,
+     "cbet_chances": 3,
+     "check_raise_rate": 0.0,
+     "overbets": 3,
+     "min_raises": 2,
+     "raises_by_street": {
+      "preflop": 4,
+      "turn": 4,
+      "river": 15,
+      "flop": 3
+     },
+     "allins_by_street": {
+      "river": 2
+     },
+     "postflop_bets_sized": 22,
+     "bluff_share": 0.0,
+     "sizing_tell": {
+      "mean_strength_big_bets": 2.0,
+      "mean_strength_small_bets": 2.0,
+      "n_big": 12,
+      "n_small": 10
+     },
+     "median_size_x_pot": 0.98
+    },
+    "vpip_by_position": {
+     "early/middle": 0.043,
+     "big blind": 0.0,
+     "small blind": 0.111,
+     "button": 0.111
+    },
+    "tilt": {
+     "vpip_after_big_loss": 0.333,
+     "vpip_otherwise": 0.041,
+     "hands_after_big_loss": 3
+    }
+   },
+   {
+    "entrant": "qwen2.5vl#frozen",
+    "kind": "language model",
+    "hands": 192,
+    "vpip": 0.578,
+    "pfr": 0.125,
+    "aggression": 0.45,
+    "fold_to_bet": 0.321,
+    "allin_rate": 0.01,
+    "favourite_raise_sizes_x_pot": {
+     "3.3": 8,
+     "6.7": 5,
+     "1.1": 5
+    },
+    "betting": {
+     "limp_rate": 0.362,
+     "cbet_rate": 0.429,
+     "cbet_chances": 14,
+     "check_raise_rate": 0.0,
+     "overbets": 18,
+     "min_raises": 0,
+     "raises_by_street": {
+      "preflop": 25,
+      "flop": 13,
+      "turn": 10,
+      "river": 1
+     },
+     "allins_by_street": {
+      "preflop": 1,
+      "turn": 1
+     },
+     "postflop_bets_sized": 24,
+     "bluff_share": 0.208,
+     "sizing_tell": {
+      "mean_strength_big_bets": 1.76,
+      "mean_strength_small_bets": 1.33,
+      "n_big": 21,
+      "n_small": 3
+     },
+     "median_size_x_pot": 2.0
+    },
+    "vpip_by_position": {
+     "early/middle": 0.619,
+     "big blind": 0.174,
+     "small blind": 0.615,
+     "button": 0.72
+    },
+    "tilt": {
+     "vpip_after_big_loss": 0.333,
+     "vpip_otherwise": 0.608,
+     "hands_after_big_loss": 21
+    },
+    "plays_most_like": "carl (calling station)"
+   },
+   {
+    "entrant": "qwen2.5vl#learn",
+    "kind": "language model",
+    "hands": 190,
+    "vpip": 0.326,
+    "pfr": 0.111,
+    "aggression": 0.54,
+    "fold_to_bet": 0.381,
+    "allin_rate": 0.005,
+    "favourite_raise_sizes_x_pot": {
+     "1.0": 6,
+     "3.3": 3,
+     "0.8": 3
+    },
+    "betting": {
+     "limp_rate": 0.163,
+     "cbet_rate": 0.308,
+     "cbet_chances": 13,
+     "check_raise_rate": 0.0,
+     "overbets": 4,
+     "min_raises": 0,
+     "raises_by_street": {
+      "flop": 9,
+      "river": 1,
+      "preflop": 21,
+      "turn": 4
+     },
+     "allins_by_street": {
+      "preflop": 1
+     },
+     "postflop_bets_sized": 14,
+     "bluff_share": 0.571,
+     "sizing_tell": {
+      "mean_strength_big_bets": 0.55,
+      "mean_strength_small_bets": 1.0,
+      "n_big": 11,
+      "n_small": 3
+     },
+     "median_size_x_pot": 1.43
+    },
+    "vpip_by_position": {
+     "early/middle": 0.331,
+     "big blind": 0.261,
+     "small blind": 0.333,
+     "button": 0.36
+    },
+    "tilt": {
+     "vpip_after_big_loss": 0.0,
+     "vpip_otherwise": 0.343,
+     "hands_after_big_loss": 9
+    },
+    "plays_most_like": "bob (recreational)"
+   },
+   {
+    "entrant": "qwen2.5vl-tools#toolkit",
+    "kind": "poker-analysis toolkit via tool calls",
+    "hands": 182,
+    "vpip": 0.176,
+    "pfr": 0.011,
+    "aggression": 0.47,
+    "fold_to_bet": 0.348,
+    "allin_rate": 0.011,
+    "favourite_raise_sizes_x_pot": {
+     "0.8": 2,
+     "1.1": 1,
+     "1.6": 1
+    },
+    "betting": {
+     "limp_rate": 0.132,
+     "cbet_rate": 0.0,
+     "cbet_chances": 1,
+     "check_raise_rate": 0.0,
+     "overbets": 5,
+     "min_raises": 1,
+     "raises_by_street": {
+      "flop": 5,
+      "preflop": 2,
+      "turn": 2
+     },
+     "allins_by_street": {
+      "flop": 2
+     },
+     "postflop_bets_sized": 7,
+     "bluff_share": 0.0,
+     "sizing_tell": {
+      "mean_strength_big_bets": 1.67,
+      "mean_strength_small_bets": 1.0,
+      "n_big": 6,
+      "n_small": 1
+     },
+     "median_size_x_pot": 1.33
+    },
+    "vpip_by_position": {
+     "early/middle": 0.175,
+     "big blind": 0.12,
+     "small blind": 0.286,
+     "button": 0.136
+    },
+    "tilt": {
+     "vpip_after_big_loss": null,
+     "vpip_otherwise": 0.176,
+     "hands_after_big_loss": 0
+    },
+    "plays_most_like": "bob (recreational)"
+   },
+   {
+    "entrant": "sol",
+    "kind": "TexasSolver heads-up turn/river, else Monte Carlo",
+    "hands": 346,
+    "vpip": 0.208,
+    "pfr": 0.038,
+    "aggression": 1.0,
+    "fold_to_bet": 0.242,
+    "allin_rate": 0.014,
+    "favourite_raise_sizes_x_pot": {
+     "0.7": 30,
+     "1.3": 8,
+     "1.0": 6
+    },
+    "betting": {
+     "limp_rate": 0.148,
+     "cbet_rate": 0.5,
+     "cbet_chances": 6,
+     "check_raise_rate": 0.0,
+     "overbets": 14,
+     "min_raises": 5,
+     "raises_by_street": {
+      "preflop": 14,
+      "river": 21,
+      "flop": 13,
+      "turn": 23
+     },
+     "allins_by_street": {
+      "river": 3,
+      "flop": 1,
+      "turn": 1
+     },
+     "postflop_bets_sized": 57,
+     "bluff_share": 0.018,
+     "sizing_tell": {
+      "mean_strength_big_bets": 3.0,
+      "mean_strength_small_bets": 2.18,
+      "n_big": 23,
+      "n_small": 34
+     },
+     "median_size_x_pot": 0.75
+    },
+    "vpip_by_position": {
+     "button": 0.2,
+     "early/middle": 0.064,
+     "big blind": 0.212,
+     "small blind": 0.848
+    },
+    "tilt": {
+     "vpip_after_big_loss": 0.125,
+     "vpip_otherwise": 0.21,
+     "hands_after_big_loss": 8
+    },
+    "plays_most_like": "bob (recreational)"
+   },
+   {
+    "entrant": "tina",
+    "kind": "tight-aggressive, simulated human",
+    "hands": 74,
+    "vpip": 0.176,
+    "pfr": 0.135,
+    "aggression": 6.0,
+    "fold_to_bet": 0.3,
+    "allin_rate": 0.041,
+    "favourite_raise_sizes_x_pot": {
+     "0.7": 11,
+     "1.0": 10,
+     "1.1": 5
+    },
+    "betting": {
+     "limp_rate": 0.034,
+     "cbet_rate": 0.375,
+     "cbet_chances": 8,
+     "check_raise_rate": 0.0,
+     "overbets": 4,
+     "min_raises": 2,
+     "raises_by_street": {
+      "preflop": 23,
+      "river": 7,
+      "flop": 7,
+      "turn": 4
+     },
+     "allins_by_street": {
+      "river": 1,
+      "flop": 2
+     },
+     "postflop_bets_sized": 18,
+     "bluff_share": 0.056,
+     "sizing_tell": {
+      "mean_strength_big_bets": 1.86,
+      "mean_strength_small_bets": 2.18,
+      "n_big": 7,
+      "n_small": 11
+     },
+     "median_size_x_pot": 1.02
+    },
+    "vpip_by_position": {
+     "early/middle": 0.174,
+     "big blind": 0.1,
+     "small blind": 0.222,
+     "button": 0.222
+    },
+    "tilt": {
+     "vpip_after_big_loss": 0.0,
+     "vpip_otherwise": 0.191,
+     "hands_after_big_loss": 6
+    }
+   },
+   {
+    "entrant": "wizard-vicuna-uncensored#frozen",
+    "kind": "language model",
+    "hands": 192,
+    "vpip": 0.109,
+    "pfr": 0.005,
+    "aggression": 0.0,
+    "fold_to_bet": 0.667,
+    "allin_rate": 0.005,
+    "favourite_raise_sizes_x_pot": {
+     "27.1": 1
+    },
+    "betting": {
+     "limp_rate": 0.079,
+     "cbet_rate": null,
+     "cbet_chances": 0,
+     "check_raise_rate": null,
+     "overbets": 0,
+     "min_raises": 0,
+     "raises_by_street": {
+      "preflop": 1
+     },
+     "allins_by_street": {
+      "preflop": 1
+     },
+     "postflop_bets_sized": 0,
+     "bluff_share": null,
+     "sizing_tell": {
+      "mean_strength_big_bets": null,
+      "mean_strength_small_bets": null,
+      "n_big": 0,
+      "n_small": 0
+     },
+     "median_size_x_pot": 27.07
+    },
+    "vpip_by_position": {
+     "small blind": 0.129,
+     "button": 0.032,
+     "early/middle": 0.131,
+     "big blind": 0.087
+    },
+    "tilt": {
+     "vpip_after_big_loss": null,
+     "vpip_otherwise": 0.109,
+     "hands_after_big_loss": 0
+    },
+    "plays_most_like": "bob (recreational)"
+   },
+   {
+    "entrant": "wizard-vicuna-uncensored#learn",
+    "kind": "language model",
+    "hands": 184,
+    "vpip": 0.147,
+    "pfr": 0.005,
+    "aggression": 0.0,
+    "fold_to_bet": 0.538,
+    "allin_rate": 0.005,
+    "favourite_raise_sizes_x_pot": {
+     "26.1": 1
+    },
+    "betting": {
+     "limp_rate": 0.113,
+     "cbet_rate": null,
+     "cbet_chances": 0,
+     "check_raise_rate": 0.0,
+     "overbets": 0,
+     "min_raises": 0,
+     "raises_by_street": {
+      "preflop": 1
+     },
+     "allins_by_street": {
+      "preflop": 1
+     },
+     "postflop_bets_sized": 0,
+     "bluff_share": null,
+     "sizing_tell": {
+      "mean_strength_big_bets": null,
+      "mean_strength_small_bets": null,
+      "n_big": 0,
+      "n_small": 0
+     },
+     "median_size_x_pot": 26.14
+    },
+    "vpip_by_position": {
+     "early/middle": 0.128,
+     "big blind": 0.042,
+     "small blind": 0.222,
+     "button": 0.25
+    },
+    "tilt": {
+     "vpip_after_big_loss": null,
+     "vpip_otherwise": 0.147,
+     "hands_after_big_loss": 0
+    },
+    "plays_most_like": "bob (recreational)"
+   }
+  ]
+ },
+ "trading": {
+  "players": []
+ },
+ "agents": {
+  "findings": [
+   {
+    "file": "br_results.json",
+    "model": "Tiger-Gemma-9B-v3",
+    "task": "read_price",
+    "passed": false,
+    "patterns": [
+     "7 tool errors"
+    ],
+    "answer": ""
+   },
+   {
+    "file": "br_results.json",
+    "model": "Tiger-Gemma-9B-v3",
+    "task": "click_link",
+    "passed": false,
+    "patterns": [
+     "loop: same call 6x in a row",
+     "6 tool errors"
+    ],
+    "answer": ""
+   },
+   {
+    "file": "br_results.json",
+    "model": "Tiger-Gemma-9B-v3",
+    "task": "fill_form",
+    "passed": false,
+    "patterns": [
+     "4 tool errors"
+    ],
+    "answer": "Error: '#send' does not match any elements."
+   },
+   {
+    "file": "br_results.json",
+    "model": "Tiger-Gemma-9B-v3",
+    "task": "read_result",
+    "passed": false,
+    "patterns": [
+     "loop: same call 8x in a row",
+     "8 tool errors"
+    ],
+    "answer": ""
+   },
+   {
+    "file": "br_results.json",
+    "model": "wizard-vicuna-uncensored",
+    "task": "read_price",
+    "passed": false,
+    "patterns": [
+     "loop: same call 8x in a row",
+     "8 tool errors"
+    ],
+    "answer": ""
+   },
+   {
+    "file": "br_results.json",
+    "model": "wizard-vicuna-uncensored",
+    "task": "click_link",
+    "passed": false,
+    "patterns": [
+     "loop: same call 3x in a row",
+     "3 tool errors"
+    ],
+    "answer": ""
+   },
+   {
+    "file": "br_results.json",
+    "model": "wizard-vicuna-uncensored",
+    "task": "fill_form",
+    "passed": false,
+    "patterns": [
+     "loop: same call 6x in a row",
+     "6 tool errors"
+    ],
+    "answer": ""
+   },
+   {
+    "file": "br_results.json",
+    "model": "wizard-vicuna-uncensored",
+    "task": "read_result",
+    "passed": false,
+    "patterns": [
+     "4 tool errors"
+    ],
+    "answer": ""
+   },
+   {
+    "file": "br_results.json",
+    "model": "Big-Tiger-Gemma-27B-v3",
+    "task": "click_link",
+    "passed": true,
+    "patterns": [
+     "2 tool errors"
+    ],
+    "answer": "Contact us"
+   },
+   {
+    "file": "br_results.json",
+    "model": "Big-Tiger-Gemma-27B-v3",
+    "task": "fill_form",
+    "passed": false,
+    "patterns": [
+     "4 tool errors"
+    ],
+    "answer": ""
+   },
+   {
+    "file": "br_results.json",
+    "model": "Big-Tiger-Gemma-27B-v3",
+    "task": "read_result",
+    "passed": false,
+    "patterns": [
+     "loop: same call 8x in a row",
+     "8 tool errors"
+    ],
+    "answer": ""
+   },
+   {
+    "file": "br_results.json",
+    "model": "qwen2.5vl",
+    "task": "fill_form",
+    "passed": true,
+    "patterns": [
+     "1 tool errors"
+    ],
+    "answer": "The form has been submitted successfully."
+   },
+   {
+    "file": "dc_results.json",
+    "model": "Tiger-Gemma-9B-v3",
+    "task": "script_and_run",
+    "passed": false,
+    "patterns": [
+     "failed but asserted a number"
+    ],
+    "answer": "5050"
+   },
+   {
+    "file": "dc_results2.json",
+    "model": "wizard-vicuna-uncensored",
+    "task": "write_file",
+    "passed": false,
+    "patterns": [
+     "loop: same call 8x in a row"
+    ],
+    "answer": ""
+   },
+   {
+    "file": "dc_results2.json",
+    "model": "wizard-vicuna-uncensored",
+    "task": "run_command",
+    "passed": false,
+    "patterns": [
+     "1 tool errors"
+    ],
+    "answer": ""
+   },
+   {
+    "file": "dc_results2.json",
+    "model": "wizard-vicuna-uncensored",
+    "task": "list_and_count",
+    "passed": false,
+    "patterns": [
+     "loop: same call 4x in a row"
+    ],
+    "answer": ""
+   },
+   {
+    "file": "dc_results2.json",
+    "model": "mistral-large",
+    "task": "script_and_run",
+    "passed": false,
+    "patterns": [
+     "failed but asserted a number"
+    ],
+    "answer": "I have successfully created the Python script `sum.py` at the specified location. Now, I will run th"
+   },
+   {
+    "file": "dc_results_tools.json",
+    "model": "tiger-gemma-tools",
+    "task": "run_command",
+    "passed": false,
+    "patterns": [
+     "answered with no tool call"
+    ],
+    "answer": "```bash\nnproc\n```"
+   },
+   {
+    "file": "dc_results_tools.json",
+    "model": "tiger-gemma-tools",
+    "task": "script_and_run",
+    "passed": false,
+    "patterns": [
+     "answered with no tool call",
+     "failed but asserted a number"
+    ],
+    "answer": "```python\n# Python script to calculate the sum of integers from 1 to 100\ntotal = 0\nfor i in range(1,"
+   },
+   {
+    "file": "dc_results_tools.json",
+    "model": "qwen2.5vl-tools",
+    "task": "run_command",
+    "passed": true,
+    "patterns": [
+     "loop: same call 7x in a row"
+    ],
+    "answer": "The machine reports having **64 CPU cores**."
+   },
+   {
+    "file": "dc_results_tools.json",
+    "model": "qwen2.5vl-tools",
+    "task": "list_and_count",
+    "passed": true,
+    "patterns": [
+     "loop: same call 20x in a row"
+    ],
+    "answer": "The directory `/home/agent/work` contains the following files:\n\n- `hello.txt`\n- `sum.py`\n\nThere are "
+   },
+   {
+    "file": "gui_results.json",
+    "model": "qwen2.5vl-tools",
+    "task": "explorer_folder",
+    "passed": false,
+    "patterns": [
+     "failed but asserted a number"
+    ],
+    "answer": "The process encountered an error while trying to capture the desktop state and type the folder name."
+   },
+   {
+    "file": "gui_results_skills.json",
+    "model": "qwen2.5vl-tools",
+    "task": "calculator",
+    "passed": false,
+    "patterns": [
+     "failed but asserted a number"
+    ],
+    "answer": "<tool_response>\n1 validation error for call[click_tool]\nlabel\n  Input should be a valid integer, una"
+   }
+  ],
+  "counts": {
+   "tool errors": 13,
+   "loop": 10,
+   "failed but asserted a number": 5,
+   "answered with no tool call": 2
+  }
+ }
+}

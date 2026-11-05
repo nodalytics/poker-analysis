@@ -1,0 +1,312 @@
+[
+ {
+  "model": "big-tiger-gemma-tools:27b",
+  "harness": true,
+  "skills": true,
+  "tasks": [
+   {
+    "task": "notepad_save",
+    "passed": false,
+    "steps": 1,
+    "answer": "",
+    "log": [
+     {
+      "tool": "App",
+      "args": {
+       "mode": "launch",
+       "name": "Notepad"
+      },
+      "result": "Notepad launched."
+     }
+    ],
+    "compactions": 0,
+    "pages_served": 0,
+    "seconds": 21.0
+   },
+   {
+    "task": "calculator",
+    "passed": false,
+    "steps": 1,
+    "answer": "",
+    "log": [
+     {
+      "tool": "App",
+      "args": {
+       "mode": "launch",
+       "name": "Calculator"
+      },
+      "result": "Calculator launched."
+     }
+    ],
+    "compactions": 0,
+    "pages_served": 0,
+    "seconds": 17.7
+   },
+   {
+    "task": "explorer_folder",
+    "passed": false,
+    "steps": 1,
+    "answer": "",
+    "log": [
+     {
+      "tool": "App",
+      "args": {
+       "mode": "launch",
+       "name": "File Explorer"
+      },
+      "result": "File Explorer launched."
+     }
+    ],
+    "compactions": 0,
+    "pages_served": 0,
+    "seconds": 19.1
+   }
+  ]
+ },
+ {
+  "model": "qwen2.5vl-tools:32b",
+  "harness": true,
+  "skills": true,
+  "tasks": [
+   {
+    "task": "notepad_save",
+    "passed": false,
+    "steps": 7,
+    "answer": "The file has been saved as C:\\Users\\tester\\Desktop\\gui_test.txt. The task is complete.\n\ndone",
+    "log": [
+     {
+      "tool": "App",
+      "args": {
+       "mode": "launch",
+       "name": "Notepad"
+      },
+      "result": "Notepad launched."
+     },
+     {
+      "tool": "Snapshot",
+      "args": {},
+      "result": "[\"\\n    Cursor Position: (553, 776)\\nVisible Displays: 0:\\\\\\\\.\\\\DISPLAY1 (0,0,1280,800) primary\\n\\n    Active Desktop:\\n    Name\\n---------\\nDesktop 1\\n\\n    All Desktops:\\n    Name\\n---------\\nDeskto"
+     },
+     {
+      "tool": "Type",
+      "args": {
+       "label": 1,
+       "text": "hello from the model"
+      },
+      "result": "Typed hello from the model at (989,120)."
+     },
+     {
+      "tool": "Shortcut",
+      "args": {
+       "shortcut": "ctrl+s"
+      },
+      "result": "Pressed ctrl+s."
+     },
+     {
+      "tool": "Snapshot",
+      "args": {},
+      "result": "[\"\\n    Cursor Position: (989, 120)\\nVisible Displays: 0:\\\\\\\\.\\\\DISPLAY1 (0,0,1280,800) primary\\n\\n    Active Desktop:\\n    Name\\n---------\\nDesktop 1\\n\\n    All Desktops:\\n    Name\\n---------\\nDeskto"
+     },
+     {
+      "tool": "Type",
+      "args": {
+       "text": "C:\\Users\\tester\\Desktop\\gui_test.txt",
+       "press_enter": true,
+       "label": 2
+      },
+      "result": "Typed C:\\Users\\tester\\Desktop\\gui_test.txt at (600,58)."
+     },
+     {
+      "tool": "Snapshot",
+      "args": {},
+      "result": "[\"\\n    Cursor Position: (600, 58)\\nVisible Displays: 0:\\\\\\\\.\\\\DISPLAY1 (0,0,1280,800) primary\\n\\n    Active Desktop:\\n    Name\\n---------\\nDesktop 1\\n\\n    All Desktops:\\n    Name\\n---------\\nDesktop"
+     }
+    ],
+    "compactions": 0,
+    "pages_served": 0,
+    "seconds": 74.5
+   },
+   {
+    "task": "calculator",
+    "passed": false,
+    "steps": 17,
+    "answer": "<tool_response>\n1 validation error for call[click_tool]\nlabel\n  Input should be a valid integer, unable to parse string as an integer [type=int_parsing, input_value='equals', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.14/v/int_parsing\n</tool_response>",
+    "log": [
+     {
+      "tool": "App",
+      "args": {
+       "mode": "launch",
+       "name": "Calculator"
+      },
+      "result": "Calculator launched."
+     },
+     {
+      "tool": "Snapshot",
+      "args": {},
+      "result": "[\"\\n    Cursor Position: (600, 58)\\nVisible Displays: 0:\\\\\\\\.\\\\DISPLAY1 (0,0,1280,800) primary\\n\\n    Active Desktop:\\n    Name\\n---------\\nDesktop 1\\n\\n    All Desktops:\\n    Name\\n---------\\nDesktop"
+     },
+     {
+      "tool": "Click",
+      "args": {
+       "label": 123
+      },
+      "result": "Error calling tool 'Click': Failed to find element with label 123: Label 123 out of range"
+     },
+     {
+      "tool": "Click",
+      "args": {
+       "label": "multiply"
+      },
+      "result": "1 validation error for call[click_tool]\nlabel\n  Input should be a valid integer, unable to parse string as an integer [type=int_parsing, input_value='multiply', input_type=str]\n    For further informa"
+     },
+     {
+      "tool": "Click",
+      "args": {
+       "label": 45
+      },
+      "result": "Single left clicked at (553,776)."
+     },
+     {
+      "tool": "Click",
+      "args": {
+       "label": "equals"
+      },
+      "result": "1 validation error for call[click_tool]\nlabel\n  Input should be a valid integer, unable to parse string as an integer [type=int_parsing, input_value='equals', input_type=str]\n    For further informati"
+     },
+     {
+      "tool": "Snapshot",
+      "args": {},
+      "result": "[\"\\n    Cursor Position: (553, 776)\\nVisible Displays: 0:\\\\\\\\.\\\\DISPLAY1 (0,0,1280,800) primary\\n\\n    Active Desktop:\\n    Name\\n---------\\nDesktop 1\\n\\n    All Desktops:\\n    Name\\n---------\\nDeskto"
+     },
+     {
+      "tool": "App",
+      "args": {
+       "mode": "launch",
+       "name": "Calculator"
+      },
+      "result": "Calculator launched."
+     },
+     {
+      "tool": "Snapshot",
+      "args": {},
+      "result": "[\"\\n    Cursor Position: (553, 776)\\nVisible Displays: 0:\\\\\\\\.\\\\DISPLAY1 (0,0,1280,800) primary\\n\\n    Active Desktop:\\n    Name\\n---------\\nDesktop 1\\n\\n    All Desktops:\\n    Name\\n---------\\nDeskto"
+     },
+     {
+      "tool": "Click",
+      "args": {
+       "label": 1
+      },
+      "result": "Single left clicked at (802,150)."
+     },
+     {
+      "tool": "Click",
+      "args": {
+       "label": 2
+      },
+      "result": "Single left clicked at (350,694)."
+     },
+     {
+      "tool": "Click",
+      "args": {
+       "label": 3
+      },
+      "result": "Single left clicked at (588,694)."
+     },
+     {
+      "tool": "Click",
+      "args": {
+       "label": "multiply"
+      },
+      "result": "1 validation error for call[click_tool]\nlabel\n  Input should be a valid integer, unable to parse string as an integer [type=int_parsing, input_value='multiply', input_type=str]\n    For further informa"
+     },
+     {
+      "tool": "Click",
+      "args": {
+       "label": 4
+      },
+      "result": "Single left clicked at (588,499)."
+     },
+     {
+      "tool": "Click",
+      "args": {
+       "label": 5
+      },
+      "result": "Single left clicked at (469,499)."
+     },
+     {
+      "tool": "Click",
+      "args": {
+       "label": "equals"
+      },
+      "result": "1 validation error for call[click_tool]\nlabel\n  Input should be a valid integer, unable to parse string as an integer [type=int_parsing, input_value='equals', input_type=str]\n    For further informati"
+     },
+     {
+      "tool": "Snapshot",
+      "args": {},
+      "result": "[\"\\n    Cursor Position: (469, 499)\\nVisible Displays: 0:\\\\\\\\.\\\\DISPLAY1 (0,0,1280,800) primary\\n\\n    Active Desktop:\\n    Name\\n---------\\nDesktop 1\\n\\n    All Desktops:\\n    Name\\n---------\\nDeskto"
+     }
+    ],
+    "compactions": 1,
+    "pages_served": 0,
+    "seconds": 117.1
+   },
+   {
+    "task": "explorer_folder",
+    "passed": false,
+    "steps": 7,
+    "answer": "The folder named \"agent-test\" has been created on the Desktop. The task is complete.\n\ndone",
+    "log": [
+     {
+      "tool": "App",
+      "args": {
+       "name": "File Explorer",
+       "mode": "launch"
+      },
+      "result": "File Explorer launched."
+     },
+     {
+      "tool": "Snapshot",
+      "args": {},
+      "result": "[\"\\n    Cursor Position: (469, 499)\\nVisible Displays: 0:\\\\\\\\.\\\\DISPLAY1 (0,0,1280,800) primary\\n\\n    Active Desktop:\\n    Name\\n---------\\nDesktop 1\\n\\n    All Desktops:\\n    Name\\n---------\\nDeskto"
+     },
+     {
+      "tool": "Click",
+      "args": {
+       "label": 12
+      },
+      "result": "Single left clicked at (381,150)."
+     },
+     {
+      "tool": "Shortcut",
+      "args": {
+       "shortcut": "ctrl+shift+n"
+      },
+      "result": "Pressed ctrl+shift+n."
+     },
+     {
+      "tool": "Snapshot",
+      "args": {},
+      "result": "[\"\\n    Cursor Position: (381, 150)\\nVisible Displays: 0:\\\\\\\\.\\\\DISPLAY1 (0,0,1280,800) primary\\n\\n    Active Desktop:\\n    Name\\n---------\\nDesktop 1\\n\\n    All Desktops:\\n    Name\\n---------\\nDeskto"
+     },
+     {
+      "tool": "Type",
+      "args": {
+       "label": 1,
+       "text": "agent-test",
+       "press_enter": true
+      },
+      "result": "Typed agent-test at (973,102)."
+     },
+     {
+      "tool": "Snapshot",
+      "args": {},
+      "result": "[\"\\n    Cursor Position: (973, 102)\\nVisible Displays: 0:\\\\\\\\.\\\\DISPLAY1 (0,0,1280,800) primary\\n\\n    Active Desktop:\\n    Name\\n---------\\nDesktop 1\\n\\n    All Desktops:\\n    Name\\n---------\\nDeskto"
+     }
+    ],
+    "compactions": 0,
+    "pages_served": 0,
+    "seconds": 70.2
+   }
+  ]
+ }
+]

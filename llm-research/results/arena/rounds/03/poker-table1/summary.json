@@ -1,0 +1,78 @@
+{
+ "chips": {
+  "bob": 0,
+  "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#learn": 189,
+  "carl": 436,
+  "monte": 200,
+  "qwen2.5vl:32b#frozen": 236,
+  "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#frozen": 207,
+  "qwen2.5vl-tools:32b#toolkit": 162,
+  "sol": 236,
+  "qwen2.5vl:32b#learn": 134
+ },
+ "stats": {
+  "bob": {
+   "decisions": 19,
+   "invalid": 0,
+   "vpip_hands": 2,
+   "hands": 11,
+   "seconds": 0.0
+  },
+  "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#learn": {
+   "decisions": 24,
+   "invalid": 0,
+   "vpip_hands": 0,
+   "hands": 24,
+   "seconds": 11.300000000000004
+  },
+  "carl": {
+   "decisions": 82,
+   "invalid": 0,
+   "vpip_hands": 18,
+   "hands": 24,
+   "seconds": 0.0
+  },
+  "monte": {
+   "decisions": 38,
+   "invalid": 0,
+   "vpip_hands": 3,
+   "hands": 24,
+   "seconds": 0.26000000000000006
+  },
+  "qwen2.5vl:32b#frozen": {
+   "decisions": 78,
+   "invalid": 0,
+   "vpip_hands": 18,
+   "hands": 24,
+   "seconds": 32.4
+  },
+  "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#frozen": {
+   "decisions": 35,
+   "invalid": 0,
+   "vpip_hands": 3,
+   "hands": 24,
+   "seconds": 15.800000000000008
+  },
+  "qwen2.5vl-tools:32b#toolkit": {
+   "decisions": 32,
+   "invalid": 2,
+   "vpip_hands": 2,
+   "hands": 24,
+   "seconds": 77.34000000000002
+  },
+  "sol": {
+   "decisions": 53,
+   "invalid": 0,
+   "vpip_hands": 5,
+   "hands": 24,
+   "seconds": 58.38000000000002
+  },
+  "qwen2.5vl:32b#learn": {
+   "decisions": 42,
+   "invalid": 0,
+   "vpip_hands": 5,
+   "hands": 24,
+   "seconds": 16.20000000000001
+  }
+ }
+}

@@ -1,0 +1,9 @@
+- round 1, chess: This match was a reminder that I need to focus on the basics of chess and not get too caught up in trying to be too creative or risky. I won the match, but it could have been much easier if I had stuc
+- round 2, chess: I remember feeling confident in my moves but also nervous about making a mistake. I will focus on following my skill file more closely to reduce errors.
+- round 3, chess: I remember that this match against qwen2.5vl#frozen was particularly challenging because they played aggressively and quickly. I struggled to keep up with their attacks and develop my pieces efficient
+- round 5, poker: I remember bob, the winner of this match. He was a recreational player but he seemed to have a good understanding of the game. He made a few bold moves that paid off and he also seemed to be able to r
+- round 6, chess: I remember that in this match, I played a solid game but didn't take any risks. I felt like I played well, but I also felt like I could have played better. I will try to be more aggressive in my next 
+- round 7, chess: I remember that in this match, I struggled to find good moves and my opponent's pieces seemed to be better coordinated than mine. I also noticed that I made some mistakes in the endgame, which could h
+- round 7, poker: The maniac opponent raised and re-raised frequently, making it difficult for me to get a read on his hand strength. However, I should have been more selective in my starting hands and called less ofte
+- round 8, chess: I remember how I felt after winning the match against Tiger-Gemma-9B-v3#frozen. I was proud of myself for playing well and winning, but I also knew that I could have played better. I will work on foll
+- round 8, poker: The maniac opponent kept raising and re-raising, making it difficult to fold or call with marginal hands. I need to be more selective in my starting hands and adjust my strategy accordingly to avoid g
