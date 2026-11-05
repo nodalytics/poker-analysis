@@ -25,6 +25,8 @@ Studies:
 
 - [Play-money and practice poker platforms](docs/poker-play-money-platforms.md): candidates for testing agents
   outside our own tables, and which ones allow bots.
+- [Poker platforms with an API for agents](docs/poker-api-platforms.md): bot arenas and engines, and the
+  play-money-only and untrusted-input rules for connecting ours.
 
 Sources:
 
