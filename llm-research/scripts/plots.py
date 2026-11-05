@@ -267,7 +267,8 @@ def agent_suites(out):
         "shell (native tools)": ["dc_results_tools.json"],
         "browser": ["br_results.json"],
         "Windows GUI": ["gui_results.json"],
-        "Windows GUI + harness": ["gui_results_harness.json"], "Windows GUI + harness + skills": ["gui_results_skills.json"],
+        "Windows GUI + harness": ["gui_results_harness.json"],
+        "Windows GUI + harness + skills": ["gui_results_skills.json"],
     }
     table = {}
     for suite, names in suites.items():

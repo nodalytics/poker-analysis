@@ -292,6 +292,7 @@ def run_episode(outdir, ep, inst, h, bars15, start, entrants, ladder, log):
         f"{gate_rate:.0%}: "
         + ", ".join(f"{arena.cs.short(e)} {totals[e]:+.2f}R" for e in sorted(entrants, key=lambda e: -totals[e]))
     )
+    arena.review(outdir, "trading", old, ladder["trading"], log)
     for e in entrants:
         if not e.endswith("#learn"):
             continue
