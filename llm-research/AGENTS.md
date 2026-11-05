@@ -51,6 +51,12 @@ Ollama setup (install, serve, models, tool templates) is in `sandboxes/ollama/`.
 - Run long jobs detached (`setsid nohup ... &`) and write results to a file. Never `pkill -f` in the same SSH
   command that started the job: the pattern matches the command line itself and kills the session.
 - Analyse results on your own machine, not on the lab.
+- **Other people's jobs run there too** (`deriv_quotes.py`, `deriv_xproduct.py`, `poker_gui.py` were running on
+  2026-11-05). Leave every process you did not start alone.
+- Ollama there runs with `OLLAMA_CONTEXT_LENGTH=8192` and up to 6 models resident; without the context cap
+  Qwen2.5-VL took 55GB instead of 22GB.
+- In a remote command, `a && b && setsid nohup c &` backgrounds the whole chain and holds the SSH session
+  open; wrap the detached part in parentheses: `a && (setsid nohup c ... &)`.
 
 ## Sandboxes and grading
 
@@ -66,12 +72,41 @@ Ollama setup (install, serve, models, tool templates) is in `sandboxes/ollama/`.
 - `sandboxes/windows/run-win11.sh`: Windows 11 Enterprise Evaluation (free, 90 days), `dockurr/windows:6.06`,
   8 cores, 16GB (needs `RAM_CHECK=N`), 128GB. Web desktop `127.0.0.1:8006`, RDP `127.0.0.1:3389`.
 - Login: `~/windows11/credentials.env` on the lab. **Never commit it, print it or put it in a doc.**
-- `sandboxes/windows/oem/install.bat` runs once at the end of a fresh install. It installs hash-checked
-  Python 3.14.8 and Windows-MCP 0.8.8 and starts Windows-MCP at logon. Keep it CRLF.
-  To rerun it: stop the container, delete `~/windows11/storage/data.img`, start again (Windows re-downloads).
-- **Windows-MCP has no authentication.** It is published only on the lab's `127.0.0.1:8765`.
-- No activation tools or key generators. Use the evaluation, or a real licence.
+- **One command brings it up:** `sh sandboxes/windows/windows-up.sh [--reinstall]` from your machine copies the
+  files to the lab and runs `provision.sh`, which creates the login and the Windows-MCP key, stages `oem/`, starts
+  the VM, and only succeeds once an authenticated MCP handshake lists Windows-MCP's tools.
+- `oem/install.bat` runs once at the end of a fresh install: hash-checked Python 3.14.8, Windows-MCP 0.8.8, and a
+  logon task running `oem/start-mcp.bat`, which it also starts immediately. Keep both files CRLF.
+- **Windows-MCP requires a key** (it refuses a network bind without one). The key is `~/windows11/oem/mcp.key` on the
+  lab; send `Authorization: Bearer <key>`. Port: the lab's `127.0.0.1:8765` only. Never print or commit the key.
+- **The evaluation expires after 90 days, and it is rebuilt, not activated.** Cron on the lab runs
+  `rebuild-if-expiring.sh` daily; it reinstalls after 80 days. Anything driving the VM must `touch
+  ~/windows11/in-use` for the run and delete it after, so a rebuild never lands mid-test. Keep nothing in the VM
+  that is not reproducible from this repo.
+- No activation tools, KMS emulators (AutoKMS, KMSAuto) or key generators: piracy, and common malware carriers.
+  Use the evaluation rebuild, or a real licence applied with `slmgr /ipk` when there is one.
 - Not another service: leave another service out of the VM until asked.
+
+## Arena: chess and poker ladder (`scripts/arena.py`)
+
+- Every model enters twice: `#learn` reads and rewrites its own `notes/<model>/skill-<game>.md` and `memory.md`
+  after every match; `#frozen` never sees notes. **Learner minus frozen twin Elo is the measure of
+  self-improvement**; without the twin, a rising Elo could be luck. Twins share a poker table (same cards).
+- Poker tables also seat non-learning anchors (`poker_selfplay.PERSONAS`, capped at 2 a table: Bob always, one
+  rotating), Monte (eval7 Monte Carlo), Sol (TexasSolver heads-up on turn and river, Monte otherwise), and
+  `qwen2.5vl-tools:32b#toolkit`, which calls the poker-analysis toolkit as tools.
+- Chess ends only on automatic outcomes (fivefold repetition, not threefold); repeating moves are marked in the
+  move list. Claiming threefold automatically ended 11 of the first 12 games in knight shuffles.
+- An Ollama error mid-game is an invalid move, and a failed reflection keeps the old notes; never let one model's
+  context overflow stop the ladder. Wizard-Vicuna (2k context) gets notes trimmed to 500 characters.
+- Analysis: `scripts/plots.py` (charts into `media/plots/`) and `scripts/patterns.py` (behaviour and betting
+  patterns into `results/patterns/`), both from the arena directory.
+
+## Context harness (`scripts/harness.py`)
+
+Long tool output is paged through `more_output`, conversations are compacted by the model's own summary before
+they overflow, and learner memories are condensed instead of truncated. Agent harnesses take `--harness`; always
+keep a baseline run without it, so its effect is measured.
 
 ## GUI skills (`gui-skills/`)
 

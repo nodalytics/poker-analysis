@@ -1,9 +1,20 @@
 # Windows 11 shell — GUI skills
 
 - **Version tested:** Windows 11 Enterprise Evaluation in `win11-gui` (dockurr/windows 6.06)
-- **Last verified:** not yet; every entry below is **unverified** standard Windows 11 behaviour, to be
-  confirmed on the VM through Windows-MCP and marked as it is
-- **Control path:** Windows-MCP (UI Automation tree first, screenshots when the tree is empty)
+- **Last verified:** 2026-11-05 through the noVNC web viewer (Playwright on `127.0.0.1:8006`); entries marked
+  `unverified` are standard Windows 11 behaviour not yet tried on the VM
+- **Control path:** Windows-MCP (UI Automation tree first, screenshots when the tree is empty); noVNC as a fallback
+
+## Driving it through noVNC (fallback when Windows-MCP is down) — verified 2026-11-05
+
+- The canvas sits at y=130 in a 913px-wide page; the taskbar search box is at about (390, 684).
+- **Click the canvas once before typing**, or keystrokes go to the desktop (they selected the Recycle Bin).
+- **Shifted characters are dropped** by `keyboard.type`: `:` became `;`, `&` became `7`, capitals became lowercase,
+  `|` became `\`. Send them as `keyboard.down('Shift')`, `press('Semicolon' | 'Quote' | 'Digit7' | 'Backslash' |
+  'Period' | 'Comma' | 'Minus' | 'Digit5' | 'Key<X>')`, `up('Shift')`. Plain letters, digits, `\`, `/`, `-`, `.` are fine.
+- Open a command prompt: click the search box, type `cmd`, wait 2s, then click **Open** in the right pane at about
+  (657, 368). Pressing Enter too soon after typing does nothing. The prompt opens as Administrator.
+- Run several commands as separate lines rather than joining them with `&`.
 
 ## Launch and focus
 
@@ -54,4 +65,7 @@
 
 ## Pitfalls
 
-None recorded yet.
+- The `\\host.lan\Data` share (container path `/tmp/smb`) did not show files copied in while Windows was running;
+  Windows kept listing only `readme.txt`. Put files in `oem/` before an install instead. — verified 2026-11-05
+- First boot shows a Windows Security "Update virus protection" toast and the Start menu; neither blocks input.
+  — verified 2026-11-05

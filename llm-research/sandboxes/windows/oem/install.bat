@@ -1,9 +1,9 @@
 @echo off
 rem Runs once, at the end of the unattended Windows install (dockurr/windows copies /oem to C:\OEM).
-rem Installs Python 3.14.8 (hash-checked) and Windows-MCP 0.8.8, and starts Windows-MCP at every logon
-rem in the interactive desktop session, which UI Automation needs.
-rem Windows-MCP's HTTP transport has no authentication: the container forwards port 8000 only to the
-rem lab's 127.0.0.1:8765, so reach it through an SSH tunnel and never publish it wider.
+rem Installs Python 3.14.8 (hash-checked) and Windows-MCP 0.8.8, and starts Windows-MCP now and at every
+rem logon, in the interactive desktop session that UI Automation needs (via C:\OEM\start-mcp.bat).
+rem Windows-MCP refuses a network bind without a key, so provision.sh puts one in C:\OEM\mcp.key; clients send
+rem it as "Authorization: Bearer <key>". The port is still published only on the lab's 127.0.0.1:8765.
 set LOG=C:\OEM\install.log
 echo [%date% %time%] start >> %LOG%
 
@@ -23,8 +23,13 @@ if not exist C:\Python314\Scripts\windows-mcp.exe (echo [%date% %time%] windows-
 
 netsh advfirewall firewall add rule name="Windows-MCP 8000" dir=in action=allow protocol=TCP localport=8000 >> %LOG% 2>&1
 
+if not exist C:\OEM\mcp.key (echo [%date% %time%] C:\OEM\mcp.key missing >> %LOG% & exit /b 1)
+if not exist C:\OEM\start-mcp.bat (echo [%date% %time%] C:\OEM\start-mcp.bat missing >> %LOG% & exit /b 1)
+
 rem Logon task for whoever logs on interactively (the autologon user), so the server sees that desktop.
-schtasks /create /f /tn "Windows-MCP" /sc onlogon /rl highest /it /tr "C:\Python314\Scripts\windows-mcp.exe serve --transport streamable-http --host 0.0.0.0 --port 8000" >> %LOG% 2>&1
+rem This script itself runs during the first logon, so the task is also started now rather than at the next one.
+schtasks /create /f /tn "Windows-MCP" /sc onlogon /rl highest /it /tr C:\OEM\start-mcp.bat >> %LOG% 2>&1
+schtasks /run /tn "Windows-MCP" >> %LOG% 2>&1
 
 echo [%date% %time%] done >> %LOG%
 exit /b 0

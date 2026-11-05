@@ -1,12 +1,16 @@
-"""Render self-play hands from hands.jsonl as a small GIF (spectator view: every hand's cards are shown).
+"""Render self-play poker from hands.jsonl (spectator view: every hand's cards are shown).
 
-Usage: python3 render_selfplay_gif.py hands.jsonl OUT.gif [N_HANDS]
-Picks the N hands with the biggest pots (default 3). Keeps to the media limits in AGENTS.md:
-720px wide, 64 colours, about 1 frame per action; prints the final size.
+Usage: uv run python scripts/render_selfplay_gif.py hands.jsonl OUT.gif|OUT.mp4 [N_HANDS]
+N_HANDS: the N biggest pots (default 3), or 0 for every hand in order. Always ends on the final standings.
+A .gif keeps to the AGENTS.md limits (720px, 64 colours); a full session is too long for that, so write .mp4
+(H.264 through ffmpeg) for it. Prints the final size.
 """
 
 import json
+import os
+import subprocess
 import sys
+import tempfile
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -72,10 +76,29 @@ def frame(hand, seats, stacks, bets, holes, folded, board, pot, actor, caption):
     return im
 
 
+def standings(chips, start, title):
+    im = Image.new("RGB", (W, H), BG)
+    d = ImageDraw.Draw(im)
+    d.text((W / 2, 50), title, font=FC, fill=INK, anchor="mm")
+    for k, (name, c) in enumerate(sorted(chips.items(), key=lambda x: -x[1])):
+        y = 110 + k * 46
+        d.rounded_rectangle(
+            [140, y - 18, W - 140, y + 18], 8, fill=(18, 24, 32), outline=HI if k == 0 else (60, 70, 80)
+        )
+        d.text((160, y), f"{k + 1}. {name}", font=FB, fill=HI if k == 0 else INK, anchor="lm")
+        d.text((W - 160, y), f"{c} chips ({c - start:+})", font=FB, fill=INK, anchor="rm")
+    d.text((W / 2, H - 20), f"winner: {max(chips, key=chips.get)}", font=FB, fill=HI, anchor="mm")
+    return im
+
+
 def main(path, out, n):
     rows = [json.loads(line) for line in open(path)]
     ends = [r for r in rows if r.get("end")]
-    big = sorted(ends, key=lambda e: -sum(p for p in e["payoffs"] if p > 0))[:n]
+    chips = {}
+    for e in sorted(ends, key=lambda e: e["hand"]):
+        chips.update(dict(zip(e["seats"], e["stacks"])))
+    big = sorted(ends, key=lambda e: -sum(p for p in e["payoffs"] if p > 0))[:n] if n else ends
+    step, rest = (600, 1500) if not n else (1100, 2600)
     frames, durations = [], []
     for e in sorted(big, key=lambda e: e["hand"]):
         h, seats = e["hand"], e["seats"]
@@ -90,7 +113,7 @@ def main(path, out, n):
             frames.append(
                 frame(h, seats, r["stacks"], r["bets"], holes, list(folded), r["board"], r["pot"], r["seat"], cap)
             )
-            durations.append(1100)
+            durations.append(step)
         won = ", ".join(f"{s} {'+' if p > 0 else ''}{p}" for s, p in zip(seats, e["payoffs"]) if p)
         frames.append(
             frame(
@@ -106,12 +129,52 @@ def main(path, out, n):
                 f"Result: {won}",
             )
         )
-        durations.append(2600)
-    pal = [f.quantize(colors=64, method=Image.Quantize.MEDIANCUT) for f in frames]
-    pal[0].save(out, save_all=True, append_images=pal[1:], duration=durations, loop=0, optimize=True)
-    import os
+        durations.append(rest)
+    frames.append(standings(chips, 200, f"Final standings after {len(ends)} hands"))
+    durations.append(5000)
+    if out.endswith(".mp4"):
+        write_mp4(frames, durations, out)
+    else:
+        pal = [f.quantize(colors=64, method=Image.Quantize.MEDIANCUT) for f in frames]
+        pal[0].save(out, save_all=True, append_images=pal[1:], duration=durations, loop=0, optimize=True)
+    print(f"{out}: {len(frames)} frames, {os.path.getsize(out) / 1e6:.2f} MB, hands {len(big)}")
 
-    print(f"{out}: {len(frames)} frames, {os.path.getsize(out) / 1e6:.2f} MB, hands {[e['hand'] for e in big]}")
+
+def write_mp4(frames, durations, out):
+    with tempfile.TemporaryDirectory() as tmp:
+        lines = []
+        for k, (f, ms) in enumerate(zip(frames, durations)):
+            f.save(os.path.join(tmp, f"{k:05d}.png"))
+            lines += [f"file '{k:05d}.png'", f"duration {ms / 1000:.3f}"]
+        lines.append(f"file '{len(frames) - 1:05d}.png'")
+        with open(os.path.join(tmp, "list.txt"), "w") as fh:
+            fh.write("\n".join(lines) + "\n")
+        subprocess.run(
+            [
+                "ffmpeg",
+                "-loglevel",
+                "error",
+                "-y",
+                "-f",
+                "concat",
+                "-safe",
+                "0",
+                "-i",
+                os.path.join(tmp, "list.txt"),
+                "-vf",
+                "fps=10,pad=ceil(iw/2)*2:ceil(ih/2)*2,format=yuv420p",
+                "-c:v",
+                "libx264",
+                "-crf",
+                "30",
+                "-preset",
+                "slow",
+                "-movflags",
+                "+faststart",
+                out,
+            ],
+            check=True,
+        )
 
 
 if __name__ == "__main__":
