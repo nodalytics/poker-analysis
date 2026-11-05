@@ -1,0 +1,128 @@
+{
+ "qwen2.5vl:32b#plain": {
+  "tournaments": 10,
+  "mean_prize": 144.0,
+  "in_the_money": 0.3,
+  "mean_finish": 10.9,
+  "wins": 0
+ },
+ "qwen2.5vl:32b#advised": {
+  "tournaments": 10,
+  "mean_prize": 90.0,
+  "in_the_money": 0.2,
+  "mean_finish": 7.9,
+  "wins": 0
+ },
+ "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#plain": {
+  "tournaments": 10,
+  "mean_prize": 0.0,
+  "in_the_money": 0.0,
+  "mean_finish": 8.3,
+  "wins": 0
+ },
+ "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#advised": {
+  "tournaments": 10,
+  "mean_prize": 0.0,
+  "in_the_money": 0.0,
+  "mean_finish": 8.3,
+  "wins": 0
+ },
+ "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#plain": {
+  "tournaments": 10,
+  "mean_prize": 0.0,
+  "in_the_money": 0.0,
+  "mean_finish": 13.2,
+  "wins": 0
+ },
+ "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#advised": {
+  "tournaments": 10,
+  "mean_prize": 36.0,
+  "in_the_money": 0.1,
+  "mean_finish": 7.9,
+  "wins": 0
+ },
+ "bob#1": {
+  "tournaments": 10,
+  "mean_prize": 108.0,
+  "in_the_money": 0.2,
+  "mean_finish": 7.9,
+  "wins": 0
+ },
+ "bob#2": {
+  "tournaments": 10,
+  "mean_prize": 198.0,
+  "in_the_money": 0.3,
+  "mean_finish": 7.5,
+  "wins": 1
+ },
+ "tina#1": {
+  "tournaments": 10,
+  "mean_prize": 360.0,
+  "in_the_money": 0.6,
+  "mean_finish": 5.7,
+  "wins": 2
+ },
+ "tina#2": {
+  "tournaments": 10,
+  "mean_prize": 180.0,
+  "in_the_money": 0.2,
+  "mean_finish": 8.2,
+  "wins": 2
+ },
+ "max#1": {
+  "tournaments": 10,
+  "mean_prize": 180.0,
+  "in_the_money": 0.2,
+  "mean_finish": 13.3,
+  "wins": 2
+ },
+ "max#2": {
+  "tournaments": 10,
+  "mean_prize": 270.0,
+  "in_the_money": 0.3,
+  "mean_finish": 11.8,
+  "wins": 3
+ },
+ "carl#1": {
+  "tournaments": 10,
+  "mean_prize": 0.0,
+  "in_the_money": 0.0,
+  "mean_finish": 9.5,
+  "wins": 0
+ },
+ "carl#2": {
+  "tournaments": 10,
+  "mean_prize": 0.0,
+  "in_the_money": 0.0,
+  "mean_finish": 10.8,
+  "wins": 0
+ },
+ "nora#1": {
+  "tournaments": 10,
+  "mean_prize": 54.0,
+  "in_the_money": 0.1,
+  "mean_finish": 9.0,
+  "wins": 0
+ },
+ "nora#2": {
+  "tournaments": 10,
+  "mean_prize": 108.0,
+  "in_the_money": 0.3,
+  "mean_finish": 7.8,
+  "wins": 0
+ },
+ "monte#1": {
+  "tournaments": 10,
+  "mean_prize": 0.0,
+  "in_the_money": 0.0,
+  "mean_finish": 12.2,
+  "wins": 0
+ },
+ "monte#2": {
+  "tournaments": 10,
+  "mean_prize": 72.0,
+  "in_the_money": 0.2,
+  "mean_finish": 10.8,
+  "wins": 0
+ }
+}

@@ -58,6 +58,29 @@ e47fbd581637). No poker site is scraped.
 These are the human baselines for the pattern scanner, and per-decision rows (`*.decisions.jsonl.gz`) are training
 data for the learning layer next to the solver library.
 
+## Tournaments: ten is too few to rank anyone
+
+`scripts/tournament_env.py`, 10 multi-table tournaments, 18 entrants (each model plain and advised, two of each
+personality, two Monte), top 3 paid from a 1,800 pool. Raw output in `results/tournaments/`; bootstrap 95%
+intervals on mean prize in `results/tournaments/ci.json`.
+
+| Entrant | Mean prize | 95% interval | In the money |
+|---|---|---|---|
+| tina#1 | 360 | 162 to 576 | 6/10 |
+| max#2 | 270 | 0 to 540 | 3/10 |
+| bob#2 | 198 | 0 to 414 | 3/10 |
+| qwen2.5vl plain | 144 | 0 to 288 | 3/10 |
+| qwen2.5vl advised | 90 | 0 to 216 | 2/10 |
+| Tiger-9B advised | 36 | 0 to 108 | 1/10 |
+| Tiger-9B plain, Big-Tiger plain and advised | 0 | 0 to 0 | 0/10 |
+
+- Only tina#1's interval excludes zero, and tina#2 (the same bot) made 180 with an interval reaching 0: the spread
+  between two copies of one strategy is as wide as the spread between strategies. **Ten tournaments rank nothing.**
+- An earlier look at 6 of 10 said only advised LLM flows cashed. That did not hold: Qwen plain cashed 3 times to
+  advised's 2. Advice did not make a measurable difference here; the paired solver-first test is the evidence for it.
+- No LLM won a tournament. Big-Tiger never cashed in either flow.
+- For a ranking, use many more tournaments with bots only (Tina+ vs Tina used 60), and keep LLMs to paired tests.
+
 ## Next
 
 1. Retrain the flop network on the full library, wire it into the advice the LLM gets on the flop, and rerun the
