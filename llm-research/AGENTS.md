@@ -27,10 +27,18 @@ The poker MCP server lives at the repo root (`../mcp_server.py`, tests in `../te
 | `qwen2.5vl:32b` | **Vision** (screenshots), **best browser agent** | 3/4 browser tasks, the only form fill; 70 tok/s, 55GB loaded. No native tool calls |
 | `hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M` | Fast, weak | 183 tok/s; claimed a script's output without writing the script |
 | `wizard-vicuna-uncensored:13b` | Not for agent work | 2,048-token context overflows within a few steps; 0/4 shell, 0/4 browser |
+| `big-tiger-gemma-tools:27b`, `qwen2.5vl-tools:32b`, `tiger-gemma-tools:9b` | **Native tool calls** | Same weights, tool templates from `sandboxes/ollama/tool-models/`; 27B and Qwen 4/4 on shell tasks, 9B 2/4 |
 | ~~`mistral-large:123b`~~ | **Retired 2026-11-05, deleted** | 16.5 tok/s across all 3 GPUs, made up a price, Mistral Research Licence (no commercial use) |
 
 - Never trust a number a model recalls; give it a tool (the poker MCP server, a search tool, the bridge).
 - Before calling a model "better", run the same harness on it; scores are in `docs/`.
+
+## Python: uv
+
+This folder is a uv project (`pyproject.toml`, `uv.lock`). Use `uv run python scripts/<name>.py` and
+`uv run ruff check scripts` / `uv run ruff format scripts`; add dependencies with `uv add`, pinned. The agent
+harnesses are standard library only, so they also run with a bare `python3` on the lab.
+Ollama setup (install, serve, models, tool templates) is in `sandboxes/ollama/`.
 
 ## The lab (`labuser@LAB_HOST`)
 
@@ -98,4 +106,4 @@ even after deletion.
 - **No `Co-Authored-By` or other attribution trailers**, ever, even if a tool suggests one.
 - The repo ignores `*.log`; add result logs with `git add -f`.
 - Never commit credentials, `lab.pem`, `credentials.env` or API keys. Check `git diff --cached` before committing.
-- Lint before committing: `uvx ruff@0.14.0 check --isolated --line-length 120` and `format --check`.
+- Lint before committing: `uv run ruff check scripts` and `uv run ruff format --check scripts` (ruff 0.14.0, line length 120).

@@ -2,13 +2,15 @@
 
 Local LLM evaluations run on the lab, with the scripts, sandboxes and raw results needed to rerun them.
 
+Python is managed with uv: `uv sync`, then `uv run python scripts/<name>.py`.
+
 Agents: read [`AGENTS.md`](AGENTS.md) first (models, lab rules, sandboxes, media limits, git). `CLAUDE.md` imports it.
 
 | Path | Contents |
 |---|---|
 | `docs/` | Write-ups, one per study, dated |
 | `scripts/` | Test harnesses (`llm_test.py`, `dc_agent_test.py`, `browser_agent_test.py`) |
-| `sandboxes/` | Docker builds for the sealed test environments, and the Windows GUI VM script |
+| `sandboxes/` | Docker builds for the sealed test environments, the Windows GUI VM, and Ollama setup (`sandboxes/ollama/`) |
 | `results/raw/` | JSON output from each run, including every model answer and tool call |
 | `results/logs/` | Console logs from each run |
 | `gui-skills/` | Per-application GUI navigation notes, loaded before and updated after each run |

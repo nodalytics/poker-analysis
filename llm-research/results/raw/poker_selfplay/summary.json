@@ -1,0 +1,38 @@
+{
+ "chips": {
+  "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M": 171,
+  "wizard-vicuna-uncensored:13b": 171,
+  "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M": 48,
+  "qwen2.5vl:32b": 410
+ },
+ "stats": {
+  "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M": {
+   "decisions": 82,
+   "invalid": 0,
+   "vpip_hands": 19,
+   "hands": 40,
+   "seconds": 10.799999999999986
+  },
+  "wizard-vicuna-uncensored:13b": {
+   "decisions": 42,
+   "invalid": 0,
+   "vpip_hands": 3,
+   "hands": 40,
+   "seconds": 8.200000000000001
+  },
+  "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M": {
+   "decisions": 64,
+   "invalid": 0,
+   "vpip_hands": 9,
+   "hands": 40,
+   "seconds": 26.500000000000007
+  },
+  "qwen2.5vl:32b": {
+   "decisions": 81,
+   "invalid": 0,
+   "vpip_hands": 25,
+   "hands": 40,
+   "seconds": 24.1
+  }
+ }
+}

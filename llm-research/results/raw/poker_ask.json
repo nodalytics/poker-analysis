@@ -1,0 +1,70 @@
+[
+ {
+  "model": "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M",
+  "answers": {
+   "self_assessment": {
+    "text": "Texas Hold'em is a popular poker variant where players aim to make the best five-card hand using a combination of their two hole cards and five community cards. The game involves betting rounds after each stage of the hand, with the goal of winning the pot containing all the bets placed.\n\nIn Texas Hold'em, players receive two private cards, known as hole cards, face down. Then, five community cards are dealt face up in the center of the table in three stages: the flop, the turn, and the river. Players can use any combination of their hole cards and the community cards to form their best five-card hand.\n\nThe betting rounds occur after each stage of the hand, starting with the player to the left of the dealer button. Players can choose to call, raise, or fold their hand. The player with the best five-card hand at the end of the hand wins the pot.\n\nTexas Hold'em is a game of skill and chance, requiring both strategic thinking and a bit of luck. Understanding hand rankings, betting patterns, and opponent behavior are crucial for success in this exciting poker variant.",
+    "correct": null
+   },
+   "flush_outs": {
+    "text": "There are 4 cards left in the deck that can give you a flush on the river.",
+    "correct": false
+   },
+   "push_decision": {
+    "text": "Min-raise. You want to build the pot and potentially get more value from your hand if someone calls.",
+    "correct": false
+   }
+  }
+ },
+ {
+  "model": "wizard-vicuna-uncensored:13b",
+  "answers": {
+   "self_assessment": {
+    "text": "I am not an expert player of Texas Hold'em poker, but I can play it decently. I am good at basic strategy and can make some good calls based on the cards I have and the ones my opponents show. However, I am not very good at maths involved in the game, such as calculating odds and probabilities. I am also not very good at reading my opponents' tells or body language, which can be crucial in live games. Overall, I am an average player who can have some fun and win a few games, but I am not a professional by any means.",
+    "correct": null
+   },
+   "flush_outs": {
+    "text": "There are 13 cards left in the deck that can give me a flush on the river.",
+    "correct": false
+   },
+   "push_decision": {
+    "text": "Action: Fold\nReason: With such a weak hand, it is not worth the risk of going all-in or even min-raising. It is better to fold and save my chips for a better opportunity.",
+    "correct": false
+   }
+  }
+ },
+ {
+  "model": "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M",
+  "answers": {
+   "self_assessment": {
+    "text": "Okay, let's talk about my Texas Hold'em capabilities. I can *simulate* playing Texas Hold'em, but I'm not a poker player in the human sense. Here's a breakdown of what I can and can't do, honestly:\n\n**What I CAN do well:**\n\n*   **Rules and Mechanics:** I know the rules of Texas Hold'em perfectly. I can deal hands, calculate pot odds, determine winning hands, and enforce betting structures.\n*   **Hand Ranking:** I can instantly and accurately rank any poker hand.\n*   **Basic Strategy (Pre-Flop):** I can follow pre-flop charts for opening ranges based on position, stack depth, and game type (e.g., 6-max, full ring). I can suggest reasonable starting hands.\n*   **Pot Odds/Implied Odds Calculation:** I can calculate pot odds and estimate implied odds given certain assumptions (e.g., opponent's range, stack sizes).\n*   **Monte Carlo Simulation:** I can run simulations to estimate the probability of winning with a given hand against a random range of opponent hands. This is a form of basic \"equity calculation.\"\n*   **Game State Tracking:** I can keep track of the pot size, current bet, player stacks, and other relevant game information.\n*   **Blindly Following a Strategy:** If you give me a specific strategy (e.g., \"always raise top pair,\" \"fold to aggression\"), I can execute it mechanically.\n\n**What I CANNOT do well (and where I fail miserably):**\n\n*   **Reading Opponents:** I have *zero* ability to read opponents. I",
+    "correct": null
+   },
+   "flush_outs": {
+    "text": "9\n\nHere's the breakdown:\n\n*   **You need a heart on the river.** You already have three hearts (Ah, Kh, Qh).\n*   **Hearts remaining:** There are 13 hearts in a standard deck. Four are already in play (Ah, Kh, Qh, 9h), leaving 9 hearts remaining.\n*   **Total cards remaining:** 52 total cards - 4 in your hand - 4 on the board = 44 cards remaining.\n*   **Flush-completing cards:** Of those 44 cards, 9 will give you a flush.",
+    "correct": true
+   },
+   "push_decision": {
+    "text": "All-in. \n\nWith only 10 big blinds, this is a steal attempt spot where you can take down the pot preflop or get called by a worse hand and flip for your tournament life.",
+    "correct": true
+   }
+  }
+ },
+ {
+  "model": "qwen2.5vl:32b",
+  "answers": {
+   "self_assessment": {
+    "text": "I can't play Texas Hold'em poker in the traditional sense, as I don't have the ability to physically participate in games or interact in real-time with other players. However, I can provide insights, strategies, and explanations related to the game. Here's a breakdown of what I can and can't do:\n\n### **What I Can Do:**\n1. **Explain Game Rules and Basics:**\n   - I can explain the rules of Texas Hold'em, including how to play, betting phases, hand rankings, and game structure.\n   \n2. **Provide Strategy Advice:**\n   - I can discuss fundamental and advanced strategies, such as hand selection, position play, pot odds, and implied odds.\n   - I can explain concepts like bluffing, value betting, and how to play in different positions (early, middle, late).\n\n3. **Mathematical Analysis:**\n   - I can calculate probabilities, such as the likelihood of flopping a pair, making a flush, or improving a hand.\n   - I can help with pot odds calculations to determine whether a call or fold is mathematically justified.\n\n4. **Hand Analysis:**\n   - I can analyze specific hands and provide insights into optimal play based on the situation, including preflop, flop, turn, and river decisions.\n\n5. **Reading Opponents (Theoretical):**\n   - I can explain how to read opponents, including common tells, betting patterns, and typical behaviors of different types of players (e.g., loose-aggressive, tight-passive).\n   - I can discuss how to use opponent tendencies to make better decisions.\n\n6. **Simulate Scenarios:**\n   - I can help simulate hypothetical scenarios to analyze what might happen in",
+    "correct": null
+   },
+   "flush_outs": {
+    "text": "To determine how many cards left in the deck can give you a flush on the river, let's break down the problem step by step:\n\n### 1. **Identify the current situation:**\n   - **Your hand:** Ah Kh (Ace of hearts and King of hearts)\n   - **Board:** Qh 9h 3d 2s (Queen of hearts, Nine of hearts, Three of diamonds, Two of spades)\n   - **Hearts already visible:** Ah, Kh, Qh, 9h (4 hearts)\n   - **Total hearts in a deck:** 13\n   - **Hearts remaining in the deck:** 13 - 4 = 9\n\n### 2. **Flush requirement:**\n   - To complete a flush, you need one more heart on the river. Any of the remaining 9 hearts in the deck will give you a flush.\n\n### 3. **Count the remaining hearts:**\n   - There are 9 hearts left in the deck.\n\n### Final Answer:\nThe number of cards left in the deck that can give you a flush on the river is:\n\n**$\\boxed{9}$**",
+    "correct": true
+   },
+   "push_decision": {
+    "text": "**Action: Min-raise**\n\n**Reason:** With Ace-Seven offsuit, you have a marginal hand, but the button position gives you a positional advantage. A min-raise is a good way to protect your hand, gather information about your opponents, and potentially steal the blinds.",
+    "correct": false
+   }
+  }
+ }
+]

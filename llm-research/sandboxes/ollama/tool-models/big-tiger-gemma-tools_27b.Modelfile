@@ -1,0 +1,47 @@
+FROM hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M
+TEMPLATE """{{- $first := true }}
+{{- range $i, $_ := .Messages }}
+{{- $last := eq (len (slice $.Messages $i)) 1 }}
+{{- if or (eq .Role "user") (eq .Role "system") }}<start_of_turn>user
+{{- if $first }}{{ $first = false }}
+{{- if $.System }}
+{{ $.System }}
+{{- end }}
+{{- if $.Tools }}
+
+# Tools
+
+You can call functions. Their signatures are inside <tools></tools>:
+<tools>
+{{- range $.Tools }}
+{"type": "function", "function": {{ .Function }}}
+{{- end }}
+</tools>
+
+To call a function, reply with ONLY this, and nothing before or after it:
+<tool_call>
+{"name": <function-name>, "arguments": <args-json-object>}
+</tool_call>
+Each result comes back inside <tool_response></tool_response>. When the task is done, answer in plain text.
+{{- end }}
+{{ end }}
+{{ .Content }}<end_of_turn>
+{{ if $last }}<start_of_turn>model
+{{ end }}
+{{- else if eq .Role "assistant" }}<start_of_turn>model
+{{ if .Content }}{{ .Content }}
+{{- else if .ToolCalls }}<tool_call>
+{{ range .ToolCalls }}{"name": "{{ .Function.Name }}", "arguments": {{ .Function.Arguments }}}
+{{ end }}</tool_call>
+{{- end }}{{ if not $last }}<end_of_turn>
+{{ end }}
+{{- else if eq .Role "tool" }}<start_of_turn>user
+<tool_response>
+{{ .Content }}
+</tool_response><end_of_turn>
+{{ if $last }}<start_of_turn>model
+{{ end }}
+{{- end }}
+{{- end }}
+"""
+PARAMETER stop "<end_of_turn>"
