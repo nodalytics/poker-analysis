@@ -23,6 +23,9 @@ Studies:
 - [2026-11-05 — Ladders, trading and Windows GUI control](docs/2026-11-05-arena-trading-gui.md): learners vs
   frozen twins at chess and poker, simulated and algorithmic players, the paper's trading method after costs,
   and Windows-MCP results.
+- [2026-11-05 — The solver stack under the LLM](docs/2026-11-05-solver-stack.md): solver advice makes every model
+  play better (p 0.003-0.021); preflop charts heads-up and multi-way, multi-way Monte Carlo, the solver library and
+  flop network, and human baselines from published hand histories.
 - [2026-11-05 — MCP servers for another service](docs/2026-11-05-mcp-for-another service.md):
   options for autonomous another service control by models through MCP (API and GUI), the tools, modes and risk limits.
 
@@ -35,9 +38,6 @@ To do:
 
 - **Post-session hand review:** load your own saved hand histories after play ends and have TexasSolver mark the
   mistakes, as a study tool. Offline only: no live client is read while a hand is being played.
-- **Post-flop solver library (layer 3):** batch TexasSolver solves over a representative set of flops, stack
-  depths and range pairs, stored in a database and served to the LLM as the nearest solved spot. Start with
-  about 100 flops × 2 depths × 2 range pairs (~400 solves, a few days on the lab), then grow it.
 
 Sources:
 

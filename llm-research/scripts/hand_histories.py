@@ -1,6 +1,7 @@
 """Read published hand histories (PHH format) into player statistics and per-decision training rows.
 
-Usage: uv run python scripts/hand_histories.py PHH_DIR OUT_PREFIX [MAX_HANDS]
+Usage: uv run python scripts/hand_histories.py PHH_DIR OUT_PREFIX [MAX_HANDS] [--population]
+(--population pools anonymised players per stake, e.g. HandHQ, into one row per stake)
 Writes OUT_PREFIX.stats.json (per player: hands, VPIP, PFR, aggression, fold to a bet, 3-bet) and
 OUT_PREFIX.decisions.jsonl.gz (one row per decision: player, street, seat, hole cards when known, board, pot,
 amount to call, action, size as a fraction of the pot).
@@ -34,11 +35,19 @@ def parse_phh(text):
 
 
 def hands(phh_dir, limit=None):
-    files = sorted(glob.glob(os.path.join(phh_dir, "**", "*.phh"), recursive=True))
-    for k, f in enumerate(files):
-        if limit and k >= limit:
-            break
-        yield f, parse_phh(open(f, errors="replace").read())
+    """Every hand under phh_dir: .phh files hold one, .phhs files many ([1], [2], ... sections)."""
+    files = sorted(glob.glob(os.path.join(phh_dir, "**", "*.phh*"), recursive=True))
+    n = 0
+    for f in files:
+        text = open(f, errors="replace").read()
+        parts = re.split(r"(?m)^\[\d+\]\s*$", text) if f.endswith(".phhs") else [text]
+        for part in parts:
+            if not part.strip():
+                continue
+            if limit and n >= limit:
+                return
+            n += 1
+            yield f, parse_phh(part)
 
 
 def replay(h):
@@ -89,17 +98,25 @@ def replay(h):
         yield row
 
 
-def main(phh_dir, prefix, limit=None):
+def stake_of(path):
+    m = re.search(r"_(\d+)NLH", path)
+    return f"{m.group(1)}NL" if m else "unknown"
+
+
+def main(phh_dir, prefix, limit=None, population=False):
     os.makedirs(os.path.dirname(prefix) or ".", exist_ok=True)
     st = collections.defaultdict(collections.Counter)
     n_hands = 0
     with gzip.open(prefix + ".decisions.jsonl.gz", "wt") as out:
-        for _f, h in hands(phh_dir, limit):
+        for f, h in hands(phh_dir, limit):
             if "actions" not in h or "starting_stacks" not in h:
                 continue
             n_hands += 1
             vp, pr, three = set(), set(), set()
             names = h.get("players") or [f"p{i + 1}" for i in range(len(h["starting_stacks"]))]
+            if population:  # anonymised players: keep them apart while reading, sum them per stake at the end
+                names = [f"{stake_of(f)}|{x}" for x in names]
+                h = dict(h, players=names)
             for r in replay(h):
                 out.write(json.dumps(r) + "\n")
                 c, who = st[r["player"]], r["player"]
@@ -124,6 +141,11 @@ def main(phh_dir, prefix, limit=None):
                 st[who]["vpip"] += who in vp
                 st[who]["pfr"] += who in pr
                 st[who]["three_bets"] += who in three
+    if population:
+        pooled = collections.defaultdict(collections.Counter)
+        for who, c in st.items():
+            pooled[who.split("|")[0]].update(c)
+        st = pooled
     rate = lambda a, b: round(a / b, 3) if b else None  # noqa: E731
     stats = {
         who: {
@@ -147,4 +169,5 @@ def main(phh_dir, prefix, limit=None):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], int(sys.argv[3]) if len(sys.argv) > 3 else None)
+    args = [a for a in sys.argv[1:] if a != "--population"]
+    main(args[0], args[1], int(args[2]) if len(args) > 2 else None, population="--population" in sys.argv)
