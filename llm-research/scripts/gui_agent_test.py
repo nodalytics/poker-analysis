@@ -100,7 +100,7 @@ def reset(w):
         "(New-Object -ComObject Shell.Application).Windows() | ForEach-Object { $_.Quit() }; "
         "Get-Process notepad, CalculatorApp -ErrorAction SilentlyContinue | Stop-Process -Force "
         "-ErrorAction SilentlyContinue; "
-        f"Remove-Item -Recurse -Force '{DESK}\\gui_test.txt', '{DESK}\\agent-test' -ErrorAction SilentlyContinue"
+        f"Remove-Item -Recurse -Force '{DESK}\\gui_test.txt', '{DESK}\\agent-test', '{DESK}\\New folder' -ErrorAction SilentlyContinue"
     )
     time.sleep(2)
     snap = w.call("Snapshot", {})

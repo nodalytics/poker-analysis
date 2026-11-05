@@ -1,0 +1,5 @@
+- round 1, chess: Tiger-Gemma-9B-v3#frozen prefers to control the center of the board with its pawns.
+- round 2, poker: Tiger-Gemma-9B-v3#frozen is a strong player, so be cautious when facing them.
+- round 3, poker: Bob won with a large stack, suggesting he may have a strong hand or be aggressive.
+- round 4, poker: sol played aggressively and won the most chips, so I should be cautious when facing them.
+- round 5, poker: Bob played aggressively and won with strong hands, indicating he might be a skilled player.

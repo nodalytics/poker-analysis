@@ -1,0 +1,78 @@
+{
+ "chips": {
+  "bob": 814,
+  "wizard-vicuna-uncensored:13b#frozen": 139,
+  "wizard-vicuna-uncensored:13b#learn": 168,
+  "sol": 245,
+  "qwen2.5vl-tools:32b#toolkit": 179,
+  "qwen2.5vl:32b#frozen": 57,
+  "max": 0,
+  "monte": 198,
+  "qwen2.5vl:32b#learn": 0
+ },
+ "stats": {
+  "bob": {
+   "decisions": 49,
+   "invalid": 0,
+   "vpip_hands": 8,
+   "hands": 24,
+   "seconds": 0.0
+  },
+  "wizard-vicuna-uncensored:13b#frozen": {
+   "decisions": 29,
+   "invalid": 0,
+   "vpip_hands": 4,
+   "hands": 24,
+   "seconds": 7.9
+  },
+  "wizard-vicuna-uncensored:13b#learn": {
+   "decisions": 30,
+   "invalid": 0,
+   "vpip_hands": 6,
+   "hands": 24,
+   "seconds": 10.8
+  },
+  "sol": {
+   "decisions": 40,
+   "invalid": 0,
+   "vpip_hands": 5,
+   "hands": 24,
+   "seconds": 48.77000000000001
+  },
+  "qwen2.5vl-tools:32b#toolkit": {
+   "decisions": 31,
+   "invalid": 6,
+   "vpip_hands": 3,
+   "hands": 24,
+   "seconds": 58.790000000000006
+  },
+  "qwen2.5vl:32b#frozen": {
+   "decisions": 62,
+   "invalid": 0,
+   "vpip_hands": 13,
+   "hands": 24,
+   "seconds": 23.40000000000001
+  },
+  "max": {
+   "decisions": 54,
+   "invalid": 0,
+   "vpip_hands": 14,
+   "hands": 18,
+   "seconds": 0.0
+  },
+  "monte": {
+   "decisions": 43,
+   "invalid": 0,
+   "vpip_hands": 4,
+   "hands": 24,
+   "seconds": 0.2900000000000001
+  },
+  "qwen2.5vl:32b#learn": {
+   "decisions": 54,
+   "invalid": 0,
+   "vpip_hands": 11,
+   "hands": 23,
+   "seconds": 18.300000000000008
+  }
+ }
+}

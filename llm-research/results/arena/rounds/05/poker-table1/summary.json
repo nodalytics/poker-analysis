@@ -1,0 +1,78 @@
+{
+ "chips": {
+  "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#learn": 324,
+  "qwen2.5vl-tools:32b#toolkit": 143,
+  "tina": 0,
+  "sol": 0,
+  "bob": 593,
+  "monte": 200,
+  "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#frozen": 0,
+  "qwen2.5vl:32b#learn": 383,
+  "qwen2.5vl:32b#frozen": 157
+ },
+ "stats": {
+  "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#learn": {
+   "decisions": 38,
+   "invalid": 0,
+   "vpip_hands": 6,
+   "hands": 24,
+   "seconds": 5.799999999999996
+  },
+  "qwen2.5vl-tools:32b#toolkit": {
+   "decisions": 41,
+   "invalid": 2,
+   "vpip_hands": 6,
+   "hands": 24,
+   "seconds": 93.41000000000001
+  },
+  "tina": {
+   "decisions": 35,
+   "invalid": 0,
+   "vpip_hands": 2,
+   "hands": 13,
+   "seconds": 0.0
+  },
+  "sol": {
+   "decisions": 26,
+   "invalid": 0,
+   "vpip_hands": 1,
+   "hands": 16,
+   "seconds": 23.7
+  },
+  "bob": {
+   "decisions": 50,
+   "invalid": 0,
+   "vpip_hands": 6,
+   "hands": 24,
+   "seconds": 0.0
+  },
+  "monte": {
+   "decisions": 27,
+   "invalid": 0,
+   "vpip_hands": 1,
+   "hands": 24,
+   "seconds": 0.20000000000000004
+  },
+  "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#frozen": {
+   "decisions": 10,
+   "invalid": 0,
+   "vpip_hands": 2,
+   "hands": 3,
+   "seconds": 2.1999999999999997
+  },
+  "qwen2.5vl:32b#learn": {
+   "decisions": 40,
+   "invalid": 0,
+   "vpip_hands": 6,
+   "hands": 24,
+   "seconds": 12.90000000000001
+  },
+  "qwen2.5vl:32b#frozen": {
+   "decisions": 57,
+   "invalid": 0,
+   "vpip_hands": 14,
+   "hands": 24,
+   "seconds": 22.100000000000016
+  }
+ }
+}

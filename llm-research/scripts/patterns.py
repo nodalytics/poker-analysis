@@ -196,11 +196,11 @@ def scan_poker(arena):
         recent_loss = collections.defaultdict(int)  # hands left in a "just lost big" window
         for h in sorted(hands):
             acts, end = hands[h], ends.get(h)
-            seats = acts[0]["seats"] if acts else []
+            seats = [short(x) for x in acts[0]["seats"]] if acts else []
             vp, pr = set(), set()
             street_now, pf_raiser, checked, opened = None, None, set(), False
             for r in acts:
-                e, a = r["model"], r["action"]
+                e, a = short(r["model"]), r["action"]  # action rows carry full names, end rows short ones
                 kind = a.split()[0]
                 pre = r["street"] == "preflop"
                 if r["street"] != street_now:
@@ -250,7 +250,7 @@ def scan_poker(arena):
                 tilt[e][window + "_vpip"] += int(e in vp)
                 recent_loss[e] = max(0, recent_loss[e] - 1)
             if end:
-                for e, p in zip(end["seats"], end["payoffs"]):
+                for e, p in zip((short(x) for x in end["seats"]), end["payoffs"]):
                     if p <= -50:
                         recent_loss[e] = 3
     players = []
@@ -285,11 +285,11 @@ def scan_poker(arena):
             continue
 
         def dist(q):
-            return (
-                (p["vpip"] - q["vpip"]) ** 2
-                + (p["pfr"] - q["pfr"]) ** 2
-                + 0.1 * ((p["aggression"] or 0) - (q["aggression"] or 0)) ** 2
-            )
+            # aggression (raises per call) runs 0-8; scale it to the share range and skip it when missing
+            d = (p["vpip"] - q["vpip"]) ** 2 + (p["pfr"] - q["pfr"]) ** 2
+            if p["aggression"] is not None and q["aggression"] is not None:
+                d += ((min(p["aggression"], 8) - min(q["aggression"], 8)) / 8) ** 2
+            return d
 
         best = min(refs.values(), key=dist)
         p["plays_most_like"] = f"{best['entrant']} ({ps.PERSONAS[best['entrant']]['kind']})"

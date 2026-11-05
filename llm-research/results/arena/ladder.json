@@ -1,0 +1,281 @@
+{
+ "round": 8,
+ "history": [
+  {
+   "round": 1,
+   "chess": {
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#learn": 988.0,
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#frozen": 1012.0,
+    "wizard-vicuna-uncensored:13b#learn": 1012.0,
+    "wizard-vicuna-uncensored:13b#frozen": 988.0,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#learn": 1000.0,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#frozen": 1000.0,
+    "qwen2.5vl:32b#learn": 988.0,
+    "qwen2.5vl:32b#frozen": 1012.0
+   },
+   "poker": {
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#learn": 988.0,
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#frozen": 1005.1428571428571,
+    "wizard-vicuna-uncensored:13b#learn": 998.2857142857143,
+    "wizard-vicuna-uncensored:13b#frozen": 1001.7142857142857,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#learn": 1000.0,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#frozen": 991.0,
+    "qwen2.5vl:32b#learn": 1006.0,
+    "qwen2.5vl:32b#frozen": 1003.0,
+    "bob": 994.8571428571429,
+    "tina": 1012.0,
+    "max": 1000.0,
+    "carl": 1000.0,
+    "nora": 1000.0,
+    "monte": 991.4285714285714,
+    "sol": 1008.5714285714286,
+    "qwen2.5vl-tools:32b#toolkit": 994.0
+   }
+  },
+  {
+   "round": 2,
+   "chess": {
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#learn": 988.4143005863771,
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#frozen": 1000.0,
+    "wizard-vicuna-uncensored:13b#learn": 1024.0,
+    "wizard-vicuna-uncensored:13b#frozen": 976.0,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#learn": 1000.4143005863771,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#frozen": 999.5856994136229,
+    "qwen2.5vl:32b#learn": 1000.0,
+    "qwen2.5vl:32b#frozen": 1011.5856994136229
+   },
+   "poker": {
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#learn": 979.7983903499393,
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#frozen": 1016.8363975875316,
+    "wizard-vicuna-uncensored:13b#learn": 998.3430583569833,
+    "wizard-vicuna-uncensored:13b#frozen": 998.6384417765673,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#learn": 1001.6107028480277,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#frozen": 989.5372213051521,
+    "qwen2.5vl:32b#learn": 995.2576948441254,
+    "qwen2.5vl:32b#frozen": 996.8742129722759,
+    "bob": 1000.099339164119,
+    "tina": 1012.0,
+    "max": 991.3249885623135,
+    "carl": 1000.0,
+    "nora": 1000.0,
+    "monte": 1000.2346018519512,
+    "sol": 999.5583583309657,
+    "qwen2.5vl-tools:32b#toolkit": 997.2238103531852
+   }
+  },
+  {
+   "round": 3,
+   "chess": {
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#learn": 975.9857082163928,
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#frozen": 988.0143094285307,
+    "wizard-vicuna-uncensored:13b#learn": 1011.5714076300158,
+    "wizard-vicuna-uncensored:13b#frozen": 988.4285923699842,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#learn": 1012.3999911578463,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#frozen": 987.6000088421537,
+    "qwen2.5vl:32b#learn": 1011.9856905714693,
+    "qwen2.5vl:32b#frozen": 1024.0142917836072
+   },
+   "poker": {
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#learn": 971.991034204361,
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#frozen": 1007.5694769745526,
+    "wizard-vicuna-uncensored:13b#learn": 1003.5192908863,
+    "wizard-vicuna-uncensored:13b#frozen": 1000.3744516179341,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#learn": 998.4635061825094,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#frozen": 992.8590392032337,
+    "qwen2.5vl:32b#learn": 986.3573189070789,
+    "qwen2.5vl:32b#frozen": 1004.4110334595473,
+    "bob": 1012.0634387469253,
+    "tina": 1012.0,
+    "max": 991.3249885623135,
+    "carl": 998.2537322471126,
+    "nora": 1000.0,
+    "monte": 991.6219375106602,
+    "sol": 1008.1152252302114,
+    "qwen2.5vl-tools:32b#toolkit": 991.2470482798058
+   }
+  },
+  {
+   "round": 4,
+   "chess": {
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#learn": 964.3867025928505,
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#frozen": 1000.0286182476283,
+    "wizard-vicuna-uncensored:13b#learn": 999.5857164491133,
+    "wizard-vicuna-uncensored:13b#frozen": 976.4142835508867,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#learn": 1024.800985534304,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#frozen": 999.199014465696,
+    "qwen2.5vl:32b#learn": 1023.9713817523717,
+    "qwen2.5vl:32b#frozen": 1011.6132974071495
+   },
+   "poker": {
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#learn": 971.3556695879995,
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#frozen": 998.676523141582,
+    "wizard-vicuna-uncensored:13b#learn": 1008.5002572223925,
+    "wizard-vicuna-uncensored:13b#frozen": 1008.9079727233651,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#learn": 1001.4590346285979,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#frozen": 990.0721991103318,
+    "qwen2.5vl:32b#learn": 980.8228059967003,
+    "qwen2.5vl:32b#frozen": 992.1756138881639,
+    "bob": 1002.9934629041389,
+    "tina": 1012.0,
+    "max": 991.3249885623135,
+    "carl": 998.2537322471126,
+    "nora": 991.4054272862802,
+    "monte": 993.6433468280329,
+    "sol": 1019.7721954771536,
+    "qwen2.5vl-tools:32b#toolkit": 1000.5227891435692
+   }
+  },
+  {
+   "round": 5,
+   "chess": {
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#learn": 952.801954653666,
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#frozen": 988.4285906744026,
+    "wizard-vicuna-uncensored:13b#learn": 987.5723602412919,
+    "wizard-vicuna-uncensored:13b#frozen": 987.9990314900712,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#learn": 1036.7723320892396,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#frozen": 1011.2123706735174,
+    "qwen2.5vl:32b#learn": 1012.000035197436,
+    "qwen2.5vl:32b#frozen": 1023.2133249803752
+   },
+   "poker": {
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#learn": 978.3443272921659,
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#frozen": 989.6070744237278,
+    "wizard-vicuna-uncensored:13b#learn": 1003.2062686316307,
+    "wizard-vicuna-uncensored:13b#frozen": 1010.4550464738358,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#learn": 999.8713547280181,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#frozen": 999.2190625761936,
+    "qwen2.5vl:32b#learn": 990.4455273877592,
+    "qwen2.5vl:32b#frozen": 992.35834803126,
+    "bob": 1015.0595449837423,
+    "tina": 999.7108549479827,
+    "max": 991.3249885623135,
+    "carl": 998.2537322471126,
+    "nora": 991.4054272862802,
+    "monte": 999.2209641342474,
+    "sol": 1010.6053724183621,
+    "qwen2.5vl-tools:32b#toolkit": 997.3817213444812
+   }
+  },
+  {
+   "round": 6,
+   "chess": {
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#learn": 953.9988886346763,
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#frozen": 1000.4137542333463,
+    "wizard-vicuna-uncensored:13b#learn": 986.3754262602816,
+    "wizard-vicuna-uncensored:13b#frozen": 976.0138679311275,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#learn": 1024.3042581799482,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#frozen": 999.2395755957752,
+    "qwen2.5vl:32b#learn": 1023.9728302751781,
+    "qwen2.5vl:32b#frozen": 1035.6813988896665
+   },
+   "poker": {
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#learn": 984.2578035180273,
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#frozen": 984.7914532841729,
+    "wizard-vicuna-uncensored:13b#learn": 1003.1251422522027,
+    "wizard-vicuna-uncensored:13b#frozen": 1007.0925230542922,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#learn": 998.0796083330351,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#frozen": 1000.8816093925359,
+    "qwen2.5vl:32b#learn": 984.8597928438232,
+    "qwen2.5vl:32b#frozen": 998.6983932925986,
+    "bob": 1022.9551312026796,
+    "tina": 999.7108549479827,
+    "max": 979.5845117988973,
+    "carl": 998.2537322471126,
+    "nora": 991.4054272862802,
+    "monte": 1011.169150251706,
+    "sol": 1001.5334213377164,
+    "qwen2.5vl-tools:32b#toolkit": 1000.5267661776247
+   }
+  },
+  {
+   "round": 7,
+   "chess": {
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#learn": 954.7582430788362,
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#frozen": 989.2262110519027,
+    "wizard-vicuna-uncensored:13b#learn": 986.8195353095726,
+    "wizard-vicuna-uncensored:13b#frozen": 975.2545134869675,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#learn": 1012.6970703043852,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#frozen": 998.7954665464842,
+    "qwen2.5vl:32b#learn": 1035.1603734566215,
+    "qwen2.5vl:32b#frozen": 1047.2885867652294
+   },
+   "poker": {
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#learn": 987.812455306443,
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#frozen": 991.3254287952121,
+    "wizard-vicuna-uncensored:13b#learn": 998.0714286164458,
+    "wizard-vicuna-uncensored:13b#frozen": 1012.1680008159932,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#learn": 1000.0820574376602,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#frozen": 999.3449724117036,
+    "qwen2.5vl:32b#learn": 982.3911203534665,
+    "qwen2.5vl:32b#frozen": 992.6929464526338,
+    "bob": 1034.2625153199767,
+    "tina": 999.7108549479827,
+    "max": 979.5845117988973,
+    "carl": 986.5350288997149,
+    "nora": 991.4054272862802,
+    "monte": 1019.5123852320575,
+    "sol": 993.1139293377286,
+    "qwen2.5vl-tools:32b#toolkit": 989.9503647012451
+   }
+  },
+  {
+   "round": 8,
+   "chess": {
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#learn": 943.4653390970049,
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#frozen": 977.1430887460624,
+    "wizard-vicuna-uncensored:13b#learn": 998.902657615413,
+    "wizard-vicuna-uncensored:13b#frozen": 986.5474174687989,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#learn": 1012.2171819877635,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#frozen": 999.2753548631059,
+    "qwen2.5vl:32b#learn": 1023.5790970387653,
+    "qwen2.5vl:32b#frozen": 1058.8698631830857
+   },
+   "poker": {
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#learn": 980.7087508492618,
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#frozen": 984.0855957829194,
+    "wizard-vicuna-uncensored:13b#learn": 991.5262457782362,
+    "wizard-vicuna-uncensored:13b#frozen": 1023.9244928818727,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#learn": 1003.7433810792851,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#frozen": 1003.0353352557677,
+    "qwen2.5vl:32b#learn": 975.4973269846624,
+    "qwen2.5vl:32b#frozen": 992.9001060986894,
+    "bob": 1041.7221102278263,
+    "tina": 999.7108549479827,
+    "max": 979.5845117988973,
+    "carl": 986.5350288997149,
+    "nora": 985.1226711440622,
+    "monte": 1012.1225347437255,
+    "sol": 986.7639453470699,
+    "qwen2.5vl-tools:32b#toolkit": 996.2638235236413
+   }
+  }
+ ],
+ "chess": {
+  "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#learn": 943.4653390970049,
+  "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#frozen": 977.1430887460624,
+  "wizard-vicuna-uncensored:13b#learn": 998.902657615413,
+  "wizard-vicuna-uncensored:13b#frozen": 986.5474174687989,
+  "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#learn": 1012.2171819877635,
+  "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#frozen": 999.2753548631059,
+  "qwen2.5vl:32b#learn": 1023.5790970387653,
+  "qwen2.5vl:32b#frozen": 1058.8698631830857
+ },
+ "poker": {
+  "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#learn": 980.7087508492618,
+  "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#frozen": 984.0855957829194,
+  "wizard-vicuna-uncensored:13b#learn": 991.5262457782362,
+  "wizard-vicuna-uncensored:13b#frozen": 1023.9244928818727,
+  "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#learn": 1003.7433810792851,
+  "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#frozen": 1003.0353352557677,
+  "qwen2.5vl:32b#learn": 975.4973269846624,
+  "qwen2.5vl:32b#frozen": 992.9001060986894,
+  "bob": 1041.7221102278263,
+  "tina": 999.7108549479827,
+  "max": 979.5845117988973,
+  "carl": 986.5350288997149,
+  "nora": 985.1226711440622,
+  "monte": 1012.1225347437255,
+  "sol": 986.7639453470699,
+  "qwen2.5vl-tools:32b#toolkit": 996.2638235236413
+ }
+}
