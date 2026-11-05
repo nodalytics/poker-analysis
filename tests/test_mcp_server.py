@@ -110,11 +110,35 @@ def test_bad_input_is_an_error_not_a_guess():
 
 
 def test_multiway_equity_and_nash_charts():
-    _, res = call_all([
-        ("equity_multiway", {"hand": "AhAd", "villain_ranges": ["KhKd"], "simulations": 40000}),
-        ("equity_multiway", {"hand": "AhKh", "villain_ranges": ["random", "random", "random"], "board": "Qh9h3d",
-                             "simulations": 20000}),
-    ])
+    _, res = call_all(
+        [
+            ("equity_multiway", {"hand": "AhAd", "villain_ranges": ["KhKd"], "simulations": 40000}),
+            (
+                "equity_multiway",
+                {
+                    "hand": "AhKh",
+                    "villain_ranges": ["random", "random", "random"],
+                    "board": "Qh9h3d",
+                    "simulations": 20000,
+                },
+            ),
+        ]
+    )
     assert not any(err for err, _ in res), res
     assert 0.81 <= res[0][1]["equity"] <= 0.835
     assert res[1][1]["opponents"] == 3 and res[1][1]["ci95"][0] < res[1][1]["equity"] < res[1][1]["ci95"][1]
+
+
+def test_push_fold_charts_heads_up_and_multiway():
+    _, res = call_all(
+        [
+            ("push_fold_nash", {"big_blinds": 10, "hand": "Kh5d"}),
+            ("push_fold_nash", {"big_blinds": 10, "players": 6}),
+            ("push_fold_nash", {"big_blinds": 10, "players": 3}),
+        ]
+    )
+    assert not any(err for err, _ in res), res
+    hu, six, three = res[0][1], res[1][1], res[2][1]
+    assert 0.55 <= hu["shove_share"] <= 0.62 and hu["shove"] is True  # published heads-up 10bb: ~58-60% shoves
+    # more players behind means a tighter first position
+    assert six["shove_share_by_position"]["pos0"] < three["shove_share_by_position"]["button"]

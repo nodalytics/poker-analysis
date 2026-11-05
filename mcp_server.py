@@ -295,13 +295,52 @@ def equity_multiway(
         raise ToolError(f"could not run the simulation: {e}") from None
 
 
-@mcp.tool()
-def push_fold_nash(big_blinds: float, hand: str = "") -> dict:
-    """Heads-up push/fold equilibrium (blinds 0.5/1, no ante) at an effective stack of 1-25 big blinds.
+def _hand_class(hand):
+    h = _cards(hand, 2, "hand")
+    order = "23456789TJQKA"
+    hi, lo = sorted((h[0][0], h[1][0]), key=order.index, reverse=True)
+    return hi + lo if hi == lo else hi + lo + ("s" if h[0][1] == h[1][1] else "o")
 
-    Returns the small blind's shove range and the big blind's call range, solved by fictitious play over all 169
-    hand classes (card removal ignored). With `hand`, also says whether that hand shoves and calls.
+
+def _push_fold_multiway(big_blinds, hand, players, ante, position):
+    path = NASH_CHARTS.replace(
+        "push_fold_nash.json", "push_fold_multiway_ante.json" if ante else "push_fold_multiway.json"
+    )
+    if not os.path.exists(path):
+        raise ToolError("multi-way charts not built yet: run llm-research/scripts/poker_math.py nash-multiway")
+    if not 3 <= players <= 6:
+        raise ToolError("players: 2 to 6")
+    charts = [c for c in json.load(open(path))["charts"] if c["players"] == players]
+    c = min(charts, key=lambda x: abs(x["stack_bb"] - big_blinds))
+    out = {
+        "players": players,
+        "stack_bb": c["stack_bb"],
+        "ante": c["ante"],
+        "shove_share_by_position": {k: v["share"] for k, v in c["shove"].items()},
+        "note": "at most one caller per shove; card removal ignored",
+    }
+    if position:
+        if position not in c["shove"]:
+            raise ToolError(f"position: one of {', '.join(c['shove'])}")
+        out["shove_range"] = ", ".join(c["shove"][position]["range"])
+        out["calls_against_this_shover"] = {k: v["share"] for k, v in c["call"].items() if k.endswith("vs " + position)}
+        if hand:
+            cls = _hand_class(hand)
+            out.update({"hand_class": cls, "shove": cls in c["shove"][position]["range"]})
+    return out
+
+
+@mcp.tool()
+def push_fold_nash(big_blinds: float, hand: str = "", players: int = 2, ante: bool = False, position: str = "") -> dict:
+    """Push/fold equilibrium ranges. Heads-up (players=2): 1-25 big blinds, small blind shove and big blind call.
+
+    Multi-way (players 3-6, at 5, 8, 10, 12, 15 or 20 big blinds, nearest used; ante=True for a 1/8 big-blind ante):
+    every position's shove range when folded to, and call ranges against each shover, assuming at most one caller.
+    position: 'button', 'small blind', 'big blind' or 'pos0' (first to act) ... With `hand`, says whether it shoves.
+    Solved by fictitious play over all 169 hand classes; card removal ignored.
     """
+    if players > 2:
+        return _push_fold_multiway(big_blinds, hand, players, ante, position)
     if not os.path.exists(NASH_CHARTS):
         raise ToolError("push/fold charts not built yet: run llm-research/scripts/poker_math.py nash")
     charts = json.load(open(NASH_CHARTS))["charts"]

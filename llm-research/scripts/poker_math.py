@@ -12,6 +12,7 @@ Layer 2  build_matrix(path)  ->  169x169 all-in preflop equity of every hand cla
 
 CLI:  uv run python scripts/poker_math.py matrix OUT.json [SIMS] [WORKERS]
       uv run python scripts/poker_math.py nash MATRIX.json OUT.json
+      uv run python scripts/poker_math.py nash-multiway MATRIX.json OUT.json [ANTE]
 """
 
 import itertools
@@ -193,6 +194,77 @@ def solve_push_fold(matrix, stack_bb, iters=4000):
     }
 
 
+def solve_push_fold_multiway(matrix, n_players, stack_bb, ante=0.0, iters=1500):
+    """Shove-or-fold equilibrium for 3-6 players with equal stacks of stack_bb big blinds (blinds 0.5/1, ante per
+    player), by fictitious play.
+
+    Positions in action order: 0 = first to act ... n-3 = button, n-2 = small blind, n-1 = big blind. Each player
+    folded to shoves or folds; each player behind a shove calls or folds. Simplification: at most one caller per shove
+    (the first to call; everyone after folds), so all-ins are heads-up and the 169x169 table gives every equity.
+    Card removal is ignored. Values are chips (big blinds), each decision against folding.
+    """
+    import numpy as np
+
+    cls = matrix["classes"]
+    k = len(cls)
+    E = np.array([[0.5 if matrix["equity"][a][b] is None else matrix["equity"][a][b] for b in cls] for a in cls])
+    w = np.array([n_combos(c) for c in cls], dtype=float)
+    n, S = n_players, float(stack_bb)
+    post = np.full(n, ante)
+    post[n - 2] += 0.5
+    post[n - 1] += 1.0
+    D = post.sum()  # dead money in the middle before anyone acts
+    push = np.ones((n - 1, k))  # running averages
+    call = np.ones((n, n, k))  # call[p, q] = caller q's strategy against a shove from p
+
+    def eq_vs(range_w):  # equity of every class against a weighted range
+        tot = range_w.sum()
+        return E @ range_w / tot if tot > 0 else np.full(k, 0.5)
+
+    for t in range(1, iters + 1):
+        br_push = np.zeros_like(push)
+        br_call = np.zeros_like(call)
+        for p in range(n - 1):
+            callers = list(range(p + 1, n))
+            frac = np.array([(w * call[p, q]).sum() / w.sum() for q in callers])
+            reach = np.cumprod(np.concatenate([[1.0], 1 - frac[:-1]]))  # nobody before q called
+            first = reach * frac  # q is the first to call
+            no_call = reach[-1] * (1 - frac[-1])
+            ev_push = no_call * (D - post[p])
+            for j, q in enumerate(callers):
+                dead = D - post[p] - post[q]
+                ev_push = ev_push + first[j] * (eq_vs(w * call[p, q]) * (2 * S + dead) - S)
+                # caller q facing p's shove (everyone between them folded)
+                e_q = eq_vs(w * push[p])
+                br_call[p, q] = ((e_q * (2 * S + dead) - S) > -post[q]).astype(float)
+            br_push[p] = (ev_push > -post[p]).astype(float)
+        lr = 1.0 / (t + 1)
+        push += lr * (br_push - push)
+        call += lr * (br_call - call)
+    names = [f"pos{i}" for i in range(n - 3)] + ["button", "small blind", "big blind"]
+    total = w.sum()
+    return {
+        "players": n,
+        "stack_bb": stack_bb,
+        "ante": ante,
+        "shove": {
+            names[p]: {
+                "share": round(float((w * (push[p] >= 0.5)).sum() / total), 3),
+                "range": [cls[i] for i in range(k) if push[p, i] >= 0.5],
+            }
+            for p in range(n - 1)
+        },
+        "call": {
+            f"{names[q]} vs {names[p]}": {
+                "share": round(float((w * (call[p, q] >= 0.5)).sum() / total), 3),
+                "range": [cls[i] for i in range(k) if call[p, q, i] >= 0.5],
+            }
+            for p in range(n - 1)
+            for q in range(p + 1, n)
+        },
+    }
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1]
     if cmd == "matrix":
@@ -217,3 +289,24 @@ if __name__ == "__main__":
         )
         for c in charts:
             print(f"{c['stack_bb']:>2}bb  shove {c['push_share']:.0%}  call {c['call_share']:.0%}")
+    elif cmd == "nash-multiway":
+        m = json.load(open(sys.argv[2]))
+        ante = float(sys.argv[4]) if len(sys.argv) > 4 else 0.0
+        charts = [solve_push_fold_multiway(m, n, s, ante) for n in (3, 4, 5, 6) for s in (5, 8, 10, 12, 15, 20)]
+        json.dump(
+            {
+                "blinds": "0.5/1",
+                "ante": ante,
+                "method": "multi-way shove/fold, at most one caller, fictitious play",
+                "charts": charts,
+            },
+            open(sys.argv[3], "w"),
+            indent=1,
+        )
+        for c in charts:
+            first, sb = next(iter(c["shove"].values())), c["shove"]["small blind"]
+            print(
+                f"{c['players']}-handed {c['stack_bb']:>2}bb: first to act shoves {first['share']:.0%}, "
+                f"small blind {sb['share']:.0%}, big blind calls the button "
+                f"{c['call'].get('big blind vs button', {}).get('share', float('nan')):.0%}"
+            )
