@@ -24,7 +24,7 @@ The poker MCP server lives at the repo root (`../mcp_server.py`, tests in `../te
 | Model | Role | Notes |
 |---|---|---|
 | `hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M` | **Default agent** (text, UI Automation tree) | Only model to pass all 4 shell tasks; 61 tok/s, 22GB. No native tool calls: use the JSON text protocol |
-| `qwen2.5vl:32b` | **Vision** (screenshots) | 70 tok/s, 55GB loaded. No native tool calls |
+| `qwen2.5vl:32b` | **Vision** (screenshots), **best browser agent** | 3/4 browser tasks, the only form fill; 70 tok/s, 55GB loaded. No native tool calls |
 | `hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M` | Fast, weak | 183 tok/s; claimed a script's output without writing the script |
 | `wizard-vicuna-uncensored:13b` | Not for agent work | 2,048-token context overflows within a few steps; 0/4 shell, 0/4 browser |
 | ~~`mistral-large:123b`~~ | **Retired 2026-11-05, deleted** | 16.5 tok/s across all 3 GPUs, made up a price, Mistral Research Licence (no commercial use) |

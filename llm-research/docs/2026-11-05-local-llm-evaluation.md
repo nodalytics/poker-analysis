@@ -62,27 +62,37 @@ The only website is `sandboxes/browser/site.py`, served inside the container. Gr
 log and submission log; the click task requires `Referer` from the home page, so typing the URL does not pass.
 Real internet was confirmed blocked (`ERR_INTERNET_DISCONNECTED`).
 
+**Rerun with full tool descriptions** (the first run cut each description to 300 characters). Mistral Large
+had been deleted by then, so Qwen2.5-VL 32B took its place. This replaces the first run's results; that run
+(with Mistral) is in git history at commit `0d3b96f`, `llm-research/results/raw/br_results.json`.
+
 | Model | read_price | click_link | fill_form | read_result | Total |
 |---|---|---|---|---|---|
-| Big-Tiger-Gemma 27B | ✓ | ✓ | ✗ | ✗ | **2/4** |
+| **Qwen2.5-VL 32B** | ✓ | ✗ | ✓ | ✓ | **3/4** |
+| Big-Tiger-Gemma 27B | ✓ | ✓ | ✗ | ✗ | 2/4 |
 | Tiger-Gemma 9B | ✗ | ✗ | ✗ | ✗ | 0/4 |
 | Wizard-Vicuna 13B | ✗ | ✗ | ✗ | ✗ | 0/4 |
-| Mistral Large 123B | ✗ | ✗ | ✗ | ✗ | 0/4 |
 
-- Mistral answered "$15.00" without opening the page (true price $7.50), wrapped a URL in backticks, and reported
-  Chrome's `DNS_PROBE_FINISHED_NO_INTERNET` error page as the site's "reference code".
-- The Gemma models guessed CSS selectors (`#name`) instead of using the snapshot's element references.
-- **Harness caveats:** tool descriptions were cut to 300 characters, and `browser_navigate` in this version returns
-  a snapshot file link rather than the page, so models had to call `browser_snapshot` themselves.
-  Both make the browser tasks harder than necessary; rerun with full descriptions before drawing firm conclusions.
+- **Qwen2.5-VL** was the first model to complete the form: it read the element references from a snapshot and
+  passed them bare (`f3e5`). It clicked the Contact link correctly but answered "Contact" (the page title) as
+  the heading without looking at the page, so that task fails.
+- **Big-Tiger-Gemma 27B** found the right reference but wrote it as `#f3e5` and `[ref=f3e5]`, which do not match.
+  In the last task it sent JSON with no `tool` field eight times.
+- In the first run, Mistral answered "$15.00" without opening the page (true price $7.50), wrapped a URL in
+  backticks, and reported Chrome's `DNS_PROBE_FINISHED_NO_INTERNET` error page as the site's "reference code".
+- The Gemma models guess CSS selectors (`#name`) before they look at the snapshot.
+- **Remaining caveat:** `browser_navigate` in this version returns a snapshot file link rather than the page, so
+  models must call `browser_snapshot` themselves. That is how a real agent works, but it costs a step.
+- The lessons are recorded in `gui-skills/playwright-mcp-browser.md`.
 
 ## Decisions
 
 - **Mistral Large dropped:** slowest, fills all three GPUs, worst agent, made up answers, and its licence
   (Mistral Research Licence) does not allow commercial use without a paid licence.
-- **Big-Tiger-Gemma 27B** is the only model here usable as an agent.
+- **Agents:** Big-Tiger-Gemma 27B for shell work (4/4) and Qwen2.5-VL 32B for the browser (3/4). No model
+  is reliable enough yet to act unattended.
 - **Factual numbers should come from tools, not model memory:** wrap `poker-analysis` as an MCP server
-  (equity, ICM, push/fold) so any model gets exact answers. Not built yet.
+  (equity, ICM, push/fold) so any model gets exact answers. Built: `../mcp_server.py`.
 - **GUI testing on Windows 11 Enterprise Evaluation** on the lab (`sandboxes/windows/run-win11.sh`).
   macOS was ruled out: Apple's licence forbids it on non-Apple hardware, and it would run slowly
   in a VM on x86. Planned control path: Windows-MCP inside the VM, with an off-the-shelf MCP client (ollmcp),
@@ -98,5 +108,6 @@ python3 scripts/dc_agent_test.py dc_results.json MODEL [MODEL ...]
 python3 scripts/browser_agent_test.py br_results.json MODEL [MODEL ...]   # needs dc_agent_test.py alongside
 ```
 
-Raw outputs are in `results/raw/` (`dc_results.json` covers Tiger-Gemma 9B; `dc_results2.json` the other three)
+Raw outputs are in `results/raw/` (`dc_results.json` covers Tiger-Gemma 9B; `dc_results2.json` the other three;
+`br_results.json` is the full-description browser rerun)
 and console logs in `results/logs/`.

@@ -14,7 +14,7 @@
       "args": {
        "url": "http://127.0.0.1:8000/"
       },
-      "result": "### Ran Playwright code\n```js\nawait page.goto('http://127.0.0.1:8000/');\n```\n### Page\n- Page URL: http://127.0.0.1:8000/\n- Page Title: Sandbox Shop\n### Snapshot\n- [Snapshot](tmp/.playwright-mcp/page-2026-11-05T07-47-18-685Z.yml)"
+      "result": "### Ran Playwright code\n```js\nawait page.goto('http://127.0.0.1:8000/');\n```\n### Page\n- Page URL: http://127.0.0.1:8000/\n- Page Title: Sandbox Shop\n### Snapshot\n- [Snapshot](tmp/.playwright-mcp/page-2026-11-05T08-21-03-567Z.yml)"
      },
      {
       "tool": "browser_snapshot",
@@ -73,7 +73,7 @@
       "result": "### Error\nError: \"div[itemprop='name']\" does not match any elements."
      }
     ],
-    "seconds": 9.0
+    "seconds": 6.4
    },
    {
     "task": "click_link",
@@ -86,7 +86,7 @@
       "args": {
        "url": "http://127.0.0.1:8000/"
       },
-      "result": "### Ran Playwright code\n```js\nawait page.goto('http://127.0.0.1:8000/');\n```\n### Page\n- Page URL: http://127.0.0.1:8000/\n- Page Title: Sandbox Shop\n### Snapshot\n- [Snapshot](tmp/.playwright-mcp/page-2026-11-05T07-47-22-194Z.yml)"
+      "result": "### Ran Playwright code\n```js\nawait page.goto('http://127.0.0.1:8000/');\n```\n### Page\n- Page URL: http://127.0.0.1:8000/\n- Page Title: Sandbox Shop\n### Snapshot\n- [Snapshot](tmp/.playwright-mcp/page-2026-11-05T08-21-07-079Z.yml)"
      },
      {
       "tool": "browser_click",
@@ -94,55 +94,55 @@
        "element": "Contact link",
        "target": "a[href='/contact']"
       },
-      "result": "### Ran Playwright code\n```js\nawait page.locator('a[href=\\'/contact\\']').click();\n```\n### Page\n- Page URL: http://127.0.0.1:8000/contact\n- Page Title: Contact\n### Snapshot\n- [Snapshot](tmp/.playwright-mcp/page-2026-11-05T07-47-23-038Z.yml)"
+      "result": "### Ran Playwright code\n```js\nawait page.locator('a[href=\\'/contact\\']').click();\n```\n### Page\n- Page URL: http://127.0.0.1:8000/contact\n- Page Title: Contact\n### Snapshot\n- [Snapshot](tmp/.playwright-mcp/page-2026-11-05T08-21-07-930Z.yml)"
      },
      {
       "tool": "browser_snapshot",
       "args": {
        "target": "h1",
-       "filename": "contact_heading.png"
+       "filename": "contact_heading.txt"
       },
-      "result": "### Error\nError: File access denied: /contact_heading.png is outside allowed roots. Allowed roots: /tmp/.playwright-mcp, /"
+      "result": "### Error\nError: File access denied: /contact_heading.txt is outside allowed roots. Allowed roots: /tmp/.playwright-mcp, /"
      },
      {
       "tool": "browser_snapshot",
       "args": {
        "target": "h1",
-       "filename": "contact_heading.png"
+       "filename": "contact_heading.txt"
       },
-      "result": "### Error\nError: File access denied: /contact_heading.png is outside allowed roots. Allowed roots: /tmp/.playwright-mcp, /"
+      "result": "### Error\nError: File access denied: /contact_heading.txt is outside allowed roots. Allowed roots: /tmp/.playwright-mcp, /"
      },
      {
       "tool": "browser_snapshot",
       "args": {
        "target": "h1",
-       "filename": "contact_heading.png"
+       "filename": "contact_heading.txt"
       },
-      "result": "### Error\nError: File access denied: /contact_heading.png is outside allowed roots. Allowed roots: /tmp/.playwright-mcp, /"
+      "result": "### Error\nError: File access denied: /contact_heading.txt is outside allowed roots. Allowed roots: /tmp/.playwright-mcp, /"
      },
      {
       "tool": "browser_snapshot",
       "args": {
        "target": "h1",
-       "filename": "contact_heading.png"
+       "filename": "contact_heading.txt"
       },
-      "result": "### Error\nError: File access denied: /contact_heading.png is outside allowed roots. Allowed roots: /tmp/.playwright-mcp, /"
+      "result": "### Error\nError: File access denied: /contact_heading.txt is outside allowed roots. Allowed roots: /tmp/.playwright-mcp, /"
      },
      {
       "tool": "browser_snapshot",
       "args": {
        "target": "h1",
-       "filename": "contact_heading.png"
+       "filename": "contact_heading.txt"
       },
-      "result": "### Error\nError: File access denied: /contact_heading.png is outside allowed roots. Allowed roots: /tmp/.playwright-mcp, /"
+      "result": "### Error\nError: File access denied: /contact_heading.txt is outside allowed roots. Allowed roots: /tmp/.playwright-mcp, /"
      },
      {
       "tool": "browser_snapshot",
       "args": {
        "target": "h1",
-       "filename": "contact_heading.png"
+       "filename": "contact_heading.txt"
       },
-      "result": "### Error\nError: File access denied: /contact_heading.png is outside allowed roots. Allowed roots: /tmp/.playwright-mcp, /"
+      "result": "### Error\nError: File access denied: /contact_heading.txt is outside allowed roots. Allowed roots: /tmp/.playwright-mcp, /"
      }
     ],
     "seconds": 4.0
@@ -150,116 +150,61 @@
    {
     "task": "fill_form",
     "passed": false,
-    "steps": 8,
-    "answer": null,
+    "steps": 5,
+    "answer": "Error: '#send' does not match any elements.",
     "log": [
      {
       "tool": "browser_navigate",
       "args": {
        "url": "http://127.0.0.1:8000/contact"
       },
-      "result": "### Ran Playwright code\n```js\nawait page.goto('http://127.0.0.1:8000/contact');\n```\n### Page\n- Page URL: http://127.0.0.1:8000/contact\n- Page Title: Contact\n### Snapshot\n- [Snapshot](tmp/.playwright-mcp/page-2026-11-05T07-47-26-214Z.yml)"
+      "result": "### Ran Playwright code\n```js\nawait page.goto('http://127.0.0.1:8000/contact');\n```\n### Page\n- Page URL: http://127.0.0.1:8000/contact\n- Page Title: Contact\n### Snapshot\n- [Snapshot](tmp/.playwright-mcp/page-2026-11-05T08-21-11-144Z.yml)"
      },
      {
       "tool": "browser_type",
       "args": {
-       "element": {
-        "description": "Name field",
-        "type": "string"
-       },
-       "target": "#id_name",
+       "element": "Name field",
+       "target": "#name",
        "text": "Ada",
        "submit": false,
        "slowly": false
       },
-      "result": "### Error\nInvalid arguments for tool \"browser_type\":\n\u2716 Invalid input: expected string, received object\n  \u2192 at element"
+      "result": "### Error\nError: \"#name\" does not match any elements."
      },
      {
       "tool": "browser_type",
       "args": {
-       "element": {
-        "description": "Message field",
-        "type": "string"
-       },
-       "target": "#id_message",
+       "element": "Message field",
+       "target": "#message",
        "text": "hello from the model",
        "submit": true,
        "slowly": false
       },
-      "result": "### Error\nInvalid arguments for tool \"browser_type\":\n\u2716 Invalid input: expected string, received object\n  \u2192 at element"
+      "result": "### Error\nError: \"#message\" does not match any elements."
      },
      {
-      "tool": "browser_type",
+      "tool": "browser_snapshot",
       "args": {
-       "element": {
-        "description": "Send button",
-        "type": "string"
-       },
-       "target": "#id_send",
-       "text": "",
-       "submit": true,
-       "slowly": false
+       "target": "#message",
+       "filename": "contact_page.png",
+       "depth": 10,
+       "boxes": true
       },
-      "result": "### Error\nInvalid arguments for tool \"browser_type\":\n\u2716 Invalid input: expected string, received object\n  \u2192 at element"
+      "result": "### Error\nError: \"#message\" does not match any elements."
      },
      {
-      "tool": "browser_type",
+      "tool": "browser_click",
       "args": {
-       "element": {
-        "description": "Send button",
-        "type": "string"
-       },
-       "target": "#id_send",
-       "text": "",
-       "submit": true,
-       "slowly": false
+       "element": "Send button",
+       "target": "#send",
+       "doubleClick": false,
+       "button": "left",
+       "modifiers": []
       },
-      "result": "### Error\nInvalid arguments for tool \"browser_type\":\n\u2716 Invalid input: expected string, received object\n  \u2192 at element"
-     },
-     {
-      "tool": "browser_type",
-      "args": {
-       "element": {
-        "description": "Send button",
-        "type": "string"
-       },
-       "target": "#id_send",
-       "text": "",
-       "submit": true,
-       "slowly": false
-      },
-      "result": "### Error\nInvalid arguments for tool \"browser_type\":\n\u2716 Invalid input: expected string, received object\n  \u2192 at element"
-     },
-     {
-      "tool": "browser_type",
-      "args": {
-       "element": {
-        "description": "Send button",
-        "type": "string"
-       },
-       "target": "#id_send",
-       "text": "",
-       "submit": true,
-       "slowly": false
-      },
-      "result": "### Error\nInvalid arguments for tool \"browser_type\":\n\u2716 Invalid input: expected string, received object\n  \u2192 at element"
-     },
-     {
-      "tool": "browser_type",
-      "args": {
-       "element": {
-        "description": "Send button",
-        "type": "string"
-       },
-       "target": "#id_send",
-       "text": "",
-       "submit": true,
-       "slowly": false
-      },
-      "result": "### Error\nInvalid arguments for tool \"browser_type\":\n\u2716 Invalid input: expected string, received object\n  \u2192 at element"
+      "result": "### Error\nError: \"#send\" does not match any elements."
      }
     ],
-    "seconds": 4.3
+    "seconds": 3.0
    },
    {
     "task": "read_result",
@@ -348,7 +293,7 @@
       "result": "### Error\nError: File access denied: /snapshot.json is outside allowed roots. Allowed roots: /tmp/.playwright-mcp, /"
      }
     ],
-    "seconds": 3.5
+    "seconds": 2.6
    }
   ]
  },
@@ -435,7 +380,7 @@
       "result": "### Error\nError: \"blue-mug\" does not match any elements."
      }
     ],
-    "seconds": 40.6
+    "seconds": 40.7
    },
    {
     "task": "click_link",
@@ -643,7 +588,7 @@
       "args": {
        "url": "http://127.0.0.1:8000/"
       },
-      "result": "### Ran Playwright code\n```js\nawait page.goto('http://127.0.0.1:8000/');\n```\n### Page\n- Page URL: http://127.0.0.1:8000/\n- Page Title: Sandbox Shop\n### Snapshot\n- [Snapshot](tmp/.playwright-mcp/page-2026-11-05T07-48-59-156Z.yml)"
+      "result": "### Ran Playwright code\n```js\nawait page.goto('http://127.0.0.1:8000/');\n```\n### Page\n- Page URL: http://127.0.0.1:8000/\n- Page Title: Sandbox Shop\n### Snapshot\n- [Snapshot](tmp/.playwright-mcp/page-2026-11-05T08-22-42-225Z.yml)"
      },
      {
       "tool": "browser_snapshot",
@@ -651,7 +596,7 @@
       "result": "### Page\n- Page URL: http://127.0.0.1:8000/\n- Page Title: Sandbox Shop\n### Snapshot\n```yaml\n- generic [active] [ref=e1]:\n  - heading \"Sandbox Shop\" [level=1] [ref=e2]\n  - table [ref=e3]:\n    - rowgroup [ref=e4]:\n      - row [ref=e5]:\n        - columnheader \"Product\" [ref=e6]\n        - columnheader \""
      }
     ],
-    "seconds": 8.4
+    "seconds": 8.8
    },
    {
     "task": "click_link",
@@ -664,7 +609,7 @@
       "args": {
        "url": "http://127.0.0.1:8000/"
       },
-      "result": "### Ran Playwright code\n```js\nawait page.goto('http://127.0.0.1:8000/');\n```\n### Page\n- Page URL: http://127.0.0.1:8000/\n- Page Title: Sandbox Shop\n### Snapshot\n- [Snapshot](tmp/.playwright-mcp/page-2026-11-05T07-49-00-703Z.yml)"
+      "result": "### Ran Playwright code\n```js\nawait page.goto('http://127.0.0.1:8000/');\n```\n### Page\n- Page URL: http://127.0.0.1:8000/\n- Page Title: Sandbox Shop\n### Snapshot\n- [Snapshot](tmp/.playwright-mcp/page-2026-11-05T08-22-43-789Z.yml)"
      },
      {
       "tool": "browser_click",
@@ -693,7 +638,7 @@
        "element": "Contact link",
        "target": "a[href='/contact']"
       },
-      "result": "### Ran Playwright code\n```js\nawait page.locator('a[href=\\'/contact\\']').click();\n```\n### Page\n- Page URL: http://127.0.0.1:8000/contact\n- Page Title: Contact\n### Snapshot\n- [Snapshot](tmp/.playwright-mcp/page-2026-11-05T07-49-03-683Z.yml)"
+      "result": "### Ran Playwright code\n```js\nawait page.locator('a[href=\\'/contact\\']').click();\n```\n### Page\n- Page URL: http://127.0.0.1:8000/contact\n- Page Title: Contact\n### Snapshot\n- [Snapshot](tmp/.playwright-mcp/page-2026-11-05T08-22-46-738Z.yml)"
      },
      {
       "tool": "browser_snapshot",
@@ -714,12 +659,11 @@
       "args": {
        "url": "http://127.0.0.1:8000/contact"
       },
-      "result": "### Ran Playwright code\n```js\nawait page.goto('http://127.0.0.1:8000/contact');\n```\n### Page\n- Page URL: http://127.0.0.1:8000/contact\n- Page Title: Contact\n### Snapshot\n- [Snapshot](tmp/.playwright-mcp/page-2026-11-05T07-49-06-730Z.yml)"
+      "result": "### Ran Playwright code\n```js\nawait page.goto('http://127.0.0.1:8000/contact');\n```\n### Page\n- Page URL: http://127.0.0.1:8000/contact\n- Page Title: Contact\n### Snapshot\n- [Snapshot](tmp/.playwright-mcp/page-2026-11-05T08-22-49-808Z.yml)"
      },
      {
       "tool": "browser_type",
       "args": {
-       "element": "Name field",
        "target": "#name",
        "text": "Ada",
        "submit": false,
@@ -735,7 +679,6 @@
      {
       "tool": "browser_type",
       "args": {
-       "element": "Name field",
        "target": "#f3e5",
        "text": "Ada",
        "submit": false,
@@ -751,13 +694,12 @@
      {
       "tool": "browser_type",
       "args": {
-       "element": "Name field",
-       "target": "textbox[ref=f3e5]",
+       "target": "[ref=f3e5]",
        "text": "Ada",
        "submit": false,
        "slowly": false
       },
-      "result": "### Error\nError: \"textbox[ref=f3e5]\" does not match any elements."
+      "result": "### Error\nError: \"[ref=f3e5]\" does not match any elements."
      },
      {
       "tool": "browser_snapshot",
@@ -767,16 +709,15 @@
      {
       "tool": "browser_type",
       "args": {
-       "element": "Name field",
-       "target": "f3e5",
+       "target": "textbox[ref=f3e5]",
        "text": "Ada",
        "submit": false,
        "slowly": false
       },
-      "result": "### Ran Playwright code\n```js\nawait page.getByRole('textbox', { name: 'Name' }).fill('Ada');\n```"
+      "result": "### Error\nError: \"textbox[ref=f3e5]\" does not match any elements."
      }
     ],
-    "seconds": 6.9
+    "seconds": 6.6
    },
    {
     "task": "read_result",
@@ -825,69 +766,133 @@
       "result": "ERROR: unknown tool None"
      }
     ],
-    "seconds": 5.1
+    "seconds": 5.2
    }
   ]
  },
  {
-  "model": "mistral-large:123b",
-  "mode": "native tools",
+  "model": "qwen2.5vl:32b",
+  "mode": "JSON text",
   "tasks": [
    {
     "task": "read_price",
-    "passed": false,
-    "steps": 0,
-    "answer": "\nThe price of the Blue Mug is $15.00.",
-    "log": [],
-    "seconds": 11.5
-   },
-   {
-    "task": "click_link",
-    "passed": false,
-    "steps": 1,
-    "answer": "The page has been successfully loaded. Now, I will proceed to click the \"Contact\" link and capture the main heading of the page that opens.\n\nLet's continue with the next steps.",
+    "passed": true,
+    "steps": 2,
+    "answer": "The price of the Blue Mug is $7.50.",
     "log": [
      {
       "tool": "browser_navigate",
       "args": {
        "url": "http://127.0.0.1:8000/"
       },
-      "result": "### Ran Playwright code\n```js\nawait page.goto('http://127.0.0.1:8000/');\n```\n### Page\n- Page URL: http://127.0.0.1:8000/\n- Page Title: Sandbox Shop\n### Snapshot\n- [Snapshot](tmp/.playwright-mcp/page-2026-11-05T07-49-34-321Z.yml)"
+      "result": "### Ran Playwright code\n```js\nawait page.goto('http://127.0.0.1:8000/');\n```\n### Page\n- Page URL: http://127.0.0.1:8000/\n- Page Title: Sandbox Shop\n### Snapshot\n- [Snapshot](tmp/.playwright-mcp/page-2026-11-05T08-23-08-766Z.yml)"
+     },
+     {
+      "tool": "browser_snapshot",
+      "args": {},
+      "result": "### Page\n- Page URL: http://127.0.0.1:8000/\n- Page Title: Sandbox Shop\n### Snapshot\n```yaml\n- generic [active] [ref=e1]:\n  - heading \"Sandbox Shop\" [level=1] [ref=e2]\n  - table [ref=e3]:\n    - rowgroup [ref=e4]:\n      - row [ref=e5]:\n        - columnheader \"Product\" [ref=e6]\n        - columnheader \""
      }
     ],
-    "seconds": 8.2
+    "seconds": 9.5
    },
    {
-    "task": "fill_form",
+    "task": "click_link",
     "passed": false,
-    "steps": 1,
-    "answer": "\nIt appears there was an error accessing the URL `http://127.0.0.1:8000/contact`. The error message `net::ERR_NAME_NOT_RESOLVED` suggests that the domain name could not be resolved, which typically means that the server at `127.0.0.1:8000` is not reachable or not running.\n\nHere are a few steps to troubleshoot the issue:\n\n1. **Check Server Status**:\n   - Ensure that the server running on `127.0.0.1:8000` is up and running.\n   - If you are running a local development server, make sure it is started and listening on port 8000.\n\n2. **Verify URL**:\n   - Double-check the URL for any typos or formatting issues. The URL should be `http://127.0.0.1:8000/contact`.\n\n3. **Network Configuration**:\n   - Ensure that your network settings allow access to `127.0.0.1` (localhost).\n   - Check if there are any firewall rules or network configurations blocking access to the local server.\n\n4. **Browser Compatibility**:\n   - Try accessing the URL directly in a web browser to see if it loads correctly.\n\nIf the server is running and the URL is correct, but you still encounter issues, please provide more details about your setup, and I can offer further assistance.",
+    "steps": 2,
+    "answer": "The main heading of the page is 'Contact'.",
     "log": [
      {
       "tool": "browser_navigate",
       "args": {
-       "url": "`http://127.0.0.1:8000/contact`"
+       "url": "http://127.0.0.1:8000/"
       },
-      "result": "### Error\nError: browserBackend.callTool: net::ERR_NAME_NOT_RESOLVED at https://`http//127.0.0.1:8000/contact%60\nCall log:\n  - navigating to \"https://`http//127.0.0.1:8000/contact%60\", waiting until \"domcontentloaded\"\n"
+      "result": "### Ran Playwright code\n```js\nawait page.goto('http://127.0.0.1:8000/');\n```\n### Page\n- Page URL: http://127.0.0.1:8000/\n- Page Title: Sandbox Shop\n### Snapshot\n- [Snapshot](tmp/.playwright-mcp/page-2026-11-05T08-23-09-921Z.yml)"
+     },
+     {
+      "tool": "browser_click",
+      "args": {
+       "element": "Contact link",
+       "target": "text=Contact"
+      },
+      "result": "### Ran Playwright code\n```js\nawait page.locator('text=Contact').click();\n```\n### Page\n- Page URL: http://127.0.0.1:8000/contact\n- Page Title: Contact\n### Snapshot\n- [Snapshot](tmp/.playwright-mcp/page-2026-11-05T08-23-10-886Z.yml)"
      }
     ],
-    "seconds": 27.5
+    "seconds": 1.8
+   },
+   {
+    "task": "fill_form",
+    "passed": true,
+    "steps": 6,
+    "answer": "The form has been submitted successfully.",
+    "log": [
+     {
+      "tool": "browser_navigate",
+      "args": {
+       "url": "http://127.0.0.1:8000/contact"
+      },
+      "result": "### Ran Playwright code\n```js\nawait page.goto('http://127.0.0.1:8000/contact');\n```\n### Page\n- Page URL: http://127.0.0.1:8000/contact\n- Page Title: Contact\n### Snapshot\n- [Snapshot](tmp/.playwright-mcp/page-2026-11-05T08-23-13-450Z.yml)"
+     },
+     {
+      "tool": "browser_type",
+      "args": {
+       "target": "name_field",
+       "text": "Ada",
+       "submit": false,
+       "slowly": false
+      },
+      "result": "### Error\nError: \"name_field\" does not match any elements."
+     },
+     {
+      "tool": "browser_snapshot",
+      "args": {},
+      "result": "### Page\n- Page URL: http://127.0.0.1:8000/contact\n- Page Title: Contact\n### Snapshot\n```yaml\n- generic [active] [ref=f3e1]:\n  - heading \"Contact us\" [level=1] [ref=f3e2]\n  - generic [ref=f3e3]:\n    - generic [ref=f3e4]:\n      - text: Name\n      - textbox \"Name\" [ref=f3e5]\n    - generic [ref=f3e6]:\n"
+     },
+     {
+      "tool": "browser_type",
+      "args": {
+       "target": "f3e5",
+       "text": "Ada",
+       "submit": false,
+       "slowly": false
+      },
+      "result": "### Ran Playwright code\n```js\nawait page.getByRole('textbox', { name: 'Name' }).fill('Ada');\n```"
+     },
+     {
+      "tool": "browser_type",
+      "args": {
+       "target": "f3e7",
+       "text": "hello from the model",
+       "submit": false,
+       "slowly": false
+      },
+      "result": "### Ran Playwright code\n```js\nawait page.getByRole('textbox', { name: 'Message' }).fill('hello from the model');\n```"
+     },
+     {
+      "tool": "browser_click",
+      "args": {
+       "target": "f3e8",
+       "doubleClick": false,
+       "button": "left",
+       "modifiers": []
+      },
+      "result": "### Ran Playwright code\n```js\nawait page.getByRole('button', { name: 'Send' }).click();\n```\n### Page\n- Page URL: http://127.0.0.1:8000/submit\n- Page Title: Thanks\n### Snapshot\n- [Snapshot](tmp/.playwright-mcp/page-2026-11-05T08-23-20-381Z.yml)"
+     }
+    ],
+    "seconds": 9.4
    },
    {
     "task": "read_result",
-    "passed": false,
+    "passed": true,
     "steps": 1,
-    "answer": "\nBased on the provided snapshot, the reference code displayed on the page is:\n\n```\nDNS_PROBE_FINISHED_NO_INTERNET\n```\n\nThis error code typically indicates that your browser was unable to connect to the internet due to a DNS resolution issue.",
+    "answer": "The reference code shown on the page is 6B42AA.",
     "log": [
      {
       "tool": "browser_snapshot",
-      "args": {
-       "boxes": true
-      },
-      "result": "### Page\n- Page URL: chrome-error://chromewebdata/\n- Page Title: `http\n### Snapshot\n```yaml\n- generic [ref=f1e3] [box=340,8,600,416]:\n  - generic [ref=f1e5] [box=340,207,600,149]:\n    - heading \"Press space to play\" [level=1] [ref=f1e6] [box=340,207,600,30]\n    - generic [ref=f1e7] [box=340,253,600,"
+      "args": {},
+      "result": "### Page\n- Page URL: http://127.0.0.1:8000/submit\n- Page Title: Thanks\n### Snapshot\n```yaml\n- generic [active] [ref=f4e1]:\n  - heading \"Thanks, Ada\" [level=1] [ref=f4e2]\n  - paragraph [ref=f4e3]: Your reference code is 6B42AA.\n```"
      }
     ],
-    "seconds": 8.2
+    "seconds": 0.7
    }
   ]
  }
