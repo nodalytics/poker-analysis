@@ -1,0 +1,118 @@
+{
+ "source": "/home/labuser/datasets/phh-dataset/data/pluribus",
+ "hands": 10000,
+ "players": {
+  "MrWhite": {
+   "hands": 4483,
+   "vpip": 0.259,
+   "pfr": 0.17,
+   "three_bet": 0.087,
+   "aggression": 1.92,
+   "fold_to_bet": 0.567
+  },
+  "MrPink": {
+   "hands": 6055,
+   "vpip": 0.263,
+   "pfr": 0.174,
+   "three_bet": 0.106,
+   "aggression": 3.04,
+   "fold_to_bet": 0.514
+  },
+  "MrBrown": {
+   "hands": 1378,
+   "vpip": 0.254,
+   "pfr": 0.155,
+   "three_bet": 0.097,
+   "aggression": 1.79,
+   "fold_to_bet": 0.45
+  },
+  "Pluribus": {
+   "hands": 10000,
+   "vpip": 0.264,
+   "pfr": 0.177,
+   "three_bet": 0.086,
+   "aggression": 2.33,
+   "fold_to_bet": 0.479
+  },
+  "MrBlue": {
+   "hands": 9121,
+   "vpip": 0.314,
+   "pfr": 0.188,
+   "three_bet": 0.076,
+   "aggression": 1.93,
+   "fold_to_bet": 0.547
+  },
+  "MrBlonde": {
+   "hands": 2560,
+   "vpip": 0.226,
+   "pfr": 0.169,
+   "three_bet": 0.107,
+   "aggression": 1.7,
+   "fold_to_bet": 0.541
+  },
+  "MrOrange": {
+   "hands": 7512,
+   "vpip": 0.208,
+   "pfr": 0.143,
+   "three_bet": 0.089,
+   "aggression": 1.99,
+   "fold_to_bet": 0.537
+  },
+  "Eddie": {
+   "hands": 5510,
+   "vpip": 0.272,
+   "pfr": 0.176,
+   "three_bet": 0.072,
+   "aggression": 2.97,
+   "fold_to_bet": 0.506
+  },
+  "Joe": {
+   "hands": 1535,
+   "vpip": 0.225,
+   "pfr": 0.174,
+   "three_bet": 0.11,
+   "aggression": 2.52,
+   "fold_to_bet": 0.459
+  },
+  "Bill": {
+   "hands": 6713,
+   "vpip": 0.275,
+   "pfr": 0.199,
+   "three_bet": 0.122,
+   "aggression": 2.12,
+   "fold_to_bet": 0.451
+  },
+  "Budd": {
+   "hands": 2509,
+   "vpip": 0.251,
+   "pfr": 0.181,
+   "three_bet": 0.1,
+   "aggression": 2.86,
+   "fold_to_bet": 0.54
+  },
+  "Gogo": {
+   "hands": 488,
+   "vpip": 0.318,
+   "pfr": 0.227,
+   "three_bet": 0.129,
+   "aggression": 2.07,
+   "fold_to_bet": 0.424
+  },
+  "ORen": {
+   "hands": 771,
+   "vpip": 0.266,
+   "pfr": 0.163,
+   "three_bet": 0.09,
+   "aggression": 5.13,
+   "fold_to_bet": 0.647
+  },
+  "Hattori": {
+   "hands": 1365,
+   "vpip": 0.264,
+   "pfr": 0.18,
+   "three_bet": 0.067,
+   "aggression": 1.95,
+   "fold_to_bet": 0.476
+  }
+ }
+}
