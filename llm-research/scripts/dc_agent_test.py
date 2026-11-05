@@ -49,14 +49,42 @@ class MCP:
     def __init__(self, name):
         self.name = name
         self.p = subprocess.Popen(
-            ["docker", "run", "-i", "--rm", "--name", name, "--network", "none",
-             "--memory", "1g", "--cpus", "1", "--pids-limit", "256",
-             "--cap-drop", "ALL", "--security-opt", "no-new-privileges", IMAGE],
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, bufsize=1,
+            [
+                "docker",
+                "run",
+                "-i",
+                "--rm",
+                "--name",
+                name,
+                "--network",
+                "none",
+                "--memory",
+                "1g",
+                "--cpus",
+                "1",
+                "--pids-limit",
+                "256",
+                "--cap-drop",
+                "ALL",
+                "--security-opt",
+                "no-new-privileges",
+                IMAGE,
+            ],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+            bufsize=1,
         )
         self.n = 0
-        self.rpc("initialize", {"protocolVersion": "2025-06-18", "capabilities": {},
-                                "clientInfo": {"name": "dc-agent-test", "version": "1"}})
+        self.rpc(
+            "initialize",
+            {
+                "protocolVersion": "2025-06-18",
+                "capabilities": {},
+                "clientInfo": {"name": "dc-agent-test", "version": "1"},
+            },
+        )
         self.p.stdin.write(json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"}) + "\n")
         self.tools = [t for t in self.rpc("tools/list", {})["tools"] if t["name"] in TOOLS]
 
@@ -84,20 +112,26 @@ class MCP:
         return text[:2000]
 
     def exec(self, cmd):
-        return subprocess.run(["docker", "exec", self.name, "sh", "-c", cmd],
-                              capture_output=True, text=True, timeout=30).stdout
+        return subprocess.run(
+            ["docker", "exec", self.name, "sh", "-c", cmd], capture_output=True, text=True, timeout=30
+        ).stdout
 
     def close(self):
         subprocess.run(["docker", "rm", "-f", self.name], capture_output=True)
 
 
 def chat(model, messages, tools=None):
-    body = {"model": model, "messages": messages, "stream": False,
-            "options": {"temperature": 0, "seed": 7, "num_predict": 600, "num_ctx": 8192}}
+    body = {
+        "model": model,
+        "messages": messages,
+        "stream": False,
+        "options": {"temperature": 0, "seed": 7, "num_predict": 600, "num_ctx": 8192},
+    }
     if tools:
         body["tools"] = tools
-    req = urllib.request.Request(OLLAMA + "/api/chat", data=json.dumps(body).encode(),
-                                 headers={"Content-Type": "application/json"})
+    req = urllib.request.Request(
+        OLLAMA + "/api/chat", data=json.dumps(body).encode(), headers={"Content-Type": "application/json"}
+    )
     with urllib.request.urlopen(req, timeout=1800) as r:
         return json.load(r)["message"]
 
@@ -111,13 +145,17 @@ def short(desc):
 
 
 def text_protocol_prompt(tools):
-    lines = ["You control a Linux machine through tools. To use a tool, reply with ONLY one JSON object:",
-             '{"tool": "<name>", "arguments": {...}}',
-             'When the task is done, reply with ONLY: {"final": "<your answer>"}',
-             "You will receive each tool's result before your next reply. Tools:"]
+    lines = [
+        "You control a Linux machine through tools. To use a tool, reply with ONLY one JSON object:",
+        '{"tool": "<name>", "arguments": {...}}',
+        'When the task is done, reply with ONLY: {"final": "<your answer>"}',
+        "You will receive each tool's result before your next reply. Tools:",
+    ]
     for t in tools:
-        lines.append(f"- {t['name']}: {short(t['description'])} Arguments schema: "
-                     f"{json.dumps(t['inputSchema'].get('properties', {}))} required: {t['inputSchema'].get('required', [])}")
+        lines.append(
+            f"- {t['name']}: {short(t['description'])} Arguments schema: "
+            f"{json.dumps(t['inputSchema'].get('properties', {}))} required: {t['inputSchema'].get('required', [])}"
+        )
     return "\n".join(lines)
 
 
@@ -129,7 +167,7 @@ def first_json(text):
             depth += {"{": 1, "}": -1}.get(text[i], 0)
             if depth == 0:
                 try:
-                    return json.loads(text[start:i + 1])
+                    return json.loads(text[start : i + 1])
                 except json.JSONDecodeError:
                     break
         start = text.find("{", start + 1)
@@ -139,14 +177,26 @@ def first_json(text):
 def run_task(model, mcp, task, native):
     log, answer = [], None
     if native:
-        tools = [{"type": "function", "function": {"name": t["name"], "description": short(t["description"]),
-                                                   "parameters": t["inputSchema"]}} for t in mcp.tools]
-        messages = [{"role": "system", "content": "You control a Linux machine through the provided tools. Use them to do the task, then answer briefly."},
-                    {"role": "user", "content": task["prompt"]}]
+        tools = [
+            {
+                "type": "function",
+                "function": {"name": t["name"], "description": short(t["description"]), "parameters": t["inputSchema"]},
+            }
+            for t in mcp.tools
+        ]
+        messages = [
+            {
+                "role": "system",
+                "content": "You control a Linux machine through the provided tools. Use them to do the task, then answer briefly.",
+            },
+            {"role": "user", "content": task["prompt"]},
+        ]
     else:
         tools = None
-        messages = [{"role": "system", "content": text_protocol_prompt(mcp.tools)},
-                    {"role": "user", "content": task["prompt"]}]
+        messages = [
+            {"role": "system", "content": text_protocol_prompt(mcp.tools)},
+            {"role": "user", "content": task["prompt"]},
+        ]
     for _ in range(MAX_STEPS):
         try:
             msg = chat(model, messages, tools)
@@ -205,8 +255,11 @@ if __name__ == "__main__":
                 res = run_task(model, mcp, t, native)
                 res["seconds"] = round(time.time() - t0, 1)
                 r["tasks"].append(res)
-                print(f"{model} [{r['mode']}] {t['id']}: {'PASS' if res['passed'] else 'FAIL'} "
-                      f"({res['steps']} tool calls, {res['seconds']}s)", flush=True)
+                print(
+                    f"{model} [{r['mode']}] {t['id']}: {'PASS' if res['passed'] else 'FAIL'} "
+                    f"({res['steps']} tool calls, {res['seconds']}s)",
+                    flush=True,
+                )
             results.append(r)
             with open(out, "w") as f:
                 json.dump(results, f, indent=1)

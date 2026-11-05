@@ -57,8 +57,7 @@ def get(path):
 def run(model):
     out = {"model": model, "results": []}
     t0 = time.time()
-    post("/api/generate", {"model": model, "prompt": "Hi", "stream": False,
-                           "options": {"num_predict": 1}})
+    post("/api/generate", {"model": model, "prompt": "Hi", "stream": False, "options": {"num_predict": 1}})
     out["load_seconds"] = round(time.time() - t0, 1)
     ps = [m for m in get("/api/ps")["models"] if m["name"] == model or m["model"] == model]
     if ps:
@@ -66,21 +65,32 @@ def run(model):
         out["total_gb"] = round(ps[0].get("size", 0) / 1e9, 1)
     for kind, prompts in (("normal", NORMAL), ("borderline", BORDERLINE)):
         for name, prompt in prompts.items():
-            r = post("/api/chat", {
-                "model": model, "stream": False,
-                "messages": [{"role": "user", "content": prompt}],
-                "options": {"temperature": 0, "seed": 7, "num_predict": 400},
-            })
+            r = post(
+                "/api/chat",
+                {
+                    "model": model,
+                    "stream": False,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "options": {"temperature": 0, "seed": 7, "num_predict": 400},
+                },
+            )
             text = r["message"]["content"]
             tps = r["eval_count"] / (r["eval_duration"] / 1e9) if r.get("eval_duration") else None
-            out["results"].append({
-                "kind": kind, "name": name, "tokens": r.get("eval_count"),
-                "tok_per_s": round(tps, 1) if tps else None,
-                "refusal_flag": bool(REFUSAL.search(text[:600])),
-                "text": text,
-            })
-            print(f"{model} {name}: {r.get('eval_count')} tok, "
-                  f"{tps:.1f} tok/s, refusal={out['results'][-1]['refusal_flag']}", flush=True)
+            out["results"].append(
+                {
+                    "kind": kind,
+                    "name": name,
+                    "tokens": r.get("eval_count"),
+                    "tok_per_s": round(tps, 1) if tps else None,
+                    "refusal_flag": bool(REFUSAL.search(text[:600])),
+                    "text": text,
+                }
+            )
+            print(
+                f"{model} {name}: {r.get('eval_count')} tok, "
+                f"{tps:.1f} tok/s, refusal={out['results'][-1]['refusal_flag']}",
+                flush=True,
+            )
     return out
 
 

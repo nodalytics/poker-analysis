@@ -1,0 +1,397 @@
+=== Self-play NLHE, blinds 1/2, 200 chips each, 40 hands max ===
+Seats: Tiger-Gemma-9B-v3, wizard-vicuna-uncensored, Big-Tiger-Gemma-27B-v3, qwen2.5vl
+
+--- Hand 1 --- Tiger-Gemma-9B-v3 200  wizard-vicuna-uncensored 200  Big-Tiger-Gemma-27B-v3 200  qwen2.5vl 200
+  [preflop] Big-Tiger-Gemma-27B-v3 3d 3c  folds  (4.5s)
+  [preflop] qwen2.5vl              4d 8h  calls 2  (3.0s)
+  [preflop] Tiger-Gemma-9B-v3      8d 2d  folds  (1.2s)
+  [preflop] wizard-vicuna-uncensored Js 2s  folds  (1.3s)
+  board - | qwen2.5vl 4d 8h | Tiger-Gemma-9B-v3 -1, wizard-vicuna-uncensored -2, qwen2.5vl +3
+
+--- Hand 2 --- wizard-vicuna-uncensored 198  Big-Tiger-Gemma-27B-v3 200  qwen2.5vl 203  Tiger-Gemma-9B-v3 199
+  [preflop] qwen2.5vl              Qd Kh  calls 2  (0.3s)
+  [preflop] Tiger-Gemma-9B-v3      4c 6s  calls 2  (0.1s)
+  [preflop] wizard-vicuna-uncensored 8d 9s  folds  (0.1s)
+  [preflop] Big-Tiger-Gemma-27B-v3 8c 3c  folds  (0.4s)
+  [flop   ] qwen2.5vl              Qd Kh  checks  (0.2s)
+  [flop   ] Tiger-Gemma-9B-v3      4c 6s  checks  (0.1s)
+  [turn   ] qwen2.5vl              Qd Kh  checks  (0.2s)
+  [turn   ] Tiger-Gemma-9B-v3      4c 6s  checks  (0.1s)
+  [river  ] qwen2.5vl              Qd Kh  checks  (0.2s)
+  [river  ] Tiger-Gemma-9B-v3      4c 6s  folds  (0.1s)
+  board 4h 9h 3d Kc Jd | qwen2.5vl Qd Kh | wizard-vicuna-uncensored -1, Big-Tiger-Gemma-27B-v3 -2, qwen2.5vl +5, Tiger-Gemma-9B-v3 -2
+
+--- Hand 3 --- Big-Tiger-Gemma-27B-v3 198  qwen2.5vl 208  Tiger-Gemma-9B-v3 197  wizard-vicuna-uncensored 197
+  [preflop] Tiger-Gemma-9B-v3      4d 2h  folds  (0.1s)
+  [preflop] wizard-vicuna-uncensored Qh 4h  folds  (0.1s)
+  [preflop] Big-Tiger-Gemma-27B-v3 Kh Jc  calls 1  (0.4s)
+  [preflop] qwen2.5vl              9c Td  raises to 20  (0.3s)
+  [preflop] Big-Tiger-Gemma-27B-v3 Kh Jc  calls 18  (0.4s)
+  [flop   ] Big-Tiger-Gemma-27B-v3 Kh Jc  checks  (0.4s)
+  [flop   ] qwen2.5vl              9c Td  checks  (0.2s)
+  [turn   ] Big-Tiger-Gemma-27B-v3 Kh Jc  checks  (0.4s)
+  [turn   ] qwen2.5vl              9c Td  raises to 80  (0.4s)
+  [turn   ] Big-Tiger-Gemma-27B-v3 Kh Jc  folds  (0.4s)
+  board 6c Ks 2s 6s | qwen2.5vl 9c Td | Big-Tiger-Gemma-27B-v3 -20, qwen2.5vl +20
+
+--- Hand 4 --- qwen2.5vl 228  Tiger-Gemma-9B-v3 197  wizard-vicuna-uncensored 197  Big-Tiger-Gemma-27B-v3 178
+  [preflop] wizard-vicuna-uncensored 6h 6c  folds  (0.1s)
+  [preflop] Big-Tiger-Gemma-27B-v3 Th 2s  folds  (0.4s)
+  [preflop] qwen2.5vl              3h 5c  calls 1  (0.3s)
+  [preflop] Tiger-Gemma-9B-v3      5s 2h  folds  (0.1s)
+  board - | qwen2.5vl 3h 5c | qwen2.5vl +2, Tiger-Gemma-9B-v3 -2
+
+--- Hand 5 --- Tiger-Gemma-9B-v3 195  wizard-vicuna-uncensored 197  Big-Tiger-Gemma-27B-v3 178  qwen2.5vl 230
+  [preflop] Big-Tiger-Gemma-27B-v3 5s 6c  folds  (0.3s)
+  [preflop] qwen2.5vl              2d 8c  calls 2  (0.3s)
+  [preflop] Tiger-Gemma-9B-v3      Jd 8h  calls 1  (0.1s)
+  [preflop] wizard-vicuna-uncensored Tc Td  folds  (0.2s)
+  [flop   ] Tiger-Gemma-9B-v3      Jd 8h  checks  (0.1s)
+  [flop   ] qwen2.5vl              2d 8c  checks  (0.2s)
+  [turn   ] Tiger-Gemma-9B-v3      Jd 8h  checks  (0.1s)
+  [turn   ] qwen2.5vl              2d 8c  checks  (0.2s)
+  [river  ] Tiger-Gemma-9B-v3      Jd 8h  checks  (0.1s)
+  [river  ] qwen2.5vl              2d 8c  checks  (0.3s)
+  board 9s Kc 8s Ts 6s | Tiger-Gemma-9B-v3 Jd 8h | Tiger-Gemma-9B-v3 +4, wizard-vicuna-uncensored -2, qwen2.5vl -2
+
+--- Hand 6 --- wizard-vicuna-uncensored 195  Big-Tiger-Gemma-27B-v3 178  qwen2.5vl 228  Tiger-Gemma-9B-v3 199
+  [preflop] qwen2.5vl              4s 9s  calls 2  (0.3s)
+  [preflop] Tiger-Gemma-9B-v3      2s 4c  calls 2  (0.1s)
+  [preflop] wizard-vicuna-uncensored 8s Ks  folds  (0.1s)
+  [preflop] Big-Tiger-Gemma-27B-v3 2h 4d  folds  (0.3s)
+  [flop   ] qwen2.5vl              4s 9s  raises to 30  (0.3s)
+  [flop   ] Tiger-Gemma-9B-v3      2s 4c  calls 30  (0.1s)
+  [turn   ] qwen2.5vl              4s 9s  checks  (0.3s)
+  [turn   ] Tiger-Gemma-9B-v3      2s 4c  checks  (0.1s)
+  [river  ] qwen2.5vl              4s 9s  checks  (0.3s)
+  [river  ] Tiger-Gemma-9B-v3      2s 4c  folds  (0.2s)
+  board 7s 9c 7h 6d 3s | qwen2.5vl 4s 9s | wizard-vicuna-uncensored -1, Big-Tiger-Gemma-27B-v3 -2, qwen2.5vl +35, Tiger-Gemma-9B-v3 -32
+
+--- Hand 7 --- Big-Tiger-Gemma-27B-v3 176  qwen2.5vl 263  Tiger-Gemma-9B-v3 167  wizard-vicuna-uncensored 194
+  [preflop] Tiger-Gemma-9B-v3      6c 9c  folds  (0.1s)
+  [preflop] wizard-vicuna-uncensored 4h 8c  folds  (0.1s)
+  [preflop] Big-Tiger-Gemma-27B-v3 6s 7h  calls 1  (0.3s)
+  [preflop] qwen2.5vl              Jh Qc  raises to 10  (0.4s)
+  [preflop] Big-Tiger-Gemma-27B-v3 6s 7h  folds  (0.4s)
+  board - | qwen2.5vl Jh Qc | Big-Tiger-Gemma-27B-v3 -2, qwen2.5vl +2
+
+--- Hand 8 --- qwen2.5vl 265  Tiger-Gemma-9B-v3 167  wizard-vicuna-uncensored 194  Big-Tiger-Gemma-27B-v3 174
+  [preflop] wizard-vicuna-uncensored 7h 4c  folds  (0.1s)
+  [preflop] Big-Tiger-Gemma-27B-v3 6c Td  folds  (0.4s)
+  [preflop] qwen2.5vl              6s Th  raises to 10  (0.3s)
+  [preflop] Tiger-Gemma-9B-v3      9h Qd  calls 8  (0.1s)
+  [flop   ] qwen2.5vl              6s Th  raises to 25  (0.4s)
+  [flop   ] Tiger-Gemma-9B-v3      9h Qd  calls 25  (0.1s)
+  [turn   ] qwen2.5vl              6s Th  checks  (0.2s)
+  [turn   ] Tiger-Gemma-9B-v3      9h Qd  checks  (0.1s)
+  [river  ] qwen2.5vl              6s Th  checks  (0.3s)
+  [river  ] Tiger-Gemma-9B-v3      9h Qd  folds  (0.1s)
+  board 3d 7c As Ts 2c | qwen2.5vl 6s Th | qwen2.5vl +35, Tiger-Gemma-9B-v3 -35
+
+--- Hand 9 --- Tiger-Gemma-9B-v3 132  wizard-vicuna-uncensored 194  Big-Tiger-Gemma-27B-v3 174  qwen2.5vl 300
+  [preflop] Big-Tiger-Gemma-27B-v3 6d 2h  folds  (0.3s)
+  [preflop] qwen2.5vl              Ts 4d  folds  (0.2s)
+  [preflop] Tiger-Gemma-9B-v3      5c 7c  calls 1  (0.1s)
+  [preflop] wizard-vicuna-uncensored 4c 4s  folds  (0.1s)
+  board - | Tiger-Gemma-9B-v3 5c 7c | Tiger-Gemma-9B-v3 +2, wizard-vicuna-uncensored -2
+
+--- Hand 10 --- wizard-vicuna-uncensored 192  Big-Tiger-Gemma-27B-v3 174  qwen2.5vl 300  Tiger-Gemma-9B-v3 134
+  [preflop] qwen2.5vl              6h Js  calls 2  (0.3s)
+  [preflop] Tiger-Gemma-9B-v3      5d 3d  folds  (0.1s)
+  [preflop] wizard-vicuna-uncensored 8h 7c  folds  (0.4s)
+  [preflop] Big-Tiger-Gemma-27B-v3 4d As  folds  (0.3s)
+  board - | qwen2.5vl 6h Js | wizard-vicuna-uncensored -1, Big-Tiger-Gemma-27B-v3 -2, qwen2.5vl +3
+
+--- Hand 11 --- Big-Tiger-Gemma-27B-v3 172  qwen2.5vl 303  Tiger-Gemma-9B-v3 134  wizard-vicuna-uncensored 191
+  [preflop] Tiger-Gemma-9B-v3      5h Qc  calls 2  (0.1s)
+  [preflop] wizard-vicuna-uncensored 6h Ks  calls 2  (0.2s)
+  [preflop] Big-Tiger-Gemma-27B-v3 9c 6c  folds  (0.3s)
+  [preflop] qwen2.5vl              Td 2h  folds  (0.3s)
+  [flop   ] Tiger-Gemma-9B-v3      5h Qc  checks  (0.1s)
+  [flop   ] wizard-vicuna-uncensored 6h Ks  folds  (0.2s)
+  board 7s 4s 7d | Tiger-Gemma-9B-v3 5h Qc | Big-Tiger-Gemma-27B-v3 -1, qwen2.5vl -2, Tiger-Gemma-9B-v3 +5, wizard-vicuna-uncensored -2
+
+--- Hand 12 --- qwen2.5vl 301  Tiger-Gemma-9B-v3 139  wizard-vicuna-uncensored 189  Big-Tiger-Gemma-27B-v3 171
+  [preflop] wizard-vicuna-uncensored Ac Ks  folds  (0.1s)
+  [preflop] Big-Tiger-Gemma-27B-v3 3d Th  folds  (0.3s)
+  [preflop] qwen2.5vl              4h 5d  calls 1  (0.3s)
+  [preflop] Tiger-Gemma-9B-v3      6h 8h  folds  (0.1s)
+  board - | qwen2.5vl 4h 5d | qwen2.5vl +2, Tiger-Gemma-9B-v3 -2
+
+--- Hand 13 --- Tiger-Gemma-9B-v3 137  wizard-vicuna-uncensored 189  Big-Tiger-Gemma-27B-v3 171  qwen2.5vl 303
+  [preflop] Big-Tiger-Gemma-27B-v3 Ac 3c  folds  (0.3s)
+  [preflop] qwen2.5vl              Jh Kh  raises to 6  (0.3s)
+  [preflop] Tiger-Gemma-9B-v3      4d Tc  folds  (0.1s)
+  [preflop] wizard-vicuna-uncensored 8h 2d  folds  (0.3s)
+  board - | qwen2.5vl Jh Kh | Tiger-Gemma-9B-v3 -1, wizard-vicuna-uncensored -2, qwen2.5vl +3
+
+--- Hand 14 --- wizard-vicuna-uncensored 187  Big-Tiger-Gemma-27B-v3 171  qwen2.5vl 306  Tiger-Gemma-9B-v3 136
+  [preflop] qwen2.5vl              Qd Tc  calls 2  (0.3s)
+  [preflop] Tiger-Gemma-9B-v3      5d 8d  calls 2  (0.1s)
+  [preflop] wizard-vicuna-uncensored Kc Kh  folds  (0.1s)
+  [preflop] Big-Tiger-Gemma-27B-v3 7h 8s  checks  (0.3s)
+  [flop   ] Big-Tiger-Gemma-27B-v3 7h 8s  checks  (0.3s)
+  [flop   ] qwen2.5vl              Qd Tc  checks  (0.2s)
+  [flop   ] Tiger-Gemma-9B-v3      5d 8d  raises to 100  (0.2s)
+  [flop   ] Big-Tiger-Gemma-27B-v3 7h 8s  folds  (0.4s)
+  [flop   ] qwen2.5vl              Qd Tc  folds  (0.2s)
+  board Js 8h Jc | Tiger-Gemma-9B-v3 5d 8d | wizard-vicuna-uncensored -1, Big-Tiger-Gemma-27B-v3 -2, qwen2.5vl -2, Tiger-Gemma-9B-v3 +5
+
+--- Hand 15 --- Big-Tiger-Gemma-27B-v3 169  qwen2.5vl 304  Tiger-Gemma-9B-v3 141  wizard-vicuna-uncensored 186
+  [preflop] Tiger-Gemma-9B-v3      5s 2s  folds  (0.1s)
+  [preflop] wizard-vicuna-uncensored 4s 9d  folds  (0.2s)
+  [preflop] Big-Tiger-Gemma-27B-v3 Js As  calls 1  (0.4s)
+  [preflop] qwen2.5vl              Qd Jh  raises to 4  (0.3s)
+  [preflop] Big-Tiger-Gemma-27B-v3 Js As  calls 2  (0.3s)
+  [flop   ] Big-Tiger-Gemma-27B-v3 Js As  folds  (0.4s)
+  board Tc 6c 7d | qwen2.5vl Qd Jh | Big-Tiger-Gemma-27B-v3 -4, qwen2.5vl +4
+
+--- Hand 16 --- qwen2.5vl 308  Tiger-Gemma-9B-v3 141  wizard-vicuna-uncensored 186  Big-Tiger-Gemma-27B-v3 165
+  [preflop] wizard-vicuna-uncensored Qs 5s  folds  (0.2s)
+  [preflop] Big-Tiger-Gemma-27B-v3 7s 8h  calls 2  (0.4s)
+  [preflop] qwen2.5vl              2c Ac  raises to 4  (0.3s)
+  [preflop] Tiger-Gemma-9B-v3      8d Jh  calls 2  (0.1s)
+  [preflop] Big-Tiger-Gemma-27B-v3 7s 8h  folds  (0.3s)
+  [flop   ] qwen2.5vl              2c Ac  checks  (0.2s)
+  [flop   ] Tiger-Gemma-9B-v3      8d Jh  folds  (0.1s)
+  board 9h Td Ad | qwen2.5vl 2c Ac | qwen2.5vl +6, Tiger-Gemma-9B-v3 -4, Big-Tiger-Gemma-27B-v3 -2
+
+--- Hand 17 --- Tiger-Gemma-9B-v3 137  wizard-vicuna-uncensored 186  Big-Tiger-Gemma-27B-v3 163  qwen2.5vl 314
+  [preflop] Big-Tiger-Gemma-27B-v3 3h 4s  folds  (0.3s)
+  [preflop] qwen2.5vl              8h 5c  folds  (0.2s)
+  [preflop] Tiger-Gemma-9B-v3      9d Qc  calls 1  (0.1s)
+  [preflop] wizard-vicuna-uncensored 5d 2c  folds  (0.1s)
+  board - | Tiger-Gemma-9B-v3 9d Qc | Tiger-Gemma-9B-v3 +2, wizard-vicuna-uncensored -2
+
+--- Hand 18 --- wizard-vicuna-uncensored 184  Big-Tiger-Gemma-27B-v3 163  qwen2.5vl 314  Tiger-Gemma-9B-v3 139
+  [preflop] qwen2.5vl              8s 3s  folds  (0.2s)
+  [preflop] Tiger-Gemma-9B-v3      2d Ks  folds  (0.1s)
+  [preflop] wizard-vicuna-uncensored Qd 4c  folds  (0.2s)
+  board - | Big-Tiger-Gemma-27B-v3 6c 7c | wizard-vicuna-uncensored -1, Big-Tiger-Gemma-27B-v3 +1
+
+--- Hand 19 --- Big-Tiger-Gemma-27B-v3 164  qwen2.5vl 314  Tiger-Gemma-9B-v3 139  wizard-vicuna-uncensored 183
+  [preflop] Tiger-Gemma-9B-v3      9h Kh  calls 2  (0.1s)
+  [preflop] wizard-vicuna-uncensored 7c Th  calls 2  (0.2s)
+  [preflop] Big-Tiger-Gemma-27B-v3 Ad 4c  folds  (0.3s)
+  [preflop] qwen2.5vl              Kc 3d  checks  (0.2s)
+  [flop   ] qwen2.5vl              Kc 3d  checks  (0.2s)
+  [flop   ] Tiger-Gemma-9B-v3      9h Kh  checks  (0.1s)
+  [flop   ] wizard-vicuna-uncensored 7c Th  folds  (0.2s)
+  [turn   ] qwen2.5vl              Kc 3d  checks  (0.2s)
+  [turn   ] Tiger-Gemma-9B-v3      9h Kh  checks  (0.1s)
+  [river  ] qwen2.5vl              Kc 3d  checks  (0.2s)
+  [river  ] Tiger-Gemma-9B-v3      9h Kh  checks  (0.2s)
+  board 6d 2c Qc Js Ah | Tiger-Gemma-9B-v3 9h Kh | Big-Tiger-Gemma-27B-v3 -1, qwen2.5vl -2, Tiger-Gemma-9B-v3 +5, wizard-vicuna-uncensored -2
+
+--- Hand 20 --- qwen2.5vl 312  Tiger-Gemma-9B-v3 144  wizard-vicuna-uncensored 181  Big-Tiger-Gemma-27B-v3 163
+  [preflop] wizard-vicuna-uncensored Jh 9h  folds  (0.2s)
+  [preflop] Big-Tiger-Gemma-27B-v3 5c 5d  calls 2  (0.3s)
+  [preflop] qwen2.5vl              4c 2d  folds  (0.2s)
+  [preflop] Tiger-Gemma-9B-v3      3c Qs  checks  (0.2s)
+  [flop   ] Tiger-Gemma-9B-v3      3c Qs  checks  (0.1s)
+  [flop   ] Big-Tiger-Gemma-27B-v3 5c 5d  checks  (0.3s)
+  [turn   ] Tiger-Gemma-9B-v3      3c Qs  raises to 50  (0.2s)
+  [turn   ] Big-Tiger-Gemma-27B-v3 5c 5d  folds  (0.3s)
+  board Qc Tc 4h Jc | Tiger-Gemma-9B-v3 3c Qs | qwen2.5vl -1, Tiger-Gemma-9B-v3 +3, Big-Tiger-Gemma-27B-v3 -2
+
+--- Hand 21 --- Tiger-Gemma-9B-v3 147  wizard-vicuna-uncensored 181  Big-Tiger-Gemma-27B-v3 161  qwen2.5vl 311
+  [preflop] Big-Tiger-Gemma-27B-v3 5s 5d  calls 2  (0.4s)
+  [preflop] qwen2.5vl              Ad 9c  calls 2  (0.3s)
+  [preflop] Tiger-Gemma-9B-v3      9s Qs  calls 1  (0.2s)
+  [preflop] wizard-vicuna-uncensored Th 6s  folds  (0.1s)
+  [flop   ] Tiger-Gemma-9B-v3      9s Qs  checks  (0.1s)
+  [flop   ] Big-Tiger-Gemma-27B-v3 5s 5d  checks  (0.4s)
+  [flop   ] qwen2.5vl              Ad 9c  checks  (0.2s)
+  [turn   ] Tiger-Gemma-9B-v3      9s Qs  checks  (0.1s)
+  [turn   ] Big-Tiger-Gemma-27B-v3 5s 5d  checks  (0.3s)
+  [turn   ] qwen2.5vl              Ad 9c  checks  (0.3s)
+  [river  ] Tiger-Gemma-9B-v3      9s Qs  folds  (0.2s)
+  [river  ] Big-Tiger-Gemma-27B-v3 5s 5d  checks  (0.3s)
+  [river  ] qwen2.5vl              Ad 9c  checks  (0.3s)
+  board 8h Kd 4c 6c 4d | Big-Tiger-Gemma-27B-v3 5s 5d | Tiger-Gemma-9B-v3 -2, wizard-vicuna-uncensored -2, Big-Tiger-Gemma-27B-v3 +6, qwen2.5vl -2
+
+--- Hand 22 --- wizard-vicuna-uncensored 179  Big-Tiger-Gemma-27B-v3 167  qwen2.5vl 309  Tiger-Gemma-9B-v3 145
+  [preflop] qwen2.5vl              3h Th  calls 2  (0.3s)
+  [preflop] Tiger-Gemma-9B-v3      Qh 5h  calls 2  (0.1s)
+  [preflop] wizard-vicuna-uncensored 8h 6h  calls 1  (0.2s)
+  [preflop] Big-Tiger-Gemma-27B-v3 Js 9d  checks  (0.4s)
+  [flop   ] wizard-vicuna-uncensored 8h 6h  checks  (0.2s)
+  [flop   ] Big-Tiger-Gemma-27B-v3 Js 9d  checks  (0.4s)
+  [flop   ] qwen2.5vl              3h Th  checks  (0.2s)
+  [flop   ] Tiger-Gemma-9B-v3      Qh 5h  raises to 100  (0.2s)
+  [flop   ] wizard-vicuna-uncensored 8h 6h  folds  (0.2s)
+  [flop   ] Big-Tiger-Gemma-27B-v3 Js 9d  calls 100  (0.5s)
+  [flop   ] qwen2.5vl              3h Th  folds  (0.3s)
+  [turn   ] Big-Tiger-Gemma-27B-v3 Js 9d  folds  (0.4s)
+  board Jh Tc Qc Qs | Tiger-Gemma-9B-v3 Qh 5h | wizard-vicuna-uncensored -2, Big-Tiger-Gemma-27B-v3 -102, qwen2.5vl -2, Tiger-Gemma-9B-v3 +106
+
+--- Hand 23 --- Big-Tiger-Gemma-27B-v3 65  qwen2.5vl 307  Tiger-Gemma-9B-v3 251  wizard-vicuna-uncensored 177
+  [preflop] Tiger-Gemma-9B-v3      Js 6c  folds  (0.1s)
+  [preflop] wizard-vicuna-uncensored 4c 9c  folds  (0.3s)
+  [preflop] Big-Tiger-Gemma-27B-v3 As 5c  folds  (0.4s)
+  board - | qwen2.5vl Jd Qd | Big-Tiger-Gemma-27B-v3 -1, qwen2.5vl +1
+
+--- Hand 24 --- qwen2.5vl 308  Tiger-Gemma-9B-v3 251  wizard-vicuna-uncensored 177  Big-Tiger-Gemma-27B-v3 64
+  [preflop] wizard-vicuna-uncensored 4d 4h  folds  (0.1s)
+  [preflop] Big-Tiger-Gemma-27B-v3 As 2d  folds  (0.3s)
+  [preflop] qwen2.5vl              6h Qh  calls 1  (0.3s)
+  [preflop] Tiger-Gemma-9B-v3      8s Tc  folds  (0.1s)
+  board - | qwen2.5vl 6h Qh | qwen2.5vl +2, Tiger-Gemma-9B-v3 -2
+
+--- Hand 25 --- Tiger-Gemma-9B-v3 249  wizard-vicuna-uncensored 177  Big-Tiger-Gemma-27B-v3 64  qwen2.5vl 310
+  [preflop] Big-Tiger-Gemma-27B-v3 5h 2s  folds  (0.3s)
+  [preflop] qwen2.5vl              8d Ts  calls 2  (0.3s)
+  [preflop] Tiger-Gemma-9B-v3      4d 3h  folds  (0.1s)
+  [preflop] wizard-vicuna-uncensored 2h Kc  folds  (0.2s)
+  board - | qwen2.5vl 8d Ts | Tiger-Gemma-9B-v3 -1, wizard-vicuna-uncensored -2, qwen2.5vl +3
+
+--- Hand 26 --- wizard-vicuna-uncensored 175  Big-Tiger-Gemma-27B-v3 64  qwen2.5vl 313  Tiger-Gemma-9B-v3 248
+  [preflop] qwen2.5vl              2h 8d  calls 2  (0.3s)
+  [preflop] Tiger-Gemma-9B-v3      Ac 3c  calls 2  (0.1s)
+  [preflop] wizard-vicuna-uncensored 5d 9s  folds  (0.2s)
+  [preflop] Big-Tiger-Gemma-27B-v3 Qs Qd  raises to 6  (0.4s)
+  [preflop] qwen2.5vl              2h 8d  folds  (0.3s)
+  [preflop] Tiger-Gemma-9B-v3      Ac 3c  calls 4  (0.1s)
+  [flop   ] Big-Tiger-Gemma-27B-v3 Qs Qd  checks  (0.4s)
+  [flop   ] Tiger-Gemma-9B-v3      Ac 3c  checks  (0.1s)
+  [turn   ] Big-Tiger-Gemma-27B-v3 Qs Qd  checks  (0.4s)
+  [turn   ] Tiger-Gemma-9B-v3      Ac 3c  checks  (0.1s)
+  [river  ] Big-Tiger-Gemma-27B-v3 Qs Qd  checks  (0.4s)
+  [river  ] Tiger-Gemma-9B-v3      Ac 3c  checks  (0.2s)
+  board 8c 3h 3d Jd 7h | Tiger-Gemma-9B-v3 Ac 3c | wizard-vicuna-uncensored -1, Big-Tiger-Gemma-27B-v3 -6, qwen2.5vl -2, Tiger-Gemma-9B-v3 +9
+
+--- Hand 27 --- Big-Tiger-Gemma-27B-v3 58  qwen2.5vl 311  Tiger-Gemma-9B-v3 257  wizard-vicuna-uncensored 174
+  [preflop] Tiger-Gemma-9B-v3      As 8d  calls 2  (0.1s)
+  [preflop] wizard-vicuna-uncensored Ad Ah  folds  (0.1s)
+  [preflop] Big-Tiger-Gemma-27B-v3 9s 8c  calls 1  (0.4s)
+  [preflop] qwen2.5vl              9d 7h  checks  (0.2s)
+  [flop   ] Big-Tiger-Gemma-27B-v3 9s 8c  checks  (0.3s)
+  [flop   ] qwen2.5vl              9d 7h  checks  (0.2s)
+  [flop   ] Tiger-Gemma-9B-v3      As 8d  checks  (0.1s)
+  [turn   ] Big-Tiger-Gemma-27B-v3 9s 8c  checks  (0.4s)
+  [turn   ] qwen2.5vl              9d 7h  checks  (0.2s)
+  [turn   ] Tiger-Gemma-9B-v3      As 8d  checks  (0.1s)
+  [river  ] Big-Tiger-Gemma-27B-v3 9s 8c  checks  (0.4s)
+  [river  ] qwen2.5vl              9d 7h  checks  (0.3s)
+  [river  ] Tiger-Gemma-9B-v3      As 8d  folds  (0.2s)
+  board 2d 2s Qh 4c Th | Big-Tiger-Gemma-27B-v3 9s 8c  qwen2.5vl 9d 7h | Big-Tiger-Gemma-27B-v3 +1, qwen2.5vl +1, Tiger-Gemma-9B-v3 -2
+
+--- Hand 28 --- qwen2.5vl 312  Tiger-Gemma-9B-v3 255  wizard-vicuna-uncensored 174  Big-Tiger-Gemma-27B-v3 59
+  [preflop] wizard-vicuna-uncensored 4d 5c  folds  (0.1s)
+  [preflop] Big-Tiger-Gemma-27B-v3 9d 3s  folds  (0.4s)
+  [preflop] qwen2.5vl              8c Jc  calls 1  (0.3s)
+  [preflop] Tiger-Gemma-9B-v3      Qc 9h  checks  (0.2s)
+  [flop   ] qwen2.5vl              8c Jc  checks  (0.2s)
+  [flop   ] Tiger-Gemma-9B-v3      Qc 9h  raises to 100  (0.2s)
+  [flop   ] qwen2.5vl              8c Jc  calls 100  (0.4s)
+  [turn   ] qwen2.5vl              8c Jc  checks  (0.2s)
+  [turn   ] Tiger-Gemma-9B-v3      Qc 9h  checks  (0.1s)
+  [river  ] qwen2.5vl              8c Jc  checks  (0.3s)
+  [river  ] Tiger-Gemma-9B-v3      Qc 9h  folds  (0.1s)
+  board Th 8s Qd 7d 3h | qwen2.5vl 8c Jc | qwen2.5vl +102, Tiger-Gemma-9B-v3 -102
+
+--- Hand 29 --- Tiger-Gemma-9B-v3 153  wizard-vicuna-uncensored 174  Big-Tiger-Gemma-27B-v3 59  qwen2.5vl 414
+  [preflop] Big-Tiger-Gemma-27B-v3 8s As  folds  (0.3s)
+  [preflop] qwen2.5vl              2c 5h  folds  (0.2s)
+  [preflop] Tiger-Gemma-9B-v3      5c 7c  folds  (0.1s)
+  board - | wizard-vicuna-uncensored Kd Qh | Tiger-Gemma-9B-v3 -1, wizard-vicuna-uncensored +1
+
+--- Hand 30 --- wizard-vicuna-uncensored 175  Big-Tiger-Gemma-27B-v3 59  qwen2.5vl 414  Tiger-Gemma-9B-v3 152
+  [preflop] qwen2.5vl              5s Ks  calls 2  (0.3s)
+  [preflop] Tiger-Gemma-9B-v3      Jh 2h  folds  (0.1s)
+  [preflop] wizard-vicuna-uncensored Jd 2s  folds  (0.1s)
+  [preflop] Big-Tiger-Gemma-27B-v3 6s 5c  folds  (0.3s)
+  board - | qwen2.5vl 5s Ks | wizard-vicuna-uncensored -1, Big-Tiger-Gemma-27B-v3 -2, qwen2.5vl +3
+
+--- Hand 31 --- Big-Tiger-Gemma-27B-v3 57  qwen2.5vl 417  Tiger-Gemma-9B-v3 152  wizard-vicuna-uncensored 174
+  [preflop] Tiger-Gemma-9B-v3      6c 4h  folds  (0.1s)
+  [preflop] wizard-vicuna-uncensored 8s Ad  folds  (0.2s)
+  [preflop] Big-Tiger-Gemma-27B-v3 3d Jd  folds  (0.3s)
+  board - | qwen2.5vl 2s 7h | Big-Tiger-Gemma-27B-v3 -1, qwen2.5vl +1
+
+--- Hand 32 --- qwen2.5vl 418  Tiger-Gemma-9B-v3 152  wizard-vicuna-uncensored 174  Big-Tiger-Gemma-27B-v3 56
+  [preflop] wizard-vicuna-uncensored 8d 7s  folds  (0.2s)
+  [preflop] Big-Tiger-Gemma-27B-v3 Qh 6h  folds  (0.3s)
+  [preflop] qwen2.5vl              9d 8c  calls 1  (0.3s)
+  [preflop] Tiger-Gemma-9B-v3      5c 9s  checks  (0.1s)
+  [flop   ] qwen2.5vl              9d 8c  checks  (0.2s)
+  [flop   ] Tiger-Gemma-9B-v3      5c 9s  checks  (0.1s)
+  [turn   ] qwen2.5vl              9d 8c  checks  (0.2s)
+  [turn   ] Tiger-Gemma-9B-v3      5c 9s  checks  (0.2s)
+  [river  ] qwen2.5vl              9d 8c  checks  (0.2s)
+  [river  ] Tiger-Gemma-9B-v3      5c 9s  checks  (0.1s)
+  board 3h Jd 3c 2h Qs | qwen2.5vl 9d 8c  Tiger-Gemma-9B-v3 5c 9s | 
+
+--- Hand 33 --- Tiger-Gemma-9B-v3 152  wizard-vicuna-uncensored 174  Big-Tiger-Gemma-27B-v3 56  qwen2.5vl 418
+  [preflop] Big-Tiger-Gemma-27B-v3 Kc 8c  folds  (0.3s)
+  [preflop] qwen2.5vl              Js 3s  folds  (0.3s)
+  [preflop] Tiger-Gemma-9B-v3      6d Ad  calls 1  (0.1s)
+  [preflop] wizard-vicuna-uncensored 8h Ts  folds  (0.1s)
+  board - | Tiger-Gemma-9B-v3 6d Ad | Tiger-Gemma-9B-v3 +2, wizard-vicuna-uncensored -2
+
+--- Hand 34 --- wizard-vicuna-uncensored 172  Big-Tiger-Gemma-27B-v3 56  qwen2.5vl 418  Tiger-Gemma-9B-v3 154
+  [preflop] qwen2.5vl              4h Kc  calls 2  (0.3s)
+  [preflop] Tiger-Gemma-9B-v3      Kh 6d  calls 2  (0.1s)
+  [preflop] wizard-vicuna-uncensored 8c 2h  folds  (0.2s)
+  [preflop] Big-Tiger-Gemma-27B-v3 Td 5h  folds  (0.3s)
+  [flop   ] qwen2.5vl              4h Kc  checks  (0.3s)
+  [flop   ] Tiger-Gemma-9B-v3      Kh 6d  checks  (0.1s)
+  [turn   ] qwen2.5vl              4h Kc  checks  (0.2s)
+  [turn   ] Tiger-Gemma-9B-v3      Kh 6d  checks  (0.1s)
+  [river  ] qwen2.5vl              4h Kc  checks  (0.2s)
+  [river  ] Tiger-Gemma-9B-v3      Kh 6d  folds  (0.1s)
+  board Qd 9c 5c Ac 7h | qwen2.5vl 4h Kc | wizard-vicuna-uncensored -1, Big-Tiger-Gemma-27B-v3 -2, qwen2.5vl +5, Tiger-Gemma-9B-v3 -2
+
+--- Hand 35 --- Big-Tiger-Gemma-27B-v3 54  qwen2.5vl 423  Tiger-Gemma-9B-v3 152  wizard-vicuna-uncensored 171
+  [preflop] Tiger-Gemma-9B-v3      Ah 5c  folds  (0.1s)
+  [preflop] wizard-vicuna-uncensored 9h Ad  folds  (0.1s)
+  [preflop] Big-Tiger-Gemma-27B-v3 8c Js  folds  (0.4s)
+  board - | qwen2.5vl Jd Ks | Big-Tiger-Gemma-27B-v3 -1, qwen2.5vl +1
+
+--- Hand 36 --- qwen2.5vl 424  Tiger-Gemma-9B-v3 152  wizard-vicuna-uncensored 171  Big-Tiger-Gemma-27B-v3 53
+  [preflop] wizard-vicuna-uncensored 6h Ac  folds  (0.2s)
+  [preflop] Big-Tiger-Gemma-27B-v3 7s Ad  folds  (0.4s)
+  [preflop] qwen2.5vl              9s As  raises to 5  (0.3s)
+  [preflop] Tiger-Gemma-9B-v3      3s 2c  folds  (0.1s)
+  board - | qwen2.5vl 9s As | qwen2.5vl +2, Tiger-Gemma-9B-v3 -2
+
+--- Hand 37 --- Tiger-Gemma-9B-v3 150  wizard-vicuna-uncensored 171  Big-Tiger-Gemma-27B-v3 53  qwen2.5vl 426
+  [preflop] Big-Tiger-Gemma-27B-v3 3c Kd  folds  (0.3s)
+  [preflop] qwen2.5vl              Js 7d  folds  (0.3s)
+  [preflop] Tiger-Gemma-9B-v3      2h 2s  folds  (0.1s)
+  board - | wizard-vicuna-uncensored Qs 9h | Tiger-Gemma-9B-v3 -1, wizard-vicuna-uncensored +1
+
+--- Hand 38 --- wizard-vicuna-uncensored 172  Big-Tiger-Gemma-27B-v3 53  qwen2.5vl 426  Tiger-Gemma-9B-v3 149
+  [preflop] qwen2.5vl              7s 2h  folds  (0.2s)
+  [preflop] Tiger-Gemma-9B-v3      Ad 5d  calls 2  (0.1s)
+  [preflop] wizard-vicuna-uncensored Js As  folds  (0.2s)
+  [preflop] Big-Tiger-Gemma-27B-v3 Jh 6h  folds  (0.3s)
+  board - | Tiger-Gemma-9B-v3 Ad 5d | wizard-vicuna-uncensored -1, Big-Tiger-Gemma-27B-v3 -2, Tiger-Gemma-9B-v3 +3
+
+--- Hand 39 --- Big-Tiger-Gemma-27B-v3 51  qwen2.5vl 426  Tiger-Gemma-9B-v3 152  wizard-vicuna-uncensored 171
+  [preflop] Tiger-Gemma-9B-v3      4h Qd  raises to 8  (0.1s)
+  [preflop] wizard-vicuna-uncensored Tc Th  folds  (0.1s)
+  [preflop] Big-Tiger-Gemma-27B-v3 3d 5d  folds  (0.3s)
+  [preflop] qwen2.5vl              2c 6d  folds  (0.3s)
+  board - | Tiger-Gemma-9B-v3 4h Qd | Big-Tiger-Gemma-27B-v3 -1, qwen2.5vl -2, Tiger-Gemma-9B-v3 +3
+
+--- Hand 40 --- qwen2.5vl 424  Tiger-Gemma-9B-v3 155  wizard-vicuna-uncensored 171  Big-Tiger-Gemma-27B-v3 50
+  [preflop] wizard-vicuna-uncensored 5d 9s  folds  (0.3s)
+  [preflop] Big-Tiger-Gemma-27B-v3 Tc Qs  calls 2  (0.3s)
+  [preflop] qwen2.5vl              Ac 4h  calls 1  (0.3s)
+  [preflop] Tiger-Gemma-9B-v3      Ad 9h  raises to 4  (0.1s)
+  [preflop] Big-Tiger-Gemma-27B-v3 Tc Qs  folds  (0.3s)
+  [preflop] qwen2.5vl              Ac 4h  calls 2  (0.3s)
+  [flop   ] qwen2.5vl              Ac 4h  checks  (0.2s)
+  [flop   ] Tiger-Gemma-9B-v3      Ad 9h  raises to 10  (0.2s)
+  [flop   ] qwen2.5vl              Ac 4h  calls 10  (0.3s)
+  [turn   ] qwen2.5vl              Ac 4h  checks  (0.3s)
+  [turn   ] Tiger-Gemma-9B-v3      Ad 9h  raises to 140  (0.2s)
+  [turn   ] qwen2.5vl              Ac 4h  folds  (0.3s)
+  board 2h 3d 3h 8s | Tiger-Gemma-9B-v3 Ad 9h | qwen2.5vl -14, Tiger-Gemma-9B-v3 +16, Big-Tiger-Gemma-27B-v3 -2
+
+=== Final chips ===
+  qwen2.5vl                410  (+210)  hands 40, played 25, decisions 81, invalid 0, avg 0.3s
+  Tiger-Gemma-9B-v3        171  (-29)  hands 40, played 19, decisions 82, invalid 0, avg 0.1s
+  wizard-vicuna-uncensored   171  (-29)  hands 40, played 3, decisions 42, invalid 0, avg 0.2s
+  Big-Tiger-Gemma-27B-v3    48  (-152)  hands 40, played 9, decisions 64, invalid 0, avg 0.4s

@@ -1,0 +1,20 @@
+[project]
+name = "llm-research"
+version = "0.1.0"
+description = "Local LLM agent evaluations: harnesses, sandboxes, self-play poker and results"
+requires-python = ">=3.12"
+# The agent harnesses (llm_test.py, dc_agent_test.py, browser_agent_test.py, poker_ask.py) use only the
+# standard library, so they also run with a bare python3 on the lab. These are for self-play and rendering.
+dependencies = [
+    "pokerkit==0.7.7",
+    "pillow==12.3.0",
+]
+
+[dependency-groups]
+dev = ["ruff==0.14.0"]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 120

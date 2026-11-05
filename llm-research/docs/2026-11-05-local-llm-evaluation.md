@@ -85,6 +85,53 @@ had been deleted by then, so Qwen2.5-VL 32B took its place. This replaces the fi
   models must call `browser_snapshot` themselves. That is how a real agent works, but it costs a step.
 - The lessons are recorded in `gui-skills/playwright-mcp-browser.md`.
 
+## 4. Native tool calling (`sandboxes/ollama/tool-models/`)
+
+Three models had no tool support in Ollama because their templates have none. New templates add it, same weights:
+`qwen.tmpl` is Ollama's official Qwen2.5 template (Qwen2.5-VL keeps vision), `gemma.tmpl` adds the same
+`<tool_call>` convention to Gemma's turn markers. Desktop Commander tasks, native mode:
+
+| Model | JSON text protocol | Native tool calls |
+|---|---|---|
+| Big-Tiger-Gemma 27B | 4/4 | **4/4** |
+| Qwen2.5-VL 32B | 4/4 | **4/4**, but 10 and 20 calls on two tasks that need 1 or 2 |
+| Tiger-Gemma 9B | 3/4 | 2/4: printed the command in a code block instead of calling the tool |
+
+Raw: `results/raw/dc_results_tools.json`.
+
+## 5. Poker (`scripts/poker_ask.py`, `scripts/poker_selfplay.py`)
+
+**Asked first.** "Can you play?" plus two questions with known answers (temperature 0):
+
+| Model | Says | 9 flush outs (AhKh on Qh9h3d2s) | A7o, 10bb, button: all-in |
+|---|---|---|---|
+| Big-Tiger-Gemma 27B | Can "simulate" play, honest about limits | ✓ | ✓ |
+| Qwen2.5-VL 32B | Can't play "in the traditional sense", can advise | ✓ (worked to `\boxed{9}`) | ✗ min-raise |
+| Tiger-Gemma 9B | Explained the rules instead of answering | ✗ said 4 | ✗ min-raise |
+| Wizard-Vicuna 13B | "Can play it decently", weak at the maths | ✗ said 13 | ✗ fold |
+
+The first grading marked Qwen's 9 wrong because it did not lead with the number; the grader now reads the
+final boxed or bold answer, and the saved answers were regraded rather than asked again.
+
+**Then played.** Four models at one No-Limit Hold'em table, play chips, PokerKit 0.7.7 enforcing the rules,
+blinds 1/2, 200 chips each, 40 hands, temperature 0.7, all four models resident on the GPUs:
+
+| Model | Final chips | Voluntarily played | Invalid replies |
+|---|---|---|---|
+| Qwen2.5-VL 32B | 410 (+210) | 25 of 40 | 0 |
+| Tiger-Gemma 9B | 171 (−29) | 19 | 0 |
+| Wizard-Vicuna 13B | 171 (−29) | 3 | 0 |
+| Big-Tiger-Gemma 27B | 48 (−152) | 9 | 0 |
+
+40 hands is far too few to rank skill: the chip counts are mostly the cards. What it does show is that every
+model followed the action format, and the styles differ (Qwen loose, Wizard-Vicuna almost never plays).
+The engine was checked first with a random player: chips conserved and every hand zero-sum.
+
+![Three biggest pots](../media/2026-11-05-poker-selfplay-4-models.gif)
+
+Raw: `results/raw/poker_ask.json`, `results/raw/poker_selfplay/` (every decision and reply);
+hand history: `results/logs/poker_selfplay_table.log`.
+
 ## Decisions
 
 - **Mistral Large dropped:** slowest, fills all three GPUs, worst agent, made up answers, and its licence

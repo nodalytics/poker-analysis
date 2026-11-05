@@ -39,7 +39,10 @@ d.TASKS = [
         "prompt": f"Go to {SITE}/contact, type Ada in the Name field and hello from the model in the Message field, then click Send.",
         "check": lambda ex, ans: any(
             r.get("name") == "Ada" and r.get("message") == "hello from the model"
-            for r in (json.loads(x) for x in ex("cat /tmp/site/submissions.jsonl 2>/dev/null").splitlines() if x.strip())),
+            for r in (
+                json.loads(x) for x in ex("cat /tmp/site/submissions.jsonl 2>/dev/null").splitlines() if x.strip()
+            )
+        ),
     },
     {
         "id": "read_result",
@@ -61,8 +64,11 @@ if __name__ == "__main__":
                 res = d.run_task(model, mcp, t, native)
                 res["seconds"] = round(time.time() - t0, 1)
                 r["tasks"].append(res)
-                print(f"{model} [{r['mode']}] {t['id']}: {'PASS' if res['passed'] else 'FAIL'} "
-                      f"({res['steps']} tool calls, {res['seconds']}s)", flush=True)
+                print(
+                    f"{model} [{r['mode']}] {t['id']}: {'PASS' if res['passed'] else 'FAIL'} "
+                    f"({res['steps']} tool calls, {res['seconds']}s)",
+                    flush=True,
+                )
             results.append(r)
             with open(out, "w") as f:
                 json.dump(results, f, indent=1)
