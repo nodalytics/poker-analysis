@@ -18,6 +18,7 @@ import arena  # noqa: E402  (binom_tail, short names)
 import poker_selfplay as ps  # noqa: E402
 
 HANDS = 24
+SHORT = None  # (5, 20) with --short: every hand dealt 5-20 big blinds
 
 
 def main(outdir, sessions, models):
@@ -29,7 +30,7 @@ def main(outdir, sessions, models):
         seats = [f"{m}#{t}" for m in models for t in ("plain", "solverfirst")]
         seats += [ps.BOB, "monte", others[(k - 1) % len(others)]]
         seats = seats[k % len(seats) :] + seats[: k % len(seats)]  # rotate positions every session
-        chips, _ = ps.main(os.path.join(outdir, f"session{k:02d}"), HANDS, seats)
+        chips, _ = ps.main(os.path.join(outdir, f"session{k:02d}"), HANDS, seats, short_stack=SHORT)
         for m in models:
             diffs[m].append(chips[f"{m}#solverfirst"] - chips[f"{m}#plain"])
         log.write(
@@ -61,4 +62,7 @@ def main(outdir, sessions, models):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], int(sys.argv[2]), sys.argv[3:])
+    args = [a for a in sys.argv[1:] if a != "--short"]
+    if "--short" in sys.argv:
+        SHORT = (5, 20)
+    main(args[0], int(args[1]), args[2:])

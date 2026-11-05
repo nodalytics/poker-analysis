@@ -8,7 +8,8 @@ per hand in the range at each point; the target is the solver's action probabili
 
 Evaluation holds out whole flops (grouped split), so the model is scored on boards it never saw, against the
 baseline of predicting each decision point's average strategy. Reports mean absolute error per action probability
-and how often the most likely action matches the solver's. Writes OUT_DIR/model.joblib and OUT_DIR/report.json.
+and how often the most likely action matches the solver's. Compares a neural network with tree models (gradient
+boosting, random forest, extra trees) and two averaging ensembles. Writes OUT_DIR/<model>.joblib and report.json.
 """
 
 import glob
@@ -108,54 +109,96 @@ def load(libdir):
     return np.array(X), np.array(Y), np.array(G), np.array(N)
 
 
+def normalise(P):
+    P = np.clip(P, 0, None)
+    return P / np.maximum(P.sum(axis=1, keepdims=True), 1e-9)
+
+
+def score(P, Y, N):
+    out = {
+        "mae": round(float(np.abs(P - Y).mean()), 4),
+        "top_action_agreement": round(float((P.argmax(1) == Y.argmax(1)).mean()), 4),
+        "by_node": {},
+    }
+    for node in NODES:
+        m = N == node
+        if m.any():
+            out["by_node"][node] = {
+                "mae": round(float(np.abs(P[m] - Y[m]).mean()), 4),
+                "top_agree": round(float((P[m].argmax(1) == Y[m].argmax(1)).mean()), 4),
+            }
+    return out
+
+
+def models():
+    from sklearn.ensemble import ExtraTreesRegressor, HistGradientBoostingRegressor, RandomForestRegressor
+    from sklearn.multioutput import MultiOutputRegressor
+    from sklearn.neural_network import MLPRegressor
+
+    return {
+        "mlp": MLPRegressor(hidden_layer_sizes=(128, 64), max_iter=300, early_stopping=True, random_state=0),
+        "gradient_boosting": MultiOutputRegressor(
+            HistGradientBoostingRegressor(max_iter=300, learning_rate=0.08, random_state=0)
+        ),
+        "random_forest": RandomForestRegressor(n_estimators=300, min_samples_leaf=5, n_jobs=8, random_state=0),
+        "extra_trees": ExtraTreesRegressor(n_estimators=300, min_samples_leaf=5, n_jobs=8, random_state=0),
+    }
+
+
 def main(libdir, outdir):
+    import time
+
     from joblib import dump
     from sklearn.model_selection import GroupShuffleSplit
-    from sklearn.neural_network import MLPRegressor
 
     os.makedirs(outdir, exist_ok=True)
     X, Y, G, N = load(libdir)
-    flops = len(set(G))
-    split = GroupShuffleSplit(n_splits=1, test_size=0.25, random_state=0)
-    tr, te = next(split.split(X, Y, G))
-    model = MLPRegressor(hidden_layer_sizes=(128, 64), max_iter=300, early_stopping=True, random_state=0)
-    model.fit(X[tr], Y[tr])
-    P = np.clip(model.predict(X[te]), 0, None)
-    P = P / np.maximum(P.sum(axis=1, keepdims=True), 1e-9)
+    tr, te = next(GroupShuffleSplit(n_splits=1, test_size=0.25, random_state=0).split(X, Y, G))
     base = np.zeros_like(Y[te])
     for node in NODES:  # baseline: that decision point's average strategy in training
         m_tr, m_te = N[tr] == node, N[te] == node
         if m_tr.any():
             base[m_te] = Y[tr][m_tr].mean(axis=0)
     rep = {
-        "solves": int(len(set(zip(G, N)))) and len(glob.glob(os.path.join(libdir, "solves", "*.json.gz"))),
-        "flops": flops,
+        "solves": len(glob.glob(os.path.join(libdir, "solves", "*.json.gz"))),
+        "flops": len(set(G)),
         "examples": int(len(X)),
         "test_flops": int(len(set(G[te]))),
         "test_examples": int(len(te)),
-        "model_mae": round(float(np.abs(P - Y[te]).mean()), 4),
-        "baseline_mae": round(float(np.abs(base - Y[te]).mean()), 4),
-        "model_top_action_agreement": round(float((P.argmax(1) == Y[te].argmax(1)).mean()), 4),
-        "baseline_top_action_agreement": round(float((base.argmax(1) == Y[te].argmax(1)).mean()), 4),
-        "by_node": {},
+        "baseline": score(base, Y[te], N[te]),
+        "models": {},
     }
-    for node in NODES:
-        m = N[te] == node
-        if m.any():
-            rep["by_node"][node] = {
-                "examples": int(m.sum()),
-                "model_mae": round(float(np.abs(P[m] - Y[te][m]).mean()), 4),
-                "baseline_mae": round(float(np.abs(base[m] - Y[te][m]).mean()), 4),
-                "model_top_agree": round(float((P[m].argmax(1) == Y[te][m].argmax(1)).mean()), 4),
-            }
-    import time
-
-    t0 = time.time()
-    model.predict(X[te][:1])
-    rep["predict_ms_one_hand"] = round((time.time() - t0) * 1000, 3)
-    dump(model, os.path.join(outdir, "model.joblib"))
+    preds = {}
+    for name, model in models().items():
+        t0 = time.time()
+        model.fit(X[tr], Y[tr])
+        fit_s = time.time() - t0
+        P = normalise(model.predict(X[te]))
+        t0 = time.time()
+        model.predict(X[te][:1])
+        rep["models"][name] = {
+            **score(P, Y[te], N[te]),
+            "fit_seconds": round(fit_s, 1),
+            "predict_ms_one_hand": round((time.time() - t0) * 1000, 2),
+        }
+        preds[name] = P
+        dump(model, os.path.join(outdir, f"{name}.joblib"))
+    trees = ["gradient_boosting", "random_forest", "extra_trees"]
+    rep["models"]["ensemble_trees"] = score(normalise(sum(preds[k] for k in trees) / len(trees)), Y[te], N[te])
+    rep["models"]["ensemble_all"] = score(normalise(sum(preds.values()) / len(preds)), Y[te], N[te])
+    best = min(rep["models"], key=lambda k: rep["models"][k]["mae"])
+    rep["best_by_mae"] = best
     json.dump(rep, open(os.path.join(outdir, "report.json"), "w"), indent=1)
-    print(json.dumps(rep, indent=1))
+    print(
+        f"{rep['solves']} solves, {rep['flops']} flops, {rep['test_flops']} held out ({rep['test_examples']} examples)"
+    )
+    print(
+        f"  {'baseline':18} MAE {rep['baseline']['mae']:.4f}  top-action {rep['baseline']['top_action_agreement']:.1%}"
+    )
+    for k, v in rep["models"].items():
+        extra = f"  fit {v['fit_seconds']}s  predict {v['predict_ms_one_hand']} ms" if "fit_seconds" in v else ""
+        print(f"  {k:18} MAE {v['mae']:.4f}  top-action {v['top_action_agreement']:.1%}{extra}")
+    print("best:", best)
 
 
 if __name__ == "__main__":

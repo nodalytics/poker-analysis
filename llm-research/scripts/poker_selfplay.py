@@ -196,7 +196,11 @@ def parse(text):
     return None, None
 
 
-def main(outdir, hands, models, notes=None):
+_SHORT_RNG = random.Random(77)
+
+
+def main(outdir, hands, models, notes=None, short_stack=None):
+    """short_stack=(lo, hi): every hand deals each player a fresh lo-hi big blinds; chips then track net winnings."""
     os.makedirs(outdir, exist_ok=True)
     log = open(os.path.join(outdir, "table.log"), "a", buffering=1)
     jl = open(os.path.join(outdir, "hands.jsonl"), "a", buffering=1)
@@ -210,13 +214,19 @@ def main(outdir, hands, models, notes=None):
     say("Seats: " + ", ".join(short(m) for m in models))
     order = list(models)
     for h in range(1, hands + 1):
-        alive = [m for m in order if chips[m] > 0]
+        alive = list(order) if short_stack else [m for m in order if chips[m] > 0]
         if len(alive) < 2:
             break
         # PokerKit seats: index 0 small blind, 1 big blind, last is the button. Rotate one seat per hand.
         seat = alive[(h - 1) % len(alive) :] + alive[: (h - 1) % len(alive)]
+        rs = _SHORT_RNG
+        dealt = (
+            {m: BB * rs.randint(short_stack[0], short_stack[1]) for m in seat}
+            if short_stack
+            else {m: chips[m] for m in seat}
+        )
         state = NoLimitTexasHoldem.create_state(
-            AUTO, True, 0, (SB, BB), BB, tuple(chips[m] for m in seat), len(seat), mode=Mode.CASH_GAME
+            AUTO, True, 0, (SB, BB), BB, tuple(dealt[m] for m in seat), len(seat), mode=Mode.CASH_GAME
         )
         say(f"\n--- Hand {h} --- " + "  ".join(f"{short(m)} {chips[m]}" for m in seat))
         for i, m in enumerate(seat):
@@ -335,7 +345,7 @@ def main(outdir, hands, models, notes=None):
             stats[m]["vpip_hands"] += 1
         board = cards(list(state.get_board_cards(0))) if state.board_count else "-"
         for i, m in enumerate(seat):
-            chips[m] = state.stacks[i]
+            chips[m] += state.stacks[i] - dealt[m]  # net change this hand
         result = ", ".join(f"{short(m)} {'+' if p > 0 else ''}{p}" for m, p in zip(seat, state.payoffs) if p)
         jl.write(
             json.dumps(
