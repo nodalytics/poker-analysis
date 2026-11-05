@@ -30,7 +30,7 @@ KEY = open(os.path.expanduser("~/windows11/oem/mcp.key")).read().strip()
 SKILLS_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "gui-skills", "windows-mcp.md")
 SKILLS = open(SKILLS_FILE).read() if os.path.exists(SKILLS_FILE) else ""
 GUI_TOOLS = ["App", "Snapshot", "Click", "Type", "Shortcut", "Scroll", "Move", "Wait", "WaitFor"]
-MAX_STEPS = 14
+MAX_STEPS = 24  # 14 cut Qwen off mid-task on Calculator and Explorer (2026-11-05)
 DESK = r"C:\Users\tester\Desktop"
 
 SYSTEM = (
