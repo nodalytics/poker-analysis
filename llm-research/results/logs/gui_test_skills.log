@@ -1,0 +1,8 @@
+Windows-MCP 4.1.6: 21 tools; models get ['App', 'Snapshot', 'Click', 'Type', 'Shortcut', 'Scroll', 'Move', 'Wait', 'WaitFor']
+big-tiger-gemma-tools:27b notepad_save: FAIL (1 tool calls, 20.0s) answer=''
+big-tiger-gemma-tools:27b calculator: FAIL (1 tool calls, 18.1s) answer=''
+big-tiger-gemma-tools:27b explorer_folder: FAIL (1 tool calls, 18.7s) answer=''
+qwen2.5vl-tools:32b notepad_save: FAIL (7 tool calls, 72.1s) answer='The file has been saved as C:\\Users\\tester\\Desktop\\gui_test.txt. The task is com'
+qwen2.5vl-tools:32b calculator: PASS (10 tool calls, 56.4s) answer='The result of 123 multiplied by 45 in the Calculator app is 5535.'
+qwen2.5vl-tools:32b explorer_folder: FAIL (7 tool calls, 71.2s) answer='The folder named "agent-test" has been successfully created on the Desktop. The '
+ALLDONE

@@ -17,7 +17,33 @@ from PIL import Image, ImageDraw, ImageFont
 W, H = 720, 405
 FELT, RIM, BG, INK, DIM, HI = (21, 94, 60), (12, 56, 36), (14, 18, 24), (236, 240, 244), (150, 160, 170), (250, 204, 21)
 SUITS = {"s": ("♠", (20, 20, 20)), "c": ("♣", (20, 20, 20)), "h": ("♥", (200, 30, 40)), "d": ("♦", (200, 30, 40))}
-SEATS = [(150, 95), (570, 95), (570, 300), (150, 300)]
+SEATS4 = [(150, 95), (570, 95), (570, 300), (150, 300)]
+
+
+ABBR = [
+    ("Big-Tiger-Gemma", "BigTiger"),
+    ("Tiger-Gemma-9B", "Tiger9B"),
+    ("qwen2.5vl", "Qwen"),
+    ("wizard-vicuna", "Wizard"),
+]
+TAGS = {"learn": "L", "frozen": "F", "toolkit": "T"}
+
+
+def label(name):
+    """Short seat label that keeps who is who: 'Qwen·L' (learner), '·F' (frozen twin), '·T' (toolkit)."""
+    base, _, tag = name.partition("#")
+    short = next((v for k, v in ABBR if k in base), base)
+    return f"{short}·{TAGS.get(tag, tag)}" if tag else short
+
+
+def seat_xy(i, n):
+    """Seat centres: the original four corners for up to 4 players, else evenly round the table's oval."""
+    if n <= 4:
+        return SEATS4[i]
+    import math
+
+    a = -math.pi / 2 + 2 * math.pi * i / n
+    return (int(W / 2 + 268 * math.cos(a)), int(H / 2 - 8 + 150 * math.sin(a)))
 
 
 def font(size, bold=False):
@@ -46,7 +72,10 @@ def frame(hand, seats, stacks, bets, holes, folded, board, pot, actor, caption):
     im = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(im)
     d.ellipse([60, 40, W - 60, H - 40], fill=FELT, outline=RIM, width=8)
-    d.text((W / 2, 18), f"Hand {hand}  ·  play chips  ·  blinds 1/2", font=FS, fill=DIM, anchor="mm")
+    if len(seats) <= 4:
+        d.text((W / 2, 18), f"Hand {hand}  ·  play chips  ·  blinds 1/2", font=FS, fill=DIM, anchor="mm")
+    else:
+        caption = f"Hand {hand}  ·  {caption}"
     cs = board.split() if board and board != "-" else []
     for k in range(5):
         x = W / 2 - 92 + k * 37
@@ -56,21 +85,28 @@ def frame(hand, seats, stacks, bets, holes, folded, board, pot, actor, caption):
             d.rounded_rectangle([x, H / 2 - 38, x + 30, H / 2 + 4], 4, outline=(40, 120, 80))
     d.text((W / 2, H / 2 + 22), f"Pot {pot}", font=FB, fill=INK, anchor="mm")
     for i, name in enumerate(seats):
-        cx, cy = SEATS[i]
-        box = [cx - 92, cy - 34, cx + 92, cy + 34]
+        cx, cy = seat_xy(i, len(seats))
+        half = 92 if len(seats) <= 4 else 70
+        box = [cx - half, cy - 34, cx + half, cy + 34]
         d.rounded_rectangle(
             box, 8, fill=(18, 24, 32), outline=HI if i == actor else (60, 70, 80), width=3 if i == actor else 1
         )
-        d.text((cx - 84, cy - 26), name[:11], font=FB, fill=DIM if folded[i] else INK)
-        d.text((cx - 84, cy - 6), f"{stacks[i]} chips", font=F, fill=DIM)
+        d.text(
+            (cx - half + 8, cy - 26),
+            label(name)[:11],
+            font=FB if half > 80 else F,
+            fill=DIM if folded[i] else INK,
+        )
+        d.text((cx - half + 8, cy - 6), f"{stacks[i]} chips", font=FS, fill=DIM)
         if bets[i]:
-            d.text((cx - 84, cy + 12), f"bet {bets[i]}", font=F, fill=HI)
+            d.text((cx - half + 8, cy + 12), f"bet {bets[i]}", font=FS, fill=HI)
         hc = (holes.get(i) or "").split()
         for k, c in enumerate(hc[:2]):
             if folded[i]:
-                d.rounded_rectangle([cx + 14 + k * 34, cy - 21, cx + 44 + k * 34, cy + 21], 4, fill=(60, 66, 72))
+                x0 = cx + half - 70 + k * 34
+                d.rounded_rectangle([x0, cy - 21, x0 + 30, cy + 21], 4, fill=(60, 66, 72))
             else:
-                card(d, cx + 14 + k * 34, cy - 21, c)
+                card(d, cx + half - 70 + k * 34, cy - 21, c)
     d.rectangle([0, H - 30, W, H], fill=(8, 10, 14))
     d.text((W / 2, H - 15), caption, font=FB, fill=INK, anchor="mm")
     return im

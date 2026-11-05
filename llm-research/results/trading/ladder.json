@@ -1,0 +1,135 @@
+{
+ "round": 6,
+ "history": [
+  {
+   "round": 1,
+   "trading": {
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#learn": 996.3076923076923,
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#frozen": 1000.9230769230769,
+    "wizard-vicuna-uncensored:13b#learn": 996.3076923076923,
+    "wizard-vicuna-uncensored:13b#frozen": 996.3076923076923,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#learn": 988.9230769230769,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#frozen": 988.9230769230769,
+    "qwen2.5vl:32b#learn": 1008.3076923076923,
+    "qwen2.5vl:32b#frozen": 991.6923076923077,
+    "qwen2.5vl:32b#paper": 1012.0,
+    "paper_rule": 1002.7692307692307,
+    "paper_random_gate": 1005.5384615384615,
+    "random_trader": 1010.1538461538462,
+    "buy_hold": 996.3076923076923,
+    "flat": 1005.5384615384615
+   }
+  },
+  {
+   "round": 2,
+   "trading": {
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#learn": 999.214192626622,
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#frozen": 1003.6579871056891,
+    "wizard-vicuna-uncensored:13b#learn": 999.214192626622,
+    "wizard-vicuna-uncensored:13b#frozen": 999.214192626622,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#learn": 984.7193803350381,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#frozen": 982.8732264888843,
+    "qwen2.5vl:32b#learn": 1005.2296470457773,
+    "qwen2.5vl:32b#frozen": 980.001119008502,
+    "qwen2.5vl:32b#paper": 1021.7078736744968,
+    "paper_rule": 1014.6662741287522,
+    "paper_random_gate": 995.1787167586448,
+    "random_trader": 1001.468749727544,
+    "buy_hold": 999.214192626622,
+    "flat": 1013.6402552201832
+   }
+  },
+  {
+   "round": 3,
+   "trading": {
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#learn": 997.3972393851501,
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#frozen": 1001.675931645666,
+    "wizard-vicuna-uncensored:13b#learn": 997.3972393851501,
+    "wizard-vicuna-uncensored:13b#frozen": 997.3972393851501,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#learn": 989.9021495034838,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#frozen": 981.6629015898709,
+    "qwen2.5vl:32b#learn": 994.8815145468326,
+    "qwen2.5vl:32b#frozen": 988.1279716083384,
+    "qwen2.5vl:32b#paper": 1031.0562218140649,
+    "paper_rule": 1002.1216816854015,
+    "paper_random_gate": 987.0501500118306,
+    "random_trader": 1013.4141836068139,
+    "buy_hold": 997.3972393851501,
+    "flat": 1020.5183364470967
+   }
+  },
+  {
+   "round": 4,
+   "trading": {
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#learn": 999.3398495031136,
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#frozen": 1003.4596182507717,
+    "wizard-vicuna-uncensored:13b#learn": 999.3398495031136,
+    "wizard-vicuna-uncensored:13b#frozen": 999.3398495031136,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#learn": 981.9692049717361,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#frozen": 970.3431619100497,
+    "qwen2.5vl:32b#learn": 996.9175558293463,
+    "qwen2.5vl:32b#frozen": 1000.5685532078153,
+    "qwen2.5vl:32b#paper": 1038.2132150495836,
+    "paper_rule": 995.5811197564108,
+    "paper_random_gate": 997.6845612038487,
+    "random_trader": 1008.3005787313749,
+    "buy_hold": 999.3398495031136,
+    "flat": 1009.6030330766085
+   }
+  },
+  {
+   "round": 5,
+   "trading": {
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#learn": 1007.6718712662915,
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#frozen": 1011.6386661777383,
+    "wizard-vicuna-uncensored:13b#learn": 1007.6718712662915,
+    "wizard-vicuna-uncensored:13b#frozen": 1007.6718712662915,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#learn": 972.4841118705742,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#frozen": 965.9031071036881,
+    "qwen2.5vl:32b#learn": 999.8010594677936,
+    "qwen2.5vl:32b#frozen": 1001.4703345410182,
+    "qwen2.5vl:32b#paper": 1035.8766687395932,
+    "paper_rule": 990.2065508202146,
+    "paper_random_gate": 995.001124015632,
+    "random_trader": 995.9922308436467,
+    "buy_hold": 1007.6718712662915,
+    "flat": 1000.9386613549344
+   }
+  },
+  {
+   "round": 6,
+   "trading": {
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#learn": 1012.0026544515442,
+    "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#frozen": 1015.8223391413555,
+    "wizard-vicuna-uncensored:13b#learn": 1012.0026544515442,
+    "wizard-vicuna-uncensored:13b#frozen": 1012.0026544515442,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#learn": 967.0417741650576,
+    "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#frozen": 971.7800352227389,
+    "qwen2.5vl:32b#learn": 1004.4239158649863,
+    "qwen2.5vl:32b#frozen": 1013.4158528056844,
+    "qwen2.5vl:32b#paper": 1031.7806701132115,
+    "paper_rule": 980.4161732253953,
+    "paper_random_gate": 985.0328826942657,
+    "random_trader": 985.9872115592154,
+    "buy_hold": 1012.0026544515442,
+    "flat": 996.2885274019119
+   }
+  }
+ ],
+ "trading": {
+  "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#learn": 1012.0026544515442,
+  "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#frozen": 1015.8223391413555,
+  "wizard-vicuna-uncensored:13b#learn": 1012.0026544515442,
+  "wizard-vicuna-uncensored:13b#frozen": 1012.0026544515442,
+  "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#learn": 967.0417741650576,
+  "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#frozen": 971.7800352227389,
+  "qwen2.5vl:32b#learn": 1004.4239158649863,
+  "qwen2.5vl:32b#frozen": 1013.4158528056844,
+  "qwen2.5vl:32b#paper": 1031.7806701132115,
+  "paper_rule": 980.4161732253953,
+  "paper_random_gate": 985.0328826942657,
+  "random_trader": 985.9872115592154,
+  "buy_hold": 1012.0026544515442,
+  "flat": 996.2885274019119
+ }
+}

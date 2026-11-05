@@ -1,0 +1,3 @@
+- round 1, trading: This match taught me the importance of having a trading plan and sticking to it. I learned that without a plan, my trades were unstructured and unsuccessful. I will remember to always have a plan befo
+- round 2, trading: This match taught me the importance of sticking to my trading plan and not letting emotions get in the way. I learned that even when I felt confident in my trade idea, I needed to follow my rules and 
+- round 3, trading: This match was a learning experience. I realized that I was too focused on making money and not enough on following my trading plan. I ended up taking trades that were not in line with my rules and lo

@@ -1,0 +1,231 @@
+{
+ "instrument": "BTCUSD",
+ "start": "2026-10-30 10:00:00+00:00",
+ "end": "2026-11-02 09:00:00+00:00",
+ "paper_gate_open_share": 0.194,
+ "totals": {
+  "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#learn": 0.305,
+  "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#frozen": 0.305,
+  "wizard-vicuna-uncensored:13b#learn": 0.305,
+  "wizard-vicuna-uncensored:13b#frozen": 0.305,
+  "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#learn": -0.099,
+  "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#frozen": 0.305,
+  "qwen2.5vl:32b#learn": 0.305,
+  "qwen2.5vl:32b#frozen": 1.384,
+  "qwen2.5vl:32b#paper": 0.248,
+  "paper_rule": -1.122,
+  "paper_random_gate": -1.127,
+  "random_trader": -1.161,
+  "buy_hold": 0.305,
+  "flat": 0
+ },
+ "trades": {
+  "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#learn": [
+   {
+    "dir": "long",
+    "entry_time": "2026-10-30 10:15:00+00:00",
+    "exit_time": "2026-11-02 10:00:00+00:00",
+    "entry": 77308.44,
+    "exit": 77880.37,
+    "r": 0.305,
+    "why": "episode end"
+   }
+  ],
+  "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#frozen": [
+   {
+    "dir": "long",
+    "entry_time": "2026-10-30 10:15:00+00:00",
+    "exit_time": "2026-11-02 10:00:00+00:00",
+    "entry": 77308.44,
+    "exit": 77880.37,
+    "r": 0.305,
+    "why": "episode end"
+   }
+  ],
+  "wizard-vicuna-uncensored:13b#learn": [
+   {
+    "dir": "long",
+    "entry_time": "2026-10-30 10:15:00+00:00",
+    "exit_time": "2026-11-02 10:00:00+00:00",
+    "entry": 77308.44,
+    "exit": 77880.37,
+    "r": 0.305,
+    "why": "episode end"
+   }
+  ],
+  "wizard-vicuna-uncensored:13b#frozen": [
+   {
+    "dir": "long",
+    "entry_time": "2026-10-30 10:15:00+00:00",
+    "exit_time": "2026-11-02 10:00:00+00:00",
+    "entry": 77308.44,
+    "exit": 77880.37,
+    "r": 0.305,
+    "why": "episode end"
+   }
+  ],
+  "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#learn": [
+   {
+    "dir": "long",
+    "entry_time": "2026-10-30 10:15:00+00:00",
+    "exit_time": "2026-10-30 15:15:00+00:00",
+    "entry": 77308.44,
+    "exit": 77585.4,
+    "r": 0.085,
+    "why": "flat"
+   },
+   {
+    "dir": "long",
+    "entry_time": "2026-10-30 16:15:00+00:00",
+    "exit_time": "2026-10-31 01:15:00+00:00",
+    "entry": 77445.67,
+    "exit": 77360.34,
+    "r": -0.184,
+    "why": "flat"
+   }
+  ],
+  "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#frozen": [
+   {
+    "dir": "long",
+    "entry_time": "2026-10-30 10:15:00+00:00",
+    "exit_time": "2026-11-02 10:00:00+00:00",
+    "entry": 77308.44,
+    "exit": 77880.37,
+    "r": 0.305,
+    "why": "episode end"
+   }
+  ],
+  "qwen2.5vl:32b#learn": [
+   {
+    "dir": "long",
+    "entry_time": "2026-10-30 10:15:00+00:00",
+    "exit_time": "2026-11-02 10:00:00+00:00",
+    "entry": 77308.44,
+    "exit": 77880.37,
+    "r": 0.305,
+    "why": "episode end"
+   }
+  ],
+  "qwen2.5vl:32b#frozen": [
+   {
+    "dir": "long",
+    "entry_time": "2026-10-30 10:15:00+00:00",
+    "exit_time": "2026-10-30 11:15:00+00:00",
+    "entry": 77308.44,
+    "exit": 77550.0,
+    "r": 0.059,
+    "why": "flat"
+   },
+   {
+    "dir": "short",
+    "entry_time": "2026-10-30 12:15:00+00:00",
+    "exit_time": "2026-10-30 14:15:00+00:00",
+    "entry": 77428.79,
+    "exit": 76562.21,
+    "r": 0.547,
+    "why": "flat"
+   },
+   {
+    "dir": "short",
+    "entry_time": "2026-10-30 15:15:00+00:00",
+    "exit_time": "2026-10-30 16:15:00+00:00",
+    "entry": 77585.4,
+    "exit": 77445.67,
+    "r": -0.017,
+    "why": "flat"
+   },
+   {
+    "dir": "short",
+    "entry_time": "2026-10-30 17:15:00+00:00",
+    "exit_time": "2026-10-30 18:15:00+00:00",
+    "entry": 77102.58,
+    "exit": 76968.85,
+    "r": -0.021,
+    "why": "flat"
+   },
+   {
+    "dir": "long",
+    "entry_time": "2026-10-30 22:15:00+00:00",
+    "exit_time": "2026-11-02 10:00:00+00:00",
+    "entry": 76720.01,
+    "exit": 77880.37,
+    "r": 0.816,
+    "why": "episode end"
+   }
+  ],
+  "qwen2.5vl:32b#paper": [
+   {
+    "dir": "short",
+    "entry_time": "2026-10-30 10:15:00+00:00",
+    "exit_time": "2026-10-30 14:15:00+00:00",
+    "entry": 77308.44,
+    "exit": 76562.21,
+    "r": 0.436,
+    "why": "flat"
+   },
+   {
+    "dir": "short",
+    "entry_time": "2026-10-30 18:15:00+00:00",
+    "exit_time": "2026-10-31 04:15:00+00:00",
+    "entry": 76968.85,
+    "exit": 77060.0,
+    "r": -0.188,
+    "why": "flat"
+   }
+  ],
+  "paper_rule": [
+   {
+    "dir": "short",
+    "entry_time": "2026-10-30 10:15:00+00:00",
+    "exit_time": "2026-11-02 03:15:00+00:00",
+    "entry": 77308.44,
+    "exit": 78650.20780792926,
+    "r": -1.122,
+    "why": "stop"
+   }
+  ],
+  "paper_random_gate": [
+   {
+    "dir": "short",
+    "entry_time": "2026-10-30 12:15:00+00:00",
+    "exit_time": "2026-11-02 03:45:00+00:00",
+    "entry": 77428.79,
+    "exit": 78716.88969153083,
+    "r": -1.127,
+    "why": "stop"
+   }
+  ],
+  "random_trader": [
+   {
+    "dir": "short",
+    "entry_time": "2026-10-30 10:15:00+00:00",
+    "exit_time": "2026-11-02 03:15:00+00:00",
+    "entry": 77308.44,
+    "exit": 78650.20780792926,
+    "r": -1.122,
+    "why": "stop"
+   },
+   {
+    "dir": "short",
+    "entry_time": "2026-11-02 08:15:00+00:00",
+    "exit_time": "2026-11-02 10:00:00+00:00",
+    "entry": 78020.73,
+    "exit": 77880.37,
+    "r": -0.039,
+    "why": "episode end"
+   }
+  ],
+  "buy_hold": [
+   {
+    "dir": "long",
+    "entry_time": "2026-10-30 10:15:00+00:00",
+    "exit_time": "2026-11-02 10:00:00+00:00",
+    "entry": 77308.44,
+    "exit": 77880.37,
+    "r": 0.305,
+    "why": "episode end"
+   }
+  ],
+  "flat": []
+ }
+}

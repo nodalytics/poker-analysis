@@ -1,0 +1,6 @@
+- round 1, trading: qwen2.5vl#paper crushed me; focus on trend-following, not counter-trend scalps.
+- round 2, trading: BTCUSD episode showed my rules got stopped out twice; need to stick to the plan and avoid forcing trades.
+- round 3, trading: Random_trader beat me by being less predictable; need to stick to the rules even when it feels bad.
+- round 4, trading: qwen2.5vl#frozen crushed this episode; I need to focus on higher-probability setups even if it means fewer trades.
+- round 5, trading: Tiger-Gemma-9B-v3#learn and buy-and-hold both crushed me; momentum matters more than I thought.
+- round 6, trading: qwen2.5vl#frozen crushed this episode; I need to stick to the rules harder and avoid hesitation.

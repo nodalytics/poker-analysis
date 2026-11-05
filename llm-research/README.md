@@ -20,6 +20,9 @@ Studies:
 
 - [2026-11-05 — Local "uncensored" LLM evaluation](docs/2026-11-05-local-llm-evaluation.md):
   speed and refusals, Desktop Commander control, browser control; why Mistral Large was dropped.
+- [2026-11-05 — Ladders, trading and Windows GUI control](docs/2026-11-05-arena-trading-gui.md): learners vs
+  frozen twins at chess and poker, simulated and algorithmic players, the paper's trading method after costs,
+  and Windows-MCP results.
 - [2026-11-05 — MCP servers for another service](docs/2026-11-05-mcp-for-another service.md):
   options for autonomous another service control by models through MCP (API and GUI), the tools, modes and risk limits.
 

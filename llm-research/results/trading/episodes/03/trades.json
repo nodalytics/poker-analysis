@@ -1,0 +1,411 @@
+{
+ "instrument": "EURUSD",
+ "start": "2026-08-07 09:00:00+00:00",
+ "end": "2026-08-12 08:00:00+00:00",
+ "paper_gate_open_share": 0.028,
+ "totals": {
+  "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#learn": -0.34,
+  "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#frozen": -0.34,
+  "wizard-vicuna-uncensored:13b#learn": -0.34,
+  "wizard-vicuna-uncensored:13b#frozen": -0.34,
+  "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#learn": -0.156,
+  "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#frozen": -0.341,
+  "qwen2.5vl:32b#learn": -0.627,
+  "qwen2.5vl:32b#frozen": -0.037,
+  "qwen2.5vl:32b#paper": 0.157,
+  "paper_rule": -1.056,
+  "paper_random_gate": -0.398,
+  "random_trader": 0.249,
+  "buy_hold": -0.34,
+  "flat": 0
+ },
+ "trades": {
+  "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#learn": [
+   {
+    "dir": "long",
+    "entry_time": "2026-08-07 09:10:00+00:00",
+    "exit_time": "2026-08-07 12:25:00+00:00",
+    "entry": 1.15243,
+    "exit": 1.1548606526062,
+    "r": 1.901,
+    "why": "target"
+   },
+   {
+    "dir": "long",
+    "entry_time": "2026-08-07 13:10:00+00:00",
+    "exit_time": "2026-08-10 02:55:00+00:00",
+    "entry": 1.15704,
+    "exit": 1.1549098720704176,
+    "r": -1.056,
+    "why": "stop"
+   },
+   {
+    "dir": "long",
+    "entry_time": "2026-08-10 03:10:00+00:00",
+    "exit_time": "2026-08-11 06:25:00+00:00",
+    "entry": 1.1549,
+    "exit": 1.1533006950204314,
+    "r": -1.075,
+    "why": "stop"
+   },
+   {
+    "dir": "long",
+    "entry_time": "2026-08-11 07:10:00+00:00",
+    "exit_time": "2026-08-12 08:55:00+00:00",
+    "entry": 1.15379,
+    "exit": 1.15377,
+    "r": -0.11,
+    "why": "episode end"
+   }
+  ],
+  "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M#frozen": [
+   {
+    "dir": "long",
+    "entry_time": "2026-08-07 09:10:00+00:00",
+    "exit_time": "2026-08-07 12:25:00+00:00",
+    "entry": 1.15243,
+    "exit": 1.1548606526062,
+    "r": 1.901,
+    "why": "target"
+   },
+   {
+    "dir": "long",
+    "entry_time": "2026-08-07 13:10:00+00:00",
+    "exit_time": "2026-08-10 02:55:00+00:00",
+    "entry": 1.15704,
+    "exit": 1.1549098720704176,
+    "r": -1.056,
+    "why": "stop"
+   },
+   {
+    "dir": "long",
+    "entry_time": "2026-08-10 03:10:00+00:00",
+    "exit_time": "2026-08-11 06:25:00+00:00",
+    "entry": 1.1549,
+    "exit": 1.1533006950204314,
+    "r": -1.075,
+    "why": "stop"
+   },
+   {
+    "dir": "long",
+    "entry_time": "2026-08-11 07:10:00+00:00",
+    "exit_time": "2026-08-12 08:55:00+00:00",
+    "entry": 1.15379,
+    "exit": 1.15377,
+    "r": -0.11,
+    "why": "episode end"
+   }
+  ],
+  "wizard-vicuna-uncensored:13b#learn": [
+   {
+    "dir": "long",
+    "entry_time": "2026-08-07 09:10:00+00:00",
+    "exit_time": "2026-08-07 12:25:00+00:00",
+    "entry": 1.15243,
+    "exit": 1.1548606526062,
+    "r": 1.901,
+    "why": "target"
+   },
+   {
+    "dir": "long",
+    "entry_time": "2026-08-07 13:10:00+00:00",
+    "exit_time": "2026-08-10 02:55:00+00:00",
+    "entry": 1.15704,
+    "exit": 1.1549098720704176,
+    "r": -1.056,
+    "why": "stop"
+   },
+   {
+    "dir": "long",
+    "entry_time": "2026-08-10 03:10:00+00:00",
+    "exit_time": "2026-08-11 06:25:00+00:00",
+    "entry": 1.1549,
+    "exit": 1.1533006950204314,
+    "r": -1.075,
+    "why": "stop"
+   },
+   {
+    "dir": "long",
+    "entry_time": "2026-08-11 07:10:00+00:00",
+    "exit_time": "2026-08-12 08:55:00+00:00",
+    "entry": 1.15379,
+    "exit": 1.15377,
+    "r": -0.11,
+    "why": "episode end"
+   }
+  ],
+  "wizard-vicuna-uncensored:13b#frozen": [
+   {
+    "dir": "long",
+    "entry_time": "2026-08-07 09:10:00+00:00",
+    "exit_time": "2026-08-07 12:25:00+00:00",
+    "entry": 1.15243,
+    "exit": 1.1548606526062,
+    "r": 1.901,
+    "why": "target"
+   },
+   {
+    "dir": "long",
+    "entry_time": "2026-08-07 13:10:00+00:00",
+    "exit_time": "2026-08-10 02:55:00+00:00",
+    "entry": 1.15704,
+    "exit": 1.1549098720704176,
+    "r": -1.056,
+    "why": "stop"
+   },
+   {
+    "dir": "long",
+    "entry_time": "2026-08-10 03:10:00+00:00",
+    "exit_time": "2026-08-11 06:25:00+00:00",
+    "entry": 1.1549,
+    "exit": 1.1533006950204314,
+    "r": -1.075,
+    "why": "stop"
+   },
+   {
+    "dir": "long",
+    "entry_time": "2026-08-11 07:10:00+00:00",
+    "exit_time": "2026-08-12 08:55:00+00:00",
+    "entry": 1.15379,
+    "exit": 1.15377,
+    "r": -0.11,
+    "why": "episode end"
+   }
+  ],
+  "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#learn": [
+   {
+    "dir": "long",
+    "entry_time": "2026-08-10 18:10:00+00:00",
+    "exit_time": "2026-08-11 01:10:00+00:00",
+    "entry": 1.15435,
+    "exit": 1.15457,
+    "r": 0.065,
+    "why": "flat"
+   },
+   {
+    "dir": "long",
+    "entry_time": "2026-08-11 02:10:00+00:00",
+    "exit_time": "2026-08-11 20:10:00+00:00",
+    "entry": 1.15434,
+    "exit": 1.15427,
+    "r": -0.15,
+    "why": "flat"
+   },
+   {
+    "dir": "long",
+    "entry_time": "2026-08-12 03:10:00+00:00",
+    "exit_time": "2026-08-12 08:55:00+00:00",
+    "entry": 1.15373,
+    "exit": 1.15377,
+    "r": -0.071,
+    "why": "episode end"
+   }
+  ],
+  "hf.co/TheDrummer/Big-Tiger-Gemma-27B-v3-GGUF:Q4_K_M#frozen": [
+   {
+    "dir": "long",
+    "entry_time": "2026-08-07 09:10:00+00:00",
+    "exit_time": "2026-08-07 12:25:00+00:00",
+    "entry": 1.15243,
+    "exit": 1.1548606526062,
+    "r": 1.901,
+    "why": "target"
+   },
+   {
+    "dir": "long",
+    "entry_time": "2026-08-07 13:10:00+00:00",
+    "exit_time": "2026-08-10 02:55:00+00:00",
+    "entry": 1.15704,
+    "exit": 1.1549098720704176,
+    "r": -1.056,
+    "why": "stop"
+   },
+   {
+    "dir": "long",
+    "entry_time": "2026-08-10 07:10:00+00:00",
+    "exit_time": "2026-08-11 02:55:00+00:00",
+    "entry": 1.15539,
+    "exit": 1.153818751313998,
+    "r": -1.076,
+    "why": "stop"
+   },
+   {
+    "dir": "long",
+    "entry_time": "2026-08-11 07:10:00+00:00",
+    "exit_time": "2026-08-12 08:55:00+00:00",
+    "entry": 1.15379,
+    "exit": 1.15377,
+    "r": -0.11,
+    "why": "episode end"
+   }
+  ],
+  "qwen2.5vl:32b#learn": [
+   {
+    "dir": "long",
+    "entry_time": "2026-08-07 09:10:00+00:00",
+    "exit_time": "2026-08-07 12:25:00+00:00",
+    "entry": 1.15243,
+    "exit": 1.1548606526062,
+    "r": 1.901,
+    "why": "target"
+   },
+   {
+    "dir": "long",
+    "entry_time": "2026-08-07 13:10:00+00:00",
+    "exit_time": "2026-08-10 02:55:00+00:00",
+    "entry": 1.15704,
+    "exit": 1.1549098720704176,
+    "r": -1.056,
+    "why": "stop"
+   },
+   {
+    "dir": "long",
+    "entry_time": "2026-08-10 06:10:00+00:00",
+    "exit_time": "2026-08-10 19:10:00+00:00",
+    "entry": 1.15538,
+    "exit": 1.15399,
+    "r": -1.004,
+    "why": "flat"
+   },
+   {
+    "dir": "long",
+    "entry_time": "2026-08-11 12:10:00+00:00",
+    "exit_time": "2026-08-12 05:10:00+00:00",
+    "entry": 1.15393,
+    "exit": 1.15339,
+    "r": -0.468,
+    "why": "flat"
+   }
+  ],
+  "qwen2.5vl:32b#frozen": [
+   {
+    "dir": "long",
+    "entry_time": "2026-08-07 09:10:00+00:00",
+    "exit_time": "2026-08-07 12:25:00+00:00",
+    "entry": 1.15243,
+    "exit": 1.1548606526062,
+    "r": 1.901,
+    "why": "target"
+   },
+   {
+    "dir": "long",
+    "entry_time": "2026-08-07 13:10:00+00:00",
+    "exit_time": "2026-08-10 02:10:00+00:00",
+    "entry": 1.15704,
+    "exit": 1.15529,
+    "r": -0.878,
+    "why": "flat"
+   },
+   {
+    "dir": "long",
+    "entry_time": "2026-08-10 04:10:00+00:00",
+    "exit_time": "2026-08-10 18:10:00+00:00",
+    "entry": 1.15479,
+    "exit": 1.15435,
+    "r": -0.36,
+    "why": "flat"
+   },
+   {
+    "dir": "long",
+    "entry_time": "2026-08-11 06:10:00+00:00",
+    "exit_time": "2026-08-11 07:10:00+00:00",
+    "entry": 1.15405,
+    "exit": 1.15379,
+    "r": -0.304,
+    "why": "flat"
+   },
+   {
+    "dir": "long",
+    "entry_time": "2026-08-11 16:10:00+00:00",
+    "exit_time": "2026-08-12 03:10:00+00:00",
+    "entry": 1.15418,
+    "exit": 1.15373,
+    "r": -0.396,
+    "why": "flat"
+   }
+  ],
+  "qwen2.5vl:32b#paper": [
+   {
+    "dir": "long",
+    "entry_time": "2026-08-07 15:10:00+00:00",
+    "exit_time": "2026-08-07 16:10:00+00:00",
+    "entry": 1.15559,
+    "exit": 1.15605,
+    "r": 0.157,
+    "why": "flat"
+   }
+  ],
+  "paper_rule": [
+   {
+    "dir": "long",
+    "entry_time": "2026-08-07 15:10:00+00:00",
+    "exit_time": "2026-08-11 06:10:00+00:00",
+    "entry": 1.15559,
+    "exit": 1.1534292264280641,
+    "r": -1.056,
+    "why": "stop"
+   }
+  ],
+  "paper_random_gate": [
+   {
+    "dir": "long",
+    "entry_time": "2026-08-10 20:10:00+00:00",
+    "exit_time": "2026-08-12 08:55:00+00:00",
+    "entry": 1.1542,
+    "exit": 1.15377,
+    "r": -0.398,
+    "why": "episode end"
+   }
+  ],
+  "random_trader": [
+   {
+    "dir": "short",
+    "entry_time": "2026-08-10 22:10:00+00:00",
+    "exit_time": "2026-08-12 08:55:00+00:00",
+    "entry": 1.15421,
+    "exit": 1.15377,
+    "r": 0.249,
+    "why": "episode end"
+   }
+  ],
+  "buy_hold": [
+   {
+    "dir": "long",
+    "entry_time": "2026-08-07 09:10:00+00:00",
+    "exit_time": "2026-08-07 12:25:00+00:00",
+    "entry": 1.15243,
+    "exit": 1.1548606526062,
+    "r": 1.901,
+    "why": "target"
+   },
+   {
+    "dir": "long",
+    "entry_time": "2026-08-07 13:10:00+00:00",
+    "exit_time": "2026-08-10 02:55:00+00:00",
+    "entry": 1.15704,
+    "exit": 1.1549098720704176,
+    "r": -1.056,
+    "why": "stop"
+   },
+   {
+    "dir": "long",
+    "entry_time": "2026-08-10 03:10:00+00:00",
+    "exit_time": "2026-08-11 06:25:00+00:00",
+    "entry": 1.1549,
+    "exit": 1.1533006950204314,
+    "r": -1.075,
+    "why": "stop"
+   },
+   {
+    "dir": "long",
+    "entry_time": "2026-08-11 07:10:00+00:00",
+    "exit_time": "2026-08-12 08:55:00+00:00",
+    "entry": 1.15379,
+    "exit": 1.15377,
+    "r": -0.11,
+    "why": "episode end"
+   }
+  ],
+  "flat": []
+ }
+}
