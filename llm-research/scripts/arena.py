@@ -51,7 +51,8 @@ def notes_for(arena, entrant, game):
         return ""
     small = "wizard-vicuna" in entrant  # 2,048-token context: notes must stay short or every prompt overflows
     d = os.path.join(arena, "notes", slug(entrant))
-    skill = read(os.path.join(d, f"skill-{game}.md")).strip()
+    cand = os.path.join(d, f"skill-{game}.candidate.md")
+    skill = read(cand if os.path.exists(cand) else os.path.join(d, f"skill-{game}.md")).strip()
     memory = read(os.path.join(d, "memory.md"), MEMORY_MAX).strip()
     parts = []
     if skill:
@@ -88,7 +89,9 @@ def reflect(arena, entrant, game, summary, rnd):
         text = text[: m.start()].strip()
     skill = text[:SKILL_MAX].strip()
     if skill:
-        with open(skill_path, "w") as f:
+        # On probation: the learner plays the next match with this candidate; review() keeps it only if the learner
+        # does not fall behind its frozen twin in that match. The accepted file is untouched until then.
+        with open(os.path.join(d, f"skill-{game}.candidate.md"), "w") as f:
             f.write(skill + "\n")
     if mem:
         mpath = os.path.join(d, "memory.md")
@@ -118,11 +121,53 @@ def _ask_long(entrant, prompt):
         return json.load(r)["message"]["content"], 0
 
 
+PROBATION_TOL = 4.0  # Elo: a candidate survives unless the learner loses more than this against its twin's change
+
+
+def review(arena, game, before, after, log):
+    """Promote or discard each learner's candidate skill file on this match's learner-vs-twin Elo change."""
+    import difflib
+
+    for e in after:
+        if not e.endswith("#learn"):
+            continue
+        d = os.path.join(arena, "notes", slug(e))
+        cand = os.path.join(d, f"skill-{game}.candidate.md")
+        if not os.path.exists(cand):
+            continue
+        twin = e[: -len("#learn")] + "#frozen"
+        gain = (after[e] - before.get(e, after[e])) - (after.get(twin, 0) - before.get(twin, after.get(twin, 0)))
+        accepted = os.path.join(d, f"skill-{game}.md")
+        old, new = read(accepted).strip(), read(cand).strip()
+        changed = 1 - difflib.SequenceMatcher(None, old, new).ratio() if old else 1.0
+        verdict = "kept" if gain >= -PROBATION_TOL else "discarded"
+        if verdict == "kept":
+            os.replace(cand, accepted)
+        else:
+            os.remove(cand)
+        with open(os.path.join(d, "probation.log"), "a") as f:
+            f.write(
+                json.dumps(
+                    {
+                        "game": game,
+                        "verdict": verdict,
+                        "learner_minus_twin_elo": round(gain, 1),
+                        "changed_share": round(changed, 2),
+                    }
+                )
+                + "\n"
+            )
+        log(
+            f"    {cs.short(e)} {game} skill candidate {verdict} (learner − twin {gain:+.1f} Elo, {changed:.0%} changed)"
+        )
+
+
 def expected(a, b):
     return 1 / (1 + 10 ** ((b - a) / 400))
 
 
 def chess_round(arena, rnd, ladder, rng, log):
+    before = dict(ladder["chess"])
     entrants = sorted(ladder["chess"], key=lambda e: -ladder["chess"][e])
     rdir = os.path.join(arena, "rounds", f"{rnd:02d}")
     os.makedirs(rdir, exist_ok=True)
@@ -147,6 +192,42 @@ def chess_round(arena, rnd, ladder, rng, log):
         glog.write(f"  result {result} ({how})\n")
         log(f"  chess {cs.short(white)} vs {cs.short(black)}: {result} ({how})")
         results.append((white, black, result, how, sans, fails))
+    # Paired test: each learner also plays its own twin every round, colours alternating by round. The power
+    # simulation (power_sim.py) showed the Elo gap alone detects a 70%-scoring learner only 44% of the time in 58
+    # rounds; the head-to-head score detects it 86% of the time.
+    models = sorted({e[: -len("#learn")] for e in ladder["chess"] if e.endswith("#learn")})
+    h2h = ladder.setdefault("h2h_chess", {})
+    for k, m in enumerate(models, len(results) + 1):
+        learner, twin = m + "#learn", m + "#frozen"
+        white, black = (learner, twin) if rnd % 2 else (twin, learner)
+        glog.write(f"\n--- Round {rnd} twin game {k}: {cs.short(white)} (White) vs {cs.short(black)} (Black) ---\n")
+        board, sans, result, how, fails = cs.play(white, black, PLIES, glog, jl, k, rng, notes)
+        jl.write(
+            json.dumps(
+                {
+                    "game": k,
+                    "end": True,
+                    "white": white,
+                    "black": black,
+                    "result": result,
+                    "how": how,
+                    "moves": sans,
+                    "twin_game": True,
+                }
+            )
+            + "\n"
+        )
+        sw = {"1-0": 1.0, "0-1": 0.0}.get(result, 0.5)
+        pts = sw if white == learner else 1 - sw
+        rec = h2h.setdefault(m, {"games": 0, "learner_points": 0.0})
+        rec["games"] += 1
+        rec["learner_points"] += pts
+        rw, rb = ladder["chess"][white], ladder["chess"][black]
+        ladder["chess"][white] = rw + K * (sw - expected(rw, rb))
+        ladder["chess"][black] = rb + K * ((1 - sw) - expected(rb, rw))
+        log(f"  chess twin game {cs.short(white)} vs {cs.short(black)}: {result} ({how})")
+        results.append((white, black, result, how, sans, fails))
+    review(arena, "chess", before, ladder["chess"], log)
     for white, black, result, how, sans, fails in results:
         for me, opp, colour in ((white, black, "White"), (black, white, "Black")):
             if not me.endswith("#learn"):
@@ -171,6 +252,7 @@ def poker_round(arena, rnd, ladder, log, models):
     random.Random(rnd).shuffle(order)
     bots = ps.bots_for_round(rnd)
     old = dict(ladder["poker"])
+    pending = []
     for t, pair in enumerate([order[0::2], order[1::2]], 1):
         if not pair:
             continue
@@ -190,6 +272,12 @@ def poker_round(arena, rnd, ladder, log, models):
             ladder["poker"][a] = old[a] + delta
         ranked = sorted(seats, key=lambda e: -chips[e])
         log(f"  poker table {t}: " + ", ".join(f"{cs.short(e)} {chips[e]}" for e in ranked))
+        pending.append((seats, chips, stats, ranked, n))
+        for m in pair:
+            if f"{m}#learn" in chips and f"{m}#frozen" in chips:
+                ladder.setdefault("h2h_poker", {}).setdefault(m, []).append(chips[f"{m}#learn"] - chips[f"{m}#frozen"])
+    review(arena, "poker", old, ladder["poker"], log)
+    for seats, chips, stats, ranked, n in pending:
         for e in seats:
             if not e.endswith("#learn"):
                 continue
@@ -206,8 +294,41 @@ def poker_round(arena, rnd, ladder, log, models):
             log(f"    {cs.short(e)} rewrote skill-poker.md ({len(skill)} chars){'; memory: ' + mem if mem else ''}")
 
 
+def binom_tail(k, n):
+    """One-sided P(X >= k) for X ~ Binomial(n, 1/2)."""
+    from math import comb
+
+    return sum(comb(n, i) for i in range(k, n + 1)) / 2**n
+
+
 def write_ladder_md(arena, ladder, rnd):
     lines = [f"# Ladder after round {rnd}", ""]
+    h = ladder.get("h2h_chess", {})
+    hp = ladder.get("h2h_poker", {})
+    if h or hp:
+        lines += [
+            "## Learner vs its own frozen twin (the paired test)",
+            "",
+            "| Model | Chess head-to-head (learner points / games) | p (learner better) | Poker sessions learner ahead / played | p |",
+            "|---|---|---|---|---|",
+        ]
+        for m in sorted(set(h) | set(hp)):
+            c = h.get(m, {"games": 0, "learner_points": 0.0})
+            pc = binom_tail(int(c["learner_points"] + 0.5), c["games"]) if c["games"] else None
+            diffs = [d for d in hp.get(m, []) if d != 0]
+            ahead = sum(d > 0 for d in diffs)
+            pp = binom_tail(ahead, len(diffs)) if diffs else None
+            fmt = lambda v: "–" if v is None else f"{v:.2f}"  # noqa: E731
+            lines.append(
+                f"| {cs.short(m)} | {c['learner_points']:.1f} / {c['games']} | {fmt(pc)} | "
+                f"{ahead} / {len(diffs)} | {fmt(pp)} |"
+            )
+        lines += [
+            "",
+            "p is one-sided (learner better than its twin); chess draws count half, poker ties are left out. "
+            "Power: see scripts/power_sim.py.",
+            "",
+        ]
     for game in ("chess", "poker"):
         lines += [f"## {game.title()}", "", "| Rank | Entrant | Elo |", "|---|---|---|"]
         for k, (e, r) in enumerate(sorted(ladder[game].items(), key=lambda x: -x[1]), 1):
