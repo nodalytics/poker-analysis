@@ -14,6 +14,8 @@ Studies:
 
 - [2026-11-05 — Local "uncensored" LLM evaluation](docs/2026-11-05-local-llm-evaluation.md):
   speed and refusals, Desktop Commander control, browser control; why Mistral Large was dropped.
+- [2026-11-05 — MCP servers for another service](docs/2026-11-05-mcp-for-another service.md):
+  options for giving models another service access through MCP, the proposed tool list, and the guards it needs.
 
 Sources:
 
