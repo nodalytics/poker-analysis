@@ -211,6 +211,26 @@ def solver_strategy(state, i, ctx):
     }
 
 
+def solver_brief(state, i, ctx):
+    """What a solver-first player is told before it decides: the solver's strategy when it can solve the spot,
+    otherwise Monte Carlo equity against the live opponents and the pot odds."""
+    adv = solver_strategy(state, i, ctx)
+    if adv.get("available"):
+        stats["solver_used"] += 1
+        mix = ", ".join(f"{a.split('.')[0]} {p:.0%}" for a, p in adv["strategy"].items())
+        return f"Solver (TexasSolver, game-theory strategy for your exact hand here): {mix}."
+    hole = _cards(state.hole_cards[i])
+    board = _cards(state.get_board_cards(0)) if state.board_count else []
+    live = sum(1 for j, s in enumerate(state.statuses) if s and j != i)
+    eq = equity_vs_random(hole, board, max(1, live))
+    to_call, pot = state.checking_or_calling_amount, state.total_pot_amount
+    odds = to_call / (pot + to_call) if to_call else 0.0
+    return (
+        f"Simulation (Monte Carlo, 2000 run-outs vs {live} random hand(s)): your equity {eq:.0%}; "
+        f"calling needs {odds:.0%}. ({adv.get('reason', 'no solve')}.)"
+    )
+
+
 # --- the poker-analysis toolkit as native tools for a language model ---------------------------------------
 def _toolkit():
     if ROOT not in sys.path:

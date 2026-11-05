@@ -31,6 +31,11 @@ Studies:
 - [Poker platforms with an API for agents](docs/poker-api-platforms.md): bot arenas and engines, and the
   play-money-only and untrusted-input rules for connecting ours.
 
+To do:
+
+- **Post-session hand review:** load your own saved hand histories after play ends and have TexasSolver mark the
+  mistakes, as a study tool. Offline only: no live client is read while a hand is being played.
+
 Sources:
 
 - [Q&A: Is a Totally Uncensored LLM Technically Possible?](https://gist.github.com/danielrosehill/a631ca5a97718564944b5bdcb7fb12b6)
