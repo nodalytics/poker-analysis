@@ -6,7 +6,7 @@
   from the solved strategy for its exact hand; Monte Carlo everywhere else and whenever a solve fails. Opponent
   ranges are a fixed wide assumption, since nobody at the table shows theirs.
 - model#toolkit: a language model with the poker-analysis toolkit as native tool calls (equity against a range,
-  hand evaluation, push/fold chart). It needs a tool-capable model such as qwen2.5vl-tools:32b.
+  hand evaluation, push/fold chart, and solver_advice: TexasSolver's strategy for its hand, heads-up turn/river). It needs a tool-capable model such as qwen2.5vl-tools:32b.
 
 Paths: POKER_ANALYSIS_ROOT (default: the repo above llm-research) for src/ and tools/TexasSolver.
 """
@@ -79,19 +79,27 @@ def monte_reply(state, i):
     return _reply("call") if eq > to_call / (pot + to_call) else _reply("fold")
 
 
-def _solve(key, pot, eff, board, oop):
+def hand_class(hole):
+    """TexasSolver range notation for a hand: 'AK' (suited and offsuit together, as WIDE uses) or '77'."""
+    order = "23456789TJQKA"
+    a, b = sorted((repr(c)[0] for c in hole), key=order.index, reverse=True)
+    return a + b
+
+
+def _solve(key, pot, eff, board, oop, extra=None):
     if key in _SOLVES:
         return _SOLVES[key]
     tree = None
     if os.path.exists(SOLVER):
         street = "turn" if len(board) == 4 else "river"
+        rng = WIDE if not extra or extra in WIDE.split(",") else f"{WIDE},{extra}"
         with tempfile.TemporaryDirectory() as tmp:
             lines = [
                 f"set_pot {pot}",
                 f"set_effective_stack {eff}",
                 f"set_board {','.join(board)}",
-                f"set_range_oop {WIDE}",
-                f"set_range_ip {WIDE}",
+                f"set_range_oop {rng}",
+                f"set_range_ip {rng}",
             ]
             for p in ("oop", "ip"):
                 lines += [
@@ -151,8 +159,9 @@ def sol_reply(state, i, ctx):
     if len(live) == 2 and len(board_cards) in (4, 5) and min(state.stacks[j] for j in live) > 0:
         board = [repr(c) for c in board_cards]
         eff = min(state.stacks[j] + state.bets[j] for j in live)
-        key = (ctx["hand"], len(board))
-        tree, _ = _solve(key, ctx["street_pot"], eff, board, min(live))
+        cls = hand_class(state.hole_cards[i])
+        key = (ctx["hand"], len(board), i)
+        tree, _ = _solve(key, ctx["street_pot"], eff, board, min(live), cls)
         node = _walk(tree, ctx["street_actions"]) if tree else None
         hole = [repr(c) for c in state.hole_cards[i]]
         strat = (node or {}).get("strategy", {}).get("strategy", {}) if node else {}
@@ -168,6 +177,38 @@ def sol_reply(state, i, ctx):
             return _reply("raise", max(lo, min(hi, state.bets[i] + int(float(pick.split()[1])))))
         stats["solver_failed"] += 1
     return monte_reply(state, i)
+
+
+def solver_strategy(state, i, ctx):
+    """TexasSolver's action frequencies for player i's exact hand in this spot, or a reason there are none."""
+    board_cards = list(state.get_board_cards(0)) if state.board_count else []
+    live = [j for j, s in enumerate(state.statuses) if s]
+    if len(live) != 2:
+        return {"available": False, "reason": f"{len(live)} players in the hand; the solver handles heads-up only"}
+    if len(board_cards) not in (4, 5):
+        return {
+            "available": False,
+            "reason": "the solver is used on the turn and river only (a flop solve is too slow)",
+        }
+    board = [repr(c) for c in board_cards]
+    eff = min(state.stacks[j] + state.bets[j] for j in live)
+    cls = hand_class(state.hole_cards[i])
+    tree, _ = _solve((ctx["hand"], len(board), i), ctx["street_pot"], eff, board, min(live), cls)
+    node = _walk(tree, ctx["street_actions"]) if tree else None
+    hole = [repr(c) for c in state.hole_cards[i]]
+    strat = (node or {}).get("strategy", {}).get("strategy", {}) if node else {}
+    probs = strat.get(hole[0] + hole[1]) or strat.get(hole[1] + hole[0])
+    if not probs:
+        return {
+            "available": False,
+            "reason": "no solution for this exact line (solve failed or the betting left the tree)",
+        }
+    return {
+        "available": True,
+        "assumed_ranges": "wide (plus your own hand class), the same for both players",
+        "strategy": {a: round(p, 3) for a, p in zip(node["actions"], probs)},
+        "note": "BET/RAISE amounts are chips added this street; frequencies are the solver's mixed strategy",
+    }
 
 
 # --- the poker-analysis toolkit as native tools for a language model ---------------------------------------
@@ -195,6 +236,16 @@ def _toolkit():
 
 
 TOOLKIT_TOOLS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "solver_advice",
+            "description": "Ask TexasSolver (poker-analysis toolkit) for the game-theory strategy for your exact hand in "
+            "the current spot. No arguments: the table fills in the pot, stacks, board and betting. Works heads-up on "
+            "the turn and river only; elsewhere it says why not. Takes about 8 seconds.",
+            "parameters": {"type": "object", "properties": {}},
+        },
+    },
     {
         "type": "function",
         "function": {
@@ -236,8 +287,9 @@ TOOLKIT_TOOLS = [
 ]
 
 
-def toolkit_reply(model, prompt, max_calls=3):
+def toolkit_reply(model, prompt, max_calls=3, state=None, i=None, ctx=None):
     fns = _toolkit()
+    fns["solver_advice"] = lambda: solver_strategy(state, i, ctx) if state is not None else {"available": False}
     messages = [
         {
             "role": "user",

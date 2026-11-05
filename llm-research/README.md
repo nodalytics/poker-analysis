@@ -23,6 +23,9 @@ Studies:
 - [2026-11-05 — MCP servers for another service](docs/2026-11-05-mcp-for-another service.md):
   options for autonomous another service control by models through MCP (API and GUI), the tools, modes and risk limits.
 
+- [Play-money and practice poker platforms](docs/poker-play-money-platforms.md): candidates for testing agents
+  outside our own tables, and which ones allow bots.
+
 Sources:
 
 - [Q&A: Is a Totally Uncensored LLM Technically Possible?](https://gist.github.com/danielrosehill/a631ca5a97718564944b5bdcb7fb12b6)

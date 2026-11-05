@@ -262,7 +262,7 @@ def main(outdir, hands, models, notes=None):
             elif m in pa.ALGOS:
                 text = pa.monte_reply(state, i) if m == "monte" else pa.sol_reply(state, i, ctx)
             elif m.endswith("#toolkit"):
-                text = pa.toolkit_reply(m, prompt)
+                text = pa.toolkit_reply(m, prompt, state=state, i=i, ctx=ctx)
             else:
                 text = None
             if text is None:
