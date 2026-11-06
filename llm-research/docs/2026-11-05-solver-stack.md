@@ -25,7 +25,7 @@ player not yet folded, which preflop at a 9-seat table is 8 random hands, so alm
 Advised players folded 80-93% of unopened pots (unadvised 40-80%), and **no player in either flow ever shoved
 preflop**. The Tigers gained because folding beats their unadvised limp-calling (Tiger-Gemma 9B called 48% of
 unopened pots); Qwen's unadvised play was already better than folding. Two fixes, then a rerun
-(`results/solverfirst_short/`, running):
+(`results/solverfirst_short/`):
 
 - When the pot is unopened and the player has 20 big blinds or less, the advice is the push/fold equilibrium's
   answer for that hand. With k players behind, the chart for the first seat of a (k+1)-handed table is used, capped
@@ -33,7 +33,25 @@ unopened pots); Qwen's unadvised play was already better than folding. Two fixes
 - Preflop equity is computed only against opponents with chips in the pot (the blinds and any raiser), not every
   player still to act.
 
-The 100bb test is rerunning with both fixes and the flop model (`results/solverfirst_flop/`).
+**Reruns with both fixes and the flop model (30 sessions each):**
+
+| Model | 100bb: ahead / sessions, p | Short stacks: ahead / sessions, p |
+|---|---|---|
+| Qwen2.5-VL 32B | 19 / 30, 0.10 | 13 / 30, 0.82 |
+| Tiger-Gemma 9B | 20 / 28, 0.018 | 21 / 30, 0.021 |
+| Big-Tiger-Gemma 27B | 16 / 30, 0.43 | 21 / 30, 0.021 |
+
+With six tests the corrected threshold is 0.008; **none passes**, and the first 100bb run (Qwen 23/30, p 0.003) did
+not replicate as strongly. The advice reached the models (flop model 129 and push/fold chart 6 times at 100bb;
+the chart 706 times on short stacks), but **the models mostly ignore it**. Told "AKs is a SHOVE: go all-in" with
+the real prompt, Qwen went all-in, Big-Tiger folded and Tiger-Gemma 9B called. Over the 30 short-stack sessions the
+advised players went all-in preflop 16 (Qwen), 8 (Big-Tiger) and 2 (Tiger-Gemma 9B) times, against 1, 0 and 2
+before the chart was added: a small share of the shoves the chart called for.
+
+**So the advice measures obedience, not the solver.** Next test (`--play`, running): the solver acts itself
+wherever it has an answer (push/fold chart, flop model, turn and river solves, sampled from the mixed strategy),
+and the model decides only the rest. This is the architecture the partner described: the LLM feeds the solver,
+the solver decides. Results: `results/solverplays/`, `results/solverplays_short/`.
 
 ## Layers
 
@@ -72,6 +90,20 @@ the 1,755 distinct flops sampled across textures x 2 stack depths x 2 range pair
 Hardest point: in position facing a bet (77% agreement at best). The advice uses the MLP: within 0.006 error of
 the best model at 1/8000th of the size (`mlflop/mlp.joblib`, `poker_agents.flop_model_strategy`), heads-up, at each
 player's first flop decision.
+
+## Faster solver
+
+`~/solver-fast` on the lab is TexasSolver rebuilt with optimisation flags. Same spots, same answer (identical
+exploitability and root strategy), `scripts/solver_bench.sh`, `results/solver_bench/solver_bench.log`:
+
+| Spot | Original, 1 thread / 16 | Optimised, 1 thread / 16 |
+|---|---|---|
+| Turn | 18.6 s / 8.5 s | **5.6 s / 4.1 s** |
+| Flop | 1,666 s / 156 s | **256 s / 41 s** |
+
+The turn comparison is fair or favours the original (it ran on an idle lab, the optimised build under load): at
+least 3.3x single-threaded and 2.1x at 16 threads. The original's flop runs overlapped heavy load, so its 6.5x is
+an overestimate. A 16-thread optimised flop solve in 41 s makes live flop solving possible for slow spots.
 
 ## Hand histories
 
