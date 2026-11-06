@@ -152,11 +152,12 @@ def advice_tests():
         ("100bb\nfirst run", (23 / 30, 22 / 29, 21 / 30)),
         ("100bb\n+ flop model", (19 / 30, 20 / 28, 16 / 30)),
         ("100bb\nsolver decides", (16 / 29, 16 / 23, 15 / 30)),
+        ("100bb solver decides\n+ deep pre-flop", (15 / 29, 20 / 28, 20 / 30)),
         ("Short stacks\nno chart (invalid)", (11 / 30, 21 / 30, 21 / 30)),
         ("Short stacks\n+ push/fold chart", (13 / 30, 21 / 30, 21 / 30)),
         ("Short stacks\nsolver decides", (17 / 30, 20 / 30, 19 / 28)),
     ]
-    fig, ax = plt.subplots(figsize=(12.5, 4.8))
+    fig, ax = plt.subplots(figsize=(14, 4.8))
     ax.axhline(50, color=INK2, lw=1, ls="--")
     ax.text(len(runs) - 0.55, 51, "coin flip", fontsize=9, color=INK2, ha="right")
     for k, (name, col) in enumerate(MODELS):
@@ -168,7 +169,9 @@ def advice_tests():
     ax.set_ylabel("sessions where the advised copy\nbeat the plain copy (%)")
     ax.grid(axis="x", visible=False)
     ax.legend(frameon=False, ncol=3, loc="upper right")
-    ax.set_title("Solver with the LLM: real gains on short stacks (pooled p 0.007), not yet at 100bb")
+    ax.set_title(
+        "Solver with the LLM: significant once the solver decides every street (pooled p 0.007 short, 0.009 at 100bb)"
+    )
     save(
         fig,
         "04-advice-tests.png",
@@ -312,7 +315,71 @@ def alphapoker():
     )
 
 
+def pca_styles():
+    pts = json.load(open(os.path.join(HERE, "results/predictive/pca_points.json")))
+    rep = json.load(open(os.path.join(HERE, "results/predictive/report.json")))["2_pca"]
+    ev = rep["explained_variance"]
+    fig, ax = plt.subplots(figsize=(10, 6))
+    win = [p for p in pts if p["bb_per_100"] > 0]
+    lose = [p for p in pts if p["bb_per_100"] <= 0]
+    for grp, col, lab in ((lose, GREY, "lost money"), (win, BLUE, "won money")):
+        ax.scatter(
+            [p["pc1"] for p in grp], [p["pc2"] for p in grp], s=9, color=col, alpha=0.55, label=lab, linewidths=0
+        )
+    ax.set_xlabel(f"PC1 ({ev[0]:.0%} of variation): plays more hands, raises and 3-bets more, folds to bets less")
+    ax.set_ylabel(f"PC2 ({ev[1]:.0%}): more aggressive after the flop")
+    ax.legend(frameon=False, loc="upper right", markerscale=2.5)
+    ax.set_title(f"Playing styles of {rep['players']:,} real players (500+ hands each): winners and losers overlap")
+    save(
+        fig,
+        "11-pca-styles.png",
+        "PCA of five style rates (VPIP, PFR, 3-bet, post-flop aggression, fold to a bet), "
+        "HandHQ 2009. Style vs win rate: correlation 0.08 or less. Source: results/predictive/report.json",
+    )
+
+
+def predict_action():
+    r = json.load(open(os.path.join(HERE, "results/predictive/report.json")))["1_next_action"]
+    rows = [
+        ("Majority action per street", "majority per street", GREY),
+        ("Logistic regression", "logistic regression", BLUE),
+        ("ESN: reads the hand's action sequence only", "ESN only (reservoir + street)", ORANGE),
+        ("ESN + table features", "ESN + static features", ORANGE),
+        ("MLP (deep learning)", "MLP (deep learning)", BLUE),
+        ("Random forest", "random forest", BLUE),
+        ("Gradient boosting", "gradient boosting", BLUE),
+    ]
+    fig, ax = plt.subplots(figsize=(10, 4.2))
+    for i, (lab, k, col) in enumerate(rows):
+        v = 100 * r[k]["accuracy"]
+        ax.barh(i, v, 0.6, color=col)
+        ax.text(v + 0.3, i, f"{v:.1f}%", va="center", fontsize=10)
+    ax.set_yticks(range(len(rows)), [x[0] for x in rows])
+    ax.set_xlim(55, 72)
+    ax.set_xlabel("next action predicted correctly (fold / check-call / bet-raise), 100,000 later decisions")
+    ax.grid(axis="y", visible=False)
+    ax.set_title("Predicting what real players do next: trees and networks tie, the ESN is close")
+    save(
+        fig,
+        "12-predict-next-action.png",
+        "Trained on 300,000 decisions, tested on 100,000 later ones; 1.3M HandHQ "
+        "hands, split by time. Axis starts at 55%. Source: results/predictive/report.json",
+    )
+
+
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
-    for f in (push_fold, solver_speed, flop_model, advice_tests, obedience, tina_plus, trading, ladder, alphapoker):
+    for f in (
+        push_fold,
+        solver_speed,
+        flop_model,
+        advice_tests,
+        obedience,
+        tina_plus,
+        trading,
+        ladder,
+        alphapoker,
+        pca_styles,
+        predict_action,
+    ):
         f()
