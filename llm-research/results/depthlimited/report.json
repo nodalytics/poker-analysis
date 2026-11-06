@@ -1,0 +1,598 @@
+{
+ "summary": {
+  "flops": 20,
+  "iterations": 300,
+  "spot": "spr4.5_wide",
+  "nodes": {
+   "oop_open": {
+    "agree_depth_limited": 0.7871,
+    "agree_flop_model": 0.8602,
+    "mae_depth_limited": 0.1124,
+    "mae_flop_model": 0.0719
+   },
+   "ip_after_check": {
+    "agree_depth_limited": 0.7105,
+    "agree_flop_model": 0.8256,
+    "mae_depth_limited": 0.1424,
+    "mae_flop_model": 0.0816
+   },
+   "ip_facing_bet": {
+    "agree_depth_limited": 0.8092,
+    "agree_flop_model": 0.7264,
+    "mae_depth_limited": 0.1067,
+    "mae_flop_model": 0.1265
+   }
+  },
+  "overall": {
+   "agree_depth_limited": 0.7689,
+   "agree_flop_model": 0.804,
+   "mae_depth_limited": 0.1205,
+   "mae_flop_model": 0.0934
+  },
+  "median_precompute_s": 5.9,
+  "median_solve_s": 526.4,
+  "median_full_solve_s": 89.0
+ },
+ "flops": [
+  {
+   "flop": "2c3d7d",
+   "precompute_s": 7.7,
+   "solve_s": 537.0,
+   "nodes": {
+    "oop_open": {
+     "hands": 525,
+     "agree_depth_limited": 0.7657142857142857,
+     "agree_flop_model": 0.8552380952380952,
+     "mae_depth_limited": 0.11857253620800193,
+     "mae_flop_model": 0.09103287500679962
+    },
+    "ip_after_check": {
+     "hands": 525,
+     "agree_depth_limited": 0.6933333333333334,
+     "agree_flop_model": 0.7866666666666666,
+     "mae_depth_limited": 0.1485399257143296,
+     "mae_flop_model": 0.09248675370941686
+    },
+    "ip_facing_bet": {
+     "hands": 525,
+     "agree_depth_limited": 0.7961904761904762,
+     "agree_flop_model": 0.6304761904761905,
+     "mae_depth_limited": 0.11367616296670886,
+     "mae_flop_model": 0.16510951838130514
+    }
+   }
+  },
+  {
+   "flop": "2c3d8d",
+   "precompute_s": 4.5,
+   "solve_s": 540.4,
+   "nodes": {
+    "oop_open": {
+     "hands": 521,
+     "agree_depth_limited": 0.7216890595009597,
+     "agree_flop_model": 0.7792706333973128,
+     "mae_depth_limited": 0.12757431378217812,
+     "mae_flop_model": 0.07942701414046574
+    },
+    "ip_after_check": {
+     "hands": 521,
+     "agree_depth_limited": 0.5892514395393474,
+     "agree_flop_model": 0.781190019193858,
+     "mae_depth_limited": 0.16324883119425931,
+     "mae_flop_model": 0.07818429577066398
+    },
+    "ip_facing_bet": {
+     "hands": 521,
+     "agree_depth_limited": 0.761996161228407,
+     "agree_flop_model": 0.6333973128598849,
+     "mae_depth_limited": 0.12901655811155865,
+     "mae_flop_model": 0.14146211465109976
+    }
+   }
+  },
+  {
+   "flop": "2c6c6d",
+   "precompute_s": 5.8,
+   "solve_s": 538.9,
+   "nodes": {
+    "oop_open": {
+     "hands": 522,
+     "agree_depth_limited": 0.7241379310344828,
+     "agree_flop_model": 0.735632183908046,
+     "mae_depth_limited": 0.1437643384967118,
+     "mae_flop_model": 0.09437406925117278
+    },
+    "ip_after_check": {
+     "hands": 522,
+     "agree_depth_limited": 0.6647509578544061,
+     "agree_flop_model": 0.8352490421455939,
+     "mae_depth_limited": 0.16681996162747487,
+     "mae_flop_model": 0.08082344184480025
+    },
+    "ip_facing_bet": {
+     "hands": 522,
+     "agree_depth_limited": 0.814176245210728,
+     "agree_flop_model": 0.789272030651341,
+     "mae_depth_limited": 0.1034941550001386,
+     "mae_flop_model": 0.126843605281271
+    }
+   }
+  },
+  {
+   "flop": "2c7c8c",
+   "precompute_s": 4.0,
+   "solve_s": 522.0,
+   "nodes": {
+    "oop_open": {
+     "hands": 510,
+     "agree_depth_limited": 0.6882352941176471,
+     "agree_flop_model": 0.9098039215686274,
+     "mae_depth_limited": 0.1582710004761012,
+     "mae_flop_model": 0.06827806203470285
+    },
+    "ip_after_check": {
+     "hands": 510,
+     "agree_depth_limited": 0.7313725490196078,
+     "agree_flop_model": 0.8215686274509804,
+     "mae_depth_limited": 0.14281584452049445,
+     "mae_flop_model": 0.09071241206080372
+    },
+    "ip_facing_bet": {
+     "hands": 510,
+     "agree_depth_limited": 0.7254901960784313,
+     "agree_flop_model": 0.6274509803921569,
+     "mae_depth_limited": 0.17135431732014672,
+     "mae_flop_model": 0.12877335264734635
+    }
+   }
+  },
+  {
+   "flop": "2c8dTh",
+   "precompute_s": 6.8,
+   "solve_s": 532.6,
+   "nodes": {
+    "oop_open": {
+     "hands": 502,
+     "agree_depth_limited": 0.7390438247011952,
+     "agree_flop_model": 0.8227091633466136,
+     "mae_depth_limited": 0.10544714817746574,
+     "mae_flop_model": 0.06824966534778314
+    },
+    "ip_after_check": {
+     "hands": 502,
+     "agree_depth_limited": 0.852589641434263,
+     "agree_flop_model": 0.9422310756972112,
+     "mae_depth_limited": 0.09164625719186133,
+     "mae_flop_model": 0.06313225165978033
+    },
+    "ip_facing_bet": {
+     "hands": 502,
+     "agree_depth_limited": 0.8446215139442231,
+     "agree_flop_model": 0.750996015936255,
+     "mae_depth_limited": 0.08474118712454064,
+     "mae_flop_model": 0.1293924220688468
+    }
+   }
+  },
+  {
+   "flop": "2cJdAd",
+   "precompute_s": 5.6,
+   "solve_s": 484.7,
+   "nodes": {
+    "oop_open": {
+     "hands": 479,
+     "agree_depth_limited": 0.8329853862212944,
+     "agree_flop_model": 0.8622129436325678,
+     "mae_depth_limited": 0.0850834047269665,
+     "mae_flop_model": 0.07236190551236242
+    },
+    "ip_after_check": {
+     "hands": 479,
+     "agree_depth_limited": 0.7599164926931107,
+     "agree_flop_model": 0.8747390396659708,
+     "mae_depth_limited": 0.13671337746767323,
+     "mae_flop_model": 0.07465812948908189
+    },
+    "ip_facing_bet": {
+     "hands": 479,
+     "agree_depth_limited": 0.9728601252609603,
+     "agree_flop_model": 0.8747390396659708,
+     "mae_depth_limited": 0.02062457950835755,
+     "mae_flop_model": 0.10221540534455861
+    }
+   }
+  },
+  {
+   "flop": "3c4c5d",
+   "precompute_s": 7.9,
+   "solve_s": 535.7,
+   "nodes": {
+    "oop_open": {
+     "hands": 526,
+     "agree_depth_limited": 0.8346007604562737,
+     "agree_flop_model": 0.8517110266159695,
+     "mae_depth_limited": 0.10614595554302475,
+     "mae_flop_model": 0.08302475662639112
+    },
+    "ip_after_check": {
+     "hands": 526,
+     "agree_depth_limited": 0.6387832699619772,
+     "agree_flop_model": 0.8517110266159695,
+     "mae_depth_limited": 0.15755795854093188,
+     "mae_flop_model": 0.08091887536766251
+    },
+    "ip_facing_bet": {
+     "hands": 526,
+     "agree_depth_limited": 0.7813688212927756,
+     "agree_flop_model": 0.7908745247148289,
+     "mae_depth_limited": 0.11186494353587889,
+     "mae_flop_model": 0.12858025057892705
+    }
+   }
+  },
+  {
+   "flop": "3c4cTc",
+   "precompute_s": 7.3,
+   "solve_s": 534.4,
+   "nodes": {
+    "oop_open": {
+     "hands": 513,
+     "agree_depth_limited": 0.6861598440545809,
+     "agree_flop_model": 0.9044834307992202,
+     "mae_depth_limited": 0.15066274388334064,
+     "mae_flop_model": 0.07514830385544653
+    },
+    "ip_after_check": {
+     "hands": 513,
+     "agree_depth_limited": 0.645224171539961,
+     "agree_flop_model": 0.7816764132553606,
+     "mae_depth_limited": 0.1657376909977105,
+     "mae_flop_model": 0.09438016331484818
+    },
+    "ip_facing_bet": {
+     "hands": 513,
+     "agree_depth_limited": 0.7017543859649122,
+     "agree_flop_model": 0.7076023391812866,
+     "mae_depth_limited": 0.1682192607836619,
+     "mae_flop_model": 0.11361098170076335
+    }
+   }
+  },
+  {
+   "flop": "3c4dTh",
+   "precompute_s": 7.1,
+   "solve_s": 533.2,
+   "nodes": {
+    "oop_open": {
+     "hands": 513,
+     "agree_depth_limited": 0.7816764132553606,
+     "agree_flop_model": 0.8830409356725146,
+     "mae_depth_limited": 0.11988889508577971,
+     "mae_flop_model": 0.05822708765371063
+    },
+    "ip_after_check": {
+     "hands": 513,
+     "agree_depth_limited": 0.6920077972709552,
+     "agree_flop_model": 0.9025341130604289,
+     "mae_depth_limited": 0.13982404235574655,
+     "mae_flop_model": 0.06874837492364119
+    },
+    "ip_facing_bet": {
+     "hands": 513,
+     "agree_depth_limited": 0.834307992202729,
+     "agree_flop_model": 0.7290448343079922,
+     "mae_depth_limited": 0.1004525120317673,
+     "mae_flop_model": 0.1277596989892675
+    }
+   }
+  },
+  {
+   "flop": "3c6cQc",
+   "precompute_s": 4.0,
+   "solve_s": 537.5,
+   "nodes": {
+    "oop_open": {
+     "hands": 513,
+     "agree_depth_limited": 0.7816764132553606,
+     "agree_flop_model": 0.9025341130604289,
+     "mae_depth_limited": 0.12888638624981755,
+     "mae_flop_model": 0.0596717550722073
+    },
+    "ip_after_check": {
+     "hands": 513,
+     "agree_depth_limited": 0.6393762183235867,
+     "agree_flop_model": 0.884990253411306,
+     "mae_depth_limited": 0.15086881205540312,
+     "mae_flop_model": 0.07069407078895924
+    },
+    "ip_facing_bet": {
+     "hands": 513,
+     "agree_depth_limited": 0.7446393762183235,
+     "agree_flop_model": 0.6257309941520468,
+     "mae_depth_limited": 0.14657181195751195,
+     "mae_flop_model": 0.12310546634668094
+    }
+   }
+  },
+  {
+   "flop": "3c7cKc",
+   "precompute_s": 6.7,
+   "solve_s": 525.8,
+   "nodes": {
+    "oop_open": {
+     "hands": 505,
+     "agree_depth_limited": 0.8,
+     "agree_flop_model": 0.9326732673267327,
+     "mae_depth_limited": 0.1256789813918619,
+     "mae_flop_model": 0.058936514763466195
+    },
+    "ip_after_check": {
+     "hands": 505,
+     "agree_depth_limited": 0.6277227722772277,
+     "agree_flop_model": 0.8376237623762376,
+     "mae_depth_limited": 0.14959007194194993,
+     "mae_flop_model": 0.07246744035481283
+    },
+    "ip_facing_bet": {
+     "hands": 505,
+     "agree_depth_limited": 0.7108910891089109,
+     "agree_flop_model": 0.5762376237623762,
+     "mae_depth_limited": 0.1529067634047528,
+     "mae_flop_model": 0.13793821702637227
+    }
+   }
+  },
+  {
+   "flop": "4c5d6h",
+   "precompute_s": 7.5,
+   "solve_s": 537.7,
+   "nodes": {
+    "oop_open": {
+     "hands": 519,
+     "agree_depth_limited": 0.7822736030828517,
+     "agree_flop_model": 0.8535645472061657,
+     "mae_depth_limited": 0.10722609104493973,
+     "mae_flop_model": 0.06912383737275239
+    },
+    "ip_after_check": {
+     "hands": 519,
+     "agree_depth_limited": 0.6685934489402697,
+     "agree_flop_model": 0.8034682080924855,
+     "mae_depth_limited": 0.1383431927495448,
+     "mae_flop_model": 0.08719688980451672
+    },
+    "ip_facing_bet": {
+     "hands": 519,
+     "agree_depth_limited": 0.7822736030828517,
+     "agree_flop_model": 0.7360308285163777,
+     "mae_depth_limited": 0.11359687964707527,
+     "mae_flop_model": 0.14139698946818732
+    }
+   }
+  },
+  {
+   "flop": "4c5dAd",
+   "precompute_s": 6.0,
+   "solve_s": 511.8,
+   "nodes": {
+    "oop_open": {
+     "hands": 484,
+     "agree_depth_limited": 0.8429752066115702,
+     "agree_flop_model": 0.8863636363636364,
+     "mae_depth_limited": 0.07926621982833654,
+     "mae_flop_model": 0.06324577419187352
+    },
+    "ip_after_check": {
+     "hands": 484,
+     "agree_depth_limited": 0.8347107438016529,
+     "agree_flop_model": 0.7231404958677686,
+     "mae_depth_limited": 0.09534482682463288,
+     "mae_flop_model": 0.1099920214614877
+    },
+    "ip_facing_bet": {
+     "hands": 484,
+     "agree_depth_limited": 0.878099173553719,
+     "agree_flop_model": 0.9132231404958677,
+     "mae_depth_limited": 0.06584743063471082,
+     "mae_flop_model": 0.07538920234810913
+    }
+   }
+  },
+  {
+   "flop": "4cAcAd",
+   "precompute_s": 4.6,
+   "solve_s": 447.6,
+   "nodes": {
+    "oop_open": {
+     "hands": 448,
+     "agree_depth_limited": 0.9107142857142857,
+     "agree_flop_model": 0.9419642857142857,
+     "mae_depth_limited": 0.062125224883300315,
+     "mae_flop_model": 0.05670558750641458
+    },
+    "ip_after_check": {
+     "hands": 448,
+     "agree_depth_limited": 0.7455357142857143,
+     "agree_flop_model": 0.7455357142857143,
+     "mae_depth_limited": 0.15846826168924716,
+     "mae_flop_model": 0.07641040982738052
+    },
+    "ip_facing_bet": {
+     "hands": 448,
+     "agree_depth_limited": 0.9241071428571429,
+     "agree_flop_model": 0.859375,
+     "mae_depth_limited": 0.045388556173557026,
+     "mae_flop_model": 0.10118810822603268
+    }
+   }
+  },
+  {
+   "flop": "4cKdAh",
+   "precompute_s": 4.5,
+   "solve_s": 501.7,
+   "nodes": {
+    "oop_open": {
+     "hands": 471,
+     "agree_depth_limited": 0.7388535031847133,
+     "agree_flop_model": 0.8195329087048833,
+     "mae_depth_limited": 0.09640685984763174,
+     "mae_flop_model": 0.0712329511739155
+    },
+    "ip_after_check": {
+     "hands": 471,
+     "agree_depth_limited": 0.7261146496815286,
+     "agree_flop_model": 0.7409766454352441,
+     "mae_depth_limited": 0.14277680387371325,
+     "mae_flop_model": 0.09605201280907999
+    },
+    "ip_facing_bet": {
+     "hands": 471,
+     "agree_depth_limited": 0.9681528662420382,
+     "agree_flop_model": 0.8110403397027601,
+     "mae_depth_limited": 0.02107364111865737,
+     "mae_flop_model": 0.13247116380208293
+    }
+   }
+  },
+  {
+   "flop": "4cTdKc",
+   "precompute_s": 6.6,
+   "solve_s": 527.0,
+   "nodes": {
+    "oop_open": {
+     "hands": 494,
+     "agree_depth_limited": 0.8582995951417004,
+     "agree_flop_model": 0.868421052631579,
+     "mae_depth_limited": 0.06969340008090684,
+     "mae_flop_model": 0.07066780343639399
+    },
+    "ip_after_check": {
+     "hands": 494,
+     "agree_depth_limited": 0.8502024291497976,
+     "agree_flop_model": 0.8461538461538461,
+     "mae_depth_limited": 0.11194880262407052,
+     "mae_flop_model": 0.0606598867697661
+    },
+    "ip_facing_bet": {
+     "hands": 494,
+     "agree_depth_limited": 0.9534412955465587,
+     "agree_flop_model": 0.7854251012145749,
+     "mae_depth_limited": 0.03733976232326372,
+     "mae_flop_model": 0.1296569580705278
+    }
+   }
+  },
+  {
+   "flop": "5cTcKc",
+   "precompute_s": 6.3,
+   "solve_s": 510.3,
+   "nodes": {
+    "oop_open": {
+     "hands": 490,
+     "agree_depth_limited": 0.8306122448979592,
+     "agree_flop_model": 0.8938775510204081,
+     "mae_depth_limited": 0.11004030163361893,
+     "mae_flop_model": 0.06590698528766221
+    },
+    "ip_after_check": {
+     "hands": 490,
+     "agree_depth_limited": 0.7122448979591837,
+     "agree_flop_model": 0.8142857142857143,
+     "mae_depth_limited": 0.14698972440156632,
+     "mae_flop_model": 0.0714837758961273
+    },
+    "ip_facing_bet": {
+     "hands": 490,
+     "agree_depth_limited": 0.6714285714285714,
+     "agree_flop_model": 0.6510204081632653,
+     "mae_depth_limited": 0.1630253800451744,
+     "mae_flop_model": 0.1450680615835305
+    }
+   }
+  },
+  {
+   "flop": "7c8c9c",
+   "precompute_s": 5.8,
+   "solve_s": 523.0,
+   "nodes": {
+    "oop_open": {
+     "hands": 488,
+     "agree_depth_limited": 0.7397540983606558,
+     "agree_flop_model": 0.8422131147540983,
+     "mae_depth_limited": 0.1399268196494785,
+     "mae_flop_model": 0.08279688589870571
+    },
+    "ip_after_check": {
+     "hands": 488,
+     "agree_depth_limited": 0.6209016393442623,
+     "agree_flop_model": 0.8422131147540983,
+     "mae_depth_limited": 0.1876869884784091,
+     "mae_flop_model": 0.09684489325196947
+    },
+    "ip_facing_bet": {
+     "hands": 488,
+     "agree_depth_limited": 0.6209016393442623,
+     "agree_flop_model": 0.6577868852459017,
+     "mae_depth_limited": 0.20006168408669248,
+     "mae_flop_model": 0.11851795150968467
+    }
+   }
+  },
+  {
+   "flop": "7c9dTd",
+   "precompute_s": 5.6,
+   "solve_s": 522.0,
+   "nodes": {
+    "oop_open": {
+     "hands": 483,
+     "agree_depth_limited": 0.8985507246376812,
+     "agree_flop_model": 0.9213250517598344,
+     "mae_depth_limited": 0.07895114878072973,
+     "mae_flop_model": 0.07823044112646885
+    },
+    "ip_after_check": {
+     "hands": 483,
+     "agree_depth_limited": 0.7805383022774327,
+     "agree_flop_model": 0.7971014492753623,
+     "mae_depth_limited": 0.121916519904736,
+     "mae_flop_model": 0.08078004380002003
+    },
+    "ip_facing_bet": {
+     "hands": 483,
+     "agree_depth_limited": 0.8198757763975155,
+     "agree_flop_model": 0.6873706004140787,
+     "mae_depth_limited": 0.09744874976997925,
+     "mae_flop_model": 0.13897234587539484
+    }
+   }
+  },
+  {
+   "flop": "7cTdTh",
+   "precompute_s": 3.8,
+   "solve_s": 516.6,
+   "nodes": {
+    "oop_open": {
+     "hands": 486,
+     "agree_depth_limited": 0.8127572016460906,
+     "agree_flop_model": 0.7489711934156379,
+     "mae_depth_limited": 0.12177404594109682,
+     "mae_flop_model": 0.06840601589084712
+    },
+    "ip_after_check": {
+     "hands": 486,
+     "agree_depth_limited": 0.7674897119341564,
+     "agree_flop_model": 0.8847736625514403,
+     "mae_depth_limited": 0.1273323920131976,
+     "mae_flop_model": 0.08673460020934019
+    },
+    "ip_facing_bet": {
+     "hands": 486,
+     "agree_depth_limited": 0.9176954732510288,
+     "agree_flop_model": 0.7263374485596708,
+     "mae_depth_limited": 0.06588393140608584,
+     "mae_flop_model": 0.11517927647959443
+    }
+   }
+  }
+ ]
+}

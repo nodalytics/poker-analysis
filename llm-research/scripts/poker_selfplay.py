@@ -122,13 +122,27 @@ def is_style(entrant):
     return entrant.startswith("style_")
 
 
+def shifter_style(name, hand):
+    """'shift_<seed>': a player who switches between two random styles, a Markov chain over hands with a 6% chance
+    of switching each hand (regimes last about 17 hands). Returns the style_<seed> playing this hand."""
+    seed = int(name.split("_", 1)[1])
+    r = random.Random(seed)
+    styles = [f"style_{seed * 2 + 11}", f"style_{seed * 2 + 12}"]
+    cur = 0
+    for _ in range(hand):
+        if r.random() < 0.06:
+            cur = 1 - cur
+    return styles[cur]
+
+
 def is_bot(entrant):
     """Rule-based or algorithmic players: no language model behind them."""
     return (
         entrant in PERSONAS
         or entrant in pa.ALGOS
-        or entrant.split("#")[0] in ("tinaplus", "solverbot", "rlbot", "rlavg", "rlsnap")
+        or entrant.split("#")[0] in ("tinaplus", "solverbot", "adaptbot", "adaptbot_recent", "rlbot", "rlavg", "rlsnap")
         or is_style(entrant)
+        or entrant.startswith("shift_")
     )
 
 
@@ -143,6 +157,8 @@ def kind_of(entrant):
         return "frozen earlier copy of the reinforcement-learning agent (league opponent)"
     if is_style(entrant):
         return "simulated player with a random style"
+    if entrant.startswith("shift_"):
+        return "simulated player who switches between two styles (regime changes)"
     if entrant.split("#")[0] == "solverbot":
         return "the solver stack alone: charts, flop model and solves, Monte Carlo where none applies"
     if entrant in PERSONAS:
@@ -245,6 +261,10 @@ def main(outdir, hands, models, notes=None, short_stack=None):
     jl = open(os.path.join(outdir, "hands.jsonl"), "a", buffering=1)
     chips = {m: START for m in models}
     stats = {m: {"decisions": 0, "invalid": 0, "vpip_hands": 0, "hands": 0, "seconds": 0.0} for m in models}
+    # what every player has shown this session, for bots that adapt to opponents (poker_agents.adapt_play)
+    profile = {m: {"hands": 0, "vpip": 0, "post_raises": 0, "post_calls": 0, "faced": 0, "folded": 0} for m in models}
+    # the same counts with exponential forgetting (x0.85 a hand, a memory of about 7 hands): tracks regime changes
+    recent = {m: {k: 0.0 for k in profile[m]} for m in models}
 
     def say(s=""):
         log.write(s + "\n")
@@ -277,7 +297,10 @@ def main(outdir, hands, models, notes=None, short_stack=None):
         for i, m in enumerate(seat):
             stats[m]["hands"] += 1
         history, voluntarily = [], set()
-        ctx, street_now = {"hand": h, "street_actions": [], "street_pot": 0}, None
+        ctx, street_now = (
+            {"hand": h, "street_actions": [], "street_pot": 0, "seats": seat, "profile": profile, "recent": recent},
+            None,
+        )
         while state.status:
             i = state.actor_index
             if i is None:
@@ -324,6 +347,12 @@ def main(outdir, hands, models, notes=None, short_stack=None):
                 text = rl_agent.reply(state, i, ctx, m)
             elif is_style(m):
                 text = bot_reply(m, state, i)
+            elif m.startswith("shift_"):
+                text = bot_reply(shifter_style(m, h), state, i)
+            elif m.split("#")[0] == "adaptbot":
+                text = pa.adapt_play(state, i, ctx)
+            elif m.split("#")[0] == "adaptbot_recent":
+                text = pa.adapt_play(state, i, ctx, recent=True)
             elif m.split("#")[0] == "solverbot":
                 text = pa.solver_play(state, i, ctx) or pa.monte_reply(state, i)
             elif m in PERSONAS:
@@ -380,6 +409,13 @@ def main(outdir, hands, models, notes=None, short_stack=None):
             kind = done.split()[0].rstrip("s")
             added = to_call if kind == "call" else (state.bets[i] - bet_before if kind == "raise" else 0)
             ctx["street_actions"].append((kind, added))
+            if st != "preflop":
+                for pr in (profile[m], recent[m]):
+                    pr["post_raises"] += kind == "raise"
+                    pr["post_calls"] += kind == "call"
+                    if to_call:
+                        pr["faced"] += 1
+                        pr["folded"] += kind == "fold"
             say(f"  [{st:7}] {short(m):22} {hole}  {done}{note}  ({secs}s)")
             jl.write(
                 json.dumps(
@@ -406,6 +442,15 @@ def main(outdir, hands, models, notes=None, short_stack=None):
             )
         for m in voluntarily:
             stats[m]["vpip_hands"] += 1
+            profile[m]["vpip"] += 1
+        for m in seat:
+            profile[m]["hands"] += 1
+        for m in voluntarily:
+            recent[m]["vpip"] += 1
+        for m in seat:
+            recent[m]["hands"] += 1
+            for k in recent[m]:
+                recent[m][k] *= 0.85
         board = cards(list(state.get_board_cards(0))) if state.board_count else "-"
         for i, m in enumerate(seat):
             chips[m] += state.stacks[i] - dealt[m]  # net change this hand
