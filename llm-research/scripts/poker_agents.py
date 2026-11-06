@@ -28,7 +28,7 @@ ROOT = os.environ.get(
 # TEXASSOLVER_BIN: e.g. the optimised build (~/solver-fast/build/console_solver), same answers, 2-3x faster
 SOLVER = os.environ.get("TEXASSOLVER_BIN", os.path.join(ROOT, "tools", "TexasSolver", "build", "console_solver"))
 RESOURCES = os.path.join(ROOT, "tools", "TexasSolver", "resources")
-SOLVER_THREADS, SOLVER_TIMEOUT = 8, 90
+SOLVER_THREADS, SOLVER_TIMEOUT = int(os.environ.get("SOLVER_THREADS", 8)), 90
 WIDE = (
     "AA,KK,QQ,JJ,TT,99,88,77,66,55,44,33,22,AK,AQ,AJ,AT,A9,A8,A7,A6,A5,A4,A3,A2,KQ,KJ,KT,K9,K8,QJ,QT,Q9,"
     "JT,J9,T9,T8,98,97,87,76,65,54"

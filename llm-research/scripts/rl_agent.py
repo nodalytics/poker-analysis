@@ -1,17 +1,29 @@
-"""Reinforcement learning: a poker agent that learns from the chips it wins, playing the bots in poker_selfplay.
+"""Reinforcement learning: poker agents that learn from the chips they win, trained at scale against many styles.
 
 Usage: uv run python scripts/rl_agent.py OUTDIR ITERATIONS [--short] [--workers N] [--sessions-per-worker K]
+       [--league] [--vs SEAT]
 Tabular every-visit Monte Carlo control with epsilon-greedy exploration. State: street, hand strength (Monte Carlo
 equity against the opponents with chips in the pot, 10 bands), facing a bet, the price of calling (4 bands),
 position (last to act or not) and stack depth (3 bands). Actions: fold, check/call, bet half the pot, bet the pot,
-all-in. The value of an action is the mean big blinds the hand finally won after taking it.
+all-in. An action's value is the mean big blinds the hand finally won after taking it.
 
-Training tables: three learning seats (rlbot#1..3, sharing one table of values) with monte, tina, tinaplus, bob, max
-and carl, 24-hand sessions in parallel workers; values are merged after every iteration and written to
-OUTDIR/q.json with the learning curve in OUTDIR/curve.json. The trained agent plays greedily as seat `rlbot` in
-poker_selfplay (reads RL_Q, default results/rl/q.json), e.g. in bot_sim.py against solverbot.
+Plain mode: three learning seats (rlbot#1..3) with monte, tina, tinaplus, bob, max and carl.
+--league: every session draws six opponents afresh: random-style players (poker_selfplay.style_<seed>, a random point
+in the personality space: raising and calling thresholds, limping, bluffing, stickiness, bet size), the named bots,
+and frozen earlier copies of the agent (rlsnap#k, saved every 25 iterations). It also keeps an average policy, the
+count of each action the learner chose greedily over all of training (neural fictitious self-play's average-policy
+idea): self-play that averages converges where greedy self-play cycles (docs/2026-11-06-alphapoker.md).
+
+--vs SEAT: an exploiter. One learning seat plays SEAT heads-up (positions alternate) and learns only to beat it. If
+an exploiter trained on a large sample cannot beat a system, that system has no leak this learner can find; if it
+can, the states where it gains show the leak (a cheap stand-in for a best response in a game too big to compute).
+
+Outputs in OUTDIR: q.json (values), avg.json (average policy), snapshots/, curve.json. Seats in poker_selfplay:
+`rlbot` plays the greedy policy (RL_Q, default results/rl/q.json), `rlavg` samples the average policy (RL_AVG,
+default avg.json next to RL_Q), `rlsnap#k` a saved snapshot.
 """
 
+import glob
 import json
 import os
 import random
@@ -25,18 +37,29 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 ACTIONS = ["fold", "passive", "half", "pot", "allin"]
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 Q_PATH = os.environ.get("RL_Q", os.path.join(HERE, "results", "rl", "q.json"))
-_Q = {}
+AVG_PATH = os.environ.get("RL_AVG", os.path.join(os.path.dirname(Q_PATH), "avg.json"))
+NAMED = ["monte", "tina", "tinaplus", "bob", "max", "carl", "nora"]
+_Q, _AVG, _SNAPS = {}, {}, {}
 EPSILON = [0.0]
-BUFFER = []  # (hand, seat name, state key, action index) while a session plays
+BUFFER = []  # (hand, seat name, state key, action index, greedy?) while a session plays
 _RNG = random.Random()
 
 
-def load(path=None):
-    _Q.clear()
+def _read(path):
     try:
-        _Q.update(json.load(open(path or Q_PATH)))
-    except OSError:
-        pass
+        return json.load(open(path))
+    except (OSError, ValueError):
+        return {}
+
+
+def load(qpath=None, avgpath=None, snapdir=None):
+    _Q.clear()
+    _Q.update(_read(qpath or Q_PATH))
+    _AVG.clear()
+    _AVG.update(_read(avgpath or AVG_PATH))
+    _SNAPS.clear()
+    for f in glob.glob(os.path.join(snapdir, "q_*.json")) if snapdir else []:
+        _SNAPS[os.path.basename(f)[2:-5]] = _read(f)
 
 
 def key(state, i, ctx):
@@ -65,14 +88,23 @@ def legal(state):
 
 
 def reply(state, i, ctx, name):
+    base, _, tag = name.partition("#")
     if not _Q and os.path.exists(Q_PATH):
         load()
     k = key(state, i, ctx)
     ok = legal(state)
-    q = _Q.get(k, {"v": [0.0] * 5})["v"]
     choices = [a for a in range(5) if ok[a]]
-    a = _RNG.choice(choices) if _RNG.random() < EPSILON[0] else max(choices, key=lambda x: q[x])
-    BUFFER.append((ctx["hand"], name, k, a))
+    if base == "rlsnap":
+        q = _SNAPS.get(tag, {}).get(k, {"v": [0.0] * 5})["v"]
+        a = max(choices, key=lambda x: q[x])
+    elif base == "rlavg" and k in _AVG and sum(_AVG[k][x] for x in choices) > 0:
+        a = _RNG.choices(choices, weights=[_AVG[k][x] for x in choices])[0]
+    else:
+        q = _Q.get(k, {"v": [0.0] * 5})["v"]
+        explore = base == "rlbot" and _RNG.random() < EPSILON[0]
+        a = _RNG.choice(choices) if explore else max(choices, key=lambda x: q[x])
+        if base == "rlbot":
+            BUFFER.append((ctx["hand"], name, k, a, not explore))
     to_call, pot = state.checking_or_calling_amount, state.total_pot_amount
     if a == 0:
         return json.dumps({"action": "fold"})
@@ -85,23 +117,48 @@ def reply(state, i, ctx, name):
     return json.dumps({"action": "raise", "amount": int(max(lo, min(hi, amt)))})
 
 
+def table(rng, league, vs=None):
+    if vs:  # exploiter: one learning seat heads-up against a fixed system, positions alternating
+        seats = ["rlbot#1", vs]
+        rng.shuffle(seats)
+        return seats
+    if not league:
+        return ["rlbot#1", "monte", "rlbot#2", "tina", "tinaplus", "rlbot#3", "bob", "max", "carl"]
+    import rl_agent as me
+
+    opp, named = [], rng.sample(NAMED, len(NAMED))
+    while len(opp) < 6:
+        u = rng.random()
+        if u < 0.45:
+            opp.append(f"style_{rng.randrange(1_000_000)}")
+        elif u < 0.8 and named:
+            opp.append(named.pop())
+        elif me._SNAPS:
+            s = f"rlsnap#{rng.choice(sorted(me._SNAPS))}"
+            opp.append(s if s not in opp else f"style_{rng.randrange(1_000_000)}")
+        else:
+            opp.append(f"style_{rng.randrange(1_000_000)}")
+    seats = ["rlbot#1", "rlbot#2", "rlbot#3"] + opp
+    rng.shuffle(seats)
+    return seats
+
+
 def play(args):
-    """One worker: some sessions with the current values; returns (state key, action, reward in big blinds)."""
-    qpath, eps, sessions, short, seed = args
+    """One worker: some sessions with the current values; returns (state, action, reward in bb, greedy?)."""
+    qpath, avgpath, snapdir, eps, sessions, short, league, seed, vs = args
     import poker_selfplay as ps
     import rl_agent as me  # the module poker_selfplay calls, not this file run as __main__
 
-    me.load(qpath)
+    me.load(qpath, avgpath, snapdir)
     me.EPSILON[0] = eps
     me._RNG.seed(seed)
     random.seed(seed)
+    rng = random.Random(seed)
     out = []
     tmp = tempfile.mkdtemp(prefix="rl-")
     try:
         for s in range(sessions):
-            seats = ["rlbot#1", "monte", "rlbot#2", "tina", "tinaplus", "rlbot#3", "bob", "max", "carl"]
-            k = _RNG.randrange(len(seats))
-            seats = seats[k:] + seats[:k]
+            seats = table(rng, league, vs)
             me.BUFFER.clear()
             d = os.path.join(tmp, f"s{s}")
             ps.main(d, 24, seats, short_stack=(5, 20) if short else None)
@@ -111,48 +168,71 @@ def play(args):
                 if r.get("end"):
                     for name, p in zip(r["seats"], r["payoffs"]):
                         pay[(r["hand"], name)] = p / 2
-            out += [(k_, a, pay.get((h, n), 0.0)) for h, n, k_, a in me.BUFFER]
+            out += [(k_, a, pay.get((h, n), 0.0), g) for h, n, k_, a, g in me.BUFFER]
+            shutil.rmtree(d, ignore_errors=True)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
     return out
 
 
-def main(outdir, iterations, short, workers, per_worker):
-    os.makedirs(outdir, exist_ok=True)
-    qpath = os.path.join(outdir, "q.json")
-    q = json.load(open(qpath)) if os.path.exists(qpath) else {}
-    curve = []
-    for it in range(1, iterations + 1):
+def main(outdir, iterations, short, workers, per_worker, league, vs=None):
+    os.makedirs(os.path.join(outdir, "snapshots"), exist_ok=True)
+    qpath, avgpath = os.path.join(outdir, "q.json"), os.path.join(outdir, "avg.json")
+    q, avg = _read(qpath), _read(avgpath)
+    curve = _read(os.path.join(outdir, "curve.json")) or []
+    for it in range(len(curve) + 1, iterations + 1):
         eps = max(0.05, 0.5 * (1 - it / iterations))
         json.dump(q, open(qpath, "w"))
+        json.dump(avg, open(avgpath, "w"))
+        snapdir = os.path.join(outdir, "snapshots") if league else None
+        jobs = [(qpath, avgpath, snapdir, eps, per_worker, short, league, it * 1000 + w, vs) for w in range(workers)]
         with ProcessPoolExecutor(workers) as pool:
-            batches = list(pool.map(play, [(qpath, eps, per_worker, short, it * 1000 + w) for w in range(workers)]))
+            batches = list(pool.map(play, jobs))
         n, tot = 0, 0.0
         for batch in batches:
-            for k, a, r in batch:
+            for k, a, r, greedy in batch:
                 e = q.setdefault(k, {"v": [0.0] * 5, "n": [0] * 5})
                 e["n"][a] += 1
                 e["v"][a] += (r - e["v"][a]) / e["n"][a]
+                if greedy:
+                    avg.setdefault(k, [0] * 5)[a] += 1
                 n += 1
                 tot += r
         curve.append(
-            {"iteration": it, "epsilon": round(eps, 3), "decisions": n, "mean_reward_bb": round(tot / max(n, 1), 3)}
+            {
+                "iteration": it,
+                "epsilon": round(eps, 3),
+                "decisions": n,
+                "mean_reward_bb": round(tot / max(n, 1), 3),
+                "states": len(q),
+            }
         )
-        print(curve[-1], f"states {len(q)}", flush=True)
+        print(curve[-1], flush=True)
         json.dump(q, open(qpath, "w"))
+        json.dump(avg, open(avgpath, "w"))
         json.dump(curve, open(os.path.join(outdir, "curve.json"), "w"), indent=1)
+        if league and it % 25 == 0:
+            json.dump(q, open(os.path.join(outdir, "snapshots", f"q_{it}.json"), "w"))
 
 
 if __name__ == "__main__":
     a = sys.argv[1:]
-    opts = {"--workers": 16, "--sessions-per-worker": 4}
+    opts = {"--workers": 16, "--sessions-per-worker": 4, "--vs": None}
     pos, k = [], 0
     while k < len(a):
         if a[k] in opts:
-            opts[a[k]] = int(a[k + 1])
+            opts[a[k]] = a[k + 1] if a[k] == "--vs" else int(a[k + 1])
             k += 2
             continue
-        if a[k] != "--short":
+        if a[k] not in ("--short", "--league"):
             pos.append(a[k])
         k += 1
-    main(pos[0], int(pos[1]), "--short" in a, opts["--workers"], opts["--sessions-per-worker"])
+    main(
+        pos[0],
+        int(pos[1]),
+        "--short" in a,
+        opts["--workers"],
+        opts["--sessions-per-worker"],
+        "--league" in a,
+        opts["--vs"],
+    )
