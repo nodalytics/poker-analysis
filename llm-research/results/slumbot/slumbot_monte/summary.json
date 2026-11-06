@@ -1,0 +1,10 @@
+{
+ "bot": "monte",
+ "hands": 3000,
+ "bb100": -65.3,
+ "ci95": [
+  -135.7,
+  2.9
+ ],
+ "fallbacks_after_illegal_reply": 0
+}
