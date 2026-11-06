@@ -1,0 +1,226 @@
+{
+ "game_value_seat0_mchips": -85.6,
+ "units": "milli-chips per hand, averaged over seats",
+ "rnr_frontier": {
+  "random": [
+   {
+    "p": 0.0,
+    "profit": 755.4,
+    "exploitability": 40.8
+   },
+   {
+    "p": 0.1,
+    "profit": 1008.7,
+    "exploitability": 60.2
+   },
+   {
+    "p": 0.25,
+    "profit": 1277.2,
+    "exploitability": 120.3
+   },
+   {
+    "p": 0.5,
+    "profit": 1829.6,
+    "exploitability": 502.7
+   },
+   {
+    "p": 0.75,
+    "profit": 2105.5,
+    "exploitability": 969.4
+   },
+   {
+    "p": 0.9,
+    "profit": 2224.9,
+    "exploitability": 1723.4
+   },
+   {
+    "p": 1.0,
+    "profit": 2368.0,
+    "exploitability": 3392.2
+   }
+  ],
+  "station": [
+   {
+    "p": 0.0,
+    "profit": 716.4,
+    "exploitability": 40.8
+   },
+   {
+    "p": 0.1,
+    "profit": 1082.9,
+    "exploitability": 59.6
+   },
+   {
+    "p": 0.25,
+    "profit": 1242.2,
+    "exploitability": 87.8
+   },
+   {
+    "p": 0.5,
+    "profit": 1345.6,
+    "exploitability": 150.0
+   },
+   {
+    "p": 0.75,
+    "profit": 1425.1,
+    "exploitability": 286.0
+   },
+   {
+    "p": 0.9,
+    "profit": 1446.4,
+    "exploitability": 334.0
+   },
+   {
+    "p": 1.0,
+    "profit": 1461.6,
+    "exploitability": 2442.8
+   }
+  ],
+  "maniac": [
+   {
+    "p": 0.0,
+    "profit": 453.6,
+    "exploitability": 40.8
+   },
+   {
+    "p": 0.1,
+    "profit": 1653.1,
+    "exploitability": 106.8
+   },
+   {
+    "p": 0.25,
+    "profit": 1948.6,
+    "exploitability": 151.6
+   },
+   {
+    "p": 0.5,
+    "profit": 2203.0,
+    "exploitability": 307.7
+   },
+   {
+    "p": 0.75,
+    "profit": 2290.2,
+    "exploitability": 420.2
+   },
+   {
+    "p": 0.9,
+    "profit": 2310.8,
+    "exploitability": 500.0
+   },
+   {
+    "p": 1.0,
+    "profit": 2318.0,
+    "exploitability": 2111.2
+   }
+  ],
+  "nit": [
+   {
+    "p": 0.0,
+    "profit": 533.0,
+    "exploitability": 40.8
+   },
+   {
+    "p": 0.1,
+    "profit": 571.2,
+    "exploitability": 42.8
+   },
+   {
+    "p": 0.25,
+    "profit": 743.7,
+    "exploitability": 74.4
+   },
+   {
+    "p": 0.5,
+    "profit": 988.0,
+    "exploitability": 249.0
+   },
+   {
+    "p": 0.75,
+    "profit": 999.8,
+    "exploitability": 269.9
+   },
+   {
+    "p": 0.9,
+    "profit": 999.8,
+    "exploitability": 269.0
+   },
+   {
+    "p": 1.0,
+    "profit": 1000.0,
+    "exploitability": 2916.6
+   }
+  ]
+ },
+ "qre_mmd": [
+  {
+   "alpha": 0.0,
+   "exploitability": 2373.6,
+   "profit": {
+    "random": -0.0,
+    "station": 0.0,
+    "maniac": -1899.3,
+    "nit": 750.0
+   }
+  },
+  {
+   "alpha": 0.02,
+   "exploitability": 1067.0,
+   "profit": {
+    "random": 896.2,
+    "station": 292.0,
+    "maniac": 609.3,
+    "nit": 690.8
+   }
+  },
+  {
+   "alpha": 0.05,
+   "exploitability": 1634.0,
+   "profit": {
+    "random": 827.1,
+    "station": 85.0,
+    "maniac": -160.9,
+    "nit": 773.8
+   }
+  },
+  {
+   "alpha": 0.1,
+   "exploitability": 2044.6,
+   "profit": {
+    "random": 727.7,
+    "station": 30.0,
+    "maniac": -699.0,
+    "nit": 781.3
+   }
+  },
+  {
+   "alpha": 0.2,
+   "exploitability": 2402.2,
+   "profit": {
+    "random": 619.3,
+    "station": 11.8,
+    "maniac": -1187.9,
+    "nit": 790.5
+   }
+  },
+  {
+   "alpha": 0.5,
+   "exploitability": 2692.1,
+   "profit": {
+    "random": 521.1,
+    "station": 4.4,
+    "maniac": -1611.7,
+    "nit": 797.9
+   }
+  },
+  {
+   "alpha": 1.0,
+   "exploitability": 2788.4,
+   "profit": {
+    "random": 483.4,
+    "station": 2.1,
+    "maniac": -1770.5,
+    "nit": 799.5
+   }
+  }
+ ]
+}
