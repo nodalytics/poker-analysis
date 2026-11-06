@@ -1,14 +1,14 @@
 <skill>
-1. Castle by 12.
-2. No 3+ move repeats. Trade if opponent repeats.
-3. Trade down when = or + material. Simplify when behind.
-4. Force/accept perpetuals. Resign if losing.
-5. Develop knights/bishops first. No pointless rook lifts.
-6. Stop repeating rook lifts after 5.
-7. Resign if -10+ after 50 plies.
-8. If stuck, trade pieces.
-9. Avoid passive rook shuffling.
-10. If ahead, push passed pawns.
-11. If behind, avoid trades.
-12. If losing, trade to draw.
+1. Castle by 15.
+2. Trade = or + material. Avoid - material trades.
+3. Push passed pawns at +2. No wasted pushes.
+4. Dev knights/bishops *before* rooks.
+5. No rook lifts unless attacking *or* defending.
+6. Simplify if losing by >3 material.
+7. Break repetition by 35. Force change.
+8. No pawn pushes into checks.
+9. Avoid 5-move repeats.
+10. No pointless king walks.
+11. No endless rook shuffling.
+12. No stalemate traps.
 </skill>

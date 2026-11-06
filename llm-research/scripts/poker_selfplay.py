@@ -230,7 +230,13 @@ def main(outdir, hands, models, notes=None, short_stack=None):
         state = NoLimitTexasHoldem.create_state(
             AUTO, True, 0, (SB, BB), BB, tuple(dealt[m] for m in seat), len(seat), mode=Mode.CASH_GAME
         )
-        say(f"\n--- Hand {h} --- " + "  ".join(f"{short(m)} {chips[m]}" for m in seat))
+        say(
+            f"\n--- Hand {h} --- "
+            + "  ".join(
+                f"{short(m)} {dealt[m]} (net {chips[m] - START:+})" if short_stack else f"{short(m)} {chips[m]}"
+                for m in seat
+            )
+        )
         for i, m in enumerate(seat):
             stats[m]["hands"] += 1
         history, voluntarily = [], set()

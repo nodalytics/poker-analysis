@@ -39,7 +39,20 @@ ALGOS = {
 _RNG = random.Random(4242)
 _DECK = eval7.Deck().cards
 _SOLVES = {}
-stats = {"solver_used": 0, "solver_failed": 0, "solver_seconds": 0.0, "toolkit_calls": 0}
+stats = {
+    "solver_used": 0,
+    "solver_failed": 0,
+    "solver_seconds": 0.0,
+    "toolkit_calls": 0,
+    "flop_model_used": 0,
+    "push_fold_used": 0,
+}
+# The flop model (ml_flop.py) trained on the solver library; the MLP is 325KB and within 0.006 MAE of the 2.6GB
+# extra-trees model on held-out flops, so it is the one loaded per decision.
+FLOP_MODEL = os.environ.get(
+    "FLOP_MODEL", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "mlflop", "mlp.joblib")
+)
+_FLOP = {}
 
 
 def _cards(cs):
@@ -211,6 +224,101 @@ def solver_strategy(state, i, ctx):
     }
 
 
+def flop_model_strategy(state, i, ctx):
+    """The flop model's prediction of TexasSolver's strategy, heads-up on the flop at the three points it was trained
+    on: first to act, in position after a check, and in position facing a bet. Or a reason there is none."""
+    board_cards = list(state.get_board_cards(0)) if state.board_count else []
+    live = [j for j, s in enumerate(state.statuses) if s]
+    if len(board_cards) != 3 or len(live) != 2:
+        return {"available": False, "reason": "the flop model covers heads-up flops only"}
+    acts = [k for k, _ in ctx["street_actions"] if k != "fold"]
+    oop = i == min(live)
+    if oop and not acts:
+        node = "oop_open"
+    elif not oop and acts == ["check"]:
+        node = "ip_after_check"
+    elif not oop and acts == ["raise"]:
+        node = "ip_facing_bet"
+    else:
+        return {"available": False, "reason": "the flop model covers the first decision of each player only"}
+    if "model" not in _FLOP:
+        try:
+            from joblib import load
+
+            _FLOP["model"] = load(FLOP_MODEL)
+        except (OSError, ImportError) as e:
+            _FLOP["model"] = None
+            _FLOP["error"] = str(e)
+    if _FLOP["model"] is None:
+        return {"available": False, "reason": f"no flop model ({_FLOP.get('error', 'not loaded')})"}
+    import ml_flop
+
+    behind = min(state.stacks[j] for j in live) + min(state.bets[j] for j in live)
+    spot = "spr9.5_wide" if behind / max(1, ctx["street_pot"]) > 7 else "spr4.5_wide"
+    hole = "".join(repr(c) for c in state.hole_cards[i])
+    x = ml_flop.features([repr(c) for c in board_cards], hole, node, spot)
+    p = [max(0.0, float(v)) for v in _FLOP["model"].predict([x])[0]]
+    if not state.checking_or_calling_amount:
+        p[0], p[3] = p[0] + p[3], 0.0  # never fold when checking is free
+    t = sum(p) or 1.0
+    names = ["check/call", "bet or raise about 2/3 pot", "all-in", "fold"]
+    return {"available": True, "node": node, "strategy": {n: round(v / t, 3) for n, v in zip(names, p)}}
+
+
+PREFLOP = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "results", "preflop")
+_CHARTS = {}
+
+
+def _chart(name):
+    if name not in _CHARTS:
+        try:
+            _CHARTS[name] = json.load(open(os.path.join(PREFLOP, name)))["charts"]
+        except OSError:
+            _CHARTS[name] = []
+    return _CHARTS[name]
+
+
+def hand_class169(hole):
+    """One of the 169 preflop classes the push/fold charts use: 'AKs', 'AKo' or '77'."""
+    order = "23456789TJQKA"
+    (r1, s1), (r2, s2) = [(repr(c)[0], repr(c)[1]) for c in hole]
+    hi, lo = sorted((r1, r2), key=order.index, reverse=True)
+    return hi + lo if hi == lo else hi + lo + ("s" if s1 == s2 else "o")
+
+
+def push_fold_advice(state, i):
+    """The push/fold equilibrium's answer when the pot is unopened (blinds only, no limpers) and the hero has 20 big
+    blinds or less. With k players still behind, a shove meets the same callers as the first seat of a (k+1)-handed
+    table, so that chart is used (capped at 6 handed, slightly loose for longer tables; at most one caller assumed).
+    Or None when it does not apply."""
+    n = len(state.statuses)
+    bb = max(getattr(state, "blinds_or_straddles", (1, 2)))
+    if list(state.get_board_cards(0)) or i == 1 or max(state.bets) > bb:
+        return None
+    if any(state.bets[j] for j in range(2, n)):  # a limper: not unopened
+        return None
+    behind = [j for j in range(n) if state.statuses[j] and j != i and (j > i or j < 2)]
+    if not behind:
+        return None
+    eff = min(state.stacks[i] + state.bets[i], max(state.stacks[j] + state.bets[j] for j in behind)) / bb
+    if eff > 20:
+        return None
+    hc = hand_class169(state.hole_cards[i])
+    m = len(behind) + 1
+    if m == 2:
+        c = min(_chart("push_fold_nash.json"), key=lambda x: abs(x["stack_bb"] - eff), default=None)
+        rng, table = (c["push"] if c else []), "heads-up"
+    else:
+        size = min(m, 6)
+        cs = [c for c in _chart("push_fold_multiway.json") if c["players"] == size]
+        c = min(cs, key=lambda x: abs(x["stack_bb"] - eff), default=None)
+        pos = "button" if size == 3 else "pos0"
+        rng, table = (c["shove"].get(pos, {}).get("range", []) if c else []), f"{size}-handed, first to act"
+    if not c:
+        return None
+    return {"hand": hc, "shove": hc in rng, "stack_bb": round(eff, 1), "chart": f"{table}, {c['stack_bb']}bb"}
+
+
 def solver_brief(state, i, ctx):
     """What a solver-first player is told before it decides: the solver's strategy when it can solve the spot,
     otherwise Monte Carlo equity against the live opponents and the pot odds."""
@@ -219,9 +327,26 @@ def solver_brief(state, i, ctx):
         stats["solver_used"] += 1
         mix = ", ".join(f"{a.split('.')[0]} {p:.0%}" for a, p in adv["strategy"].items())
         return f"Solver (TexasSolver, game-theory strategy for your exact hand here): {mix}."
+    flop = flop_model_strategy(state, i, ctx)
+    if flop.get("available"):
+        stats["flop_model_used"] += 1
+        mix = ", ".join(f"{a} {p:.0%}" for a, p in flop["strategy"].items() if p >= 0.005)
+        return (
+            "Solver flop model (trained on 400 TexasSolver flop solves, predicts its strategy for your hand here; "
+            f"about 81% agreement on unseen flops): {mix}."
+        )
+    pf = push_fold_advice(state, i)
+    if pf:
+        stats["push_fold_used"] += 1
+        return (
+            f"Push/fold equilibrium ({pf['chart']} chart, you have {pf['stack_bb']} big blinds, folded to you): "
+            f"{pf['hand']} is {'a SHOVE: go all-in' if pf['shove'] else 'a FOLD'}."
+        )
     hole = _cards(state.hole_cards[i])
     board = _cards(state.get_board_cards(0)) if state.board_count else []
-    live = sum(1 for j, s in enumerate(state.statuses) if s and j != i)
+    # range only the opponents with chips in the pot: preflop, players still to act are not random hands yet
+    postflop = bool(board)
+    live = sum(1 for j, s in enumerate(state.statuses) if s and j != i and (postflop or state.bets[j]))
     eq = equity_vs_random(hole, board, max(1, live))
     to_call, pot = state.checking_or_calling_amount, state.total_pot_amount
     odds = to_call / (pot + to_call) if to_call else 0.0

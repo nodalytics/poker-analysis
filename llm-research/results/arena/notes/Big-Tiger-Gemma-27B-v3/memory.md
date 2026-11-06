@@ -1,16 +1,15 @@
-- round 1, chess: Big-Tiger-Gemma-27B-v3#frozen will draw by repetition if given the chance; force complications early.
-- round 1, poker: Bob played very loose and won mostly by luck; avoid calling his bluffs.
-- round 2, chess: qwen2.5vl#frozen will draw any position if given enough time, even if material is equal.
-- round 2, poker: Tiger-Gemma-9B-v3#frozen crushed me; it played relentlessly aggressive, so I need to fold even more to avoid bleeding chips.
-- round 3, chess: Tiger-Gemma-9B-v3#frozen will loop indefinitely if allowed; force a resignation or stalemate.
-- round 3, poker: Carl called every bet, so tighter ranges are needed even against weak players.
-- round 4, chess: qwen2.5vl#frozen will repeat the same rook lift until adjudicated if given the chance.
-- round 4, poker: Sol crushed me despite my tight range; his aggression is too high to call down light.
-- round 5, chess: qwen2.5vl#learn will repeat rook lifts indefinitely if not forced to trade.
-- round 5, poker: Bob won because I played too many hands and didn’t fold to his aggression. Fold more.
-- round 6, chess: qwen2.5vl#frozen will endlessly repeat rook moves if allowed; force trades or resign early.
-- round 6, poker: Monte consistently value-bets thinly and exploits any weakness; avoid playing hands against him at all costs.
-- round 7, chess: qwen2.5vl#frozen will endlessly repeat rook lifts if allowed; force a trade or resign early.
-- round 7, poker: Bob won because I didn't play a single hand, but he still won big. Need to play more, even if it's just AA/KK/QQ.
-- round 8, chess: Big-Tiger-Gemma-27B-v3#frozen will happily repeat moves indefinitely; force a trade earlier to avoid a drawn repetition.
-- round 8, poker: Wizard-vicuna-uncensored#frozen won because I didn't play enough hands, even with a small stack.
+Here's a condensed list of key lessons:
+
+- Gemma-27B/9B: Complicate/trade early, avoid draws.
+- Bob: Fold weak, avoid bluff-calls.
+- qwen2.5vl: Force trades/resign, break repetition.
+- Carl: Play tighter, avoid unnecessary games.
+- Sol: Hyper-aggression, tight folds.
+- Monte/Tina: Fold-heavy preflop (fold >1/3 pot).
+- Wizard-vicuna: Play actively, vary lines.
+- Frozen models: Force variation/trades (repeat risk).
+- Verify legality *every* move.
+- Nora: Variance is brutal, even tight play fails.
+- round 58, chess: qwen2.5vl#learn will happily loop if you let it, and I looped for 120 plies. Never again.
+- round 58, chess: Big-Tiger-Gemma-27B-v3#frozen will draw by repetition if allowed; force a change before move 35.
+- round 58, poker: Wizard-vicuna-uncensored#learn is a stronger exploiter than I anticipated; it punished my passivity.

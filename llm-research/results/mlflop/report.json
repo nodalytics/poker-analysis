@@ -1,0 +1,144 @@
+{
+ "solves": 400,
+ "flops": 100,
+ "examples": 602822,
+ "test_flops": 25,
+ "test_examples": 150262,
+ "baseline": {
+  "mae": 0.1767,
+  "top_action_agreement": 0.6271,
+  "by_node": {
+   "oop_open": {
+    "mae": 0.1218,
+    "top_agree": 0.8272
+   },
+   "ip_after_check": {
+    "mae": 0.1544,
+    "top_agree": 0.564
+   },
+   "ip_facing_bet": {
+    "mae": 0.2284,
+    "top_agree": 0.511
+   }
+  }
+ },
+ "models": {
+  "mlp": {
+   "mae": 0.0996,
+   "top_action_agreement": 0.8143,
+   "by_node": {
+    "oop_open": {
+     "mae": 0.0682,
+     "top_agree": 0.8675
+    },
+    "ip_after_check": {
+     "mae": 0.0808,
+     "top_agree": 0.8194
+    },
+    "ip_facing_bet": {
+     "mae": 0.1322,
+     "top_agree": 0.7725
+    }
+   },
+   "fit_seconds": 101.6,
+   "predict_ms_one_hand": 36.98
+  },
+  "gradient_boosting": {
+   "mae": 0.1059,
+   "top_action_agreement": 0.807,
+   "by_node": {
+    "oop_open": {
+     "mae": 0.0761,
+     "top_agree": 0.8535
+    },
+    "ip_after_check": {
+     "mae": 0.0916,
+     "top_agree": 0.8036
+    },
+    "ip_facing_bet": {
+     "mae": 0.1352,
+     "top_agree": 0.7744
+    }
+   },
+   "fit_seconds": 10.4,
+   "predict_ms_one_hand": 39.67
+  },
+  "random_forest": {
+   "mae": 0.0949,
+   "top_action_agreement": 0.8166,
+   "by_node": {
+    "oop_open": {
+     "mae": 0.0633,
+     "top_agree": 0.8738
+    },
+    "ip_after_check": {
+     "mae": 0.0754,
+     "top_agree": 0.8193
+    },
+    "ip_facing_bet": {
+     "mae": 0.128,
+     "top_agree": 0.7729
+    }
+   },
+   "fit_seconds": 39.0,
+   "predict_ms_one_hand": 45.46
+  },
+  "extra_trees": {
+   "mae": 0.0936,
+   "top_action_agreement": 0.8246,
+   "by_node": {
+    "oop_open": {
+     "mae": 0.0613,
+     "top_agree": 0.8831
+    },
+    "ip_after_check": {
+     "mae": 0.0711,
+     "top_agree": 0.8381
+    },
+    "ip_facing_bet": {
+     "mae": 0.1286,
+     "top_agree": 0.7747
+    }
+   },
+   "fit_seconds": 55.8,
+   "predict_ms_one_hand": 48.84
+  },
+  "ensemble_trees": {
+   "mae": 0.0965,
+   "top_action_agreement": 0.8219,
+   "by_node": {
+    "oop_open": {
+     "mae": 0.0651,
+     "top_agree": 0.8757
+    },
+    "ip_after_check": {
+     "mae": 0.0758,
+     "top_agree": 0.8364
+    },
+    "ip_facing_bet": {
+     "mae": 0.1301,
+     "top_agree": 0.7748
+    }
+   }
+  },
+  "ensemble_all": {
+   "mae": 0.0961,
+   "top_action_agreement": 0.8233,
+   "by_node": {
+    "oop_open": {
+     "mae": 0.0643,
+     "top_agree": 0.877
+    },
+    "ip_after_check": {
+     "mae": 0.0748,
+     "top_agree": 0.8401
+    },
+    "ip_facing_bet": {
+     "mae": 0.1303,
+     "top_agree": 0.7752
+    }
+   }
+  }
+ },
+ "best_by_mae": "extra_trees"
+}
