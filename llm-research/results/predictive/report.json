@@ -1,0 +1,105 @@
+{
+ "folders": 27,
+ "hands": 1299282,
+ "1_next_action": {
+  "train_decisions": 300000,
+  "test_decisions": 100000,
+  "class_share_test": [
+   51078,
+   29076,
+   19846
+  ],
+  "majority per street": {
+   "accuracy": 0.6262,
+   "log_loss": 0.9075
+  },
+  "logistic regression": {
+   "accuracy": 0.6668,
+   "log_loss": 0.7717
+  },
+  "gradient boosting": {
+   "accuracy": 0.6917,
+   "log_loss": 0.6989
+  },
+  "random forest": {
+   "accuracy": 0.6912,
+   "log_loss": 0.7011
+  },
+  "MLP (deep learning)": {
+   "accuracy": 0.6892,
+   "log_loss": 0.7029
+  },
+  "ESN only (reservoir + street)": {
+   "accuracy": 0.6722,
+   "log_loss": 0.7598
+  },
+  "ESN + static features": {
+   "accuracy": 0.6825,
+   "log_loss": 0.7285
+  }
+ },
+ "2_pca": {
+  "players": 2624,
+  "explained_variance": [
+   0.522,
+   0.278,
+   0.106,
+   0.069,
+   0.027
+  ],
+  "loadings": {
+   "PC1": {
+    "vpip": 0.526,
+    "pfr": 0.554,
+    "three_bet": 0.482,
+    "aggression": -0.184,
+    "fold_to_bet": -0.388
+   },
+   "PC2": {
+    "vpip": -0.041,
+    "pfr": 0.284,
+    "three_bet": 0.382,
+    "aggression": 0.738,
+    "fold_to_bet": 0.476
+   },
+   "PC3": {
+    "vpip": 0.607,
+    "pfr": 0.107,
+    "three_bet": -0.352,
+    "aggression": -0.25,
+    "fold_to_bet": 0.658
+   }
+  },
+  "bb_per_100_corr_with_PC": {
+   "PC1": 0.078,
+   "PC2": -0.007,
+   "PC3": -0.083
+  }
+ },
+ "3_style_to_profit": {
+  "players_1000_plus_hands": 1107,
+  "persistence_corr_first_vs_second_half": -0.023,
+  "linear (ridge)": {
+   "cv_r2": -0.008,
+   "corr": -0.018,
+   "second_half_bb_per_100_by_predicted_quintile": [
+    6.2,
+    2.4,
+    3.4,
+    7.4,
+    4.6
+   ]
+  },
+  "gradient boosting": {
+   "cv_r2": -0.3134,
+   "corr": -0.021,
+   "second_half_bb_per_100_by_predicted_quintile": [
+    5.7,
+    2.8,
+    6.4,
+    6.8,
+    2.3
+   ]
+  }
+ }
+}

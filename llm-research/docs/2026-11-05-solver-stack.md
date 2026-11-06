@@ -87,6 +87,10 @@ AJ+ and ATs. Limits: no bluff 3-bets or squeezes, card removal ignored, and call
 blind defends about 24% against a button open, solvers about 60%). Rerunning the 100bb solver-plays test with it:
 `results/solverplays_deep/`.
 
+**Result:** with the solver also deciding pre-flop, the 100bb solver-plays seats were ahead in 55 of 87 sessions
+(pooled p 0.009), +54.8 chips a session (t 2.03), against 47 of 82 (p 0.11) when the models played pre-flop. Details
+in [2026-11-06-ml-rl-rag.md](2026-11-06-ml-rl-rag.md).
+
 ## Layers
 
 | Street | What answers it | Speed |
