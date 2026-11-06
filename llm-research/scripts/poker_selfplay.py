@@ -140,7 +140,8 @@ def is_bot(entrant):
     return (
         entrant in PERSONAS
         or entrant in pa.ALGOS
-        or entrant.split("#")[0] in ("tinaplus", "solverbot", "adaptbot", "adaptbot_recent", "rlbot", "rlavg", "rlsnap")
+        or entrant.split("#")[0]
+        in ("tinaplus", "solverbot", "adaptbot", "adaptbot_recent", "rlbot", "rlavg", "rlsnap", "rlx")
         or is_style(entrant)
         or entrant.startswith("shift_")
     )
@@ -341,7 +342,7 @@ def main(outdir, hands, models, notes=None, short_stack=None):
                 import poker_tina_plus
 
                 text = poker_tina_plus.reply(state, i)
-            elif m.split("#")[0] in ("rlbot", "rlavg", "rlsnap"):
+            elif m.split("#")[0] in ("rlbot", "rlavg", "rlsnap", "rlx"):
                 import rl_agent
 
                 text = rl_agent.reply(state, i, ctx, m)
