@@ -1,0 +1,486 @@
+{
+ "units": "milli-chips per hand above game value, averaged over seats",
+ "static_exact": {
+  "nash": {
+   "exploitability": 40.9,
+   "profit": {
+    "random": 755.4,
+    "station": 716.4,
+    "maniac": 453.6,
+    "nit": 533.0,
+    "drunk": 671.6,
+    "loose": 758.9
+   }
+  },
+  "rnr_random": {
+   "exploitability": 120.3,
+   "profit": {
+    "random": 1277.3,
+    "station": 982.2,
+    "maniac": 1127.5,
+    "nit": 497.8,
+    "drunk": 1398.7,
+    "loose": 1074.0
+   }
+  },
+  "rnr_station": {
+   "exploitability": 87.9,
+   "profit": {
+    "random": 832.4,
+    "station": 1242.3,
+    "maniac": 558.4,
+    "nit": 503.2,
+    "drunk": 727.8,
+    "loose": 1086.2
+   }
+  },
+  "rnr_maniac": {
+   "exploitability": 151.6,
+   "profit": {
+    "random": 1062.9,
+    "station": 618.5,
+    "maniac": 1948.6,
+    "nit": 656.3,
+    "drunk": 1471.2,
+    "loose": 752.2
+   }
+  },
+  "rnr_nit": {
+   "exploitability": 74.4,
+   "profit": {
+    "random": 716.0,
+    "station": 620.4,
+    "maniac": 454.9,
+    "nit": 743.7,
+    "drunk": 616.5,
+    "loose": 686.8
+   }
+  },
+  "mixture_all5": {
+   "exploitability": 75.9,
+   "profit": {
+    "random": 928.8,
+    "station": 836.0,
+    "maniac": 908.6,
+    "nit": 586.8,
+    "drunk": 977.1,
+    "loose": 871.6
+   }
+  },
+  "mixture_rnr4": {
+   "exploitability": 88.3,
+   "profit": {
+    "random": 972.2,
+    "station": 865.8,
+    "maniac": 1022.3,
+    "nit": 600.2,
+    "drunk": 1053.5,
+    "loose": 899.8
+   }
+  },
+  "vote_all5": {
+   "exploitability": 127.0,
+   "profit": {
+    "random": 934.8,
+    "station": 806.6,
+    "maniac": 875.5,
+    "nit": 591.3,
+    "drunk": 964.3,
+    "loose": 846.8
+   }
+  },
+  "vote_rnr4": {
+   "exploitability": 144.2,
+   "profit": {
+    "random": 980.0,
+    "station": 829.4,
+    "maniac": 998.6,
+    "nit": 605.0,
+    "drunk": 1045.9,
+    "loose": 871.6
+   }
+  },
+  "joint_0.25": {
+   "exploitability": 133.8,
+   "profit": {
+    "random": 1159.8,
+    "station": 1138.3,
+    "maniac": 1718.4,
+    "nit": 574.3,
+    "drunk": 1451.7,
+    "loose": 1084.1
+   }
+  },
+  "joint_0.5": {
+   "exploitability": 193.5,
+   "profit": {
+    "random": 1344.7,
+    "station": 1226.4,
+    "maniac": 1957.7,
+    "nit": 554.6,
+    "drunk": 1701.9,
+    "loose": 1208.6
+   }
+  },
+  "alphapoker_single_nash": {
+   "exploitability": 499.8,
+   "profit": {
+    "random": 666.3,
+    "station": 544.7,
+    "maniac": 41.7,
+    "nit": 571.7,
+    "drunk": 441.3,
+    "loose": 581.4
+   }
+  },
+  "alphapoker_bag5_nash": {
+   "exploitability": 369.1,
+   "profit": {
+    "random": 687.5,
+    "station": 625.1,
+    "maniac": 154.4,
+    "nit": 550.8,
+    "drunk": 502.4,
+    "loose": 642.5
+   }
+  },
+  "cfr_nash": {
+   "exploitability": 40.9,
+   "profit": {
+    "random": 755.4,
+    "station": 716.4,
+    "maniac": 453.6,
+    "nit": 533.0,
+    "drunk": 671.6,
+    "loose": 758.9
+   }
+  },
+  "alphapoker_single_rnr_maniac": {
+   "exploitability": 403.1,
+   "profit": {
+    "random": 1019.0,
+    "station": 573.3,
+    "maniac": 1561.2,
+    "nit": 683.1,
+    "drunk": 1277.1,
+    "loose": 680.3
+   }
+  },
+  "alphapoker_bag5_rnr_maniac": {
+   "exploitability": 317.8,
+   "profit": {
+    "random": 997.8,
+    "station": 624.6,
+    "maniac": 1643.5,
+    "nit": 661.8,
+    "drunk": 1290.2,
+    "loose": 714.0
+   }
+  },
+  "cfr_rnr_maniac": {
+   "exploitability": 151.6,
+   "profit": {
+    "random": 1062.9,
+    "station": 618.5,
+    "maniac": 1948.6,
+    "nit": 656.3,
+    "drunk": 1471.2,
+    "loose": 752.2
+   }
+  }
+ },
+ "online": {
+  "sessions": 200,
+  "hands_per_session": 1000,
+  "table": {
+   "nash": {
+    "random": [
+     761.6,
+     9.4
+    ],
+    "station": [
+     700.1,
+     7.9
+    ],
+    "maniac": [
+     446.7,
+     16.0
+    ],
+    "nit": [
+     533.2,
+     1.7
+    ],
+    "drunk": [
+     658.7,
+     13.1
+    ],
+    "loose": [
+     750.0,
+     10.0
+    ],
+    "nash": [
+     -2.6,
+     8.1
+    ],
+    "trap": [
+     160.1,
+     10.6
+    ],
+    "mean": 501.0,
+    "worst": -2.6
+   },
+   "rnr_random": {
+    "random": [
+     1271.5,
+     10.5
+    ],
+    "station": [
+     970.1,
+     8.4
+    ],
+    "maniac": [
+     1120.7,
+     18.6
+    ],
+    "nit": [
+     493.4,
+     2.0
+    ],
+    "drunk": [
+     1403.8,
+     13.5
+    ],
+    "loose": [
+     1077.8,
+     8.7
+    ],
+    "nash": [
+     -33.1,
+     8.6
+    ],
+    "trap": [
+     354.2,
+     14.0
+    ],
+    "mean": 832.3,
+    "worst": -33.1
+   },
+   "rnr_station": {
+    "random": [
+     823.1,
+     9.6
+    ],
+    "station": [
+     1230.5,
+     9.1
+    ],
+    "maniac": [
+     563.4,
+     15.0
+    ],
+    "nit": [
+     506.7,
+     1.8
+    ],
+    "drunk": [
+     730.2,
+     13.1
+    ],
+    "loose": [
+     1092.8,
+     10.3
+    ],
+    "nash": [
+     -13.3,
+     7.6
+    ],
+    "trap": [
+     193.8,
+     10.2
+    ],
+    "mean": 640.9,
+    "worst": -13.3
+   },
+   "rnr_maniac": {
+    "random": [
+     1056.0,
+     10.1
+    ],
+    "station": [
+     625.3,
+     8.5
+    ],
+    "maniac": [
+     1903.6,
+     17.6
+    ],
+    "nit": [
+     657.4,
+     1.5
+    ],
+    "drunk": [
+     1476.3,
+     14.7
+    ],
+    "loose": [
+     730.6,
+     10.6
+    ],
+    "nash": [
+     -48.4,
+     8.8
+    ],
+    "trap": [
+     464.9,
+     12.3
+    ],
+    "mean": 858.2,
+    "worst": -48.4
+   },
+   "rnr_nit": {
+    "random": [
+     722.5,
+     10.2
+    ],
+    "station": [
+     608.9,
+     9.4
+    ],
+    "maniac": [
+     448.2,
+     15.6
+    ],
+    "nit": [
+     744.8,
+     1.5
+    ],
+    "drunk": [
+     613.7,
+     12.8
+    ],
+    "loose": [
+     679.9,
+     10.2
+    ],
+    "nash": [
+     -35.8,
+     8.2
+    ],
+    "trap": [
+     152.9,
+     11.9
+    ],
+    "mean": 491.9,
+    "worst": -35.8
+   },
+   "exp3": {
+    "random": [
+     933.5,
+     12.1
+    ],
+    "station": [
+     853.9,
+     10.2
+    ],
+    "maniac": [
+     1006.0,
+     18.4
+    ],
+    "nit": [
+     588.2,
+     2.1
+    ],
+    "drunk": [
+     1036.2,
+     13.6
+    ],
+    "loose": [
+     891.1,
+     10.6
+    ],
+    "nash": [
+     -21.2,
+     8.3
+    ],
+    "trap": [
+     271.2,
+     12.1
+    ],
+    "mean": 694.9,
+    "worst": -21.2
+   },
+   "bayes_id": {
+    "random": [
+     1281.9,
+     10.9
+    ],
+    "station": [
+     1242.3,
+     9.6
+    ],
+    "maniac": [
+     1962.0,
+     16.7
+    ],
+    "nit": [
+     743.1,
+     1.3
+    ],
+    "drunk": [
+     1382.5,
+     15.4
+    ],
+    "loose": [
+     1083.5,
+     10.1
+    ],
+    "nash": [
+     12.5,
+     7.5
+    ],
+    "trap": [
+     562.5,
+     13.3
+    ],
+    "mean": 1033.8,
+    "worst": 12.5
+   },
+   "bayes_mixed": {
+    "random": [
+     1277.1,
+     10.3
+    ],
+    "station": [
+     1231.6,
+     9.4
+    ],
+    "maniac": [
+     1951.9,
+     16.9
+    ],
+    "nit": [
+     742.8,
+     1.4
+    ],
+    "drunk": [
+     1394.0,
+     13.0
+    ],
+    "loose": [
+     1076.6,
+     10.1
+    ],
+    "nash": [
+     5.7,
+     7.4
+    ],
+    "trap": [
+     550.5,
+     12.7
+    ],
+    "mean": 1028.8,
+    "worst": 5.7
+   }
+  }
+ }
+}

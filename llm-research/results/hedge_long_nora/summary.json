@@ -1,0 +1,33 @@
+{
+ "short": true,
+ "hands_per_session": 300,
+ "entrants": {
+  "hedgebot": {
+   "sessions": 64,
+   "bb_per_100": 22.2,
+   "ci95": [
+    18.4,
+    26.0
+   ]
+  },
+  "nora": {
+   "sessions": 64,
+   "bb_per_100": -22.2,
+   "ci95": [
+    -26.1,
+    -18.2
+   ]
+  }
+ },
+ "solver_calls": {
+  "solver_used": 4657,
+  "solver_failed": 0,
+  "solver_seconds": 677.620044708252,
+  "toolkit_calls": 0,
+  "flop_model_used": 6261,
+  "push_fold_used": 0,
+  "preflop_deep_used": 0,
+  "adapt_reads": 5924,
+  "adapt_changes": 411
+ }
+}

@@ -19,7 +19,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import poker_selfplay as ps  # noqa: E402
 
-HANDS = 24
+HANDS = int(os.environ.get("SIM_HANDS", 24))  # hands per session
 SEATS = ["solverbot", "sol", "monte", "tina", "tinaplus", "bob", "max", "carl", "nora"]
 
 
