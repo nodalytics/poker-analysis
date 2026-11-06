@@ -300,11 +300,13 @@ def push_fold_advice(state, i):
     Or None when it does not apply."""
     n = len(state.statuses)
     bb = max(getattr(state, "blinds_or_straddles", (1, 2)))
-    if list(state.get_board_cards(0)) or i == 1 or max(state.bets) > bb:
+    big = 0 if n == 2 else 1  # heads-up PokerKit seats the big blind at 0 and the button (small blind) at 1
+    if list(state.get_board_cards(0)) or i == big or max(state.bets) > bb:
         return None
     if any(state.bets[j] for j in range(2, n)):  # a limper: not unopened
         return None
-    behind = [j for j in range(n) if state.statuses[j] and j != i and (j > i or j < 2)]
+    order = [1, 0] if n == 2 else list(range(2, n)) + [0, 1]  # pre-flop acting order
+    behind = [j for j in order[order.index(i) + 1 :] if state.statuses[j]]
     if not behind:
         return None
     eff = min(state.stacks[i] + state.bets[i], max(state.stacks[j] + state.bets[j] for j in behind)) / bb

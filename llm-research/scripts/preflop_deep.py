@@ -24,6 +24,7 @@ import os
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OPEN_SHARE = {"EP": 0.13, "LJ": 0.17, "HJ": 0.21, "CO": 0.27, "BTN": 0.42, "SB": 0.36}
 REALISE = {True: 0.8, False: 0.65}
+OPEN_SHARE_HU = 0.8  # heads-up button (small blind) opening range, close to published 100bb solver ranges
 VALUE_3BET, VALUE_4BET = 0.58, 0.56
 R3_SHARE, R3_SHARE_BLINDS, R4_SHARE = 0.06, 0.09, 0.025
 _EQ = {}
@@ -60,7 +61,10 @@ def top(share):
 
 
 def position(i, n):
-    """PokerKit seats: 0 small blind, 1 big blind, n-1 button; named by how many players act after them."""
+    """PokerKit seats: 0 small blind, 1 big blind, n-1 button; named by how many players act after them. Heads-up
+    PokerKit reverses the blinds: seat 1 is the button and posts the small blind, seat 0 the big blind."""
+    if n == 2:
+        return "SB" if i == 1 else "BB"
     if i == 0:
         return "SB"
     if i == 1:
@@ -109,17 +113,19 @@ def decide(state, i, ctx, hand):
             if limpers and hand in top(0.15):
                 return act("raise", (4 + limpers) * bb, f"{hand} is in the top 15%: raise the limpers")
             return act("check", why="big blind, no raise: check")
-        share = OPEN_SHARE[pos]
+        share = OPEN_SHARE_HU if n == 2 else OPEN_SHARE[pos]
         if hand in top(share):
-            size = (3 if pos == "SB" else 2.5 + limpers) * bb
+            size = (2.5 if n == 2 else 3 if pos == "SB" else 2.5 + limpers) * bb
             return act("raise", size, f"{hand} is in the {pos} opening range (top {share:.0%})")
         return act("fold", why=f"{hand} is outside the {pos} opening range (top {share:.0%})")
 
     raiser = max(range(n), key=lambda j: (state.bets[j], -j))
     ip = (i > raiser) and pos not in ("SB", "BB") or (raiser in (0, 1) and i > 1)
+    if n == 2:
+        ip = pos == "SB"  # heads-up the button posts the small blind and acts last after the flop
     if raises == 1:
         opener_pos = position(raiser, n)
-        rng = top(OPEN_SHARE.get(opener_pos, 0.42))
+        rng = top(OPEN_SHARE_HU if n == 2 else OPEN_SHARE.get(opener_pos, 0.42))
         e = equity(hand, rng)
         callers = sum(1 for j in range(n) if j not in (i, raiser) and state.bets[j] == top_bet)
         if e >= VALUE_3BET:
