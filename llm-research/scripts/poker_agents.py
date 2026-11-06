@@ -46,6 +46,7 @@ stats = {
     "toolkit_calls": 0,
     "flop_model_used": 0,
     "push_fold_used": 0,
+    "preflop_deep_used": 0,
 }
 # The flop model (ml_flop.py) trained on the solver library; the MLP is 325KB and within 0.006 MAE of the 2.6GB
 # extra-trees model on held-out flops, so it is the one loaded per decision.
@@ -319,6 +320,15 @@ def push_fold_advice(state, i):
     return {"hand": hc, "shove": hc in rng, "stack_bb": round(eff, 1), "chart": f"{table}, {c['stack_bb']}bb"}
 
 
+def preflop_deep_decision(state, i, ctx):
+    """The deep-stack pre-flop strategy (preflop_deep.py) for this spot, or None."""
+    import preflop_deep
+
+    if push_fold_advice(state, i):
+        return None
+    return preflop_deep.decide(state, i, ctx, hand_class169(state.hole_cards[i]))
+
+
 def solver_play(state, i, ctx):
     """The solver acts itself wherever it has an answer, so the model cannot overrule it: the push/fold chart
     (unopened pot, 20 big blinds or less), TexasSolver (heads-up turn and river) and the flop model (heads-up, first
@@ -333,6 +343,10 @@ def solver_play(state, i, ctx):
     if pf:
         stats["push_fold_used"] += 1
         return _reply("raise", hi) if pf["shove"] and can_raise else (_reply("fold") if to_call else passive)
+    deep = preflop_deep_decision(state, i, ctx)
+    if deep:
+        stats["preflop_deep_used"] += 1
+        return _reply(deep["action"], deep.get("amount"))
     adv = solver_strategy(state, i, ctx)
     if adv.get("available"):
         stats["solver_used"] += 1
@@ -372,6 +386,13 @@ def solver_brief(state, i, ctx):
         return (
             "Solver flop model (trained on 400 TexasSolver flop solves, predicts its strategy for your hand here; "
             f"about 81% agreement on unseen flops): {mix}."
+        )
+    deep = preflop_deep_decision(state, i, ctx)
+    if deep:
+        stats["preflop_deep_used"] += 1
+        amount = f" to {deep['amount']}" if deep["action"] == "raise" else ""
+        return (
+            f"Pre-flop strategy (deep stacks, from our equity tables): {deep['action'].upper()}{amount}. {deep['why']}."
         )
     pf = push_fold_advice(state, i)
     if pf:
