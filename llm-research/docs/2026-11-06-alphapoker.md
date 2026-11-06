@@ -38,9 +38,53 @@ small enough to compute **exact exploitability**, how many chips a perfect oppon
 strategy (0 = unbeatable). Every method below is turned into a full strategy and scored the same way, with
 DeepMind's OpenSpiel (`scripts/alphapoker.py`, `results/alphapoker/report.json`).
 
-RESULTS_TABLE
+Exploitability in milli-chips per hand (the ante is 1 chip; a perfect opponent wins this much from the strategy
+on average; 0 = unbeatable). Run on the lab (`results/alphapoker/report.json`).
 
-FINDINGS
+| Method | What it is | Exploitability |
+|---|---|---|
+| Random | Uniform over legal actions | 2,374 |
+| AlphaGo search, PIMC | Sample the hidden cards, perfect-information MCTS in each world (20 x 200 simulations) | 2,018 |
+| AlphaGo search, IS-MCTS | MCTS over information sets, 4,000 simulations a decision | 809 |
+| Self-play RL (Q-learning) | Two learners, 1M games, no search, no averaging | 892 (another run: 1,975) |
+| Fictitious self-play | Best-respond to the opponent's *average* strategy, 300 iterations | 133 |
+| MCCFR (sampled self-play) | Regret matching on sampled self-play games, 1M games, 110 s | 140 |
+| **CFR+** | The full solver method, 1,000 iterations | **0.3** |
+| AlphaPoker v0, network 16 units | MCCFR teacher compressed into a policy network, 547 parameters | 1,785 |
+| AlphaPoker v0, network 64 units | 2,179 parameters | 710 |
+| AlphaPoker v0, network 128+64 | 12,419 parameters | 352 |
+| AlphaPoker v0 + AlphaGo search | 64-unit network as the prior for PUCT information-set search | 527 |
+
+Learning curves (exploitability as training grows):
+
+| Method | Curve |
+|---|---|
+| Q-learning, 10k / 100k / 1M games | 2,288 / 1,904 / 892; the previous run 2,725 / 1,163 / 1,975 |
+| MCCFR, 1k / 10k / 100k / 1M games | 2,065 / 1,145 / 498 / 140 |
+| Fictitious play, 10 / 30 / 100 / 300 iterations | 1,174 / 544 / 250 / 133 |
+| CFR+, 10 / 30 / 100 / 300 / 1,000 iterations | 610 / 82 / 13 / 2.3 / 0.3 |
+
+What the test shows:
+
+- **AlphaGo's search does not carry over as it is.** Guessing the cards and searching each guess (PIMC) is barely
+  better than random, the strategy-fusion problem. Searching over information sets (IS-MCTS) is much better but
+  still loses 0.8 chips a hand to a perfect opponent, because search that picks one best move cannot mix.
+- **Self-play without averaging does not converge.** Q-learning's strategy got better and then worse again, and two
+  identical runs ended at 892 and 1,975: each learner chases the other's current strategy.
+- **Self-play that averages does converge,** steadily, as theory says: fictitious play and sampled CFR fall with
+  every tenfold increase in games, and CFR+ reaches 0.3, effectively unbeatable. This is the learning rule behind
+  Libratus and Pluribus, and the one AlphaPoker must use in place of AlphaZero's.
+- **A network compresses the self-play strategy at a cost** that shrinks with size: 547 parameters keep little
+  (1,785), 12,419 parameters keep most of it (352 against the teacher's 140). Hold'em is far larger than Leduc, so a
+  network alone will lose more; this is why DeepStack and ReBeL re-solve the current spot at play time.
+- **AlphaGo-style search on top of the network helps a little and caps it.** The 64-unit network plus PUCT search
+  scored 527, better than the network alone (710) and than search alone (809), but worse than the bigger network
+  and far from CFR+. Search for poker has to be CFR re-solving (as TexasSolver does on our turns and rivers), not
+  MCTS.
+
+**AlphaPoker therefore means:** CFR-family self-play (not greedy RL) to build the strategy, networks to compress it
+and to value positions over beliefs, and CFR re-solving (not MCTS) at play time, with the LLM reading the table and
+feeding the solver.
 
 ## AlphaPoker for hold'em: the design, mapped to what exists
 
