@@ -1,0 +1,14 @@
+{
+ "source": "/home/labuser/datasets/phh-dataset/data/handhq/PTY-2009-07-01_2009-07-23_1000NLH_OBFU",
+ "hands": 440727,
+ "players": {
+  "1000NL": {
+   "hands": 2236638,
+   "vpip": 0.255,
+   "pfr": 0.176,
+   "three_bet": 0.083,
+   "aggression": 2.43,
+   "fold_to_bet": 0.518
+  }
+ }
+}
