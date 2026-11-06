@@ -26,5 +26,6 @@ committed results; every chart names its source.
 | 10 | [AlphaPoker](10-alphapoker.png) | AlphaGo search and plain self-play RL stay beatable; averaging self-play (CFR) converges to 0.3 |
 | 11 | [Player styles (PCA)](11-pca-styles.png) | Two components explain 80% of how 2,624 real players differ; style does not mark winners |
 | 12 | [Predicting real players](12-predict-next-action.png) | About 69% of next actions predicted (63% baseline); the ESN reaches 67% from the action sequence alone |
+| 13 | [Value network](13-value-network.png) | Every hand's turn value to within 2.5% of the pot in milliseconds (a solve takes 5.5 s; raw equity errs by 17.9%) |
 
 Latest, the solver deciding every street: short stacks ahead in 56 of 88 sessions (p 0.007); 100bb, with the solver also playing pre-flop, ahead in 55 of 87 (p 0.009).

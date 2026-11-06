@@ -1,0 +1,55 @@
+{
+ "short": true,
+ "hands_per_session": 24,
+ "entrants": {
+  "rlbot": {
+   "sessions": 400,
+   "bb_per_100": -11.9,
+   "ci95": [
+    -21.7,
+    -2.1
+   ]
+  },
+  "solverbot": {
+   "sessions": 400,
+   "bb_per_100": 26.2,
+   "ci95": [
+    16.5,
+    36.4
+   ]
+  },
+  "solverbot#2": {
+   "sessions": 400,
+   "bb_per_100": 2.5,
+   "ci95": [
+    -6.4,
+    11.8
+   ]
+  },
+  "sol": {
+   "sessions": 400,
+   "bb_per_100": -8.5,
+   "ci95": [
+    -18.2,
+    1.2
+   ]
+  },
+  "nora": {
+   "sessions": 400,
+   "bb_per_100": -8.4,
+   "ci95": [
+    -12.3,
+    -4.6
+   ]
+  }
+ },
+ "solver_calls": {
+  "solver_used": 43398,
+  "solver_failed": 20533,
+  "solver_seconds": 67039.22529816628,
+  "toolkit_calls": 0,
+  "flop_model_used": 46416,
+  "push_fold_used": 315341,
+  "preflop_deep_used": 0
+ }
+}
