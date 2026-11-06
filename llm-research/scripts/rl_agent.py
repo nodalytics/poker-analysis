@@ -46,7 +46,9 @@ EPSILON = [0.0]
 #   belief     opponent modelling: the state also holds the opponents' type read from their play this session
 #   boltzmann  statistical physics: explore by sampling actions from exp(value / temperature), the temperature
 #              annealed from 2 big blinds down to 0.2 over training, instead of epsilon-greedy
-#   kelly      information theory / finance: reward is 100 x the log growth of the stack in the hand, not chips
+#   kelly      information theory / finance: reward is 100 x the log growth of a 100 big blind bankroll, not chips
+#              (concave: a loss hurts more than an equal win helps)
+KELLY_BANKROLL_BB = 100
 MODE = {m for m in os.environ.get("RL_MODE", "").split(",") if m}
 BUFFER = []  # (hand, seat name, state key, action index, greedy?) while a session plays
 _RNG = random.Random()
@@ -194,10 +196,9 @@ def play(args):
             for line in open(os.path.join(d, "hands.jsonl")):
                 r = json.loads(line)
                 if r.get("end"):
-                    for name, p, end in zip(r["seats"], r["payoffs"], r["stacks"]):
-                        start = end - p
-                        if "kelly" in me.MODE and start > 0:
-                            pay[(r["hand"], name)] = 100 * math.log(max(end, 1e-9) / start)
+                    for name, p in zip(r["seats"], r["payoffs"]):
+                        if "kelly" in me.MODE:  # log growth of a 100-big-blind bankroll, x100
+                            pay[(r["hand"], name)] = 100 * math.log(max(1 + (p / 2) / KELLY_BANKROLL_BB, 1e-6))
                         else:
                             pay[(r["hand"], name)] = p / 2
             out += [(k_, a, pay.get((h, n), 0.0), g) for h, n, k_, a, g in me.BUFFER]
