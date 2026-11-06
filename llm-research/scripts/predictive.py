@@ -59,7 +59,7 @@ def read_folder(args):
                 st = None
                 for st in hist:
                     pass
-                bb = float(max(h.get("blinds_or_straddles", [1]) or [1])) or 1.0
+                bb = abs(float(max(h.get("blinds_or_straddles", [1]) or [1]))) or 1.0
                 net = [(float(b) - float(a)) / bb for a, b in zip(hist.starting_stacks, st.stacks)]
                 rows = list(hh.replay(h))
             except Exception:  # a hand PokerKit cannot replay is skipped, not guessed
@@ -134,7 +134,7 @@ def esn_input(r, who):
     u[3 + STREETS.index(r["street"])] = 1
     u[7] = min(r.get("size_x_pot", 0) or 0, 3) / 3
     u[8] = 1.0 if r["player"] == who else 0.0
-    u[9] = min(r["to_call"] / max(r["pot"], 1e-9), 2) / 2
+    u[9] = min(max(r["to_call"], 0) / max(r["pot"], 1e-9), 2) / 2
     return u
 
 
@@ -155,9 +155,9 @@ def decisions(hands, prof, esn, mean_prof, cap, rng):
                         *(float(r["street"] == s) for s in STREETS),
                         r["players"],
                         r["seat"] / max(r["players"], 1),
-                        math.log1p(r["pot"] / bb),
-                        r["to_call"] / max(r["pot"], 1e-9),
-                        math.log1p(r["to_call"] / bb),
+                        math.log1p(max(r["pot"], 0) / bb),
+                        max(r["to_call"], 0) / max(r["pot"], 1e-9),
+                        math.log1p(max(r["to_call"], 0) / bb),
                         r["raises_before"],
                         *counts,
                         *(p[s] for s in STYLE),
