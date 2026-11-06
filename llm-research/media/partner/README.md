@@ -7,7 +7,7 @@ committed results; every chart names its source.
 
 | Clip | What it shows |
 |---|---|
-| [`../2026-11-05-solver-demo.mp4`](../2026-11-05-solver-demo.mp4) (30 s) | TexasSolver running live on the lab and getting a textbook game exactly right: bet the nuts 100%, bluff 9.9% (theory 9.4%), call 50.0% |
+| [`../2026-11-05-solver-demo.mp4`](../2026-11-05-solver-demo.mp4) (10 s) | TexasSolver running live on the lab and getting a textbook game exactly right: bet the nuts 100%, bluff 9.9% (theory 9.4%), call 50.0% |
 | [`09-solver-plays-short-stacks.gif`](09-solver-plays-short-stacks.gif) (18 s) | The newest setup at 5-20 big blinds: the solver acts itself (seats marked **S**) wherever it has an answer, the LLM decides only the rest. **P** = the same model playing alone. The three biggest pots of one session |
 | [`../2026-11-05-arena-poker-round8-table1.gif`](../2026-11-05-arena-poker-round8-table1.gif) | The models' poker arena: learners, frozen twins, simulated humans, Monte Carlo and solver bots at one table |
 
