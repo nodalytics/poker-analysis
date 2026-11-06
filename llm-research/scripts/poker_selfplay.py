@@ -9,6 +9,7 @@ and replaced by check (if allowed) or fold. Blinds 1/2, 200-chip stacks (100 big
 """
 
 import json
+import math
 import os
 import random
 import re
@@ -252,6 +253,76 @@ def parse(text):
     return None, None
 
 
+# ---------- ensembles of bots ----------
+VOTE_EXPERTS = ("adaptbot", "monte", "tinaplus")
+HEDGE_EXPERTS = ("solverbot", "adaptbot", "monte", "tinaplus")
+_HEDGE = {}  # (session id, player) -> Exp3 state; one session = one profile dict
+
+
+def expert_reply(name, state, i, ctx):
+    import poker_agents as pa
+
+    if name == "adaptbot":
+        return pa.adapt_play(state, i, ctx)
+    if name == "solverbot":
+        return pa.solver_play(state, i, ctx) or pa.monte_reply(state, i)
+    if name == "monte":
+        return pa.monte_reply(state, i)
+    if name == "tinaplus":
+        import poker_tina_plus
+
+        return poker_tina_plus.reply(state, i)
+    raise ValueError(name)
+
+
+def vote_reply(state, i, ctx):
+    """Majority vote of VOTE_EXPERTS over fold / call / raise; a raise goes to the median raise size of the raisers.
+    No majority: the first expert (adaptbot) decides."""
+    votes = []
+    for e in VOTE_EXPERTS:
+        act, amt = parse(expert_reply(e, state, i, ctx))
+        act = {"check": "call", "bet": "raise", "all-in": "raise", "all in": "raise"}.get(act, act)
+        if act in ("all-in", "all in") or (act == "raise" and amt is None):
+            amt = state.max_completion_betting_or_raising_to_amount if state.can_complete_bet_or_raise_to() else None
+        votes.append((act, amt))
+    kinds = [v[0] for v in votes]
+    best = max(set(kinds), key=kinds.count)
+    if kinds.count(best) == 1:
+        best = kinds[0]
+    if best == "raise":
+        sizes = sorted(a for k, a in votes if k == "raise" and a is not None)
+        if sizes:
+            return json.dumps({"action": "raise", "amount": int(sizes[len(sizes) // 2])})
+    if best == "fold" and not state.checking_or_calling_amount:
+        best = "check"
+    return json.dumps({"action": {"call": "call" if state.checking_or_calling_amount else "check"}.get(best, best)})
+
+
+def hedge_reply(name, state, i, ctx):
+    """Exp3 over HEDGE_EXPERTS: one expert plays the whole hand, chosen with probability from the chips each has
+    won (importance-weighted) when it played; gamma 0.1, rewards clipped to +-20 big blinds a hand."""
+    key = (id(ctx["profile"]), name)
+    h = _HEDGE.setdefault(key, {"w": [0.0] * len(HEDGE_EXPERTS), "hand": None, "k": 0, "p": None})
+    if h["hand"] != ctx["hand"]:
+        g, n = 0.1, len(HEDGE_EXPERTS)
+        m = max(h["w"])
+        e = [math.exp(x - m) for x in h["w"]]
+        z = sum(e)
+        h["p"] = [(1 - g) * x / z + g / n for x in e]
+        h["k"] = _BOT_RNG.choices(range(n), weights=h["p"])[0]
+        h["hand"] = ctx["hand"]
+    return expert_reply(HEDGE_EXPERTS[h["k"]], state, i, ctx)
+
+
+def hedge_end(profile, name, net_bb):
+    h = _HEDGE.get((id(profile), name))
+    if not h or h["p"] is None:
+        return
+    r = (max(-20.0, min(20.0, net_bb)) / 20 + 1) / 2
+    h["w"][h["k"]] += 0.1 * (r / h["p"][h["k"]]) / len(HEDGE_EXPERTS)
+    h["p"] = None
+
+
 _SHORT_RNG = random.Random(77)
 
 
@@ -350,6 +421,10 @@ def main(outdir, hands, models, notes=None, short_stack=None):
                 text = bot_reply(m, state, i)
             elif m.startswith("shift_"):
                 text = bot_reply(shifter_style(m, h), state, i)
+            elif m.split("#")[0] == "votebot":
+                text = vote_reply(state, i, ctx)
+            elif m.split("#")[0] == "hedgebot":
+                text = hedge_reply(m, state, i, ctx)
             elif m.split("#")[0] == "adaptbot":
                 text = pa.adapt_play(state, i, ctx)
             elif m.split("#")[0] == "adaptbot_recent":
@@ -455,6 +530,8 @@ def main(outdir, hands, models, notes=None, short_stack=None):
         board = cards(list(state.get_board_cards(0))) if state.board_count else "-"
         for i, m in enumerate(seat):
             chips[m] += state.stacks[i] - dealt[m]  # net change this hand
+            if m.split("#")[0] == "hedgebot":
+                hedge_end(profile, m, (state.stacks[i] - dealt[m]) / BB)
         result = ", ".join(f"{short(m)} {'+' if p > 0 else ''}{p}" for m, p in zip(seat, state.payoffs) if p)
         jl.write(
             json.dumps(
