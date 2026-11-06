@@ -96,5 +96,33 @@ feeding the solver.
 | Self-play | Sampled CFR self-play, not greedy RL | RL agent (Monte Carlo control) and the bot simulations | MCCFR self-play on an abstracted hold'em game to grow the blueprint |
 | — | **The LLM**: reads the table, feeds the solver, explains | The solver-acts flow (`--play`) | Screen reading (OCR) into the same flow, on play-money tables only |
 
-Order of work this points to: the value network from the solver library first (it turns 41 s flop solves into
-depth-limited solves of a second or two), then MCCFR self-play for a full-game blueprint.
+## The value network, built (2026-11-06)
+
+**Data.** TexasSolver does not save hand values, but its final best-response pass computes every hand's value at the
+root. A patched copy (`~/solver-values` on the lab: `BestResponse` records them, `PCfrSolver` runs one last pass on
+the final strategy, `dump_result` writes `root_evs`) gives them out. Checked on the textbook river game: ace pairs
++100, the bluffs −50, the bluff-catcher +26.8, as theory says. `scripts/value_library.py` then solved **4,000 turn
+spots with random ranges** (DeepStack-style: strength-ordered with noise, 8-60% of hands kept, 30% polarised) and
+random stack depths (1, 2.5 or 5 pots), median 5.5 s each to 0.56% mean exploitability: 3.57 million hand values.
+
+**Network.** `scripts/value_net.py` predicts each hand's value as a share of the pot from the board, the hand, its
+equity against the opponent's range, both ranges' size and strength, stack depth and position. Held out by board
+(1,000 spots, 888,248 hand values; `results/valuenet/report.json`):
+
+| Model | Error (share of the pot) | R² | Range-average error |
+|---|---|---|---|
+| Average value | 35.4% | 0.00 | 7.4% |
+| Raw equity (value = equity − ½) | 17.9% | 0.67 | 3.5% |
+| Ridge regression | 11.4% | 0.89 | 2.6% |
+| Extra trees | 2.9% | 0.991 | 0.9% |
+| Gradient boosting | 2.9% | 0.992 | 0.8% |
+| **MLP value network** | **2.5%** | **0.993** | **0.8%** |
+
+The network gets a hand's turn value to within 2.5% of the pot, and a whole range's average to 0.8%, about seven
+times better than equity alone: it has learned how much of its equity each hand actually realises. A solve takes
+about 5.5 s; the network takes under 1 ms per 1,000 hands, plus about 70 ms to compute the equity features. That is
+what a depth-limited flop search needs at its leaves. The remaining step is the search itself: a CFR flop solver
+that stops at the turn and asks this network, instead of solving every turn and river.
+
+Order of work this points to: the depth-limited flop search on top of the value network (built above), then MCCFR
+self-play for a full-game blueprint.

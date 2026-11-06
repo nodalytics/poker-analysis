@@ -367,6 +367,34 @@ def predict_action():
     )
 
 
+def value_net():
+    r = json.load(open(os.path.join(HERE, "results/valuenet/report.json")))
+    rows = [
+        ("Average value (baseline)", "baseline mean", GREY),
+        ("Raw equity (every hand realises its equity)", "baseline raw equity (value = equity - 1/2)", GREY),
+        ("Ridge regression", "ridge", BLUE),
+        ("Extra trees", "extra trees", BLUE),
+        ("Gradient boosting", "gradient boosting", BLUE),
+        ("MLP value network", "MLP", ORANGE),
+    ]
+    fig, ax = plt.subplots(figsize=(10, 4.2))
+    for i, (lab, k, col) in enumerate(reversed(rows)):
+        v = 100 * r[k]["mae_pots"]
+        ax.barh(i, v, 0.6, color=col)
+        ax.text(v + 0.4, i, f"{v:.1f}% of the pot (R² {max(r[k]['r2'], 0):.3f})", va="center", fontsize=10)
+    ax.set_yticks(range(len(rows)), [x[0] for x in reversed(rows)])
+    ax.set_xlim(0, 48)
+    ax.set_xlabel("average error in a hand's value, as a share of the pot (lower is better), 1,000 held-out turn spots")
+    ax.grid(axis="y", visible=False)
+    ax.set_title("AlphaPoker's value network: a turn solve's hand values in milliseconds")
+    save(
+        fig,
+        "13-value-network.png",
+        f"{r['train_examples']:,} hand values from 4,000 turn solves with random ranges. Solve ~5.5 s; network "
+        "<1 ms per 1,000 hands + ~70 ms features. Source: results/valuenet/report.json",
+    )
+
+
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
     for f in (
@@ -381,5 +409,6 @@ if __name__ == "__main__":
         alphapoker,
         pca_styles,
         predict_action,
+        value_net,
     ):
         f()
