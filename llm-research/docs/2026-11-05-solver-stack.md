@@ -53,6 +53,22 @@ wherever it has an answer (push/fold chart, flop model, turn and river solves, s
 and the model decides only the rest. This is the architecture the partner described: the LLM feeds the solver,
 the solver decides. Results: `results/solverplays/`, `results/solverplays_short/`.
 
+**Short stacks, solver acting (`results/solverplays_short/`, 30 sessions):**
+
+| Model | Solver plays: chips per session vs plain (t) | Advice only (t) |
+|---|---|---|
+| Tiger-Gemma 9B | +31.7 (2.50) | +37.3 (2.84) |
+| Big-Tiger-Gemma 27B | +20.5 (2.61) | +17.4 (2.92) |
+| Qwen2.5-VL 32B | +4.6 (0.44) | +1.8 (0.14) |
+| **Pooled** | **+18.9 (3.10); ahead in 56 of 88, p 0.007** | +18.8 (2.87); 55 of 90, p 0.022 |
+
+- **Solver help is real on short stacks** when the three models are pooled (one question: does it beat the model
+  alone?): about +0.8 chips a hand, 39 big blinds per 100 hands, against this table.
+- **Letting the solver act added nothing over advising** (+18.9 vs +18.8). At this table almost everyone folds
+  pre-flop, so a shove the model failed to make costs only the blinds it would have stolen; most of the gain is the
+  junk the solver folds that the plain Tigers limp with.
+- **Qwen gains nothing either way:** its own short-stack play is already about as good as the chart here.
+
 ## Layers
 
 | Street | What answers it | Speed |
