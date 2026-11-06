@@ -1,0 +1,188 @@
+{
+ "qre_mmd": [
+  {
+   "alpha": 0.005,
+   "iterations": 20000,
+   "gap_curve": [
+    0.00085,
+    0.0,
+    0.0,
+    0.0,
+    -0.0,
+    -0.0,
+    -0.0,
+    -0.0,
+    -0.0,
+    -0.0
+   ],
+   "exploitability": 204.6,
+   "profit": {
+    "random": 833.2,
+    "station": 608.5,
+    "maniac": 877.8,
+    "nit": 520.6
+   }
+  },
+  {
+   "alpha": 0.01,
+   "iterations": 20000,
+   "gap_curve": [
+    0.0,
+    -0.0,
+    0.0,
+    -0.0,
+    -0.0,
+    -0.0,
+    0.0,
+    -0.0,
+    -0.0,
+    -0.0
+   ],
+   "exploitability": 480.4,
+   "profit": {
+    "random": 906.4,
+    "station": 522.0,
+    "maniac": 935.3,
+    "nit": 561.5
+   }
+  },
+  {
+   "alpha": 0.02,
+   "iterations": 20000,
+   "gap_curve": [
+    -0.0,
+    0.0,
+    -0.0,
+    -0.0,
+    -0.0,
+    -0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "exploitability": 1067.0,
+   "profit": {
+    "random": 896.2,
+    "station": 292.0,
+    "maniac": 609.3,
+    "nit": 690.8
+   }
+  },
+  {
+   "alpha": 0.05,
+   "iterations": 20000,
+   "gap_curve": [
+    -0.0,
+    0.0,
+    0.0,
+    -0.0,
+    -0.0,
+    -0.0,
+    -0.0,
+    -0.0,
+    0.0,
+    0.0
+   ],
+   "exploitability": 1634.0,
+   "profit": {
+    "random": 827.1,
+    "station": 85.0,
+    "maniac": -160.9,
+    "nit": 773.8
+   }
+  },
+  {
+   "alpha": 0.1,
+   "iterations": 20000,
+   "gap_curve": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "exploitability": 2044.6,
+   "profit": {
+    "random": 727.7,
+    "station": 30.0,
+    "maniac": -699.0,
+    "nit": 781.3
+   }
+  },
+  {
+   "alpha": 0.2,
+   "iterations": 20000,
+   "gap_curve": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "exploitability": 2402.2,
+   "profit": {
+    "random": 619.3,
+    "station": 11.8,
+    "maniac": -1187.9,
+    "nit": 790.5
+   }
+  },
+  {
+   "alpha": 0.5,
+   "iterations": 20000,
+   "gap_curve": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "exploitability": 2692.1,
+   "profit": {
+    "random": 521.1,
+    "station": 4.4,
+    "maniac": -1611.7,
+    "nit": 797.9
+   }
+  },
+  {
+   "alpha": 1.0,
+   "iterations": 20000,
+   "gap_curve": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "exploitability": 2788.4,
+   "profit": {
+    "random": 483.4,
+    "station": 2.1,
+    "maniac": -1770.5,
+    "nit": 799.5
+   }
+  }
+ ]
+}

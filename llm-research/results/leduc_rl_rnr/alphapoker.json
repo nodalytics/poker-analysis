@@ -1,0 +1,246 @@
+{
+ "units": "milli-chips per hand",
+ "episodes": 300000,
+ "alphapoker": [
+  {
+   "opponent": "maniac",
+   "p": 0.0,
+   "cfr": {
+    "profit": 453.6,
+    "exploitability": 40.9
+   },
+   "alphapoker_net": {
+    "profit": 188.5,
+    "exploitability": 371.4
+   },
+   "rl_against_alphapoker_net": [
+    {
+     "episodes": 3000,
+     "learner_wins_above_game_value": -169.9
+    },
+    {
+     "episodes": 30000,
+     "learner_wins_above_game_value": 87.7
+    },
+    {
+     "episodes": 90000,
+     "learner_wins_above_game_value": 205.4
+    },
+    {
+     "episodes": 300000,
+     "learner_wins_above_game_value": 277.6
+    }
+   ]
+  },
+  {
+   "opponent": "maniac",
+   "p": 0.25,
+   "cfr": {
+    "profit": 1948.6,
+    "exploitability": 151.6
+   },
+   "alphapoker_net": {
+    "profit": 1656.1,
+    "exploitability": 345.7
+   },
+   "rl_against_alphapoker_net": [
+    {
+     "episodes": 3000,
+     "learner_wins_above_game_value": -194.9
+    },
+    {
+     "episodes": 30000,
+     "learner_wins_above_game_value": 115.9
+    },
+    {
+     "episodes": 90000,
+     "learner_wins_above_game_value": 222.1
+    },
+    {
+     "episodes": 300000,
+     "learner_wins_above_game_value": 246.5
+    }
+   ]
+  },
+  {
+   "opponent": "maniac",
+   "p": 0.5,
+   "cfr": {
+    "profit": 2203.0,
+    "exploitability": 307.7
+   },
+   "alphapoker_net": {
+    "profit": 1915.8,
+    "exploitability": 472.2
+   },
+   "rl_against_alphapoker_net": [
+    {
+     "episodes": 3000,
+     "learner_wins_above_game_value": -108.8
+    },
+    {
+     "episodes": 30000,
+     "learner_wins_above_game_value": 241.9
+    },
+    {
+     "episodes": 90000,
+     "learner_wins_above_game_value": 328.7
+    },
+    {
+     "episodes": 300000,
+     "learner_wins_above_game_value": 374.4
+    }
+   ]
+  },
+  {
+   "opponent": "maniac",
+   "p": 1.0,
+   "cfr": {
+    "profit": 2318.1,
+    "exploitability": 2111.3
+   },
+   "alphapoker_net": {
+    "profit": 503.4,
+    "exploitability": 2105.8
+   },
+   "rl_against_alphapoker_net": [
+    {
+     "episodes": 3000,
+     "learner_wins_above_game_value": 887.7
+    },
+    {
+     "episodes": 30000,
+     "learner_wins_above_game_value": 1753.9
+    },
+    {
+     "episodes": 90000,
+     "learner_wins_above_game_value": 1921.5
+    },
+    {
+     "episodes": 300000,
+     "learner_wins_above_game_value": 1993.3
+    }
+   ]
+  },
+  {
+   "opponent": "station",
+   "p": 0.0,
+   "cfr": {
+    "profit": 716.4,
+    "exploitability": 40.9
+   },
+   "alphapoker_net": {
+    "profit": 576.7,
+    "exploitability": 470.7
+   },
+   "rl_against_alphapoker_net": [
+    {
+     "episodes": 3000,
+     "learner_wins_above_game_value": -158.1
+    },
+    {
+     "episodes": 30000,
+     "learner_wins_above_game_value": 79.7
+    },
+    {
+     "episodes": 90000,
+     "learner_wins_above_game_value": 174.6
+    },
+    {
+     "episodes": 300000,
+     "learner_wins_above_game_value": 315.7
+    }
+   ]
+  },
+  {
+   "opponent": "station",
+   "p": 0.25,
+   "cfr": {
+    "profit": 1242.3,
+    "exploitability": 87.9
+   },
+   "alphapoker_net": {
+    "profit": 1111.3,
+    "exploitability": 461.0
+   },
+   "rl_against_alphapoker_net": [
+    {
+     "episodes": 3000,
+     "learner_wins_above_game_value": -302.0
+    },
+    {
+     "episodes": 30000,
+     "learner_wins_above_game_value": 143.7
+    },
+    {
+     "episodes": 90000,
+     "learner_wins_above_game_value": 224.5
+    },
+    {
+     "episodes": 300000,
+     "learner_wins_above_game_value": 303.0
+    }
+   ]
+  },
+  {
+   "opponent": "station",
+   "p": 0.5,
+   "cfr": {
+    "profit": 1345.7,
+    "exploitability": 150.0
+   },
+   "alphapoker_net": {
+    "profit": 1287.3,
+    "exploitability": 398.4
+   },
+   "rl_against_alphapoker_net": [
+    {
+     "episodes": 3000,
+     "learner_wins_above_game_value": -213.2
+    },
+    {
+     "episodes": 30000,
+     "learner_wins_above_game_value": 170.9
+    },
+    {
+     "episodes": 90000,
+     "learner_wins_above_game_value": 222.5
+    },
+    {
+     "episodes": 300000,
+     "learner_wins_above_game_value": 278.7
+    }
+   ]
+  },
+  {
+   "opponent": "station",
+   "p": 1.0,
+   "cfr": {
+    "profit": 1461.6,
+    "exploitability": 2442.8
+   },
+   "alphapoker_net": {
+    "profit": 270.3,
+    "exploitability": 2371.1
+   },
+   "rl_against_alphapoker_net": [
+    {
+     "episodes": 3000,
+     "learner_wins_above_game_value": 1078.6
+    },
+    {
+     "episodes": 30000,
+     "learner_wins_above_game_value": 1905.5
+    },
+    {
+     "episodes": 90000,
+     "learner_wins_above_game_value": 2049.5
+    },
+    {
+     "episodes": 300000,
+     "learner_wins_above_game_value": 2196.3
+    }
+   ]
+  }
+ ]
+}
