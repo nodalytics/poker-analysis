@@ -19,6 +19,7 @@ import poker_selfplay as ps  # noqa: E402
 
 HANDS = 24
 SHORT = None  # (5, 20) with --short: every hand dealt 5-20 big blinds
+FLOW = "solverfirst"  # --play: "solverplays", where the solver acts itself wherever it has an answer
 
 
 def main(outdir, sessions, models):
@@ -27,12 +28,12 @@ def main(outdir, sessions, models):
     diffs = {m: [] for m in models}
     log = open(os.path.join(outdir, "test.log"), "a", buffering=1)
     for k in range(1, sessions + 1):
-        seats = [f"{m}#{t}" for m in models for t in ("plain", "solverfirst")]
+        seats = [f"{m}#{t}" for m in models for t in ("plain", FLOW)]
         seats += [ps.BOB, "monte", others[(k - 1) % len(others)]]
         seats = seats[k % len(seats) :] + seats[: k % len(seats)]  # rotate positions every session
         chips, _ = ps.main(os.path.join(outdir, f"session{k:02d}"), HANDS, seats, short_stack=SHORT)
         for m in models:
-            diffs[m].append(chips[f"{m}#solverfirst"] - chips[f"{m}#plain"])
+            diffs[m].append(chips[f"{m}#{FLOW}"] - chips[f"{m}#plain"])
         log.write(
             f"session {k}: "
             + ", ".join(f"{arena.cs.short(e)} {chips[e]}" for e in sorted(chips, key=lambda e: -chips[e]))
@@ -45,6 +46,7 @@ def main(outdir, sessions, models):
         rows.append(
             {
                 "model": arena.cs.short(m),
+                "flow": FLOW,
                 "sessions": len(diffs[m]),
                 "solverfirst_ahead": ahead,
                 "decided_sessions": len(d),
@@ -56,13 +58,15 @@ def main(outdir, sessions, models):
     json.dump({"rows": rows, "solver_stats": ps.pa.stats}, open(os.path.join(outdir, "summary.json"), "w"), indent=1)
     for r in rows:
         log.write(
-            f"{r['model']}: solver-first ahead in {r['solverfirst_ahead']} of {r['decided_sessions']} sessions, "
+            f"{r['model']}: {FLOW} ahead in {r['solverfirst_ahead']} of {r['decided_sessions']} sessions, "
             f"mean {r['mean_chip_diff']:+} chips, p {r['p_solverfirst_better']}\n"
         )
 
 
 if __name__ == "__main__":
-    args = [a for a in sys.argv[1:] if a != "--short"]
+    args = [a for a in sys.argv[1:] if a not in ("--short", "--play")]
+    if "--play" in sys.argv:
+        FLOW = "solverplays"
     if "--short" in sys.argv:
         SHORT = (5, 20)
     main(args[0], int(args[1]), args[2:])

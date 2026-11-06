@@ -319,6 +319,44 @@ def push_fold_advice(state, i):
     return {"hand": hc, "shove": hc in rng, "stack_bb": round(eff, 1), "chart": f"{table}, {c['stack_bb']}bb"}
 
 
+def solver_play(state, i, ctx):
+    """The solver acts itself wherever it has an answer, so the model cannot overrule it: the push/fold chart
+    (unopened pot, 20 big blinds or less), TexasSolver (heads-up turn and river) and the flop model (heads-up, first
+    decision each), each sampled from its mixed strategy. Returns a JSON reply, or None where no solver covers the
+    spot and the model decides."""
+    can_raise = state.can_complete_bet_or_raise_to()
+    lo = state.min_completion_betting_or_raising_to_amount if can_raise else 0
+    hi = state.max_completion_betting_or_raising_to_amount if can_raise else 0
+    to_call, pot = state.checking_or_calling_amount, state.total_pot_amount
+    passive = _reply("call" if to_call else "check")
+    pf = push_fold_advice(state, i)
+    if pf:
+        stats["push_fold_used"] += 1
+        return _reply("raise", hi) if pf["shove"] and can_raise else (_reply("fold") if to_call else passive)
+    adv = solver_strategy(state, i, ctx)
+    if adv.get("available"):
+        stats["solver_used"] += 1
+        pick = _RNG.choices(list(adv["strategy"]), weights=list(adv["strategy"].values()))[0]
+        kind = pick.split()[0]
+        if kind == "FOLD":
+            return _reply("fold") if to_call else passive
+        if kind in ("CHECK", "CALL") or not can_raise:
+            return passive
+        return _reply("raise", max(lo, min(hi, state.bets[i] + int(float(pick.split()[1])))))
+    flop = flop_model_strategy(state, i, ctx)
+    if flop.get("available"):
+        stats["flop_model_used"] += 1
+        pick = _RNG.choices(list(flop["strategy"]), weights=list(flop["strategy"].values()))[0]
+        if pick == "fold":
+            return _reply("fold") if to_call else passive
+        if pick == "check/call" or not can_raise:
+            return passive
+        if pick == "all-in":
+            return _reply("raise", hi)
+        return _reply("raise", max(lo, min(hi, state.bets[i] + to_call + int(0.66 * (pot + to_call)))))
+    return None
+
+
 def solver_brief(state, i, ctx):
     """What a solver-first player is told before it decides: the solver's strategy when it can solve the spot,
     otherwise Monte Carlo equity against the live opponents and the pot odds."""

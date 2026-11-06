@@ -116,6 +116,8 @@ def kind_of(entrant):
         return pa.ALGOS[entrant]
     if entrant.endswith("#solverfirst"):
         return "language model given solver or Monte Carlo advice every decision"
+    if entrant.endswith("#solverplays"):
+        return "solver acts wherever it has an answer; language model decides the rest, with advice"
     return "poker-analysis toolkit via tool calls" if entrant.endswith("#toolkit") else "language model"
 
 
@@ -285,6 +287,12 @@ def main(outdir, hands, models, notes=None, short_stack=None):
                 text = bot_reply(m, state, i)
             elif m in pa.ALGOS:
                 text = pa.monte_reply(state, i) if m == "monte" else pa.sol_reply(state, i, ctx)
+            elif m.endswith("#solverplays"):
+                text = pa.solver_play(state, i, ctx)
+                if text is None:
+                    text, _ = ask(
+                        m, prompt.replace("Legal actions:", pa.solver_brief(state, i, ctx) + "\nLegal actions:", 1)
+                    )
             elif m.endswith("#solverfirst"):
                 brief = pa.solver_brief(state, i, ctx)
                 text, _ = ask(m, prompt.replace("Legal actions:", brief + "\nLegal actions:", 1))

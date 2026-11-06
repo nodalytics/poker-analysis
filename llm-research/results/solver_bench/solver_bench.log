@@ -1,0 +1,9 @@
+TexasSolver  turn  threads 1: 18.6158 s  Total exploitability 147.15083  root 2d2c [0.63, 0.37, 0.0]
+TexasSolver  turn  threads 16: 8.49116 s  Total exploitability 147.15083  root 2d2c [0.63, 0.37, 0.0]
+TexasSolver  flop  threads 1: 1665.89 s  Total exploitability 139.90955  root 2h2c [0.01, 0.99, 0.0]
+TexasSolver  flop  threads 16: 155.547 s  Total exploitability 139.90955  root 2h2c [0.01, 0.99, 0.0]
+solver-fast  turn  threads 1: 5.55597 s  Total exploitability 147.15083  root 2d2c [0.63, 0.37, 0.0]
+solver-fast  turn  threads 16: 4.05847 s  Total exploitability 147.15083  root 2d2c [0.63, 0.37, 0.0]
+solver-fast  flop  threads 1: 256.336 s  Total exploitability 139.90955  root 2h2c [0.01, 0.99, 0.0]
+solver-fast  flop  threads 16: 41.2897 s  Total exploitability 139.90955  root 2h2c [0.01, 0.99, 0.0]
+ALLDONE
