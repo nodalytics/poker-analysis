@@ -76,6 +76,17 @@ heads-up flops (150 decisions), turns and rivers (265); **every pre-flop decisio
 100bb pots are large and noisy. The missing piece is a deep-stack pre-flop strategy (open, 3-bet and call ranges by
 position), the analogue of the push/fold chart.
 
+**Deep-stack pre-flop strategy (`scripts/preflop_deep.py`), now in the solver's hands.** Built from our 169x169
+equity table rather than typed-in charts. Opens by position (early 13% ... button 42%, close to published 100bb
+full-ring solver frequencies), hands ranked by equity against a random hand. Facing an open: 3-bet when equity
+against the opener's range is at least 58%, call when equity x realisation (0.8 in position, 0.65 out) covers the
+pot odds, else fold. Facing a 3-bet: 4-bet at 56% against a top-6% range, else call by price if we opened. Facing a
+4-bet: all-in when equity against a top-2.5% range covers the price of the whole effective stack. Implied ranges
+are in `results/preflop/deep_ranges.json`: 3-bet against an early open is TT+ and AK; against a button open, 88+,
+AJ+ and ATs. Limits: no bluff 3-bets or squeezes, card removal ignored, and calls tighter than a solver's (the big
+blind defends about 24% against a button open, solvers about 60%). Rerunning the 100bb solver-plays test with it:
+`results/solverplays_deep/`.
+
 ## Layers
 
 | Street | What answers it | Speed |
