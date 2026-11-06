@@ -1,7 +1,7 @@
 """Reinforcement learning: poker agents that learn from the chips they win, trained at scale against many styles.
 
 Usage: uv run python scripts/rl_agent.py OUTDIR ITERATIONS [--short] [--workers N] [--sessions-per-worker K]
-       [--league] [--vs SEAT] [--belief] [--boltzmann] [--kelly]
+       [--league] [--vs SEAT] [--rnr P --target SEAT] [--belief] [--boltzmann] [--kelly]
 Tabular every-visit Monte Carlo control with epsilon-greedy exploration. State: street, hand strength (Monte Carlo
 equity against the opponents with chips in the pot, 10 bands), facing a bet, the price of calling (4 bands),
 position (last to act or not) and stack depth (3 bands). Actions: fold, check/call, bet half the pot, bet the pot,
@@ -17,6 +17,10 @@ idea): self-play that averages converges where greedy self-play cycles (docs/202
 --vs SEAT: an exploiter. One learning seat plays SEAT heads-up (positions alternate) and learns only to beat it. If
 an exploiter trained on a large sample cannot beat a system, that system has no leak this learner can find; if it
 can, the states where it gains show the leak (a cheap stand-in for a best response in a game too big to compute).
+
+--rnr P --target SEAT: RL robust exploitation (the restricted Nash response with learners). Heads-up, the opponent
+is SEAT (the player to exploit) with probability P, otherwise rlx#1, an adversary trained at the same time only to
+beat the learner (values in qx.json). P = 1 learns pure exploitation, P = 0 learns not to be beaten.
 
 Outputs in OUTDIR: q.json (values), avg.json (average policy), snapshots/, curve.json. Seats in poker_selfplay:
 `rlbot` plays the greedy policy (RL_Q, default results/rl/q.json), `rlavg` samples the average policy (RL_AVG,
@@ -40,7 +44,7 @@ HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 Q_PATH = os.environ.get("RL_Q", os.path.join(HERE, "results", "rl", "q.json"))
 AVG_PATH = os.environ.get("RL_AVG", os.path.join(os.path.dirname(Q_PATH), "avg.json"))
 NAMED = ["monte", "tina", "tinaplus", "bob", "max", "carl", "nora"]
-_Q, _AVG, _SNAPS = {}, {}, {}
+_Q, _AVG, _SNAPS, _QX = {}, {}, {}, {}
 EPSILON = [0.0]
 # combinations with ideas from other fields, chosen by RL_MODE (comma-separated) or the matching command-line flags:
 #   belief     opponent modelling: the state also holds the opponents' type read from their play this session
@@ -64,6 +68,8 @@ def _read(path):
 def load(qpath=None, avgpath=None, snapdir=None):
     _Q.clear()
     _Q.update(_read(qpath or Q_PATH))
+    _QX.clear()
+    _QX.update(_read(os.path.join(os.path.dirname(qpath or Q_PATH), "qx.json")))
     _AVG.clear()
     _AVG.update(_read(avgpath or AVG_PATH))
     _SNAPS.clear()
@@ -117,7 +123,13 @@ def reply(state, i, ctx, name):
     k = key(state, i, ctx)
     ok = legal(state)
     choices = [a for a in range(5) if ok[a]]
-    if base == "rlsnap":
+    if base == "rlx":  # robust-exploitation adversary: learns only to beat the learner
+        q = _QX.get(k, {"v": [0.0] * 5})["v"]
+        best = max(choices, key=lambda x: q[x])
+        explore = _RNG.random() < EPSILON[0]
+        a = _RNG.choice(choices) if explore else best
+        BUFFER.append((ctx["hand"], name, k, a, not explore))
+    elif base == "rlsnap":
         q = _SNAPS.get(tag, {}).get(k, {"v": [0.0] * 5})["v"]
         a = max(choices, key=lambda x: q[x])
     elif base == "rlavg" and k in _AVG and sum(_AVG[k][x] for x in choices) > 0:
@@ -147,7 +159,12 @@ def reply(state, i, ctx, name):
     return json.dumps({"action": "raise", "amount": int(max(lo, min(hi, amt)))})
 
 
-def table(rng, league, vs=None):
+def table(rng, league, vs=None, rnr=None):
+    if rnr:  # robust exploitation: the target with probability p, else the co-trained adversary
+        p, target = rnr
+        seats = ["rlbot#1", target if rng.random() < p else "rlx#1"]
+        rng.shuffle(seats)
+        return seats
     if vs:  # exploiter: one learning seat heads-up against a fixed system, positions alternating
         seats = ["rlbot#1", vs]
         rng.shuffle(seats)
@@ -175,7 +192,7 @@ def table(rng, league, vs=None):
 
 def play(args):
     """One worker: some sessions with the current values; returns (state, action, reward in bb, greedy?)."""
-    qpath, avgpath, snapdir, eps, sessions, short, league, seed, vs = args
+    qpath, avgpath, snapdir, eps, sessions, short, league, seed, vs, rnr = args
     import poker_selfplay as ps
     import rl_agent as me  # the module poker_selfplay calls, not this file run as __main__
 
@@ -188,7 +205,7 @@ def play(args):
     tmp = tempfile.mkdtemp(prefix="rl-")
     try:
         for s in range(sessions):
-            seats = table(rng, league, vs)
+            seats = table(rng, league, vs, rnr)
             me.BUFFER.clear()
             d = os.path.join(tmp, f"s{s}")
             ps.main(d, 24, seats, short_stack=(5, 20) if short else None)
@@ -201,29 +218,39 @@ def play(args):
                             pay[(r["hand"], name)] = 100 * math.log(max(1 + (p / 2) / KELLY_BANKROLL_BB, 1e-6))
                         else:
                             pay[(r["hand"], name)] = p / 2
-            out += [(k_, a, pay.get((h, n), 0.0), g) for h, n, k_, a, g in me.BUFFER]
+            out += [(k_, a, pay.get((h, n), 0.0), g, n) for h, n, k_, a, g in me.BUFFER]
             shutil.rmtree(d, ignore_errors=True)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
     return out
 
 
-def main(outdir, iterations, short, workers, per_worker, league, vs=None):
+def main(outdir, iterations, short, workers, per_worker, league, vs=None, rnr=None):
     os.makedirs(os.path.join(outdir, "snapshots"), exist_ok=True)
     qpath, avgpath = os.path.join(outdir, "q.json"), os.path.join(outdir, "avg.json")
     q, avg = _read(qpath), _read(avgpath)
+    qxpath = os.path.join(outdir, "qx.json")
+    qx = _read(qxpath)
     curve = _read(os.path.join(outdir, "curve.json")) or []
     for it in range(len(curve) + 1, iterations + 1):
         eps = max(0.05, 0.5 * (1 - it / iterations))
         json.dump(q, open(qpath, "w"))
         json.dump(avg, open(avgpath, "w"))
         snapdir = os.path.join(outdir, "snapshots") if league else None
-        jobs = [(qpath, avgpath, snapdir, eps, per_worker, short, league, it * 1000 + w, vs) for w in range(workers)]
+        json.dump(qx, open(qxpath, "w"))
+        jobs = [
+            (qpath, avgpath, snapdir, eps, per_worker, short, league, it * 1000 + w, vs, rnr) for w in range(workers)
+        ]
         with ProcessPoolExecutor(workers) as pool:
             batches = list(pool.map(play, jobs))
         n, tot = 0, 0.0
         for batch in batches:
-            for k, a, r, greedy in batch:
+            for k, a, r, greedy, who in batch:
+                if who.startswith("rlx"):
+                    e = qx.setdefault(k, {"v": [0.0] * 5, "n": [0] * 5})
+                    e["n"][a] += 1
+                    e["v"][a] += (r - e["v"][a]) / e["n"][a]
+                    continue
                 e = q.setdefault(k, {"v": [0.0] * 5, "n": [0] * 5})
                 e["n"][a] += 1
                 e["v"][a] += (r - e["v"][a]) / e["n"][a]
@@ -244,17 +271,18 @@ def main(outdir, iterations, short, workers, per_worker, league, vs=None):
         json.dump(q, open(qpath, "w"))
         json.dump(avg, open(avgpath, "w"))
         json.dump(curve, open(os.path.join(outdir, "curve.json"), "w"), indent=1)
+        json.dump(qx, open(qxpath, "w"))
         if league and it % 25 == 0:
             json.dump(q, open(os.path.join(outdir, "snapshots", f"q_{it}.json"), "w"))
 
 
 if __name__ == "__main__":
     a = sys.argv[1:]
-    opts = {"--workers": 16, "--sessions-per-worker": 4, "--vs": None}
+    opts = {"--workers": 16, "--sessions-per-worker": 4, "--vs": None, "--rnr": None, "--target": None}
     pos, k = [], 0
     while k < len(a):
         if a[k] in opts:
-            opts[a[k]] = a[k + 1] if a[k] == "--vs" else int(a[k + 1])
+            opts[a[k]] = a[k + 1] if a[k] in ("--vs", "--rnr", "--target") else int(a[k + 1])
             k += 2
             continue
         if a[k] in ("--belief", "--boltzmann", "--kelly"):
@@ -271,4 +299,5 @@ if __name__ == "__main__":
         opts["--sessions-per-worker"],
         "--league" in a,
         opts["--vs"],
+        (float(opts["--rnr"]), opts["--target"]) if opts["--rnr"] is not None else None,
     )
