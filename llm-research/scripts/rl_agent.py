@@ -1,7 +1,7 @@
 """Reinforcement learning: poker agents that learn from the chips they win, trained at scale against many styles.
 
 Usage: uv run python scripts/rl_agent.py OUTDIR ITERATIONS [--short] [--workers N] [--sessions-per-worker K]
-       [--league] [--vs SEAT]
+       [--league] [--vs SEAT] [--belief] [--boltzmann] [--kelly]
 Tabular every-visit Monte Carlo control with epsilon-greedy exploration. State: street, hand strength (Monte Carlo
 equity against the opponents with chips in the pot, 10 bands), facing a bet, the price of calling (4 bands),
 position (last to act or not) and stack depth (3 bands). Actions: fold, check/call, bet half the pot, bet the pot,
@@ -25,6 +25,7 @@ default avg.json next to RL_Q), `rlsnap#k` a saved snapshot.
 
 import glob
 import json
+import math
 import os
 import random
 import shutil
@@ -41,6 +42,12 @@ AVG_PATH = os.environ.get("RL_AVG", os.path.join(os.path.dirname(Q_PATH), "avg.j
 NAMED = ["monte", "tina", "tinaplus", "bob", "max", "carl", "nora"]
 _Q, _AVG, _SNAPS = {}, {}, {}
 EPSILON = [0.0]
+# combinations with ideas from other fields, chosen by RL_MODE (comma-separated) or the matching command-line flags:
+#   belief     opponent modelling: the state also holds the opponents' type read from their play this session
+#   boltzmann  statistical physics: explore by sampling actions from exp(value / temperature), the temperature
+#              annealed from 2 big blinds down to 0.2 over training, instead of epsilon-greedy
+#   kelly      information theory / finance: reward is 100 x the log growth of the stack in the hand, not chips
+MODE = {m for m in os.environ.get("RL_MODE", "").split(",") if m}
 BUFFER = []  # (hand, seat name, state key, action index, greedy?) while a session plays
 _RNG = random.Random()
 
@@ -78,7 +85,21 @@ def key(state, i, ctx):
     depth = 0 if eff <= 10 else 1 if eff <= 25 else 2
     order = [j for j in live if j > 1] + [j for j in live if j <= 1] if not board else sorted(live)
     last = order[-1] == i
-    return f"{street}|{min(9, int(eq * 10))}|{int(bool(to_call))}|{price_b}|{int(last)}|{depth}"
+    k = f"{street}|{min(9, int(eq * 10))}|{int(bool(to_call))}|{price_b}|{int(last)}|{depth}"
+    if "belief" in MODE:
+        read = pa.opponent_read(ctx, i)
+        if read is None:
+            typ = "unknown"
+        elif read["fold_to_bet"] < 0.35 and read["vpip"] > 0.4:
+            typ = "station"
+        elif read["fold_to_bet"] > 0.6:
+            typ = "folder"
+        elif read["aggression"] > 0.6:
+            typ = "maniac"
+        else:
+            typ = "balanced"
+        k += "|" + typ
+    return k
 
 
 def legal(state):
@@ -101,8 +122,15 @@ def reply(state, i, ctx, name):
         a = _RNG.choices(choices, weights=[_AVG[k][x] for x in choices])[0]
     else:
         q = _Q.get(k, {"v": [0.0] * 5})["v"]
-        explore = base == "rlbot" and _RNG.random() < EPSILON[0]
-        a = _RNG.choice(choices) if explore else max(choices, key=lambda x: q[x])
+        best = max(choices, key=lambda x: q[x])
+        if base == "rlbot" and "boltzmann" in MODE and EPSILON[0] > 0:
+            temp = max(0.2, 4 * EPSILON[0])  # epsilon 0.5 -> 2 bb, annealing to 0.2 bb
+            mx = q[best]
+            a = _RNG.choices(choices, weights=[math.exp((q[x] - mx) / temp) for x in choices])[0]
+            explore = a != best
+        else:
+            explore = base == "rlbot" and _RNG.random() < EPSILON[0]
+            a = _RNG.choice(choices) if explore else best
         if base == "rlbot":
             BUFFER.append((ctx["hand"], name, k, a, not explore))
     to_call, pot = state.checking_or_calling_amount, state.total_pot_amount
@@ -166,8 +194,12 @@ def play(args):
             for line in open(os.path.join(d, "hands.jsonl")):
                 r = json.loads(line)
                 if r.get("end"):
-                    for name, p in zip(r["seats"], r["payoffs"]):
-                        pay[(r["hand"], name)] = p / 2
+                    for name, p, end in zip(r["seats"], r["payoffs"], r["stacks"]):
+                        start = end - p
+                        if "kelly" in me.MODE and start > 0:
+                            pay[(r["hand"], name)] = 100 * math.log(max(end, 1e-9) / start)
+                        else:
+                            pay[(r["hand"], name)] = p / 2
             out += [(k_, a, pay.get((h, n), 0.0), g) for h, n, k_, a, g in me.BUFFER]
             shutil.rmtree(d, ignore_errors=True)
     finally:
@@ -224,7 +256,10 @@ if __name__ == "__main__":
             opts[a[k]] = a[k + 1] if a[k] == "--vs" else int(a[k + 1])
             k += 2
             continue
-        if a[k] not in ("--short", "--league"):
+        if a[k] in ("--belief", "--boltzmann", "--kelly"):
+            MODE.add(a[k][2:])
+            os.environ["RL_MODE"] = ",".join(sorted(MODE))  # worker processes and their imports see it
+        elif a[k] not in ("--short", "--league"):
             pos.append(a[k])
         k += 1
     main(

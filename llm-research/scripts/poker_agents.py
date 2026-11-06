@@ -372,6 +372,72 @@ def solver_play(state, i, ctx):
     return None
 
 
+def opponent_read(ctx, i, recent=False):
+    """Pooled tendencies of the live opponents: VPIP, post-flop aggression, fold to a bet. recent=True reads the
+    exponentially forgotten counts (memory of about 7 hands), which follow an opponent who changes style."""
+    seats, prof = ctx.get("seats"), ctx.get("recent" if recent else "profile")
+    if not seats or not prof:
+        return None
+    need = 3 if recent else 8
+    rows = [prof[m] for j, m in enumerate(seats) if j != i and prof[m]["hands"] >= need]
+    if not rows:
+        return None
+    h = sum(r["hands"] for r in rows)
+    acts = sum(r["post_raises"] + r["post_calls"] for r in rows)
+    faced = sum(r["faced"] for r in rows)
+    if recent:
+        return {
+            "vpip": sum(r["vpip"] for r in rows) / h,
+            "aggression": sum(r["post_raises"] for r in rows) / acts if acts > 0.5 else 0.5,
+            "fold_to_bet": sum(r["folded"] for r in rows) / faced if faced >= 1.5 else 0.5,
+        }
+    return {
+        "vpip": sum(r["vpip"] for r in rows) / h,
+        "aggression": sum(r["post_raises"] for r in rows) / acts if acts else 0.5,
+        "fold_to_bet": sum(r["folded"] for r in rows) / faced if faced >= 5 else 0.5,
+    }
+
+
+def adapt_play(state, i, ctx, recent=False):
+    """The solver strategy, bent toward the opponents it has seen: the classic way poker profit is made.
+    Against calling stations (fold to a bet under 35%, VPIP over 40%): no bluffs, bet strong hands for value. Against
+    players who fold too much (over 60%): bet when checked to. Against maniacs (post-flop aggression over 60%): call
+    down medium hands instead of folding. Unchanged when the opponents look balanced or unknown."""
+    base = solver_play(state, i, ctx) or monte_reply(state, i)
+    board = list(state.get_board_cards(0))
+    read = opponent_read(ctx, i, recent)
+    if not board or read is None:
+        return base
+    stats["adapt_reads"] = stats.get("adapt_reads", 0) + 1
+    live = sum(1 for j, s in enumerate(state.statuses) if s and j != i)
+    eq = equity_vs_random(_cards(state.hole_cards[i]), _cards(board), max(1, live), 400)
+    to_call, pot = state.checking_or_calling_amount, state.total_pot_amount
+    can_raise = state.can_complete_bet_or_raise_to()
+    act = json.loads(base).get("action")
+
+    def bet(frac):
+        lo = state.min_completion_betting_or_raising_to_amount
+        hi = state.max_completion_betting_or_raising_to_amount
+        return _reply("raise", max(lo, min(hi, state.bets[i] + to_call + int(frac * (pot + to_call)))))
+
+    station = read["fold_to_bet"] < 0.35 and read["vpip"] > 0.4
+    folder = read["fold_to_bet"] > 0.6
+    maniac = read["aggression"] > 0.6
+    if station and act == "raise" and eq < 0.5:
+        stats["adapt_changes"] = stats.get("adapt_changes", 0) + 1
+        return _reply("call" if to_call else "check")  # no bluffs into a calling station
+    if station and act in ("check", "call") and eq > 0.65 and can_raise:
+        stats["adapt_changes"] = stats.get("adapt_changes", 0) + 1
+        return bet(0.75)  # thin value against someone who pays off
+    if folder and not to_call and act == "check" and can_raise:
+        stats["adapt_changes"] = stats.get("adapt_changes", 0) + 1
+        return bet(0.5)  # steal from someone who folds too often
+    if maniac and act == "fold" and eq > 0.45:
+        stats["adapt_changes"] = stats.get("adapt_changes", 0) + 1
+        return _reply("call")  # catch the maniac's bluffs
+    return base
+
+
 def solver_brief(state, i, ctx):
     """What a solver-first player is told before it decides: the solver's strategy when it can solve the spot,
     otherwise Monte Carlo equity against the live opponents and the pot odds."""
