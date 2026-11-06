@@ -1,0 +1,517 @@
+{
+ "units": "milli-chips per hand",
+ "episodes": 300000,
+ "p": 0.5,
+ "teaching": [
+  {
+   "opponent": "maniac",
+   "p": 0.5,
+   "teacher": "none",
+   "curve": [
+    {
+     "episodes": 15000,
+     "average": {
+      "profit": 1276.3,
+      "exploitability": 1192.7
+     },
+     "greedy": {
+      "profit": 1883.3,
+      "exploitability": 1387.5
+     }
+    },
+    {
+     "episodes": 75000,
+     "average": {
+      "profit": 1825.0,
+      "exploitability": 913.3
+     },
+     "greedy": {
+      "profit": 1983.3,
+      "exploitability": 966.7
+     }
+    },
+    {
+     "episodes": 150000,
+     "average": {
+      "profit": 1932.6,
+      "exploitability": 770.3
+     },
+     "greedy": {
+      "profit": 2033.3,
+      "exploitability": 1120.8
+     }
+    },
+    {
+     "episodes": 300000,
+     "average": {
+      "profit": 2003.0,
+      "exploitability": 790.5
+     },
+     "greedy": {
+      "profit": 2066.7,
+      "exploitability": 1004.2
+     }
+    }
+   ]
+  },
+  {
+   "opponent": "maniac",
+   "p": 0.5,
+   "teacher": "nash",
+   "curve": [
+    {
+     "episodes": 15000,
+     "average": {
+      "profit": 496.8,
+      "exploitability": 616.7
+     },
+     "greedy": {
+      "profit": 875.0,
+      "exploitability": 3229.2
+     }
+    },
+    {
+     "episodes": 75000,
+     "average": {
+      "profit": 792.5,
+      "exploitability": 296.1
+     },
+     "greedy": {
+      "profit": 2000.0,
+      "exploitability": 1383.3
+     }
+    },
+    {
+     "episodes": 150000,
+     "average": {
+      "profit": 1238.5,
+      "exploitability": 529.1
+     },
+     "greedy": {
+      "profit": 2183.3,
+      "exploitability": 1087.5
+     }
+    },
+    {
+     "episodes": 300000,
+     "average": {
+      "profit": 1737.3,
+      "exploitability": 703.1
+     },
+     "greedy": {
+      "profit": 2216.7,
+      "exploitability": 1283.3
+     }
+    }
+   ]
+  },
+  {
+   "opponent": "maniac",
+   "p": 0.5,
+   "teacher": "rnr",
+   "curve": [
+    {
+     "episodes": 15000,
+     "average": {
+      "profit": 2147.8,
+      "exploitability": 558.9
+     },
+     "greedy": {
+      "profit": 833.3,
+      "exploitability": 3275.0
+     }
+    },
+    {
+     "episodes": 75000,
+     "average": {
+      "profit": 2188.7,
+      "exploitability": 554.0
+     },
+     "greedy": {
+      "profit": 2350.0,
+      "exploitability": 1337.5
+     }
+    },
+    {
+     "episodes": 150000,
+     "average": {
+      "profit": 2240.6,
+      "exploitability": 662.6
+     },
+     "greedy": {
+      "profit": 2366.7,
+      "exploitability": 1295.8
+     }
+    },
+    {
+     "episodes": 300000,
+     "average": {
+      "profit": 2282.5,
+      "exploitability": 820.4
+     },
+     "greedy": {
+      "profit": 2333.3,
+      "exploitability": 1279.2
+     }
+    }
+   ]
+  },
+  {
+   "opponent": "maniac",
+   "p": 0.5,
+   "teacher": "br",
+   "curve": [
+    {
+     "episodes": 15000,
+     "average": {
+      "profit": 2264.2,
+      "exploitability": 2141.1
+     },
+     "greedy": {
+      "profit": 1812.5,
+      "exploitability": 2054.2
+     }
+    },
+    {
+     "episodes": 75000,
+     "average": {
+      "profit": 2297.1,
+      "exploitability": 1669.5
+     },
+     "greedy": {
+      "profit": 2316.7,
+      "exploitability": 1295.8
+     }
+    },
+    {
+     "episodes": 150000,
+     "average": {
+      "profit": 2317.9,
+      "exploitability": 1169.1
+     },
+     "greedy": {
+      "profit": 2333.3,
+      "exploitability": 1033.3
+     }
+    },
+    {
+     "episodes": 300000,
+     "average": {
+      "profit": 2331.2,
+      "exploitability": 871.1
+     },
+     "greedy": {
+      "profit": 2350.0,
+      "exploitability": 1141.7
+     }
+    }
+   ]
+  },
+  {
+   "opponent": "maniac",
+   "p": 0.5,
+   "teacher": "alphapoker",
+   "curve": [
+    {
+     "episodes": 15000,
+     "average": {
+      "profit": 1760.0,
+      "exploitability": 808.6
+     },
+     "greedy": {
+      "profit": 1329.2,
+      "exploitability": 2720.8
+     }
+    },
+    {
+     "episodes": 75000,
+     "average": {
+      "profit": 1870.7,
+      "exploitability": 552.2
+     },
+     "greedy": {
+      "profit": 2300.0,
+      "exploitability": 1483.3
+     }
+    },
+    {
+     "episodes": 150000,
+     "average": {
+      "profit": 2017.7,
+      "exploitability": 596.2
+     },
+     "greedy": {
+      "profit": 2300.0,
+      "exploitability": 970.8
+     }
+    },
+    {
+     "episodes": 300000,
+     "average": {
+      "profit": 2181.3,
+      "exploitability": 725.6
+     },
+     "greedy": {
+      "profit": 2316.7,
+      "exploitability": 987.5
+     }
+    }
+   ]
+  },
+  {
+   "opponent": "station",
+   "p": 0.5,
+   "teacher": "none",
+   "curve": [
+    {
+     "episodes": 15000,
+     "average": {
+      "profit": 1158.2,
+      "exploitability": 2220.6
+     },
+     "greedy": {
+      "profit": 1350.0,
+      "exploitability": 2816.7
+     }
+    },
+    {
+     "episodes": 75000,
+     "average": {
+      "profit": 1384.6,
+      "exploitability": 1182.2
+     },
+     "greedy": {
+      "profit": 1450.0,
+      "exploitability": 1095.8
+     }
+    },
+    {
+     "episodes": 150000,
+     "average": {
+      "profit": 1426.9,
+      "exploitability": 932.7
+     },
+     "greedy": {
+      "profit": 1466.7,
+      "exploitability": 995.8
+     }
+    },
+    {
+     "episodes": 300000,
+     "average": {
+      "profit": 1443.8,
+      "exploitability": 767.8
+     },
+     "greedy": {
+      "profit": 1450.0,
+      "exploitability": 1066.7
+     }
+    }
+   ]
+  },
+  {
+   "opponent": "station",
+   "p": 0.5,
+   "teacher": "nash",
+   "curve": [
+    {
+     "episodes": 15000,
+     "average": {
+      "profit": 722.4,
+      "exploitability": 802.9
+     },
+     "greedy": {
+      "profit": 1250.0,
+      "exploitability": 4025.0
+     }
+    },
+    {
+     "episodes": 75000,
+     "average": {
+      "profit": 859.1,
+      "exploitability": 375.7
+     },
+     "greedy": {
+      "profit": 1433.3,
+      "exploitability": 1991.7
+     }
+    },
+    {
+     "episodes": 150000,
+     "average": {
+      "profit": 1048.6,
+      "exploitability": 528.8
+     },
+     "greedy": {
+      "profit": 1466.7,
+      "exploitability": 1545.8
+     }
+    },
+    {
+     "episodes": 300000,
+     "average": {
+      "profit": 1262.0,
+      "exploitability": 863.6
+     },
+     "greedy": {
+      "profit": 1450.0,
+      "exploitability": 1362.5
+     }
+    }
+   ]
+  },
+  {
+   "opponent": "station",
+   "p": 0.5,
+   "teacher": "rnr",
+   "curve": [
+    {
+     "episodes": 15000,
+     "average": {
+      "profit": 1331.9,
+      "exploitability": 536.0
+     },
+     "greedy": {
+      "profit": 950.0,
+      "exploitability": 3445.8
+     }
+    },
+    {
+     "episodes": 75000,
+     "average": {
+      "profit": 1337.7,
+      "exploitability": 526.2
+     },
+     "greedy": {
+      "profit": 1466.7,
+      "exploitability": 1804.2
+     }
+    },
+    {
+     "episodes": 150000,
+     "average": {
+      "profit": 1381.9,
+      "exploitability": 545.8
+     },
+     "greedy": {
+      "profit": 1466.7,
+      "exploitability": 1433.3
+     }
+    },
+    {
+     "episodes": 300000,
+     "average": {
+      "profit": 1425.4,
+      "exploitability": 662.8
+     },
+     "greedy": {
+      "profit": 1466.7,
+      "exploitability": 1412.5
+     }
+    }
+   ]
+  },
+  {
+   "opponent": "station",
+   "p": 0.5,
+   "teacher": "br",
+   "curve": [
+    {
+     "episodes": 15000,
+     "average": {
+      "profit": 1439.9,
+      "exploitability": 2625.8
+     },
+     "greedy": {
+      "profit": 1366.7,
+      "exploitability": 3200.0
+     }
+    },
+    {
+     "episodes": 75000,
+     "average": {
+      "profit": 1443.7,
+      "exploitability": 1940.3
+     },
+     "greedy": {
+      "profit": 1416.7,
+      "exploitability": 975.0
+     }
+    },
+    {
+     "episodes": 150000,
+     "average": {
+      "profit": 1445.3,
+      "exploitability": 1370.7
+     },
+     "greedy": {
+      "profit": 1450.0,
+      "exploitability": 1066.7
+     }
+    },
+    {
+     "episodes": 300000,
+     "average": {
+      "profit": 1450.6,
+      "exploitability": 1110.3
+     },
+     "greedy": {
+      "profit": 1466.7,
+      "exploitability": 1375.0
+     }
+    }
+   ]
+  },
+  {
+   "opponent": "station",
+   "p": 0.5,
+   "teacher": "alphapoker",
+   "curve": [
+    {
+     "episodes": 15000,
+     "average": {
+      "profit": 1273.5,
+      "exploitability": 1112.4
+     },
+     "greedy": {
+      "profit": 1300.0,
+      "exploitability": 3858.3
+     }
+    },
+    {
+     "episodes": 75000,
+     "average": {
+      "profit": 1304.5,
+      "exploitability": 565.1
+     },
+     "greedy": {
+      "profit": 1450.0,
+      "exploitability": 1620.8
+     }
+    },
+    {
+     "episodes": 150000,
+     "average": {
+      "profit": 1346.1,
+      "exploitability": 534.1
+     },
+     "greedy": {
+      "profit": 1450.0,
+      "exploitability": 1095.8
+     }
+    },
+    {
+     "episodes": 300000,
+     "average": {
+      "profit": 1396.9,
+      "exploitability": 615.0
+     },
+     "greedy": {
+      "profit": 1450.0,
+      "exploitability": 1179.2
+     }
+    }
+   ]
+  }
+ ]
+}

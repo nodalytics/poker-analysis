@@ -1,0 +1,34 @@
+{
+ "hands_train": 7000,
+ "hands_test": 3000,
+ "action_model_accuracy": 0.8455,
+ "players_scored": 14749,
+ "all": {
+  "n": 14749,
+  "mean_rank": 0.3236,
+  "mean_bits_gained": 0.628,
+  "top10_rate": 0.2415,
+  "mean_entropy_left_bits": 9.52
+ },
+ "1 action": {
+  "n": 11587,
+  "mean_rank": 0.373,
+  "mean_bits_gained": 0.36,
+  "top10_rate": 0.1588,
+  "mean_entropy_left_bits": 9.81
+ },
+ "2-3 actions": {
+  "n": 1489,
+  "mean_rank": 0.1448,
+  "mean_bits_gained": 1.598,
+  "top10_rate": 0.5084,
+  "mean_entropy_left_bits": 8.62
+ },
+ "4+ actions": {
+  "n": 1673,
+  "mean_rank": 0.1409,
+  "mean_bits_gained": 1.628,
+  "top10_rate": 0.5768,
+  "mean_entropy_left_bits": 8.28
+ }
+}

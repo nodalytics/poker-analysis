@@ -1,0 +1,42 @@
+{
+ "hands": 879282,
+ "players": 38718,
+ "tilt": {
+  "loss": {
+   "players": 2586,
+   "vpip_change": 0.0069,
+   "vpip_t": 3.97,
+   "pfr_change": 0.003,
+   "pfr_t": 2.0
+  },
+  "win": {
+   "players": 2831,
+   "vpip_change": -0.0049,
+   "vpip_t": -3.24,
+   "pfr_change": -0.0077,
+   "pfr_t": -5.98
+  },
+  "placebo": {
+   "players": 2586,
+   "vpip_change": -0.0017,
+   "vpip_t": -0.98,
+   "pfr_change": -0.001,
+   "pfr_t": -0.69
+  }
+ },
+ "hmm": {
+  "players_fitted": 400,
+  "mean_gain_per_hand_real": 0.00179,
+  "mean_gain_per_hand_shuffled": 0.00034,
+  "share_beating_own_shuffled_95": 0.223,
+  "expected_share_if_no_regimes": 0.05,
+  "regime_players_median_rates": [
+   0.183,
+   0.35
+  ],
+  "regime_players_median_length_hands": [
+   42.9,
+   31.9
+  ]
+ }
+}
