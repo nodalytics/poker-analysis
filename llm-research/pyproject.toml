@@ -18,6 +18,11 @@ dependencies = [
     "ccxt==4.5.89",
 ]
 
+[project.optional-dependencies]
+alphapoker = [
+    "open-spiel==2.0.2",
+]
+
 [dependency-groups]
 dev = ["ruff==0.14.0"]
 

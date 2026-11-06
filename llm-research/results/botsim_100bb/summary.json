@@ -1,0 +1,87 @@
+{
+ "short": false,
+ "hands_per_session": 24,
+ "entrants": {
+  "solverbot": {
+   "sessions": 600,
+   "bb_per_100": 35.3,
+   "ci95": [
+    2.6,
+    68.1
+   ]
+  },
+  "sol": {
+   "sessions": 600,
+   "bb_per_100": 85.7,
+   "ci95": [
+    49.8,
+    122.1
+   ]
+  },
+  "monte": {
+   "sessions": 600,
+   "bb_per_100": 88.8,
+   "ci95": [
+    48.2,
+    132.6
+   ]
+  },
+  "tina": {
+   "sessions": 600,
+   "bb_per_100": 44.5,
+   "ci95": [
+    0.8,
+    91.2
+   ]
+  },
+  "tinaplus": {
+   "sessions": 600,
+   "bb_per_100": 32.7,
+   "ci95": [
+    -6.3,
+    72.9
+   ]
+  },
+  "bob": {
+   "sessions": 600,
+   "bb_per_100": 38.8,
+   "ci95": [
+    -7.0,
+    87.7
+   ]
+  },
+  "max": {
+   "sessions": 600,
+   "bb_per_100": -214.9,
+   "ci95": [
+    -258.1,
+    -164.0
+   ]
+  },
+  "carl": {
+   "sessions": 600,
+   "bb_per_100": -127.8,
+   "ci95": [
+    -176.9,
+    -79.0
+   ]
+  },
+  "nora": {
+   "sessions": 600,
+   "bb_per_100": 17.1,
+   "ci95": [
+    -8.7,
+    42.5
+   ]
+  }
+ },
+ "solver_calls": {
+  "solver_used": 263969,
+  "solver_failed": 112095,
+  "solver_seconds": 352073.53288912773,
+  "toolkit_calls": 0,
+  "flop_model_used": 102516,
+  "push_fold_used": 5481,
+  "preflop_deep_used": 756826
+ }
+}

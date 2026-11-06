@@ -1,0 +1,87 @@
+{
+ "short": true,
+ "hands_per_session": 24,
+ "entrants": {
+  "solverbot": {
+   "sessions": 600,
+   "bb_per_100": 17.7,
+   "ci95": [
+    8.9,
+    25.7
+   ]
+  },
+  "sol": {
+   "sessions": 600,
+   "bb_per_100": 13.8,
+   "ci95": [
+    6.0,
+    21.7
+   ]
+  },
+  "monte": {
+   "sessions": 600,
+   "bb_per_100": 15.9,
+   "ci95": [
+    7.4,
+    24.6
+   ]
+  },
+  "tina": {
+   "sessions": 600,
+   "bb_per_100": 13.6,
+   "ci95": [
+    5.4,
+    21.8
+   ]
+  },
+  "tinaplus": {
+   "sessions": 600,
+   "bb_per_100": 13.5,
+   "ci95": [
+    5.3,
+    22.6
+   ]
+  },
+  "bob": {
+   "sessions": 600,
+   "bb_per_100": 26.1,
+   "ci95": [
+    16.8,
+    35.7
+   ]
+  },
+  "max": {
+   "sessions": 600,
+   "bb_per_100": -66.2,
+   "ci95": [
+    -80.9,
+    -51.1
+   ]
+  },
+  "carl": {
+   "sessions": 600,
+   "bb_per_100": -35.8,
+   "ci95": [
+    -50.4,
+    -21.7
+   ]
+  },
+  "nora": {
+   "sessions": 600,
+   "bb_per_100": 1.3,
+   "ci95": [
+    -3.0,
+    5.9
+   ]
+  }
+ },
+ "solver_calls": {
+  "solver_used": 38636,
+  "solver_failed": 6201,
+  "solver_seconds": 86833.99070572853,
+  "toolkit_calls": 0,
+  "flop_model_used": 14341,
+  "push_fold_used": 219827,
+  "preflop_deep_used": 0
+ }
+}
