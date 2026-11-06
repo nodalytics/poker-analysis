@@ -159,10 +159,13 @@ def mmd_job(args):
     from open_spiel.python.algorithms import mmd_dilated
 
     m = mmd_dilated.MMDDilatedEnt(GAME, alpha)
-    for _ in range(iters):
+    gaps = []
+    for k in range(1, iters + 1):
         m.update_sequences()
-    pol = m.get_avg_policies() if alpha == 0 else m.get_policies()
-    out = {"alpha": alpha, "exploitability": 0.0, "profit": {}}
+        if k % max(1, iters // 10) == 0:
+            gaps.append(round(float(m.get_gap()), 5))  # distance from the regularised equilibrium (0 = converged)
+    pol = m.get_policies()
+    out = {"alpha": alpha, "iterations": iters, "gap_curve": gaps, "exploitability": 0.0, "profit": {}}
     for seat in (0, 1):
 
         def fn(s, pol=pol):
@@ -174,6 +177,22 @@ def mmd_job(args):
             out["profit"][o] = round(out["profit"].get(o, 0) + v / 2, 1)
     out["exploitability"] = round(out["exploitability"], 1)
     return out
+
+
+def mmd_only(outdir, iters):
+    """Rerun only the temperature sweep, longer, recording convergence (the first run had not converged)."""
+    from open_spiel.python.algorithms import cfr
+
+    os.makedirs(outdir, exist_ok=True)
+    nash = cfr.CFRPlusSolver(GAME)
+    for _ in range(1000):
+        nash.evaluate_and_update_policy()
+    gv0 = expected_game_score.policy_value(GAME.new_initial_state(), [nash.average_policy()] * 2)[0]
+    gv = [gv0, -gv0]
+    with ProcessPoolExecutor(8) as pool:
+        mm = list(pool.map(mmd_job, [(a, iters, gv) for a in (0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0)]))
+    json.dump({"qre_mmd": mm}, open(os.path.join(outdir, "qre.json"), "w"), indent=1)
+    print(json.dumps(mm, indent=1))
 
 
 def main(outdir, iters=600):
@@ -213,4 +232,7 @@ def main(outdir, iters=600):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], *(int(x) for x in sys.argv[2:3]))
+    if "--mmd-only" in sys.argv:
+        mmd_only(sys.argv[1], int(sys.argv[sys.argv.index("--mmd-only") + 1]))
+    else:
+        main(sys.argv[1], *(int(x) for x in sys.argv[2:3]))

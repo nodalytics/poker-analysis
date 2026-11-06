@@ -187,6 +187,8 @@ def sol_reply(state, i, ctx):
             kind = pick.split()[0]
             if kind in ("CHECK", "CALL", "FOLD"):
                 return _reply(kind.lower())
+            if not state.can_complete_bet_or_raise_to():  # the solver bets but no raise is legal (opponent all-in)
+                return _reply("call" if state.checking_or_calling_amount else "check")
             lo = state.min_completion_betting_or_raising_to_amount
             hi = state.max_completion_betting_or_raising_to_amount
             return _reply("raise", max(lo, min(hi, state.bets[i] + int(float(pick.split()[1])))))
