@@ -62,6 +62,8 @@ def read_folder(args):
                 bb = abs(float(max(h.get("blinds_or_straddles", [1]) or [1]))) or 1.0
                 net = [(float(b) - float(a)) / bb for a, b in zip(hist.starting_stacks, st.stacks)]
                 rows = list(hh.replay(h))
+                if not all(math.isfinite(x) for x in net):
+                    continue
             except Exception:  # a hand PokerKit cannot replay is skipped, not guessed
                 continue
             n += 1
@@ -245,6 +247,7 @@ def main(src, outdir, per_folder=60000, workers=24):
         res[name] = {"accuracy": round(accuracy_score(yc, P.argmax(1)), 4), "log_loss": round(log_loss(yc, P), 4)}
         print(name, res[name], flush=True)
     rep["1_next_action"] = res
+    json.dump(rep, open(os.path.join(outdir, "report.json"), "w"), indent=1)
 
     # 2. PCA of styles (all hands) and 3. style -> profit (first half vs second half of each player's hands)
     every = [hd for hands in data.values() for hd in hands]
@@ -281,6 +284,7 @@ def main(src, outdir, per_folder=60000, workers=24):
         ],
         open(os.path.join(outdir, "pca_points.json"), "w"),
     )
+    json.dump(rep, open(os.path.join(outdir, "report.json"), "w"), indent=1)
     per_player = collections.defaultdict(list)
     for hd in every:
         for p in hd["players"]:
