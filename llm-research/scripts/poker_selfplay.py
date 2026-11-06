@@ -102,9 +102,34 @@ _HIGH = {"A": 10, "K": 8, "Q": 7, "J": 6}
 _VALUE = {r: i for i, r in enumerate("23456789TJQKA", 2)}
 
 
+def style_params(name):
+    """A random point in the personality space for 'style_<seed>': every seed is a different simulated player."""
+    r = random.Random(int(name.split("_", 1)[1]))
+    call = r.choice([99, r.randint(2, 12)])
+    return dict(
+        kind="random style",
+        raise_=r.randint(4, 13),
+        call=call,
+        limp=r.choice([99, r.randint(0, 10)]),
+        cap=0 if call == 99 else r.randint(1, 10),
+        bluff=round(r.uniform(0, 0.35), 3),
+        sticky=round(r.uniform(0, 0.8), 3),
+        size=round(r.uniform(0.33, 1.0), 2),
+    )
+
+
+def is_style(entrant):
+    return entrant.startswith("style_")
+
+
 def is_bot(entrant):
     """Rule-based or algorithmic players: no language model behind them."""
-    return entrant in PERSONAS or entrant in pa.ALGOS or entrant.split("#")[0] in ("tinaplus", "solverbot", "rlbot")
+    return (
+        entrant in PERSONAS
+        or entrant in pa.ALGOS
+        or entrant.split("#")[0] in ("tinaplus", "solverbot", "rlbot", "rlavg", "rlsnap")
+        or is_style(entrant)
+    )
 
 
 def kind_of(entrant):
@@ -112,6 +137,12 @@ def kind_of(entrant):
         return "tight-aggressive, stack-aware and balanced (Tina+), simulated human"
     if entrant.split("#")[0] == "rlbot":
         return "reinforcement-learning agent (Monte Carlo control, trained against the bots)"
+    if entrant.split("#")[0] == "rlavg":
+        return "reinforcement-learning agent, average policy over training (fictitious-play style)"
+    if entrant.split("#")[0] == "rlsnap":
+        return "frozen earlier copy of the reinforcement-learning agent (league opponent)"
+    if is_style(entrant):
+        return "simulated player with a random style"
     if entrant.split("#")[0] == "solverbot":
         return "the solver stack alone: charts, flop model and solves, Monte Carlo where none applies"
     if entrant in PERSONAS:
@@ -149,7 +180,7 @@ def _chen(hole):
 
 
 def bot_reply(name, state, i):
-    p, rng = PERSONAS[name], _BOT_RNG
+    p, rng = (PERSONAS[name] if name in PERSONAS else style_params(name)), _BOT_RNG
     hole = list(state.hole_cards[i])
     board = list(state.get_board_cards(0)) if state.board_count else []
     to_call = state.checking_or_calling_amount
@@ -287,10 +318,12 @@ def main(outdir, hands, models, notes=None, short_stack=None):
                 import poker_tina_plus
 
                 text = poker_tina_plus.reply(state, i)
-            elif m.split("#")[0] == "rlbot":
+            elif m.split("#")[0] in ("rlbot", "rlavg", "rlsnap"):
                 import rl_agent
 
                 text = rl_agent.reply(state, i, ctx, m)
+            elif is_style(m):
+                text = bot_reply(m, state, i)
             elif m.split("#")[0] == "solverbot":
                 text = pa.solver_play(state, i, ctx) or pa.monte_reply(state, i)
             elif m in PERSONAS:
