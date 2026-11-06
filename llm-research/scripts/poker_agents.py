@@ -120,8 +120,11 @@ def _solve(key, pot, eff, board, oop, extra=None):
                 lines += [
                     f"set_bet_sizes {p},{street},bet,66",
                     f"set_bet_sizes {p},{street},raise,100",
-                    f"set_bet_sizes {p},{street},allin",
                 ]
+                # an explicit all-in only when the stack is at most 4 pots: deeper, a 60-iteration solve leaves bluff
+                # shoves of 50 pots (Slumbot at 200bb called them); bets still become all-in past the threshold
+                if eff <= 4 * pot:
+                    lines.append(f"set_bet_sizes {p},{street},allin")
             lines += [
                 "set_allin_threshold 0.67",
                 "build_tree",
