@@ -26,7 +26,7 @@ ABBR = [
     ("qwen2.5vl", "Qwen"),
     ("wizard-vicuna", "Wizard"),
 ]
-TAGS = {"learn": "L", "frozen": "F", "toolkit": "T"}
+TAGS = {"learn": "L", "frozen": "F", "toolkit": "T", "solverplays": "S", "solverfirst": "A", "plain": "P"}
 
 
 def label(name):
