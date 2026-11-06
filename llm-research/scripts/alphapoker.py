@@ -1,6 +1,9 @@
 """AlphaPoker: does the AlphaGo recipe (search + self-play + networks) work for poker? Measured exactly on Leduc.
 
 Usage: uv run --extra alphapoker python scripts/alphapoker.py OUTDIR [--quick]
+Runs on the lab in its own Python 3.12 environment (open_spiel has no build for the lab's Python 3.14):
+  uv venv --python 3.12 .venv-alphapoker && uv pip install --python .venv-alphapoker/bin/python open_spiel==2.0.2 scikit-learn==1.9.1
+  .venv-alphapoker/bin/python scripts/alphapoker.py alphapoker
 Leduc hold'em (6 cards, 2 betting rounds, a public card) is small enough to compute exact exploitability: how much
 a best-responding opponent wins per hand against a strategy (0 = unbeatable). Reported in milli-chips per hand
 (the ante is 1 chip). Every method is turned into a full strategy table and scored the same way (OpenSpiel).
