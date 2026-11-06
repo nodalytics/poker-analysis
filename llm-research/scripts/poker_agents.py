@@ -25,7 +25,8 @@ import eval7
 ROOT = os.environ.get(
     "POKER_ANALYSIS_ROOT", os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
-SOLVER = os.path.join(ROOT, "tools", "TexasSolver", "build", "console_solver")
+# TEXASSOLVER_BIN: e.g. the optimised build (~/solver-fast/build/console_solver), same answers, 2-3x faster
+SOLVER = os.environ.get("TEXASSOLVER_BIN", os.path.join(ROOT, "tools", "TexasSolver", "build", "console_solver"))
 RESOURCES = os.path.join(ROOT, "tools", "TexasSolver", "resources")
 SOLVER_THREADS, SOLVER_TIMEOUT = 8, 90
 WIDE = (
