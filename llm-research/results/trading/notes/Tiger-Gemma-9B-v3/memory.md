@@ -1,6 +1,9 @@
-- round 1, trading: qwen2.5vl#paper outperformed by a significant margin, suggesting a strong understanding of market dynamics.
-- round 2, trading: paper_rule outperformed by +1.31R, suggesting a potential bias towards aggressive trading strategies.
-- round 3, trading: random_trader performed better than me in this episode.
-- round 4, trading: qwen2.5vl#frozen had the best performance in this episode, achieving +3.78R.
-- round 5, trading: Tiger-Gemma-9B-v3#learn achieved +5.74R by entering 7 trades, resulting in 5 winners and 2 exits due to stop-loss orders.
-- round 6, trading: qwen2.5vl#frozen had a better performance than me in this episode, so I should analyze their strategy.
+- qwen2.5vl#paper excels in market understanding (round 1).
+- qwen2.5vl#frozen consistently outperformed in rounds 4, 6, 9, 10, 11, 17, 33.
+- paper_random_gate outperformed in rounds 13 and 28, so analyze their strategies.
+- qwen2.5vl#paper outperformed in round 29, so study their approach.
+- The "paper_rule" strategy outperformed buy-and-hold in round 34, suggesting an active trading strategy may be beneficial.
+- qwen2.5vl#learn had a better performance than buy-and-hold in round 35, indicating potential for improvement in trading strategy.
+- random_trader outperformed in rounds 36 and 38.
+- round 45, trading: qwen2.5vl#frozen had the best performance in this episode, achieving +2.25R.
+- round 46, trading: Avoid trading during periods of high volatility, such as news releases.

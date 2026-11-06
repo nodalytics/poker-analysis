@@ -1,4 +1,4 @@
-My skill file:
+<skill>
 1. Fold more often to reduce variance.
 2. Raise more often with strong hands to increase my share of the pot.
 3. Call less often with marginal hands to avoid getting trapped.
@@ -12,4 +12,4 @@ My skill file:
 11. Practice more to improve my skills and decision-making abilities.
 12. Stay disciplined and stick to my strategy even when facing tough opponents or bad beats.
 
-In my last match, I played against a maniac opponent who raised and re-raised frequently. I should have been more selective in my starting hands and called less often with marginal hands to avoid getting trapped. I also need to pay more attention to my opponents' tendencies and adjust my s
+In my last match, I played against a maniac opponent who raised and re-raised frequently. I should have been more selective in my starting hands and called less often with marginal hands to avoid getting trapped. I also need to pay more attention to my opponents' tendencies and adjust my strat.

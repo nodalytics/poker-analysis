@@ -1,0 +1,523 @@
+
+=== Episode 1 ===
+  episode 1 EURUSD 2026-08-05 20:00 +72h, gate open 4%: qwen2.5vl#paper +2.04R, random_trader +1.06R, qwen2.5vl#learn +0.19R, paper_random_gate +0.01R, flat +0.00R, paper_rule -0.70R, Tiger-Gemma-9B-v3#frozen -1.74R, Tiger-Gemma-9B-v3#learn -1.79R, wizard-vicuna-uncensored#learn -1.79R, wizard-vicuna-uncensored#frozen -1.79R, buy_hold -1.79R, qwen2.5vl#frozen -2.02R, Big-Tiger-Gemma-27B-v3#learn -2.11R, Big-Tiger-Gemma-27B-v3#frozen -2.11R
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: qwen2.5vl#paper outperformed by a significant margin, suggesting a strong understanding of market dynamics.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (711 chars); memory: This match taught me the importance of having a trading plan and sticking to it. I learned that without a plan, my trades were unstructured and unsuccessful. I will remember to always have a plan befo
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (249 chars); memory: qwen2.5vl#paper crushed me; focus on trend-following, not counter-trend scalps.
+    qwen2.5vl#learn rewrote skill-trading.md (492 chars); memory: qwen2.5vl#paper demonstrated significant skill in entry selection, delivering a +2.04R return, which significantly outperformed other strategies.
+  episode 1 took 159s
+
+=== Episode 2 ===
+  episode 2 BTCUSD 2026-09-27 13:00 +72h, gate open 4%: paper_rule +1.31R, qwen2.5vl#paper +0.75R, flat +0.00R, Tiger-Gemma-9B-v3#learn -0.79R, Tiger-Gemma-9B-v3#frozen -0.79R, wizard-vicuna-uncensored#learn -0.79R, wizard-vicuna-uncensored#frozen -0.79R, buy_hold -0.79R, qwen2.5vl#learn -1.20R, Big-Tiger-Gemma-27B-v3#learn -1.35R, Big-Tiger-Gemma-27B-v3#frozen -2.07R, random_trader -2.45R, paper_random_gate -2.53R, qwen2.5vl#frozen -3.00R
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: paper_rule outperformed by +1.31R, suggesting a potential bias towards aggressive trading strategies.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (711 chars); memory: This match taught me the importance of sticking to my trading plan and not letting emotions get in the way. I learned that even when I felt confident in my trade idea, I needed to follow my rules and 
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (317 chars); memory: BTCUSD episode showed my rules got stopped out twice; need to stick to the plan and avoid forcing trades.
+    qwen2.5vl#learn rewrote skill-trading.md (739 chars); memory: paper_rule demonstrated significant profitability in this episode, suggesting it may be a reliable entrant for future trades with similar market conditions.
+  episode 2 took 202s
+
+=== Episode 3 ===
+  episode 3 EURUSD 2026-08-07 09:00 +72h, gate open 3%: random_trader +0.25R, qwen2.5vl#paper +0.16R, flat +0.00R, qwen2.5vl#frozen -0.04R, Big-Tiger-Gemma-27B-v3#learn -0.16R, Tiger-Gemma-9B-v3#learn -0.34R, Tiger-Gemma-9B-v3#frozen -0.34R, wizard-vicuna-uncensored#learn -0.34R, wizard-vicuna-uncensored#frozen -0.34R, buy_hold -0.34R, Big-Tiger-Gemma-27B-v3#frozen -0.34R, paper_random_gate -0.40R, qwen2.5vl#learn -0.63R, paper_rule -1.06R
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: random_trader performed better than me in this episode.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (711 chars); memory: This match was a learning experience. I realized that I was too focused on making money and not enough on following my trading plan. I ended up taking trades that were not in line with my rules and lo
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (359 chars); memory: Random_trader beat me by being less predictable; need to stick to the rules even when it feels bad.
+    qwen2.5vl#learn rewrote skill-trading.md (941 chars); memory: Avoid random_trader and focus on entrants with consistent positive returns like paper_rule.
+  episode 3 took 195s
+
+=== Episode 4 ===
+  episode 4 BTCUSD 2026-09-18 19:00 +72h, gate open 29%: qwen2.5vl#frozen +3.78R, paper_random_gate +3.41R, qwen2.5vl#paper +2.98R, Tiger-Gemma-9B-v3#frozen +2.73R, wizard-vicuna-uncensored#learn +2.73R, wizard-vicuna-uncensored#frozen +2.73R, buy_hold +2.73R, Tiger-Gemma-9B-v3#learn +2.73R, qwen2.5vl#learn +2.68R, random_trader +1.84R, paper_rule +0.94R, Big-Tiger-Gemma-27B-v3#learn +0.51R, flat +0.00R, Big-Tiger-Gemma-27B-v3#frozen -0.17R
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: qwen2.5vl#frozen had the best performance in this episode, achieving +3.78R.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (986 chars)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (359 chars); memory: qwen2.5vl#frozen crushed this episode; I need to focus on higher-probability setups even if it means fewer trades.
+    qwen2.5vl#learn rewrote skill-trading.md (1042 chars); memory: qwen2.5vl#frozen demonstrated exceptional performance with a +3.78R return, making it a priority entrant for future trades.
+  episode 4 took 194s
+
+=== Episode 5 ===
+  episode 5 EURUSD 2026-07-29 12:00 +72h, gate open 64%: Tiger-Gemma-9B-v3#learn +5.74R, Tiger-Gemma-9B-v3#frozen +5.74R, wizard-vicuna-uncensored#learn +5.74R, wizard-vicuna-uncensored#frozen +5.74R, buy_hold +5.74R, qwen2.5vl#learn +4.68R, qwen2.5vl#frozen +4.14R, qwen2.5vl#paper +3.80R, paper_random_gate +2.75R, paper_rule +1.86R, Big-Tiger-Gemma-27B-v3#frozen +1.86R, flat +0.00R, Big-Tiger-Gemma-27B-v3#learn -1.04R, random_trader -4.12R
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: Tiger-Gemma-9B-v3#learn achieved +5.74R by entering 7 trades, resulting in 5 winners and 2 exits due to stop-loss orders.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (1200 chars)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (387 chars); memory: Tiger-Gemma-9B-v3#learn and buy-and-hold both crushed me; momentum matters more than I thought.
+    qwen2.5vl#learn rewrote skill-trading.md (1200 chars); memory: Tiger-Gemma-9B-v3#learn demonstrated exceptional performance with a +5.74R return, highlighting its effectiveness in capturing profitable opportunities.
+  episode 5 took 197s
+
+=== Episode 6 ===
+  episode 6 BTCUSD 2026-10-30 10:00 +72h, gate open 19%: qwen2.5vl#frozen +1.38R, Tiger-Gemma-9B-v3#learn +0.30R, Tiger-Gemma-9B-v3#frozen +0.30R, wizard-vicuna-uncensored#learn +0.30R, wizard-vicuna-uncensored#frozen +0.30R, Big-Tiger-Gemma-27B-v3#frozen +0.30R, qwen2.5vl#learn +0.30R, buy_hold +0.30R, qwen2.5vl#paper +0.25R, flat +0.00R, Big-Tiger-Gemma-27B-v3#learn -0.10R, paper_rule -1.12R, paper_random_gate -1.13R, random_trader -1.16R
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: qwen2.5vl#frozen had a better performance than me in this episode, so I should analyze their strategy.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (1200 chars)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (387 chars); memory: qwen2.5vl#frozen crushed this episode; I need to stick to the rules harder and avoid hesitation.
+    qwen2.5vl#learn rewrote skill-trading.md (1199 chars); memory: qwen2.5vl#frozen demonstrated exceptional performance in the last match, outperforming other entrants significantly (+1.38R), indicating its potential as a reliable strategy for future trades.
+  episode 6 took 201s
+
+=== Episode 7 ===
+  episode 7 EURUSD 2026-08-04 11:00 +72h, gate open 0%: qwen2.5vl#learn +1.31R, Tiger-Gemma-9B-v3#learn +0.24R, Tiger-Gemma-9B-v3#frozen +0.24R, wizard-vicuna-uncensored#learn +0.24R, wizard-vicuna-uncensored#frozen +0.24R, Big-Tiger-Gemma-27B-v3#frozen +0.24R, buy_hold +0.24R, qwen2.5vl#paper +0.00R, paper_rule +0.00R, paper_random_gate +0.00R, flat +0.00R, random_trader -0.00R, Big-Tiger-Gemma-27B-v3#learn -0.63R, qwen2.5vl#frozen -0.66R
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: qwen2.5vl#learn had a better performance than buy and hold in this episode.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (1200 chars)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (387 chars); memory: qwen2.5vl#learn consistently outperforms; need to analyze its signals more closely to identify why.
+    qwen2.5vl#learn rewrote skill-trading.md (1199 chars); memory: Focus on qwen2.5vl#learn as the top-performing entrant, and avoid random_trader due to its poor performance.
+  episode 7 took 215s
+
+=== Episode 8 ===
+  episode 8 BTCUSD 2026-10-09 12:00 +72h, gate open 4%: random_trader +0.61R, Big-Tiger-Gemma-27B-v3#learn +0.00R, flat +0.00R, qwen2.5vl#paper -0.17R, paper_rule -1.20R, Tiger-Gemma-9B-v3#learn -1.22R, Tiger-Gemma-9B-v3#frozen -1.22R, wizard-vicuna-uncensored#learn -1.22R, wizard-vicuna-uncensored#frozen -1.22R, Big-Tiger-Gemma-27B-v3#frozen -1.22R, buy_hold -1.22R, paper_random_gate -1.29R, qwen2.5vl#learn -1.61R, qwen2.5vl#frozen -1.79R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin +0.1 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate kept (learner − twin +10.9 Elo, 0% changed)
+    qwen2.5vl#learn trading skill candidate kept (learner − twin +1.3 Elo, 45% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: random_trader had a better performance than me in this episode.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (1200 chars)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (387 chars); memory: Doing nothing (flat) scored 0R, better than buy and hold (-1.22R), so strict adherence to rules is paramount even if it means no trades.
+    qwen2.5vl#learn rewrote skill-trading.md (1200 chars); memory: random_trader showed inconsistency in the last match, resulting in a loss despite being the best entrant; prioritize qwen2.5vl#learn for future trades.
+  episode 8 took 215s
+
+=== Episode 9 ===
+  episode 9 EURUSD 2026-08-02 22:00 +72h, gate open 12%: qwen2.5vl#frozen +1.14R, paper_random_gate +1.09R, Tiger-Gemma-9B-v3#frozen +0.07R, Tiger-Gemma-9B-v3#learn +0.06R, wizard-vicuna-uncensored#learn +0.06R, wizard-vicuna-uncensored#frozen +0.06R, buy_hold +0.06R, flat +0.00R, Big-Tiger-Gemma-27B-v3#frozen -0.04R, qwen2.5vl#learn -0.04R, paper_rule -0.04R, qwen2.5vl#paper -0.29R, Big-Tiger-Gemma-27B-v3#learn -0.53R, random_trader -1.04R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin +0.1 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate discarded (learner − twin -6.1 Elo, 0% changed)
+    qwen2.5vl#learn trading skill candidate discarded (learner − twin -16.3 Elo, 17% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: qwen2.5vl#frozen had a better performance than me in this match.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (676 chars); memory: I learned that sticking to my rules and following my plan really paid off in this match. Even though the market was challenging, I stayed disciplined and focused, and it helped me make better decision
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (387 chars); memory: qwen2.5vl#frozen crushed me; its high-momentum entries worked while mine didn't, suggesting I need faster signal recognition or better momentum filtering.
+    qwen2.5vl#learn rewrote skill-trading.md (1199 chars); memory: Avoid trades with entrants that underperform significantly compared to the best-performing entrant, as seen with qwen2.5vl#frozen outperforming others by a large margin.
+  episode 9 took 216s
+
+=== Episode 10 ===
+  episode 10 BTCUSD 2026-10-04 09:00 +72h, gate open 8%: qwen2.5vl#frozen +0.47R, qwen2.5vl#paper +0.10R, flat +0.00R, qwen2.5vl#learn -0.09R, Tiger-Gemma-9B-v3#learn -0.85R, Tiger-Gemma-9B-v3#frozen -0.85R, wizard-vicuna-uncensored#learn -0.85R, wizard-vicuna-uncensored#frozen -0.85R, buy_hold -0.85R, Big-Tiger-Gemma-27B-v3#frozen -1.23R, Big-Tiger-Gemma-27B-v3#learn -1.71R, paper_rule -2.56R, paper_random_gate -2.67R, random_trader -3.71R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin +0.1 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 28% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate kept (learner − twin -1.2 Elo, 0% changed)
+    qwen2.5vl#learn trading skill candidate discarded (learner − twin -5.5 Elo, 0% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: qwen2.5vl#frozen had the best results by entering long positions when the price broke above the 200-period moving average on the hourly chart.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (676 chars); memory: This match against Bitcoin was challenging due to its high volatility and unpredictable movements. However, I was able to stick to my trading plan and follow my rules, resulting in a positive outcome.
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (363 chars); memory: qwen2.5vl#frozen consistently outperforms, suggesting better momentum detection or risk management; need to analyze their entries.
+    qwen2.5vl#learn rewrote skill-trading.md (1200 chars); memory: qwen2.5vl#frozen demonstrated strong performance with a +0.47R return, while random_trader underperformed significantly, reinforcing the need to prioritize high-performing entrants and avoid risky str
+  episode 10 took 213s
+
+=== Episode 11 ===
+  episode 11 EURUSD 2026-07-31 02:00 +72h, gate open 31%: qwen2.5vl#frozen +3.05R, qwen2.5vl#paper +2.79R, qwen2.5vl#learn +2.67R, random_trader +1.95R, paper_rule +0.81R, flat +0.00R, Big-Tiger-Gemma-27B-v3#frozen -0.23R, Tiger-Gemma-9B-v3#learn -0.23R, Tiger-Gemma-9B-v3#frozen -0.23R, wizard-vicuna-uncensored#learn -0.23R, wizard-vicuna-uncensored#frozen -0.23R, buy_hold -0.23R, Big-Tiger-Gemma-27B-v3#learn -1.04R, paper_random_gate -2.20R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin +0.1 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate discarded (learner − twin -5.8 Elo, 33% changed)
+    qwen2.5vl#learn trading skill candidate kept (learner − twin -3.5 Elo, 1% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: qwen2.5vl#frozen had a strong performance, achieving +3.05R, while I only managed -0.23R.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (676 chars); memory: This match taught me the importance of sticking to my trading plan and not getting emotional when trades don't go my way. I learned that it's crucial to take profits quickly and cut losses quickly, ev
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (387 chars); memory: qwen2.5vl#frozen crushed this episode; need to stick to the rules even harder next time.
+    qwen2.5vl#learn rewrote skill-trading.md (1200 chars); memory: qwen2.5vl#frozen demonstrated exceptional performance with +3.05R, highlighting its reliability as a top entrant for future trades.
+  episode 11 took 219s
+
+=== Episode 12 ===
+  episode 12 BTCUSD 2026-10-03 22:00 +72h, gate open 8%: qwen2.5vl#learn +1.59R, Tiger-Gemma-9B-v3#learn +0.81R, wizard-vicuna-uncensored#learn +0.81R, wizard-vicuna-uncensored#frozen +0.81R, buy_hold +0.81R, Tiger-Gemma-9B-v3#frozen +0.78R, Big-Tiger-Gemma-27B-v3#frozen +0.19R, qwen2.5vl#paper +0.10R, Big-Tiger-Gemma-27B-v3#learn +0.00R, flat +0.00R, paper_random_gate -0.33R, qwen2.5vl#frozen -0.95R, random_trader -2.31R, paper_rule -2.56R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin +0.1 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate kept (learner − twin -3.8 Elo, 0% changed)
+    qwen2.5vl#learn trading skill candidate kept (learner − twin +20.7 Elo, 6% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: qwen2.5vl#learn had the best performance in the last match with +1.59R, so it's worth studying its strategies.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (676 chars); memory: This match against BTCUSD was intense, with a lot of volatility and opportunities. I learned that sticking to my trading plan and using technical indicators helped me make profitable trades. I also no
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (387 chars); memory: qwen2.5vl#learn consistently outperforms doing nothing, so ignoring signals is a losing strategy.
+    qwen2.5vl#learn rewrote skill-trading.md (1030 chars); memory: qwen2.5vl#frozen demonstrated strong performance with +1.59R, outperforming buy-and-hold strategies, highlighting the effectiveness of selective entrants in volatile markets.
+  episode 12 took 221s
+
+=== Episode 13 ===
+  episode 13 EURUSD 2026-08-02 22:00 +72h, gate open 12%: paper_random_gate +1.95R, qwen2.5vl#frozen +1.66R, qwen2.5vl#learn +0.38R, Tiger-Gemma-9B-v3#frozen +0.07R, Tiger-Gemma-9B-v3#learn +0.06R, wizard-vicuna-uncensored#learn +0.06R, wizard-vicuna-uncensored#frozen +0.06R, buy_hold +0.06R, flat +0.00R, Big-Tiger-Gemma-27B-v3#frozen -0.04R, paper_rule -0.04R, qwen2.5vl#paper -0.29R, Big-Tiger-Gemma-27B-v3#learn -1.22R, random_trader -2.16R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin +0.1 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate discarded (learner − twin -4.6 Elo, 0% changed)
+    qwen2.5vl#learn trading skill candidate kept (learner − twin -2.3 Elo, 66% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: paper_random_gate had a better performance than me this time, so I should investigate their strategy.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (676 chars); memory: This match reminded me of the importance of following my trading plan. I was able to stick to my rules and limit my losses, even though the market was highly volatile. I also learned the importance of
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (387 chars); memory: This episode proved that even with strict rules, consistent losses are possible; focus on signal frequency, not just win rate.
+    qwen2.5vl#learn rewrote skill-trading.md (1176 chars)
+  episode 13 took 210s
+
+=== Episode 14 ===
+  episode 14 BTCUSD 2026-09-25 19:00 +72h, gate open 0%: qwen2.5vl#paper +0.00R, paper_rule +0.00R, paper_random_gate +0.00R, flat +0.00R, Tiger-Gemma-9B-v3#learn -0.81R, Tiger-Gemma-9B-v3#frozen -0.81R, wizard-vicuna-uncensored#learn -0.81R, wizard-vicuna-uncensored#frozen -0.81R, Big-Tiger-Gemma-27B-v3#frozen -0.81R, buy_hold -0.81R, random_trader -1.03R, qwen2.5vl#frozen -1.12R, Big-Tiger-Gemma-27B-v3#learn -1.99R, qwen2.5vl#learn -2.37R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin +0.1 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate discarded (learner − twin -9.0 Elo, 0% changed)
+    qwen2.5vl#learn trading skill candidate discarded (learner − twin -4.0 Elo, 7% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (500 chars)
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (676 chars); memory: This match against qwen2.5vl#paper was intense. I learned a lot about how to manage my trades better. I'll remember to always have a plan before entering a trade, and to use technical indicators to co
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (387 chars); memory: qwen2.5vl#paper did nothing and still beat me, proving even inaction is better than my current execution.
+    qwen2.5vl#learn rewrote skill-trading.md (1046 chars); memory: Avoid trades with entrants showing poor performance, like random_trader, and focus on high-performing entrants like qwen2.5vl#frozen to improve overall returns.
+  episode 14 took 213s
+
+=== Episode 15 ===
+  episode 15 EURUSD 2026-07-29 11:00 +72h, gate open 58%: Tiger-Gemma-9B-v3#learn +5.49R, Tiger-Gemma-9B-v3#frozen +5.49R, wizard-vicuna-uncensored#learn +5.49R, wizard-vicuna-uncensored#frozen +5.49R, buy_hold +5.49R, qwen2.5vl#frozen +5.48R, qwen2.5vl#paper +3.93R, qwen2.5vl#learn +3.81R, paper_random_gate +3.55R, paper_rule +2.65R, Big-Tiger-Gemma-27B-v3#frozen +1.60R, flat +0.00R, Big-Tiger-Gemma-27B-v3#learn -1.65R, random_trader -1.90R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin +0.1 Elo, 11% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate kept (learner − twin -2.2 Elo, 0% changed)
+    qwen2.5vl#learn trading skill candidate discarded (learner − twin -8.5 Elo, 57% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (500 chars)
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (676 chars); memory: This match was a tough one, but I learned a lot about my trading style. I realized that I tend to hold onto winning trades for too long, which can be risky. I also noticed that I often enter trades wi
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (387 chars); memory: Tiger-Gemma-9B-v3#learn and buy-and-hold both crushed my strategy this episode; high-momentum entries alone aren't enough.
+    qwen2.5vl#learn rewrote skill-trading.md (1085 chars); memory: Tiger-Gemma-9B-v3#learn demonstrated exceptional performance with a +5.49R trade, highlighting its reliability as a top-performing entrant.
+  episode 15 took 211s
+
+=== Episode 16 ===
+  episode 16 BTCUSD 2026-10-30 01:00 +72h, gate open 32%: qwen2.5vl#paper +0.76R, Tiger-Gemma-9B-v3#learn +0.72R, Tiger-Gemma-9B-v3#frozen +0.72R, wizard-vicuna-uncensored#learn +0.72R, wizard-vicuna-uncensored#frozen +0.72R, buy_hold +0.72R, qwen2.5vl#learn +0.66R, Big-Tiger-Gemma-27B-v3#frozen +0.37R, flat +0.00R, paper_rule -0.10R, qwen2.5vl#frozen -0.67R, paper_random_gate -0.85R, Big-Tiger-Gemma-27B-v3#learn -1.15R, random_trader -1.66R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin +0.1 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate discarded (learner − twin -7.7 Elo, 0% changed)
+    qwen2.5vl#learn trading skill candidate kept (learner − twin +7.5 Elo, 5% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: qwen2.5vl#paper outperformed by doing nothing, suggesting a market downturn or indecision.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (676 chars); memory: I learned that the BTCUSD pair is highly volatile and has a lot of potential for profit. I also learned that entering a trade without a plan is a recipe for disaster. Next time, I will stick to my tra
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (387 chars); memory: qwen2.5vl#paper consistently outperforms; flat is a viable alternative to losing trades.
+    qwen2.5vl#learn rewrote skill-trading.md (1004 chars); memory: qwen2.5vl#paper demonstrated strong performance in the last match, outperforming other entrants and achieving a +0.76R return.
+  episode 16 took 221s
+
+=== Episode 17 ===
+  episode 17 EURUSD 2026-08-03 12:00 +72h, gate open 0%: qwen2.5vl#frozen +1.57R, random_trader +1.39R, qwen2.5vl#learn +0.57R, qwen2.5vl#paper +0.00R, paper_rule +0.00R, paper_random_gate +0.00R, flat +0.00R, Tiger-Gemma-9B-v3#learn -0.12R, Tiger-Gemma-9B-v3#frozen -0.12R, wizard-vicuna-uncensored#learn -0.12R, wizard-vicuna-uncensored#frozen -0.12R, buy_hold -0.12R, Big-Tiger-Gemma-27B-v3#frozen -0.15R, Big-Tiger-Gemma-27B-v3#learn -0.53R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin +0.1 Elo, 11% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate discarded (learner − twin -4.7 Elo, 0% changed)
+    qwen2.5vl#learn trading skill candidate kept (learner − twin -3.8 Elo, 52% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: qwen2.5vl#frozen had the best performance in this episode by achieving +1.57R, while doing nothing (flat) resulted in 0R.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (676 chars); memory: This match against EURUSD was tough, but I learned a lot. I saw that my entry signals were good, but my exits were too slow. I need to work on my risk management and cut my losses faster. I also notic
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (387 chars); memory: qwen2.5vl#frozen crushed me; need to stick to the rules even harder next time.
+    qwen2.5vl#learn rewrote skill-trading.md (1004 chars); memory: qwen2.5vl#frozen performed exceptionally well in the last match (+1.57R), indicating strong potential for future success; prioritize its signals in similar market conditions.
+  episode 17 took 209s
+
+=== Episode 18 ===
+  episode 18 BTCUSD 2026-10-09 20:00 +72h, gate open 0%: random_trader +0.01R, qwen2.5vl#paper +0.00R, paper_rule +0.00R, paper_random_gate +0.00R, flat +0.00R, Tiger-Gemma-9B-v3#learn -0.63R, wizard-vicuna-uncensored#learn -0.63R, wizard-vicuna-uncensored#frozen -0.63R, Big-Tiger-Gemma-27B-v3#frozen -0.63R, buy_hold -0.63R, Tiger-Gemma-9B-v3#frozen -0.65R, qwen2.5vl#frozen -0.89R, qwen2.5vl#learn -1.47R, Big-Tiger-Gemma-27B-v3#learn -2.00R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin +0.1 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate discarded (learner − twin -8.2 Elo, 0% changed)
+    qwen2.5vl#learn trading skill candidate kept (learner − twin -1.8 Elo, 15% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: random_trader had a slight edge this time, so I should focus on improving my entry and exit points.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (676 chars); memory: This match against random_trader was tough, but I learned a lot. I saw that my entries were too late and my exits were too early, so I need to work on my timing. I also realized that I was too focused
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (387 chars); memory: BTCUSD was brutal; sticking to EURUSD is the only way to salvage this.
+    qwen2.5vl#learn rewrote skill-trading.md (1112 chars); memory: Avoid relying on random_trader, as its performance was inconsistent and contributed negatively to the overall result.
+  episode 18 took 210s
+
+=== Episode 19 ===
+  episode 19 EURUSD 2026-07-28 14:00 +72h, gate open 38%: qwen2.5vl#learn +5.92R, Tiger-Gemma-9B-v3#learn +3.77R, Tiger-Gemma-9B-v3#frozen +3.77R, wizard-vicuna-uncensored#learn +3.77R, wizard-vicuna-uncensored#frozen +3.77R, buy_hold +3.77R, qwen2.5vl#frozen +3.68R, qwen2.5vl#paper +1.90R, random_trader +1.81R, Big-Tiger-Gemma-27B-v3#frozen +1.80R, paper_rule +0.92R, flat +0.00R, paper_random_gate -1.20R, Big-Tiger-Gemma-27B-v3#learn -1.65R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin +0.1 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate discarded (learner − twin -6.1 Elo, 0% changed)
+    qwen2.5vl#learn trading skill candidate kept (learner − twin +11.1 Elo, 6% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: qwen2.5vl#learn had a better performance than buying and holding.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (676 chars); memory: This match against qwen2.5vl#learn was intense. They were making consistent profits and had a high win rate. I learned a lot from watching their trades and will apply their strategies to my own tradin
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (387 chars); memory: qwen2.5vl#learn crushed me, and doing nothing was better than my trades; stick to the rules tighter next time.
+    qwen2.5vl#learn rewrote skill-trading.md (1002 chars); memory: qwen2.5vl#learn performed exceptionally well in the last match, delivering the highest returns; prioritize its strategies in future episodes.
+  episode 19 took 212s
+
+=== Episode 20 ===
+  episode 20 BTCUSD 2026-10-21 12:00 +72h, gate open 19%: random_trader +0.59R, Big-Tiger-Gemma-27B-v3#learn +0.00R, flat +0.00R, qwen2.5vl#paper -0.27R, paper_rule -0.55R, paper_random_gate -1.66R, qwen2.5vl#learn -4.05R, qwen2.5vl#frozen -4.08R, Tiger-Gemma-9B-v3#learn -4.32R, wizard-vicuna-uncensored#learn -4.39R, wizard-vicuna-uncensored#frozen -4.39R, Big-Tiger-Gemma-27B-v3#frozen -4.39R, buy_hold -4.39R, Tiger-Gemma-9B-v3#frozen -4.67R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin +9.3 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate kept (learner − twin +19.0 Elo, 0% changed)
+    qwen2.5vl#learn trading skill candidate kept (learner − twin -0.3 Elo, 11% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: This episode showed that simply following the strategy blindly can lead to losses, so it's important to adapt based on market conditions.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (944 chars)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (387 chars); memory: Doing nothing beat buy and hold, and I took zero trades; next time, stick to the rules even if it feels wrong.
+    qwen2.5vl#learn rewrote skill-trading.md (1200 chars)
+  episode 20 took 204s
+
+=== Episode 21 ===
+  episode 21 EURUSD 2026-07-30 15:00 +72h, gate open 46%: qwen2.5vl#paper +3.11R, qwen2.5vl#frozen +1.17R, Tiger-Gemma-9B-v3#learn +0.59R, Tiger-Gemma-9B-v3#frozen +0.59R, wizard-vicuna-uncensored#learn +0.59R, wizard-vicuna-uncensored#frozen +0.59R, paper_rule +0.59R, buy_hold +0.59R, flat +0.00R, qwen2.5vl#learn -0.03R, Big-Tiger-Gemma-27B-v3#frozen -0.47R, Big-Tiger-Gemma-27B-v3#learn -1.04R, paper_random_gate -1.51R, random_trader -1.54R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin -0.3 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 17% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate kept (learner − twin -0.1 Elo, 0% changed)
+    qwen2.5vl#learn trading skill candidate discarded (learner − twin -14.2 Elo, 9% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (449 chars)
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (1200 chars)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (373 chars); memory: qwen2.5vl#paper consistently outperforms; my strategy needs tighter execution to avoid early stops.
+    qwen2.5vl#learn rewrote skill-trading.md (1002 chars); memory: qwen2.5vl#paper demonstrated exceptional performance, achieving +3.11R, highlighting the importance of prioritizing top-performing entrants and trusting their signals.
+  episode 21 took 204s
+
+=== Episode 22 ===
+  episode 22 BTCUSD 2026-09-15 22:00 +72h, gate open 17%: Tiger-Gemma-9B-v3#learn +4.38R, wizard-vicuna-uncensored#learn +4.38R, wizard-vicuna-uncensored#frozen +4.38R, buy_hold +4.38R, Tiger-Gemma-9B-v3#frozen +4.37R, qwen2.5vl#learn +4.37R, qwen2.5vl#frozen +4.35R, qwen2.5vl#paper +2.81R, random_trader +2.54R, paper_rule +2.50R, Big-Tiger-Gemma-27B-v3#frozen +1.87R, paper_random_gate +0.46R, Big-Tiger-Gemma-27B-v3#learn +0.00R, flat +0.00R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin -0.2 Elo, 6% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 12% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate kept (learner − twin -2.9 Elo, 33% changed)
+    qwen2.5vl#learn trading skill candidate kept (learner − twin +0.2 Elo, 0% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (475 chars)
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (1200 chars)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (373 chars); memory: Tiger-Gemma-9B-v3#learn's +4.38R shows extreme volatility rewards risk; must stick to rules to avoid being left behind.
+    qwen2.5vl#learn rewrote skill-trading.md (1002 chars); memory: Tiger-Gemma-9B-v3#learn performed exceptionally well in this episode, suggesting potential for future consideration as a top-performing entrant.
+  episode 22 took 204s
+
+=== Episode 23 ===
+  episode 23 EURUSD 2026-08-04 20:00 +72h, gate open 4%: qwen2.5vl#frozen +2.41R, paper_random_gate +1.93R, Tiger-Gemma-9B-v3#learn +1.35R, Tiger-Gemma-9B-v3#frozen +1.35R, wizard-vicuna-uncensored#learn +1.35R, wizard-vicuna-uncensored#frozen +1.35R, Big-Tiger-Gemma-27B-v3#frozen +1.35R, buy_hold +1.35R, qwen2.5vl#learn +1.32R, qwen2.5vl#paper +0.11R, paper_rule +0.09R, flat +0.00R, random_trader -0.23R, Big-Tiger-Gemma-27B-v3#learn -1.46R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin -0.2 Elo, 7% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate discarded (learner − twin -12.9 Elo, 0% changed)
+    qwen2.5vl#learn trading skill candidate discarded (learner − twin -9.0 Elo, 0% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: qwen2.5vl#frozen had a better performance in the last match, achieving +2.41R compared to my +1.35R.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (1200 chars)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (373 chars); memory: qwen2.5vl#frozen crushed me; flat would've been better than my 0-4 record.
+    qwen2.5vl#learn rewrote skill-trading.md (1105 chars); memory: qwen2.5vl#frozen performed exceptionally well in this match, outperforming other entrants significantly, indicating potential for future reliance.
+  episode 23 took 213s
+
+=== Episode 24 ===
+  episode 24 BTCUSD 2026-09-27 05:00 +72h, gate open 3%: paper_rule +0.66R, flat +0.00R, Big-Tiger-Gemma-27B-v3#learn -0.30R, qwen2.5vl#paper -0.59R, paper_random_gate -2.39R, Tiger-Gemma-9B-v3#learn -2.89R, Tiger-Gemma-9B-v3#frozen -2.89R, wizard-vicuna-uncensored#learn -2.89R, wizard-vicuna-uncensored#frozen -2.89R, Big-Tiger-Gemma-27B-v3#frozen -2.89R, buy_hold -2.89R, qwen2.5vl#learn -2.91R, random_trader -2.99R, qwen2.5vl#frozen -3.88R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin -0.2 Elo, 8% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate kept (learner − twin +13.4 Elo, 0% changed)
+    qwen2.5vl#learn trading skill candidate kept (learner − twin +9.7 Elo, 7% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: Avoid trading during periods of high volatility, such as news releases.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (1200 chars)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (373 chars); memory: BTCUSD trended down all episode; RSI signals were traps. Avoided further losses by sticking to the rules, but need to watch for stronger momentum.
+    qwen2.5vl#learn rewrote skill-trading.md (1114 chars); memory: Avoid trades with negative expected returns and focus on entrants with positive performance history.
+  episode 24 took 208s
+
+=== Episode 25 ===
+  episode 25 EURUSD 2026-07-29 18:00 +72h, gate open 61%: qwen2.5vl#frozen +4.81R, qwen2.5vl#paper +4.21R, random_trader +2.99R, Tiger-Gemma-9B-v3#learn +2.97R, Tiger-Gemma-9B-v3#frozen +2.97R, wizard-vicuna-uncensored#learn +2.97R, wizard-vicuna-uncensored#frozen +2.97R, buy_hold +2.97R, qwen2.5vl#learn +2.68R, paper_rule +2.06R, paper_random_gate +1.97R, Big-Tiger-Gemma-27B-v3#frozen +1.01R, Big-Tiger-Gemma-27B-v3#learn +0.00R, flat +0.00R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin -0.2 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate kept (learner − twin -0.9 Elo, 1% changed)
+    qwen2.5vl#learn trading skill candidate discarded (learner − twin -14.6 Elo, 18% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: qwen2.5vl#frozen had the best performance in the EURUSD match with +4.81R.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (1200 chars)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (373 chars); memory: qwen2.5vl#frozen flat-played to +4.81R; EURUSD needs faster, stricter entries to compete.
+    qwen2.5vl#learn rewrote skill-trading.md (1200 chars)
+  episode 25 took 204s
+
+=== Episode 26 ===
+  episode 26 BTCUSD 2026-10-07 02:00 +72h, gate open 17%: paper_random_gate +2.90R, qwen2.5vl#learn +2.07R, Big-Tiger-Gemma-27B-v3#learn +0.05R, flat +0.00R, qwen2.5vl#frozen -0.09R, paper_rule -1.90R, qwen2.5vl#paper -2.28R, Tiger-Gemma-9B-v3#frozen -4.01R, Tiger-Gemma-9B-v3#learn -4.14R, wizard-vicuna-uncensored#learn -4.14R, wizard-vicuna-uncensored#frozen -4.14R, Big-Tiger-Gemma-27B-v3#frozen -4.14R, buy_hold -4.14R, random_trader -4.90R
+    Tiger-Gemma-9B-v3#learn trading skill candidate discarded (learner − twin -5.7 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate kept (learner − twin +16.6 Elo, 1% changed)
+    qwen2.5vl#learn trading skill candidate kept (learner − twin +6.2 Elo, 19% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: paper_random_gate had a better performance than my strategy in this episode, suggesting I should explore alternative strategies or refine my existing ones.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (1200 chars)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (373 chars); memory: Paper_random_gate crushed this episode; its aggressive, random approach worked better than anything else.
+    qwen2.5vl#learn rewrote skill-trading.md (1200 chars); memory: Avoid flat positions during volatile market conditions, as they can lead to missed opportunities or negative returns.
+  episode 26 took 207s
+
+=== Episode 27 ===
+  episode 27 EURUSD 2026-08-10 13:00 +72h, gate open 0%: qwen2.5vl#frozen +1.29R, qwen2.5vl#paper +0.00R, paper_rule +0.00R, paper_random_gate +0.00R, flat +0.00R, qwen2.5vl#learn -0.01R, random_trader -0.15R, Tiger-Gemma-9B-v3#frozen -0.34R, Tiger-Gemma-9B-v3#learn -1.68R, wizard-vicuna-uncensored#learn -1.68R, wizard-vicuna-uncensored#frozen -1.68R, Big-Tiger-Gemma-27B-v3#frozen -1.68R, buy_hold -1.68R, Big-Tiger-Gemma-27B-v3#learn -3.23R
+    Tiger-Gemma-9B-v3#learn trading skill candidate discarded (learner − twin -5.5 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate discarded (learner − twin -4.2 Elo, 0% changed)
+    qwen2.5vl#learn trading skill candidate discarded (learner − twin -5.1 Elo, 2% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: qwen2.5vl#frozen had a better performance than me in this episode, potentially due to its ability to identify profitable opportunities.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (1200 chars)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (373 chars); memory: Zero winners in 72 decisions proves the system needs no adjustment; strict adherence is the only path forward.
+    qwen2.5vl#learn rewrote skill-trading.md (1199 chars)
+  episode 27 took 208s
+
+=== Episode 28 ===
+  episode 28 BTCUSD 2026-10-21 23:00 +72h, gate open 6%: paper_random_gate +1.79R, paper_rule +0.60R, random_trader +0.56R, flat +0.00R, Big-Tiger-Gemma-27B-v3#learn -0.38R, qwen2.5vl#paper -1.00R, qwen2.5vl#frozen -4.44R, Big-Tiger-Gemma-27B-v3#frozen -4.51R, qwen2.5vl#learn -4.54R, Tiger-Gemma-9B-v3#learn -5.10R, Tiger-Gemma-9B-v3#frozen -5.10R, wizard-vicuna-uncensored#learn -5.10R, wizard-vicuna-uncensored#frozen -5.10R, buy_hold -5.10R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin +0.2 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate kept (learner − twin +7.9 Elo, 0% changed)
+    qwen2.5vl#learn trading skill candidate kept (learner − twin -2.1 Elo, 20% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: The paper_random_gate strategy outperformed my strategy in this match.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (1200 chars)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (373 chars); memory: BTCUSD was brutal; even flat outperformed buy/hold and my trades. Stick to EURUSD.
+    qwen2.5vl#learn rewrote skill-trading.md (1200 chars)
+  episode 28 took 208s
+
+=== Episode 29 ===
+  episode 29 EURUSD 2026-07-30 22:00 +72h, gate open 36%: qwen2.5vl#paper +2.35R, qwen2.5vl#frozen +1.47R, paper_rule +0.82R, flat +0.00R, paper_random_gate -0.02R, random_trader -0.12R, Tiger-Gemma-9B-v3#learn -0.22R, Tiger-Gemma-9B-v3#frozen -0.22R, wizard-vicuna-uncensored#learn -0.22R, wizard-vicuna-uncensored#frozen -0.22R, buy_hold -0.22R, Big-Tiger-Gemma-27B-v3#frozen -0.22R, qwen2.5vl#learn -0.23R, Big-Tiger-Gemma-27B-v3#learn -1.04R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin +0.2 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate discarded (learner − twin -6.2 Elo, 0% changed)
+    qwen2.5vl#learn trading skill candidate discarded (learner − twin -14.1 Elo, 17% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: qwen2.5vl#paper had a better performance than me in this episode.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (1200 chars)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (373 chars); memory: qwen2.5vl#paper crushed me, highlighting the need to stick *exactly* to the rules, even when losing.
+    qwen2.5vl#learn rewrote skill-trading.md (1119 chars); memory: Avoid trades where the market is range-bound or lacks clear momentum, as this led to underperformance in the last match.
+  episode 29 took 207s
+
+=== Episode 30 ===
+  episode 30 BTCUSD 2026-10-06 14:00 +72h, gate open 15%: paper_random_gate +0.61R, Big-Tiger-Gemma-27B-v3#learn +0.01R, random_trader +0.00R, flat +0.00R, qwen2.5vl#learn -0.60R, qwen2.5vl#frozen -1.27R, qwen2.5vl#paper -2.25R, paper_rule -3.31R, Tiger-Gemma-9B-v3#learn -6.04R, Tiger-Gemma-9B-v3#frozen -6.04R, wizard-vicuna-uncensored#learn -6.04R, wizard-vicuna-uncensored#frozen -6.04R, Big-Tiger-Gemma-27B-v3#frozen -6.04R, buy_hold -6.04R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin +0.2 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate kept (learner − twin +17.1 Elo, 0% changed)
+    qwen2.5vl#learn trading skill candidate kept (learner − twin +3.1 Elo, 20% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: The strategy performed poorly, resulting in a loss of 6.04R, with only one winning trade out of eight.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (1200 chars)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (373 chars); memory: Paper_random_gate beat me this round; need to stick to the rules even when others are more profitable.
+    qwen2.5vl#learn rewrote skill-trading.md (1189 chars); memory: Avoid trades recommended by random_trader and focus on leveraging qwen2.5vl#frozen's signals for better risk-adjusted returns.
+  episode 30 took 213s
+
+=== Episode 31 ===
+  episode 31 EURUSD 2026-08-06 13:00 +72h, gate open 3%: qwen2.5vl#frozen +1.91R, qwen2.5vl#paper +0.16R, flat +0.00R, paper_random_gate -0.14R, Tiger-Gemma-9B-v3#frozen -0.69R, wizard-vicuna-uncensored#learn -1.02R, wizard-vicuna-uncensored#frozen -1.02R, buy_hold -1.02R, Tiger-Gemma-9B-v3#learn -1.02R, paper_rule -1.06R, random_trader -1.25R, Big-Tiger-Gemma-27B-v3#frozen -1.42R, Big-Tiger-Gemma-27B-v3#learn -2.00R, qwen2.5vl#learn -2.34R
+    Tiger-Gemma-9B-v3#learn trading skill candidate discarded (learner − twin -5.4 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate kept (learner − twin -1.1 Elo, 0% changed)
+    qwen2.5vl#learn trading skill candidate discarded (learner − twin -22.9 Elo, 9% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: qwen2.5vl#frozen had a better performance than me this episode.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (1200 chars)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (373 chars); memory: qwen2.5vl#frozen consistently outperforms flat and buy/hold; focus on identifying similar setups or why it wins.
+    qwen2.5vl#learn rewrote skill-trading.md (1200 chars)
+  episode 31 took 211s
+
+=== Episode 32 ===
+  episode 32 BTCUSD 2026-10-04 16:00 +72h, gate open 8%: paper_random_gate +0.49R, qwen2.5vl#paper +0.10R, flat +0.00R, random_trader -0.93R, qwen2.5vl#learn -1.03R, qwen2.5vl#frozen -1.90R, Big-Tiger-Gemma-27B-v3#frozen -1.96R, Tiger-Gemma-9B-v3#learn -2.03R, Tiger-Gemma-9B-v3#frozen -2.03R, wizard-vicuna-uncensored#learn -2.03R, wizard-vicuna-uncensored#frozen -2.03R, buy_hold -2.03R, Big-Tiger-Gemma-27B-v3#learn -2.21R, paper_rule -2.56R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin +0.4 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate discarded (learner − twin -10.3 Elo, 0% changed)
+    qwen2.5vl#learn trading skill candidate kept (learner − twin +3.8 Elo, 16% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: paper_random_gate had a better performance than me in this episode.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (1200 chars)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (373 chars); memory: Paper_random_gate beat me this episode; it's a reminder that even random can outperform when I lose discipline.
+    qwen2.5vl#learn rewrote skill-trading.md (1200 chars)
+  episode 32 took 206s
+
+=== Episode 33 ===
+  episode 33 EURUSD 2026-08-11 08:00 +72h, gate open 0%: qwen2.5vl#frozen +4.43R, Tiger-Gemma-9B-v3#learn +1.57R, Tiger-Gemma-9B-v3#frozen +1.48R, wizard-vicuna-uncensored#learn +1.48R, wizard-vicuna-uncensored#frozen +1.48R, Big-Tiger-Gemma-27B-v3#frozen +1.48R, buy_hold +1.48R, qwen2.5vl#learn +1.08R, qwen2.5vl#paper +0.00R, paper_rule +0.00R, paper_random_gate +0.00R, flat +0.00R, Big-Tiger-Gemma-27B-v3#learn -0.09R, random_trader -0.40R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin +5.9 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate discarded (learner − twin -13.6 Elo, 1% changed)
+    qwen2.5vl#learn trading skill candidate discarded (learner − twin -11.1 Elo, 45% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: qwen2.5vl#frozen had the best performance in the last match, achieving +4.43R.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (1200 chars)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (373 chars); memory: qwen2.5vl#frozen crushed me; flat would have been better than forcing a bad trade.
+    qwen2.5vl#learn rewrote skill-trading.md (1200 chars)
+  episode 33 took 209s
+
+=== Episode 34 ===
+  episode 34 BTCUSD 2026-10-31 14:00 +72h, gate open 14%: paper_rule +1.78R, qwen2.5vl#paper +0.43R, flat +0.00R, Big-Tiger-Gemma-27B-v3#learn -0.20R, random_trader -0.20R, qwen2.5vl#frozen -0.43R, qwen2.5vl#learn -0.87R, Big-Tiger-Gemma-27B-v3#frozen -1.42R, Tiger-Gemma-9B-v3#learn -1.68R, Tiger-Gemma-9B-v3#frozen -1.68R, wizard-vicuna-uncensored#learn -1.68R, wizard-vicuna-uncensored#frozen -1.68R, buy_hold -1.68R, paper_random_gate -2.50R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin +0.1 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate kept (learner − twin +8.1 Elo, 0% changed)
+    qwen2.5vl#learn trading skill candidate kept (learner − twin +0.3 Elo, 68% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: The "paper_rule" strategy outperformed the buy-and-hold approach, suggesting that a more active trading strategy may be beneficial.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (1200 chars)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (373 chars); memory: BTCUSD match proved flat is sometimes better than forced trades; stick to the rules, even if it means no trades.
+    qwen2.5vl#learn rewrote skill-trading.md (1176 chars); memory: **random_trader's signals consistently underperformed, resulting in losses; focus exclusively on top performers like qwen2.5vl#frozen and monitor paper_rule's performance for future opportunities.**
+  episode 34 took 209s
+
+=== Episode 35 ===
+  episode 35 EURUSD 2026-08-12 23:00 +72h, gate open 3%: qwen2.5vl#learn +3.80R, Tiger-Gemma-9B-v3#learn +2.85R, Tiger-Gemma-9B-v3#frozen +2.85R, wizard-vicuna-uncensored#learn +2.85R, wizard-vicuna-uncensored#frozen +2.85R, buy_hold +2.85R, qwen2.5vl#frozen +2.64R, Big-Tiger-Gemma-27B-v3#frozen +1.98R, paper_rule +1.93R, qwen2.5vl#paper +0.90R, flat +0.00R, Big-Tiger-Gemma-27B-v3#learn -0.72R, paper_random_gate -1.03R, random_trader -2.90R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin +0.1 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate discarded (learner − twin -6.0 Elo, 0% changed)
+    qwen2.5vl#learn trading skill candidate kept (learner − twin +13.2 Elo, 71% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: qwen2.5vl#learn had a better performance than the buy-and-hold strategy, suggesting a potential for improvement in trading strategy.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (1200 chars)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (413 chars); memory: qwen2.5vl#learn crushed me; need to avoid consecutive stops by skipping after a loss.
+    qwen2.5vl#learn rewrote skill-trading.md (1188 chars); memory: paper_rule demonstrated strong potential with +1.78R in this match, indicating it may become a valuable entrant to monitor and potentially prioritize in future episodes.
+  episode 35 took 206s
+
+=== Episode 36 ===
+  episode 36 BTCUSD 2026-10-21 08:00 +72h, gate open 21%: random_trader +3.03R, paper_random_gate +0.61R, flat +0.00R, qwen2.5vl#learn -0.62R, paper_rule -0.73R, qwen2.5vl#paper -0.94R, qwen2.5vl#frozen -1.03R, Big-Tiger-Gemma-27B-v3#learn -1.07R, Big-Tiger-Gemma-27B-v3#frozen -2.73R, Tiger-Gemma-9B-v3#learn -3.06R, Tiger-Gemma-9B-v3#frozen -3.06R, wizard-vicuna-uncensored#learn -3.06R, wizard-vicuna-uncensored#frozen -3.06R, buy_hold -3.06R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin +0.1 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 1% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate kept (learner − twin +4.3 Elo, 5% changed)
+    qwen2.5vl#learn trading skill candidate kept (learner − twin +8.2 Elo, 3% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: random_trader outperformed me by +6.09R this episode.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (1180 chars)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (389 chars); memory: Random_trader crushed me; BTCUSD is a losing game for this strategy.
+    qwen2.5vl#learn rewrote skill-trading.md (1170 chars); memory: Avoid trades based on random_trader's signals, as their performance is inconsistent and negatively impacts overall results.
+  episode 36 took 212s
+
+=== Episode 37 ===
+  episode 37 EURUSD 2026-08-06 17:00 +72h, gate open 3%: qwen2.5vl#frozen +0.48R, random_trader +0.23R, qwen2.5vl#paper +0.16R, flat +0.00R, qwen2.5vl#learn -0.23R, Tiger-Gemma-9B-v3#learn -0.49R, Tiger-Gemma-9B-v3#frozen -0.49R, wizard-vicuna-uncensored#learn -0.49R, wizard-vicuna-uncensored#frozen -0.49R, buy_hold -0.49R, Big-Tiger-Gemma-27B-v3#learn -0.89R, Big-Tiger-Gemma-27B-v3#frozen -0.91R, paper_rule -1.06R, paper_random_gate -1.07R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin +0.1 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 1% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate kept (learner − twin +1.4 Elo, 25% changed)
+    qwen2.5vl#learn trading skill candidate discarded (learner − twin -6.0 Elo, 3% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: qwen2.5vl#frozen had a better performance than buy and hold in this episode.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (1180 chars)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (389 chars); memory: qwen2.5vl#frozen beat me consistently; it seems to punish overtrading in choppy conditions.
+    qwen2.5vl#learn rewrote skill-trading.md (1200 chars); memory: Focus on qwen2.5vl#frozen's signals, as they delivered the best performance (+0.48R) in the last match, while random_trader underperformed significantly.
+  episode 37 took 210s
+
+=== Episode 38 ===
+  episode 38 BTCUSD 2026-10-21 09:00 +72h, gate open 21%: random_trader +3.05R, paper_random_gate +0.19R, flat +0.00R, Big-Tiger-Gemma-27B-v3#learn -0.38R, paper_rule -0.55R, qwen2.5vl#paper -0.78R, qwen2.5vl#learn -1.70R, Big-Tiger-Gemma-27B-v3#frozen -3.25R, Tiger-Gemma-9B-v3#learn -4.36R, wizard-vicuna-uncensored#learn -4.36R, wizard-vicuna-uncensored#frozen -4.36R, buy_hold -4.36R, Tiger-Gemma-9B-v3#frozen -4.37R, qwen2.5vl#frozen -4.62R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin +0.1 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate kept (learner − twin +8.7 Elo, 0% changed)
+    qwen2.5vl#learn trading skill candidate kept (learner − twin +14.5 Elo, 2% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: random_trader outperformed me with +3.05R in this episode.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (0 chars); memory: (reflection failed: HTTP 500)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (389 chars); memory: Random_trader crushed me; their aggression worked while mine didn't. Need to stick to the rules even harder.
+    qwen2.5vl#learn rewrote skill-trading.md (1200 chars); memory: Avoid trades based on random_trader's signals, as they underperformed significantly in the last match, contributing to overall losses.
+  episode 38 took 203s
+
+=== Episode 39 ===
+  episode 39 EURUSD 2026-08-05 15:00 +72h, gate open 3%: qwen2.5vl#frozen +0.75R, qwen2.5vl#paper +0.16R, random_trader +0.10R, flat +0.00R, paper_rule -0.43R, paper_random_gate -0.43R, Tiger-Gemma-9B-v3#learn -1.42R, Tiger-Gemma-9B-v3#frozen -1.42R, wizard-vicuna-uncensored#learn -1.42R, wizard-vicuna-uncensored#frozen -1.42R, buy_hold -1.42R, Big-Tiger-Gemma-27B-v3#learn -1.50R, qwen2.5vl#learn -1.53R, Big-Tiger-Gemma-27B-v3#frozen -1.74R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin +0.1 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate kept (learner − twin +3.8 Elo, 0% changed)
+    qwen2.5vl#learn trading skill candidate discarded (learner − twin -20.1 Elo, 1% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: qwen2.5vl#frozen had a better performance than buy and hold in this episode.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (1200 chars)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (389 chars); memory: qwen2.5vl#frozen beat me by being less greedy; flat sometimes is better than forced entry.
+    qwen2.5vl#learn rewrote skill-trading.md (1200 chars); memory: Focus on leveraging qwen2.5vl#frozen's signals more aggressively, as they are the top performer, and avoid trades based on random_trader's signals to reduce losses.
+  episode 39 took 211s
+
+=== Episode 40 ===
+  episode 40 BTCUSD 2026-09-24 17:00 +72h, gate open 4%: random_trader +0.24R, Big-Tiger-Gemma-27B-v3#learn +0.00R, qwen2.5vl#paper +0.00R, paper_rule +0.00R, flat +0.00R, qwen2.5vl#learn -0.03R, Tiger-Gemma-9B-v3#learn -0.59R, Tiger-Gemma-9B-v3#frozen -0.59R, wizard-vicuna-uncensored#learn -0.59R, wizard-vicuna-uncensored#frozen -0.59R, Big-Tiger-Gemma-27B-v3#frozen -0.59R, buy_hold -0.59R, paper_random_gate -1.35R, qwen2.5vl#frozen -1.81R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin +0.1 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 1% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate kept (learner − twin +11.1 Elo, 0% changed)
+    qwen2.5vl#learn trading skill candidate kept (learner − twin +20.3 Elo, 20% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: random_trader had a better performance than me in this episode.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (1200 chars)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (389 chars); memory: Doing nothing beats buy and hold in this simulation; sticking to the rules is the only way to beat random noise.
+    qwen2.5vl#learn rewrote skill-trading.md (1162 chars); memory: Avoid trades based on random_trader's signals, as they consistently underperform and may lead to losses.
+  episode 40 took 207s
+
+=== Episode 41 ===
+  episode 41 EURUSD 2026-08-06 08:00 +72h, gate open 4%: qwen2.5vl#frozen +0.50R, qwen2.5vl#learn +0.37R, qwen2.5vl#paper +0.11R, flat +0.00R, paper_rule -1.06R, Tiger-Gemma-9B-v3#learn -1.29R, Tiger-Gemma-9B-v3#frozen -1.29R, wizard-vicuna-uncensored#learn -1.78R, wizard-vicuna-uncensored#frozen -1.78R, buy_hold -1.78R, Big-Tiger-Gemma-27B-v3#frozen -1.78R, paper_random_gate -2.15R, Big-Tiger-Gemma-27B-v3#learn -2.92R, random_trader -3.23R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin +0.1 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate discarded (learner − twin -5.9 Elo, 0% changed)
+    qwen2.5vl#learn trading skill candidate kept (learner − twin -0.7 Elo, 10% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: qwen2.5vl#frozen had a better performance in this episode, suggesting they might have a better understanding of the market dynamics.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (1200 chars)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (445 chars); memory: qwen2.5vl#frozen exploits weak risk management; avoid consecutive losses at all costs.
+    qwen2.5vl#learn rewrote skill-trading.md (1162 chars); memory: paper_rule demonstrated significant potential with +1.78R, indicating it may be a valuable entrant to watch and potentially integrate into future strategies.
+  episode 41 took 206s
+
+=== Episode 42 ===
+  episode 42 BTCUSD 2026-10-07 03:00 +72h, gate open 17%: paper_random_gate +2.52R, qwen2.5vl#learn +0.33R, flat +0.00R, paper_rule -1.78R, qwen2.5vl#paper -2.27R, qwen2.5vl#frozen -2.78R, Big-Tiger-Gemma-27B-v3#learn -3.34R, Tiger-Gemma-9B-v3#learn -4.27R, Tiger-Gemma-9B-v3#frozen -4.27R, wizard-vicuna-uncensored#learn -4.27R, wizard-vicuna-uncensored#frozen -4.27R, Big-Tiger-Gemma-27B-v3#frozen -4.27R, buy_hold -4.27R, random_trader -4.75R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin +0.1 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate kept (learner − twin +7.2 Elo, 7% changed)
+    qwen2.5vl#learn trading skill candidate kept (learner − twin +8.5 Elo, 0% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: paper_random_gate had a better performance than me in this episode, so I should analyze its strategies.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (1200 chars)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (403 chars); memory: BTCUSD was brutal; reducing max trades after consecutive stops is now enforced.
+    qwen2.5vl#learn rewrote skill-trading.md (1162 chars); memory: paper_random_gate demonstrated strong potential (+2.52R) in this episode, indicating it may be worth revisiting and analyzing further for future trades.
+  episode 42 took 211s
+
+=== Episode 43 ===
+  episode 43 EURUSD 2026-08-10 12:00 +72h, gate open 0%: qwen2.5vl#learn +1.88R, qwen2.5vl#frozen +1.24R, qwen2.5vl#paper +0.00R, paper_rule +0.00R, paper_random_gate +0.00R, flat +0.00R, Big-Tiger-Gemma-27B-v3#frozen -1.83R, Tiger-Gemma-9B-v3#learn -2.02R, wizard-vicuna-uncensored#learn -2.02R, wizard-vicuna-uncensored#frozen -2.02R, buy_hold -2.02R, Tiger-Gemma-9B-v3#frozen -2.02R, random_trader -2.03R, Big-Tiger-Gemma-27B-v3#learn -4.26R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin +0.1 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate discarded (learner − twin -12.4 Elo, 11% changed)
+    qwen2.5vl#learn trading skill candidate kept (learner − twin +2.7 Elo, 0% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: qwen2.5vl#learn outperformed by +1.88R, suggesting a potential advantage in its trading strategy.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (1200 chars)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (415 chars); memory: qwen2.5vl#learn consistently beat me with higher winrate, indicating I need to refine entry timing or risk management.
+    qwen2.5vl#learn rewrote skill-trading.md (1136 chars); memory: paper_rule showed strong potential (+1.78R) and could be a key entrant to focus on in future episodes.
+  episode 43 took 208s
+
+=== Episode 44 ===
+  episode 44 BTCUSD 2026-11-01 00:00 +72h, gate open 15%: random_trader +2.16R, paper_rule +1.78R, qwen2.5vl#frozen +0.90R, qwen2.5vl#learn +0.90R, qwen2.5vl#paper +0.67R, flat +0.00R, Big-Tiger-Gemma-27B-v3#frozen -1.39R, Tiger-Gemma-9B-v3#learn -1.65R, Tiger-Gemma-9B-v3#frozen -1.65R, wizard-vicuna-uncensored#learn -1.65R, wizard-vicuna-uncensored#frozen -1.65R, buy_hold -1.65R, Big-Tiger-Gemma-27B-v3#learn -2.66R, paper_random_gate -2.83R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin +0.1 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate discarded (learner − twin -10.2 Elo, 12% changed)
+    qwen2.5vl#learn trading skill candidate kept (learner − twin +0.7 Elo, 65% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: random_trader performed better than me by +2.16R, indicating a need to analyze their strategy for improvement.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (1200 chars)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (415 chars); memory: BTCUSD episode proved flat is better than my system; need to tighten entry filters or reduce max trades further.
+    qwen2.5vl#learn rewrote skill-trading.md (1200 chars); memory: random_trader's recent success (+2.16R) was an anomaly; focus on consistent performers like qwen2.5vl#frozen.
+  episode 44 took 206s
+
+=== Episode 45 ===
+  episode 45 EURUSD 2026-07-30 20:00 +72h, gate open 39%: qwen2.5vl#frozen +2.25R, qwen2.5vl#paper +2.25R, paper_rule +0.86R, flat +0.00R, Tiger-Gemma-9B-v3#learn -0.18R, wizard-vicuna-uncensored#learn -0.18R, wizard-vicuna-uncensored#frozen -0.18R, buy_hold -0.18R, Tiger-Gemma-9B-v3#frozen -0.18R, Big-Tiger-Gemma-27B-v3#frozen -0.19R, random_trader -0.42R, qwen2.5vl#learn -0.69R, paper_random_gate -1.24R, Big-Tiger-Gemma-27B-v3#learn -2.94R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin +0.1 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate discarded (learner − twin -10.7 Elo, 12% changed)
+    qwen2.5vl#learn trading skill candidate discarded (learner − twin -18.7 Elo, 11% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: qwen2.5vl#frozen had the best performance in this episode, achieving +2.25R.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (1200 chars)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (415 chars); memory: qwen2.5vl#frozen crushed me, and doing nothing was better than my trades; I need to be even stricter with entries.
+    qwen2.5vl#learn rewrote skill-trading.md (1069 chars); memory: Focus solely on qwen2.5vl#frozen's signals as they consistently outperform others.
+  episode 45 took 206s
+
+=== Episode 46 ===
+  episode 46 BTCUSD 2026-10-22 06:00 +72h, gate open 6%: paper_random_gate +1.81R, paper_rule +1.78R, random_trader +0.59R, flat +0.00R, qwen2.5vl#paper -1.04R, Big-Tiger-Gemma-27B-v3#learn -1.65R, qwen2.5vl#learn -1.82R, qwen2.5vl#frozen -2.60R, Tiger-Gemma-9B-v3#learn -2.64R, wizard-vicuna-uncensored#learn -2.64R, wizard-vicuna-uncensored#frozen -2.64R, buy_hold -2.64R, Tiger-Gemma-9B-v3#frozen -2.66R, Big-Tiger-Gemma-27B-v3#frozen -2.76R
+    Tiger-Gemma-9B-v3#learn trading skill candidate kept (learner − twin +1.0 Elo, 0% changed)
+    wizard-vicuna-uncensored#learn trading skill candidate kept (learner − twin +0.0 Elo, 0% changed)
+    Big-Tiger-Gemma-27B-v3#learn trading skill candidate kept (learner − twin +16.4 Elo, 12% changed)
+    qwen2.5vl#learn trading skill candidate kept (learner − twin +6.9 Elo, 38% changed)
+    Tiger-Gemma-9B-v3#learn rewrote skill-trading.md (402 chars); memory: Avoid trading during periods of high volatility, such as news releases.
+    wizard-vicuna-uncensored#learn rewrote skill-trading.md (1200 chars)
+    Big-Tiger-Gemma-27B-v3#learn rewrote skill-trading.md (415 chars); memory: BTCUSD episode showed flat outperformed buy/hold, highlighting extreme volatility and the need for strict adherence to rules.
+    qwen2.5vl#learn rewrote skill-trading.md (1000 chars); memory: paper_random_gate performed exceptionally well in this episode, scoring +1.81R, which suggests the potential for exploring its strategy or identifying underlying patterns.
+  episode 46 took 210s

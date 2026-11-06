@@ -1,14 +1,16 @@
 <skill>
-Fold 99.9% preflop. Play AA, KK, QQ only.
+Fold 99.9% preflop. AA, KK, QQ only.
 Bet 1/3 pot with top pair+ strong kicker.
 Fold to 2x+ from bob/tina/carl/sol.
 Fold to Sol’s raises preflop.
-Fold if losing >5% stack. No exceptions.
+Fold if losing >5% stack.
 No bluffing vs. Monte/Sol.
-No chasing losses. No overbets. No slowplays.
-Never call nut flush/straight draws.
+Fold to nut flush/straight draws.
 If stack < 10% of Monte, fold everything.
-If Monte bets > 1/2 pot, fold.
+Fold to Monte bets > 1/3 pot.
 Fold to all bets if stack < 20% of Monte.
-If stack < 10% of Monte, fold everything.
+Fold to all bets if stack < 10% of bob.
+Fold to Tina’s bets if stack < 20% of hers.
+If stack < 10% of anyone, fold.
+No chasing losses. No overbets. No slowplays.
 </skill>

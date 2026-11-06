@@ -1,3 +1,11 @@
-- round 1, trading: This match taught me the importance of having a trading plan and sticking to it. I learned that without a plan, my trades were unstructured and unsuccessful. I will remember to always have a plan befo
-- round 2, trading: This match taught me the importance of sticking to my trading plan and not letting emotions get in the way. I learned that even when I felt confident in my trade idea, I needed to follow my rules and 
-- round 3, trading: This match was a learning experience. I realized that I was too focused on making money and not enough on following my trading plan. I ended up taking trades that were not in line with my rules and lo
+- Stick to trading plan, don't let emotions get in the way.
+- Follow trading plan, don't let confidence override rules.
+- Focus on rules, not just making money.
+- Discipline pays off, stick to rules and plan.
+- Volatile market, stick to rules and plan.
+- Use technical indicators to control trades.
+- Holding onto winning trades too long can be risky.
+- Entering trades without a plan is a recipe for disaster.
+- BTCUSD pair is highly volatile and ha
+- round 18, trading: This match against random_trader was tough, but I learned a lot. I saw that my entries were too late and my exits were too early, so I need to work on my timing. I also realized that I was too focused
+- round 19, trading: This match against qwen2.5vl#learn was intense. They were making consistent profits and had a high win rate. I learned a lot from watching their trades and will apply their strategies to my own tradin

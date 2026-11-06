@@ -1,6 +1,12 @@
-- round 1, trading: qwen2.5vl#paper crushed me; focus on trend-following, not counter-trend scalps.
-- round 2, trading: BTCUSD episode showed my rules got stopped out twice; need to stick to the plan and avoid forcing trades.
-- round 3, trading: Random_trader beat me by being less predictable; need to stick to the rules even when it feels bad.
-- round 4, trading: qwen2.5vl#frozen crushed this episode; I need to focus on higher-probability setups even if it means fewer trades.
-- round 5, trading: Tiger-Gemma-9B-v3#learn and buy-and-hold both crushed me; momentum matters more than I thought.
-- round 6, trading: qwen2.5vl#frozen crushed this episode; I need to stick to the rules harder and avoid hesitation.
+- Rules over emotion: Strict discipline beats errors (BTCUSD, Random_trader).
+- Momentum & holds win: Exploit trends, avoid forced trades (qwen2.5vl#paper/frozen).
+- Action beats inaction: Consistent trades > paralysis.
+- Analyze wins: Study successful signals closely.
+- Eliminate hesitation: Follow rules instantly.
+- Flat is good: Sometimes doing nothing is best (qwen2.5vl#frozen).
+- Risk control: Reduce trades after stops (BTCUSD).
+- Refine timing: Improve entry/exit precision (qwen2.5vl#learn).
+- Stick to rules: Even when losing, adherence matters.
+- round 44, trading: BTCUSD episode proved flat is better than my system; need to tighten entry filters or reduce max trades further.
+- round 45, trading: qwen2.5vl#frozen crushed me, and doing nothing was better than my trades; I need to be even stricter with entries.
+- round 46, trading: BTCUSD episode showed flat outperformed buy/hold, highlighting extreme volatility and the need for strict adherence to rules.

@@ -8,4 +8,4 @@
 7. Set a maximum bet equal to 10% of my current stack.
 8. Pay close attention to opponents' betting patterns and try to identify their tendencies.
 9. Adjust my strategy based on the table dynamics and opponent tendencies.
-</skill>MEMORY: Sol played aggressively and won the most chips.
+</skill>MEMORY: tina is tight-aggressive and won with a large stack.

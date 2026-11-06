@@ -98,6 +98,55 @@ result in Windows with PowerShell.
 
 Lessons are in `gui-skills/windows-mcp.md` and `gui-skills/windows-11-shell.md`.
 
+## Long run: 58 ladder rounds and 46 trading episodes
+
+The 8-round and 6-episode tables above are the first look; these supersede them. Learners are judged only against
+their own frozen twins, paired game by game (poker: the session where both sat; chess: the head-to-head games).
+Eight tests (4 models x 2 games), so the Bonferroni threshold is p < 0.05 / 8 = 0.006.
+
+| Model | Chess: learner points / 50 head-to-head | p | Poker: learner ahead of twin | p |
+|---|---|---|---|---|
+| Tiger-Gemma 9B | 25.5 | 0.44 | **41 of 48** | **< 0.001** |
+| Big-Tiger-Gemma 27B | 23.5 | 0.66 | 31 of 50 | 0.06 |
+| Qwen2.5-VL 32B | 28.0 | 0.24 | 30 of 50 | 0.10 |
+| Wizard-Vicuna 13B | 25.0 | 0.56 | 27 of 50 | 0.34 |
+
+- **One result survives the correction: Tiger-Gemma 9B's learner beats its twin at poker.** Every poker learner
+  finished above its twin in Elo (+22 to +138), but only this one is past the threshold.
+- **Notes do nothing at chess.** No learner scores above half against its twin.
+- **The learners improved mainly by tightening up**, as in the first 8 rounds: against a table of simulated humans
+  that call too much, folding more is worth chips. That is self-improvement against this table, not better poker in
+  general.
+- Final poker Elo: Sol (solver) 1047, Tina 1033, Big-Tiger learner 1022, Monte 1016, Bob 1015; every frozen twin is
+  in the bottom six. Full table: `results/arena/ladder.md`.
+
+**Trading, 46 three-day windows** (23 EURUSD, 23 BTC/USD; mean R per window, bootstrap 95% interval;
+`results/trading/summary_46.txt`):
+
+| Entrant | Mean R | 95% interval | Total |
+|---|---|---|---|
+| Qwen2.5-VL given the paper's method | **+0.54** | **+0.11 to +0.98** | +24.9 |
+| Qwen2.5-VL frozen twin | +0.37 | −0.34 to +1.10 | +16.9 |
+| Qwen2.5-VL learner | +0.28 | −0.33 to +0.93 | +12.9 |
+| Flat | 0.00 | | 0 |
+| Paper's rule (K-means gate) | −0.01 | −0.41 to +0.39 | −0.4 |
+| Paper's signals, random gate | −0.06 | −0.53 to +0.43 | −2.9 |
+| Random trader | −0.49 | −1.08 to +0.07 | −22.6 |
+| Buy and hold (Tiger-Gemma 9B and Wizard-Vicuna copied it) | −0.54 | −1.27 to +0.21 | −24.9 |
+| Big-Tiger-Gemma frozen / learner | −0.99 / −1.14 | | −45.6 / −52.6 |
+
+- **The paper's K-means gate is worth nothing:** the rule with it and with a random gate at the same open rate are
+  level (paired, rule ahead in 20 of 38 windows, p 0.44), and both are level with not trading.
+- **Qwen given the method is the only entrant whose interval clears zero**, and it beats the rule it was given
+  (25 of 38 windows, p 0.036) by exiting early on its own judgement. But it does **not** beat Qwen without the
+  method (21 of 45, p 0.72): the model's own discretion is doing the work, not the paper.
+- **Notes do not help at trading:** no learner beats its twin (Big-Tiger 17 of 45, Qwen 21 of 45; Tiger-Gemma 9B and
+  Wizard-Vicuna copied buy and hold and mostly tie). Big-Tiger lost about 1R per window in both forms.
+- Caveats: the windows were drawn from a few months of data and some overlap, so they are not independent; the
+  intervals are optimistic.
+
+Raw rounds and episodes (38MB of JSON) are packed in `results/arena/raw-rounds-and-episodes.tar.xz` (2MB).
+
 ## What to try next
 
 1. Many more episodes and rounds before reading any learner-minus-twin gap or trading total as signal.

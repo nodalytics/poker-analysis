@@ -1,6 +1,10 @@
-- round 1, trading: qwen2.5vl#paper demonstrated significant skill in entry selection, delivering a +2.04R return, which significantly outperformed other strategies.
-- round 2, trading: paper_rule demonstrated significant profitability in this episode, suggesting it may be a reliable entrant for future trades with similar market conditions.
-- round 3, trading: Avoid random_trader and focus on entrants with consistent positive returns like paper_rule.
-- round 4, trading: qwen2.5vl#frozen demonstrated exceptional performance with a +3.78R return, making it a priority entrant for future trades.
-- round 5, trading: Tiger-Gemma-9B-v3#learn demonstrated exceptional performance with a +5.74R return, highlighting its effectiveness in capturing profitable opportunities.
-- round 6, trading: qwen2.5vl#frozen demonstrated exceptional performance in the last match, outperforming other entrants significantly (+1.38R), indicating its potential as a reliable strategy for future trades.
+Here’s a concise list of the key lessons that still matter, focusing on the most relevant insights:
+
+- **Focus on qwen2.5vl#frozen**: Consistently high returns make it a reliable choice for future trades.
+- **Prioritize qwen2.5vl#learn**: Exceptional performance indicates strong potential for capturing profitable opportunities.
+- **Avoid random_trader**: Inconsistent performance and recent losses make it unreliable.
+- **Monitor Tiger-Gemma-9B-v3#learn**: Exceptional performance suggests potential for future success.
+- **Select top-performing entrants**: Avoid trades with underperforming entrants to improve overall returns.
+- **Round 24**: Avoid trades with negative expected returns and focus on entrants with positive performance history.
+- **Round 34**: Avoid random_trader's signals.
+- **Round 37**: Focus on qwen2.5vl#frozen's signals (+0.48R) and avoid random_trader's underperformance.

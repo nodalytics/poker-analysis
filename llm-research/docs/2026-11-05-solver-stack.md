@@ -18,6 +18,23 @@ everywhere else. 30 sessions of 24 hands; one-sided sign test on the session-by-
 
 The first result in these studies to clear its test. Raw: `results/raw/solver_first_summary.json`.
 
+**Short stacks (5-20 big blinds, every hand dealt fresh): the first run did not test the solver.**
+`results/solverfirst_short_v1/`: Big-Tiger and Tiger-Gemma 9B solver-first ahead in 21 of 30 sessions (p 0.021
+each), Qwen 11 of 30 (p 0.95). But the advice carried no push/fold chart, only Monte Carlo equity against every
+player not yet folded, which preflop at a 9-seat table is 8 random hands, so almost every hand read as a fold.
+Advised players folded 80-93% of unopened pots (unadvised 40-80%), and **no player in either flow ever shoved
+preflop**. The Tigers gained because folding beats their unadvised limp-calling (Tiger-Gemma 9B called 48% of
+unopened pots); Qwen's unadvised play was already better than folding. Two fixes, then a rerun
+(`results/solverfirst_short/`, running):
+
+- When the pot is unopened and the player has 20 big blinds or less, the advice is the push/fold equilibrium's
+  answer for that hand. With k players behind, the chart for the first seat of a (k+1)-handed table is used, capped
+  at 6-handed (slightly loose for earlier seats at 9).
+- Preflop equity is computed only against opponents with chips in the pot (the blinds and any raiser), not every
+  player still to act.
+
+The 100bb test is rerunning with both fixes and the flop model (`results/solverfirst_flop/`).
+
 ## Layers
 
 | Street | What answers it | Speed |
@@ -25,7 +42,7 @@ The first result in these studies to clear its test. Raw: `results/raw/solver_fi
 | Preflop, heads-up | Push/fold equilibrium, 1-25 big blinds (`push_fold_nash`) | instant (precomputed) |
 | Preflop, 3-6 players | Multi-way push/fold equilibrium, every position, with or without antes | instant (precomputed) |
 | Any street, any number of players | Multi-way Monte Carlo equity with ranges and dead cards (`equity_multiway`) | ~1M run-outs in 10 s on the lab |
-| Flop | Flop-strategy network trained on the solver library | 0.7 ms per hand |
+| Flop (heads-up, first decision each) | Flop-strategy MLP trained on the solver library | ~40 ms per call |
 | Turn, river (heads-up) | Live TexasSolver solve | ~8 s |
 
 **Preflop, heads-up** (`scripts/poker_math.py nash`): fictitious play over all 169 hand classes on a 169x169 equity
@@ -41,8 +58,20 @@ reproduces the heads-up solution (58% / 37%); more players behind tighten the fi
 **Real-time flops**: a reduced live flop solve takes 80 s at 16% exploitability, a decent one 2.4 minutes: too slow.
 So flops come from a network (`scripts/ml_flop.py`) trained on the **solver library** (`scripts/solver_library.py`):
 the 1,755 distinct flops sampled across textures x 2 stack depths x 2 range pairs, solved at <=1.3% exploitability,
-~47 s each. First model on 3 flops (1 held out): 75% top-action agreement with the solver vs 60% for the
-average-strategy baseline. A small sample; it retrains on the full 400 solves.
+~47 s each. Trained on 400 solves (100 flops x 4 spots, 602,822 hand-decisions), tested on 25 flops it never saw:
+
+| Model | Mean abs. error | Top action agrees with the solver | Size |
+|---|---|---|---|
+| Average-strategy baseline | 0.177 | 62.7% | |
+| Extra trees | **0.094** | **82.5%** | 2.6GB |
+| Random forest | 0.095 | 81.7% | 2.0GB |
+| Ensembles (trees; all) | 0.097; 0.096 | 82.2%; 82.3% | |
+| MLP | 0.100 | 81.4% | **325KB** |
+| Gradient boosting | 0.106 | 80.7% | 4MB |
+
+Hardest point: in position facing a bet (77% agreement at best). The advice uses the MLP: within 0.006 error of
+the best model at 1/8000th of the size (`mlflop/mlp.joblib`, `poker_agents.flop_model_strategy`), heads-up, at each
+player's first flop decision.
 
 ## Hand histories
 
@@ -57,6 +86,24 @@ e47fbd581637). No poker site is scraped.
 
 These are the human baselines for the pattern scanner, and per-decision rows (`*.decisions.jsonl.gz`) are training
 data for the learning layer next to the solver library.
+
+## Backtest on Pluribus's decisions: cannot measure the advice
+
+`scripts/backtest_hh.py`, 300 spots sampled from Pluribus's 10,000 hands; each flow sees what Pluribus saw. Rerun
+after two fixes (advice equity only against opponents in the pot; a fold when checking is free counts as a check).
+`results/backtest/summary_v2.json`, `spots_v2.jsonl`.
+
+| Flow | Matches Pluribus's action | Chips vs Pluribus per spot (95% interval) |
+|---|---|---|
+| Qwen2.5-VL plain / advised | 58% / **66%** | −13 (−53, +25) / −32 (−88, +6) |
+| Big-Tiger 27B plain / advised | 69% / **71%** | −31 (−97, +22) / −35 (−88, +4) |
+| Tiger-Gemma 9B plain / advised | 39% / **62%** | −33 (−67, −7) / −11 (−46, +13) |
+| Always call / fold to any bet | 25% / 67% | −44 / −47 |
+
+- **Advice moves every model toward Pluribus's choices** (+8, +2, +23 points).
+- **The chip score cannot tell the flows apart:** the intervals overlap, a handful of big pots decide it (one turn
+  fold cost Qwen 5,686), and it scores calls against the cards the opponents really held, so a correct river
+  bluff-catch that loses counts as 0% equity. Treat agreement as the result and the chip score as a footnote.
 
 ## Tournaments: ten is too few to rank anyone
 
@@ -79,12 +126,15 @@ intervals on mean prize in `results/tournaments/ci.json`.
 - An earlier look at 6 of 10 said only advised LLM flows cashed. That did not hold: Qwen plain cashed 3 times to
   advised's 2. Advice did not make a measurable difference here; the paired solver-first test is the evidence for it.
 - No LLM won a tournament. Big-Tiger never cashed in either flow.
+- **The advised flows never got the push/fold chart in these tournaments.** On the lab the charts sat in
+  `llm-research/preflop/`, not `results/preflop/` where `tournament_env.py` looks, so the chart line came back empty
+  and the advice was the flawed preflop equity only. Fixed (the charts are now in both places); the Tina+ test ran
+  on this machine and was not affected.
 - For a ranking, use many more tournaments with bots only (Tina+ vs Tina used 60), and keep LLMs to paired tests.
 
 ## Next
 
-1. Retrain the flop network on the full library, wire it into the advice the LLM gets on the flop, and rerun the
-   solver-first test with it.
+1. Read the two solver-first reruns (100bb with the flop model, short stacks with the chart).
 2. Reinforcement learning: self-play fine-tuning in the PokerKit arena, starting from the networks, against the fixed
    players (Bob, Monte, Sol).
 3. Grow the library beyond 100 flops; parse all 21.6M HandHQ hands.

@@ -2,17 +2,17 @@
 
 | Rank | Entrant | Elo |
 |---|---|---|
-| 1 | qwen2.5vl#paper | 1032 |
-| 2 | Tiger-Gemma-9B-v3#frozen | 1016 |
-| 3 | qwen2.5vl#frozen | 1013 |
-| 4 | Tiger-Gemma-9B-v3#learn | 1012 |
-| 5 | wizard-vicuna-uncensored#learn | 1012 |
-| 6 | wizard-vicuna-uncensored#frozen | 1012 |
-| 7 | buy_hold | 1012 |
-| 8 | qwen2.5vl#learn | 1004 |
-| 9 | flat | 996 |
-| 10 | random_trader | 986 |
-| 11 | paper_random_gate | 985 |
-| 12 | paper_rule | 980 |
-| 13 | Big-Tiger-Gemma-27B-v3#frozen | 972 |
-| 14 | Big-Tiger-Gemma-27B-v3#learn | 967 |
+| 1 | qwen2.5vl#paper | 1113 |
+| 2 | qwen2.5vl#frozen | 1087 |
+| 3 | flat | 1078 |
+| 4 | qwen2.5vl#learn | 1056 |
+| 5 | paper_rule | 1049 |
+| 6 | paper_random_gate | 1006 |
+| 7 | random_trader | 997 |
+| 8 | Tiger-Gemma-9B-v3#frozen | 969 |
+| 9 | Tiger-Gemma-9B-v3#learn | 968 |
+| 10 | wizard-vicuna-uncensored#learn | 958 |
+| 11 | wizard-vicuna-uncensored#frozen | 958 |
+| 12 | buy_hold | 958 |
+| 13 | Big-Tiger-Gemma-27B-v3#frozen | 917 |
+| 14 | Big-Tiger-Gemma-27B-v3#learn | 885 |

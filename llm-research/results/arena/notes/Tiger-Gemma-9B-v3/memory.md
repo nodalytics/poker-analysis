@@ -1,5 +1,11 @@
-- round 1, chess: Tiger-Gemma-9B-v3#frozen prefers to control the center of the board with its pawns.
-- round 2, poker: Tiger-Gemma-9B-v3#frozen is a strong player, so be cautious when facing them.
-- round 3, poker: Bob won with a large stack, suggesting he may have a strong hand or be aggressive.
-- round 4, poker: sol played aggressively and won the most chips, so I should be cautious when facing them.
-- round 5, poker: Bob played aggressively and won with strong hands, indicating he might be a skilled player.
+- Tiger-Gemma-9B-v3#frozen controls the center in chess and is strong in poker.
+- Be cautious when facing Bob and Sol in poker as they are aggressive and skilled.
+- Monte is aggressive and has a strong understanding of poker strategy.
+- Tina is tight-aggressive and won with 630 chips in poker.
+- qwen2.5vl-tools#toolkit and qwen2.5vl#learn are aggressive and skilled in poker.
+- Bob is aggressive and won multiple matches in poker, indicating strong play.
+- carl is a calling station and can be exploited by playing aggressively against him.
+- round 36, chess: Tiger-Gemma-9B-v3#frozen prefers an aggressive style with rapid piece development.
+- round 48, poker: sol is aggressive and won most hands.
+- round 55, poker: sol is aggressive and won most hands.
+- round 56, poker: Nora played aggressively and won the most chips, so I should try to exploit her tendencies.
