@@ -1,0 +1,143 @@
+{
+ "game": "leduc_poker",
+ "units": "milli-chips per hand (ante 1 chip); 0 = unbeatable",
+ "infosets": 936,
+ "methods": {
+  "random": {
+   "exploitability": 2373.6,
+   "seconds": 0.2
+  },
+  "AlphaGo search (PIMC)": {
+   "exploitability": 2018.3,
+   "seconds": 5.1,
+   "note": "20 sampled worlds x 200 simulations"
+  },
+  "AlphaGo search (IS-MCTS)": {
+   "exploitability": 808.8,
+   "seconds": 52.9,
+   "note": "4000 simulations per decision"
+  },
+  "self-play RL (Q-learning)": {
+   "episodes": 1000000,
+   "exploitability": 891.7,
+   "seconds": 71.0
+  },
+  "fictitious self-play": {
+   "iterations": 300,
+   "exploitability": 133.3
+  },
+  "CFR+": {
+   "iterations": 1000,
+   "exploitability": 0.3
+  },
+  "MCCFR (sampled self-play)": {
+   "games": 1000000,
+   "exploitability": 140.4,
+   "seconds": 109.5
+  },
+  "AlphaPoker v0 (network (16,))": {
+   "exploitability": 1785.0,
+   "seconds": 0.1,
+   "parameters": 547,
+   "teacher_exploitability": 140.4
+  },
+  "AlphaPoker v0 (network (64,))": {
+   "exploitability": 709.6,
+   "seconds": 0.1,
+   "parameters": 2179,
+   "teacher_exploitability": 140.4
+  },
+  "AlphaPoker v0 (network (128, 64))": {
+   "exploitability": 351.7,
+   "seconds": 0.1,
+   "parameters": 12419,
+   "teacher_exploitability": 140.4
+  },
+  "AlphaPoker v0 + AlphaGo search (PUCT, net prior)": {
+   "exploitability": 527.3,
+   "seconds": 51.9,
+   "note": "4000 simulations per decision"
+  }
+ },
+ "curves": {
+  "self-play RL (Q-learning)": [
+   {
+    "episodes": 10000,
+    "exploitability": 2287.5,
+    "seconds": 1.0
+   },
+   {
+    "episodes": 100000,
+    "exploitability": 1904.2,
+    "seconds": 7.4
+   },
+   {
+    "episodes": 1000000,
+    "exploitability": 891.7,
+    "seconds": 71.0
+   }
+  ],
+  "fictitious self-play": [
+   {
+    "iterations": 10,
+    "exploitability": 1173.8
+   },
+   {
+    "iterations": 30,
+    "exploitability": 543.9
+   },
+   {
+    "iterations": 100,
+    "exploitability": 250.1
+   },
+   {
+    "iterations": 300,
+    "exploitability": 133.3
+   }
+  ],
+  "CFR+": [
+   {
+    "iterations": 10,
+    "exploitability": 610.4
+   },
+   {
+    "iterations": 30,
+    "exploitability": 81.8
+   },
+   {
+    "iterations": 100,
+    "exploitability": 13.4
+   },
+   {
+    "iterations": 300,
+    "exploitability": 2.3
+   },
+   {
+    "iterations": 1000,
+    "exploitability": 0.3
+   }
+  ],
+  "MCCFR (sampled self-play)": [
+   {
+    "games": 1000,
+    "exploitability": 2064.8,
+    "seconds": 0.2
+   },
+   {
+    "games": 10000,
+    "exploitability": 1144.6,
+    "seconds": 1.3
+   },
+   {
+    "games": 100000,
+    "exploitability": 497.6,
+    "seconds": 12.0
+   },
+   {
+    "games": 1000000,
+    "exploitability": 140.4,
+    "seconds": 109.5
+   }
+  ]
+ }
+}

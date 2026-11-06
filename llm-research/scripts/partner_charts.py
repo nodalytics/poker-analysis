@@ -279,7 +279,40 @@ def ladder():
     )
 
 
+def alphapoker():
+    r = json.load(open(os.path.join(HERE, "results/alphapoker/report.json")))["methods"]
+    show = [
+        ("Random play", "random", GREY),
+        ("AlphaGo search, guessing the cards (PIMC)", "AlphaGo search (PIMC)", GREY),
+        ("AlphaGo search over information sets", "AlphaGo search (IS-MCTS)", GREY),
+        ("Self-play RL, no averaging (Q-learning)", "self-play RL (Q-learning)", GREY),
+        ("AlphaPoker v0: network 64 units", "AlphaPoker v0 (network (64,))", ORANGE),
+        ("AlphaPoker v0: network + AlphaGo search", "AlphaPoker v0 + AlphaGo search (PUCT, net prior)", ORANGE),
+        ("AlphaPoker v0: network 128+64 units", "AlphaPoker v0 (network (128, 64))", ORANGE),
+        ("Sampled self-play that averages (MCCFR)", "MCCFR (sampled self-play)", BLUE),
+        ("Fictitious self-play", "fictitious self-play", BLUE),
+        ("CFR+ (the solver method)", "CFR+", BLUE),
+    ]
+    fig, ax = plt.subplots(figsize=(11, 5.2))
+    for i, (label, key, col) in enumerate(reversed(show)):
+        v = r[key]["exploitability"]
+        ax.barh(i, v, 0.6, color=col)
+        ax.text(v * 1.12, i, f"{v:,.1f}" if v < 10 else f"{v:,.0f}", va="center", fontsize=10)
+    ax.set_xscale("log")
+    ax.set_xlim(0.1, 8000)
+    ax.set_yticks(range(len(show)), [x[0] for x in reversed(show)])
+    ax.set_xlabel("exploitability: milli-chips a perfect opponent wins per hand (log scale; lower is better)")
+    ax.grid(axis="y", visible=False)
+    ax.set_title("AlphaPoker on Leduc poker: search alone fails, averaging self-play converges")
+    save(
+        fig,
+        "10-alphapoker.png",
+        "Grey: AlphaGo/AlphaZero ingredients as they are. Orange: our network versions. Blue: "
+        "self-play that averages (the Libratus/Pluribus family). Source: results/alphapoker/report.json",
+    )
+
+
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
-    for f in (push_fold, solver_speed, flop_model, advice_tests, obedience, tina_plus, trading, ladder):
+    for f in (push_fold, solver_speed, flop_model, advice_tests, obedience, tina_plus, trading, ladder, alphapoker):
         f()
