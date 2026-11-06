@@ -1,0 +1,45 @@
+{
+ "C_docs_qa": {
+  "chunks": 62,
+  "retrieval_hit": {
+   "nomic-embed-text": "10/12",
+   "mxbai-embed-large": "11/12",
+   "bge-m3": "11/12"
+  },
+  "answer_correct": {
+   "qwen2.5vl:32b | alone": "0/12",
+   "qwen2.5vl:32b | RAG (mxbai-embed-large)": "11/12",
+   "Tiger-Gemma-9B-v3-GGUF:Q4_K_M | alone": "0/12",
+   "Tiger-Gemma-9B-v3-GGUF:Q4_K_M | RAG (mxbai-embed-large)": "11/12"
+  },
+  "best_embedding": "mxbai-embed-large"
+ },
+ "A_spot_retrieval": {
+  "store": 6000,
+  "queries": 600,
+  "retrieval": {
+   "decision-point average (random retrieval)": 0.615,
+   "5-NN on hand-made features": 0.745,
+   "5-NN on nomic-embed-text embeddings": 0.6767,
+   "5-NN on mxbai-embed-large embeddings": 0.635,
+   "5-NN on bge-m3 embeddings": 0.6533
+  },
+  "embed_seconds": {
+   "nomic-embed-text": 36.2,
+   "mxbai-embed-large": 42.1,
+   "bge-m3": 47.3
+  },
+  "best_embedding": "nomic-embed-text"
+ },
+ "B_llm_with_rag": {
+  "queries": 120,
+  "agreement_with_solver_top_action": {
+   "qwen2.5vl:32b | alone": 0.2917,
+   "qwen2.5vl:32b | RAG (nomic-embed-text)": 0.275,
+   "qwen2.5vl:32b | RAG (features)": 0.3083,
+   "Tiger-Gemma-9B-v3-GGUF:Q4_K_M | alone": 0.375,
+   "Tiger-Gemma-9B-v3-GGUF:Q4_K_M | RAG (nomic-embed-text)": 0.3667,
+   "Tiger-Gemma-9B-v3-GGUF:Q4_K_M | RAG (features)": 0.4333
+  }
+ }
+}

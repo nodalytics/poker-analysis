@@ -172,7 +172,7 @@ def network(teacher, hidden=(64,), seed=0):
     sets = infosets()
     X = np.array([s.information_state_tensor() for s in sets.values()])
     Y = np.array([[teacher.action_probabilities(s).get(a, 0.0) for a in range(NA)] for s in sets.values()])
-    net = MLPRegressor(hidden, max_iter=3000, random_state=seed).fit(X, Y)
+    net = MLPRegressor(hidden_layer_sizes=hidden, max_iter=3000, random_state=seed).fit(X, Y)
 
     def fn(s):
         p = net.predict([s.information_state_tensor()])[0]
