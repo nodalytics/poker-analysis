@@ -24,4 +24,4 @@ committed results; every chart names its source.
 | 07 | [Trading arena](07-trading.png) | The paper's regime gate adds nothing after costs; the model's own judgement does |
 | 08 | [Self-learning ladder](08-self-learning-ladder.png) | Models that rewrite their own skill notes: one clear learner after 58 rounds |
 
-Still running: the solver-acts-itself test at 100bb and at 5-20bb (30 sessions each); results follow.
+Latest, the solver deciding itself: short stacks ahead in 56 of 88 sessions (p 0.007), the same gain as advice; 100bb ahead in 47 of 82 (p 0.11), where every pre-flop decision is still the model's.
