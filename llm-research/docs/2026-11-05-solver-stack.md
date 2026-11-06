@@ -69,6 +69,13 @@ the solver decides. Results: `results/solverplays/`, `results/solverplays_short/
   junk the solver folds that the plain Tigers limp with.
 - **Qwen gains nothing either way:** its own short-stack play is already about as good as the chart here.
 
+**100bb, solver acting (`results/solverplays/`, 30 sessions):** Tiger-Gemma 9B +44.3 chips a session (t 1.15),
+Big-Tiger +26.1 (t 0.98), Qwen −1.7 (t −0.05); pooled ahead in 47 of 82 sessions (p 0.11), +22.9 (t 1.17). Not
+significant, and below the advice-with-flop-model run (pooled 55 of 88, p 0.012). At 100bb the solver covers only
+heads-up flops (150 decisions), turns and rivers (265); **every pre-flop decision is still the model's**, and
+100bb pots are large and noisy. The missing piece is a deep-stack pre-flop strategy (open, 3-bet and call ranges by
+position), the analogue of the push/fold chart.
+
 ## Layers
 
 | Street | What answers it | Speed |

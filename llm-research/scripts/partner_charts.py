@@ -151,12 +151,14 @@ def advice_tests():
     runs = [
         ("100bb\nfirst run", (23 / 30, 22 / 29, 21 / 30)),
         ("100bb\n+ flop model", (19 / 30, 20 / 28, 16 / 30)),
+        ("100bb\nsolver decides", (16 / 29, 16 / 23, 15 / 30)),
         ("Short stacks\nno chart (invalid)", (11 / 30, 21 / 30, 21 / 30)),
         ("Short stacks\n+ push/fold chart", (13 / 30, 21 / 30, 21 / 30)),
+        ("Short stacks\nsolver decides", (17 / 30, 20 / 30, 19 / 28)),
     ]
-    fig, ax = plt.subplots(figsize=(11, 4.8))
+    fig, ax = plt.subplots(figsize=(12.5, 4.8))
     ax.axhline(50, color=INK2, lw=1, ls="--")
-    ax.text(3.45, 51, "coin flip", fontsize=9, color=INK2, ha="right")
+    ax.text(len(runs) - 0.55, 51, "coin flip", fontsize=9, color=INK2, ha="right")
     for k, (name, col) in enumerate(MODELS):
         xs = [i + (k - 1) * 0.16 for i in range(len(runs))]
         ys = [r[1][k] * 100 for r in runs]
@@ -166,7 +168,7 @@ def advice_tests():
     ax.set_ylabel("sessions where the advised copy\nbeat the plain copy (%)")
     ax.grid(axis="x", visible=False)
     ax.legend(frameon=False, ncol=3, loc="upper right")
-    ax.set_title("Solver advice to the LLM: helps sometimes, but the models often ignore it")
+    ax.set_title("Solver with the LLM: real gains on short stacks (pooled p 0.007), not yet at 100bb")
     save(
         fig,
         "04-advice-tests.png",
