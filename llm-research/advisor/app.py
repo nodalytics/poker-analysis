@@ -1,4 +1,4 @@
-"""Poker Advisor desktop app: session review, trainer, and spot study (next).
+"""Poker Advisor desktop app: session review, trainer, spot study and hand sync.
 
 Run: python -m advisor.app     (Windows, macOS or Linux; Tkinter ships with Python)
 Session review reads finished hands from hand-history files and writes an HTML report that opens in the browser.
@@ -37,9 +37,12 @@ class App(tk.Tk):
         from advisor.trainer_ui import TrainerTab
 
         nb.add(TrainerTab(nb), text="Trainer")
-        f = ttk.Frame(nb, padding=16)
-        ttk.Label(f, text="Spot study: coming next.").pack(anchor="w")
-        nb.add(f, text="Spot study")
+        from advisor.spot_ui import SpotTab
+
+        nb.add(SpotTab(nb), text="Spot study")
+        from advisor.sync_ui import SyncTab
+
+        nb.add(SyncTab(nb), text="Hand Sync")
 
     def review_tab(self, nb):
         f = ttk.Frame(nb, padding=16)
@@ -49,7 +52,7 @@ class App(tk.Tk):
         found = [p for _, p in COMMON if os.path.isdir(p)]
         self.folder = tk.StringVar(value=found[0] if found else "")
         ttk.Entry(f, textvariable=self.folder).grid(row=0, column=1, sticky="ew", padx=6)
-        ttk.Button(f, text="Folder…", command=self.pick).grid(row=0, column=2)
+        ttk.Button(f, text="Folder...", command=self.pick).grid(row=0, column=2)
         ttk.Label(f, text="Your screen name").grid(row=1, column=0, sticky="w", pady=(8, 0))
         self.hero = tk.StringVar()
         ttk.Entry(f, textvariable=self.hero).grid(row=1, column=1, sticky="ew", padx=6, pady=(8, 0))
@@ -88,7 +91,7 @@ class App(tk.Tk):
             return
         self.go.state(["disabled"])
         self.bar["value"] = 0
-        self.say(f"Reviewing {folder} …")
+        self.say(f"Reviewing {folder} ...")
         threading.Thread(target=self.work, args=(folder,), daemon=True).start()
 
     def progress(self, k, n):
