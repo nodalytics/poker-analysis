@@ -183,6 +183,17 @@ def advise(state, i, ctx, use_solver=True):
                 "detail": detail,
                 "why": f"solved live; ranges: {adv['assumed_ranges']}",
             }
+    sized = pa.sized_flop_strategy(state, i, ctx)
+    if sized.get("available"):
+        s = sized["strategy"]
+        raise_keys = [k for k in s if k not in ("check/call", "fold")]
+        faced = f", facing {sized['bet_faced']:.0%} pot" if sized["bet_faced"] else ""
+        return {
+            "source": "flop model (bet sizes)",
+            "mix": _mix(s.get("fold", 0), s.get("check/call", 0), sum(s[k] for k in raise_keys)),
+            "detail": {k: s[k] for k in raise_keys if s[k] > 0.005},
+            "why": f"predicts the solver's flop play ({sized['node'].replace('_', ' ')}{faced})",
+        }
     flop = pa.flop_model_strategy(state, i, ctx)
     if flop.get("available"):
         s = flop["strategy"]

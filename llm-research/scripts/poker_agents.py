@@ -69,6 +69,23 @@ FLOP_MODEL = os.environ.get(
     "FLOP_MODEL", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "mlflop", "mlp.joblib")
 )
 _FLOP = {}
+# the bet-size-aware flop model (ml_flop_sized.py); used when present, the 66%-only model otherwise
+FLOP_MODEL_SIZED = os.environ.get(
+    "FLOP_MODEL_SIZED",
+    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "mlflop_sized", "mlp.joblib"),
+)
+_FLOP_SIZED = {}
+SIZED_SLOTS = [
+    "check/call",
+    "bet 33% pot",
+    "bet 66% pot",
+    "bet 100% pot",
+    "bet 150% pot",
+    "raise pot",
+    "all-in",
+    "fold",
+]
+SIZED_FRACS = {"bet 33% pot": 0.33, "bet 66% pot": 0.66, "bet 100% pot": 1.0, "bet 150% pot": 1.5}
 
 
 def _cards(cs):
@@ -271,6 +288,78 @@ def solver_strategy(state, i, ctx):
     }
 
 
+def sized_flop_strategy(state, i, ctx):
+    """The bet-size-aware flop model's strategy (heads-up flop, first decision of each player, or facing one bet of
+    any size), or {"available": False}."""
+    board_cards = list(state.get_board_cards(0)) if state.board_count else []
+    live = [j for j, s in enumerate(state.statuses) if s]
+    if len(board_cards) != 3 or len(live) != 2:
+        return {"available": False}
+    if "model" not in _FLOP_SIZED:
+        try:
+            from joblib import load
+
+            _FLOP_SIZED["model"] = load(FLOP_MODEL_SIZED) if os.path.exists(FLOP_MODEL_SIZED) else None
+        except (OSError, ImportError):
+            _FLOP_SIZED["model"] = None
+    model = _FLOP_SIZED["model"]
+    if model is None:
+        return {"available": False}
+    acts = [k for k, _ in ctx["street_actions"] if k != "fold"]
+    oop = i == min(live)
+    to_call = state.checking_or_calling_amount
+    pot = state.total_pot_amount
+    bet = to_call / max(pot - to_call, 1)
+    if oop and not acts:
+        node, bet = "oop_open", 0.0
+    elif not oop and acts == ["check"]:
+        node, bet = "ip_after_check", 0.0
+    elif not oop and acts == ["raise"]:
+        node = "ip_facing_bet"
+    elif oop and acts == ["check", "raise"]:
+        node = "oop_facing_bet"
+    else:
+        return {"available": False}
+    if bet > 2.0:  # bigger than anything in the training solves: leave it to overbet_defence
+        return {"available": False}
+    import ml_flop_sized
+
+    behind = min(state.stacks[j] for j in live) + min(state.bets[j] for j in live)
+    spot = "spr9.5_wide" if behind / max(1, ctx["street_pot"]) > 7 else "spr4.5_wide"
+    hole = "".join(repr(c) for c in state.hole_cards[i])
+    x = ml_flop_sized.feats([repr(c) for c in board_cards], hole, node, spot, bet)
+    p = [max(0.0, float(v)) for v in model.predict([x])[0]]
+    if not to_call:
+        p[0], p[7] = p[0] + p[7], 0.0  # never fold when checking is free
+        p[5] = 0.0
+    else:
+        p[1:5] = [0.0] * 4  # facing a bet: call, raise, all-in or fold
+    s = sum(p) or 1.0
+    return {
+        "available": True,
+        "node": node,
+        "bet_faced": round(bet, 2),
+        "strategy": {n: v / s for n, v in zip(SIZED_SLOTS, p)},
+    }
+
+
+def sized_action(state, i, pick):
+    """Turn a sized-model action name into a reply."""
+    to_call, pot = state.checking_or_calling_amount, state.total_pot_amount
+    passive = _reply("call" if to_call else "check")
+    can_raise = state.can_complete_bet_or_raise_to()
+    if pick == "fold":
+        return _reply("fold") if to_call else passive
+    if pick == "check/call" or not can_raise:
+        return passive
+    lo, hi = state.min_completion_betting_or_raising_to_amount, state.max_completion_betting_or_raising_to_amount
+    if pick == "all-in":
+        return _reply("raise", hi)
+    if pick == "raise pot":
+        return _reply("raise", max(lo, min(hi, state.bets[i] + to_call + (pot + to_call))))
+    return _reply("raise", max(lo, min(hi, state.bets[i] + int(SIZED_FRACS[pick] * pot))))
+
+
 def flop_model_strategy(state, i, ctx):
     """The flop model's prediction of TexasSolver's strategy, heads-up on the flop at the three points it was trained
     on: first to act, in position after a check, and in position facing a bet. Or a reason there is none."""
@@ -417,6 +506,8 @@ def overbet_defence(state, i, ctx, ratio=None):
     pot_before = state.total_pot_amount - to_call
     if to_call < (ratio or OVERBET_RATIO) * max(pot_before, 1):
         return None
+    if len(board) == 3 and to_call <= 2.0 * max(pot_before, 1) and sized_flop_strategy(state, i, ctx).get("available"):
+        return None  # the bet-size-aware flop model was trained on these sizes
     import ranges
 
     if not ranges.available():
@@ -498,6 +589,11 @@ def solver_play(state, i, ctx):
         if kind in ("CHECK", "CALL") or not can_raise:
             return passive
         return _reply("raise", max(lo, min(hi, state.bets[i] + int(float(pick.split()[1])))))
+    sized = sized_flop_strategy(state, i, ctx)
+    if sized.get("available"):
+        stats["flop_model_used"] += 1
+        pick = _RNG.choices(list(sized["strategy"]), weights=list(sized["strategy"].values()))[0]
+        return sized_action(state, i, pick)
     flop = flop_model_strategy(state, i, ctx)
     if flop.get("available"):
         stats["flop_model_used"] += 1
