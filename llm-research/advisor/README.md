@@ -1,0 +1,93 @@
+# Poker Advisor
+
+A desktop tool that puts our solver stack to work on your own game, away from the live table.
+
+| Tab | What it does | Status |
+|---|---|---|
+| **Session review** | Reads your finished hands from hand-history files and grades every decision you made. Lists your costliest mistakes and compares your frequencies with winning ranges | Working |
+| **Trainer** | A table where you play our bots, with a **Hint** button before you act and a verdict after each move | Working |
+| **Spot study** | Type in any situation and see the solver's mix, the opponent's likely range and the chart answer | Next |
+
+It never reads the screen, watches a table or advises during a hand. Real-money sites ban real-time assistance,
+and it would cheat the other players. It works on finished hands, the practice table, or a spot you type in
+between sessions.
+
+## Run it
+
+```
+cd llm-research
+uv run python -m advisor.app             # the window (Windows, macOS, Linux; Tkinter ships with Python)
+uv run python -m advisor.review FOLDER   # session review from the command line -> session_review.html
+uv run --with pytest python -m pytest advisor/tests
+```
+
+Reports are saved to `~/PokerReview/` and open in your browser. A one-file Windows `.exe` can be built with
+PyInstaller; this is not done yet.
+
+## Hand histories it reads
+
+| Site | Where the files are | Notes |
+|---|---|---|
+| ACR / Winning Poker Network | `C:\ACR Poker\handHistory\<screen name>\` (written automatically) | Pre-filled when the folder exists |
+| PokerStars | `%LOCALAPPDATA%\PokerStars\HandHistory\<screen name>\` (written automatically) | Pre-filled when the folder exists |
+| GGPoker | Download from PokerCraft (zip), then unzip | Opponents appear as hashed ids |
+| Ignition / Bovada | Downloaded from the client | Anonymous tables |
+| Winamax | `%APPDATA%\winamax\documents\accounts\<name>\history` | Euro amounts |
+| PHH (open standard) | `.phh` / `.phhs` files | The format of our research datasets |
+
+The parsers were written from each site's documented layout and tested on sample hands
+(`advisor/tests/test_handhistory.py`). **The first real file from each site should be checked**: send one in, and
+fix any quirk with a test. 888, partypoker and iPoker (XML) are not supported yet.
+
+Only no-limit hold'em hands with one small and one big blind are reviewed. Hands with a straddle, a dead blind, or
+lines the replay cannot follow are skipped and counted in the report.
+
+## How the advice is made (`engine.py`)
+
+These are the same layers as the solver bot that beat Slumbot. The first one that covers the spot answers:
+
+1. **Push/fold chart**: an unopened pot at 20 big blinds or less. The equilibrium was computed by us by fictitious
+   play.
+2. **Short-stack defence**: heads-up, 20bb or less, facing a raise. Re-shove the chart's calling range, or call
+   when the price is right.
+3. **Pre-flop strategy**: deeper stacks. Opening ranges by seat, and 3-bets and 4-bets from equity against the
+   opponent's likely range. Separate heads-up ranges.
+4. **TexasSolver**: heads-up turns and rivers, solved live. Only used when a solver binary is configured
+   (`TEXASSOLVER_BIN`) and the box is ticked; it takes a few seconds per spot.
+5. **Flop model**: heads-up flops. A network trained on 400 solver runs that predicts the solver's play in
+   milliseconds (81–83% top-action agreement).
+6. **Monte Carlo equity**: everything else. Heads-up, it computes equity against the range the opponent's betting
+   implies, using hand reading from `scripts/ranges.py` and the model trained on Pluribus's hands. Multi-way, it
+   uses random hands. It ignores later betting, so it can call a move "questionable" but never a "mistake".
+
+Every answer is a **mix** (for example: fold 0%, call 30%, raise 70%) with the source and a reason. A move the
+engine plays at least 35% of the time **agrees**, 10–35% is **questionable**, and under 10% is a **mistake**.
+
+## Files
+
+| File | Purpose |
+|---|---|
+| `engine.py` | `advise(state, i, ctx)`, and `Table`: builds and replays a hand in PokerKit, keeps the context the advisors need, and deals the board in live play |
+| `handhistory.py` | Parsers: the PokerStars family (Stars, GG, ACR, Ignition, Bovada, Winamax) and PHH |
+| `review.py` | Grades decisions, computes frequencies and behavioural patterns, writes the HTML report |
+| `trainer.py` | Game logic for the practice table and the bots |
+| `trainer_ui.py`, `app.py` | The window |
+| `tests/` | One sample hand per site layout; the trainer plays whole hands against every bot |
+
+The engine imports from `../scripts/` (`poker_agents`, `preflop_deep`, `ranges`, `poker_selfplay`). It loads the
+committed models `mlflop/mlp.joblib`, `range_inference/action_model.joblib`, the push/fold charts in
+`results/preflop/`, and optionally `slumbot_range/action_model.joblib`.
+
+## Design notes
+
+**Rust or Go for the advisor?** Not necessary, and not much faster:
+
+- **The slow parts are already compiled code.** TexasSolver is C++ (we already sped it up 3.3×). Hand evaluation
+  (eval7) is C. The models run in C/Fortran (scikit-learn, NumPy). Python only glues them together and parses text,
+  which takes milliseconds per hand.
+- **A rewrite would mean re-implementing everything:** the PokerKit rules engine, the models, hand reading and the
+  charts. That is weeks of work for no visible speed-up in review, the trainer or spot study.
+- **Where Rust could help later is the solver itself.** b-inary's `postflop-solver` is an open-source Rust solver
+  reported to be as fast as or faster than TexasSolver (development appears to have paused). If live turn and river
+  solves become the bottleneck, benchmark it against our build instead of rewriting the app.
+- **Distribution does not need a rewrite:** PyInstaller packages the app as one Windows `.exe`.

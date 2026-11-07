@@ -6,6 +6,8 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from advisor import handhistory, review  # noqa: E402
 
+review.engine.pa.SOLVER = "/nonexistent"  # tests never run the solver
+
 STARS = """PokerStars Hand #245112233445: Hold'em No Limit ($0.01/$0.02 USD) - 2026/11/01 20:15:03 ET
 Table 'Alcor III' 6-max Seat #4 is the button
 Seat 1: villainA ($2.10 in chips)

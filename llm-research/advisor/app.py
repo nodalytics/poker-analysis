@@ -1,4 +1,4 @@
-"""Poker Advisor desktop app: session review (now), trainer and spot study (next).
+"""Poker Advisor desktop app: session review, trainer, and spot study (next).
 
 Run: python -m advisor.app     (Windows, macOS or Linux; Tkinter ships with Python)
 Session review reads finished hands from hand-history files and writes an HTML report that opens in the browser.
@@ -29,15 +29,17 @@ class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Poker Advisor")
-        self.geometry("720x480")
+        self.geometry("980x720")
         self.minsize(560, 400)
         nb = ttk.Notebook(self)
         nb.pack(fill="both", expand=True, padx=10, pady=10)
         self.review_tab(nb)
-        for name in ("Trainer", "Spot study"):
-            f = ttk.Frame(nb, padding=16)
-            ttk.Label(f, text=f"{name}: coming next.").pack(anchor="w")
-            nb.add(f, text=name)
+        from advisor.trainer_ui import TrainerTab
+
+        nb.add(TrainerTab(nb), text="Trainer")
+        f = ttk.Frame(nb, padding=16)
+        ttk.Label(f, text="Spot study: coming next.").pack(anchor="w")
+        nb.add(f, text="Spot study")
 
     def review_tab(self, nb):
         f = ttk.Frame(nb, padding=16)
