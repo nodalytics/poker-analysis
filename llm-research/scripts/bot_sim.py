@@ -20,13 +20,17 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import poker_selfplay as ps  # noqa: E402
 
 HANDS = int(os.environ.get("SIM_HANDS", 24))  # hands per session
+# SIM_STACKS="200,200": deal every hand fresh stacks of 200 big blinds (a cash game at that depth, e.g. the blueprint)
+STACKS = tuple(int(x) for x in os.environ["SIM_STACKS"].split(",")) if os.environ.get("SIM_STACKS") else None
 SEATS = ["solverbot", "sol", "monte", "tina", "tinaplus", "bob", "max", "carl", "nora"]
 
 
 def one(args):
     outdir, k, seats, short = args
     seats = seats[k % len(seats) :] + seats[: k % len(seats)]
-    chips, _ = ps.main(os.path.join(outdir, f"session{k:04d}"), HANDS, seats, short_stack=(5, 20) if short else None)
+    chips, _ = ps.main(
+        os.path.join(outdir, f"session{k:04d}"), HANDS, seats, short_stack=STACKS or ((5, 20) if short else None)
+    )
     return k, chips, dict(ps.pa.stats)
 
 

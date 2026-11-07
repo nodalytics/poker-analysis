@@ -1,0 +1,10 @@
+{
+ "bot": "blueprintbot",
+ "hands": 5000,
+ "bb100": -7.1,
+ "ci95": [
+  -48.7,
+  30.0
+ ],
+ "fallbacks_after_illegal_reply": 0
+}
