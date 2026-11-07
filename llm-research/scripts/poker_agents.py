@@ -426,11 +426,27 @@ def overbet_defence(state, i, ctx, ratio=1.5):
         return None
     price = to_call / (state.total_pot_amount + to_call)
     margin = 0.0 if state.stacks[j] == 0 or state.stacks[i] <= to_call else 0.05
-    act = "call" if eq > price + margin else "fold"
+    # minimum defence frequency: against a bet B into P, defending the top P/(P+B) of our range makes bluffs break
+    # even; equity against a read of an overbet alone was too optimistic (LBR still won +267 bb/100 from calls)
+    mdf = pot_before / max(pot_before + to_call, 1)
+    pct = own_range_percentile(ctx["log"], i, board, hole)
+    act = "call" if eq > price + margin and pct >= 1 - mdf else "fold"
     return {
         "action": act,
-        "why": f"overbet {to_call / max(pot_before, 1):.1f}x pot: equity {eq:.0%} vs price {price:.0%}",
+        "why": f"overbet {to_call / max(pot_before, 1):.1f}x pot: equity {eq:.0%} vs price {price:.0%}; "
+        f"hand in the top {1 - pct:.0%} of our range, defend the top {mdf:.0%}",
     }
+
+
+def own_range_percentile(log, i, board, hole):
+    """Share of our own range (read from our betting) that our hand beats on this board."""
+    import ranges
+
+    w = ranges.weights(log, i, set(board))
+    st = ranges.strengths(board)
+    mine = st.get(ranges.norm("".join(hole)), (0.5, 0, 0))[0]
+    tot = sum(w.values()) or 1.0
+    return sum(x for h, x in w.items() if st.get(h, (0.5, 0, 0))[0] < mine) / tot
 
 
 def preflop_deep_decision(state, i, ctx):

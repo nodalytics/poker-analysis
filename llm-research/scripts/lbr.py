@@ -120,8 +120,17 @@ class Hand:
         w = ranges.weights(ctx["log"], self.lbr, set(board))
         price = to_call / (state.total_pot_amount + to_call)
         margin = 0.0 if state.stacks[self.lbr] == 0 or state.stacks[self.bot] <= to_call else 0.05
+        mdf = pot_before / max(pot_before + to_call, 1)
+        st = ranges.strengths(board)
+        tot = sum(self.reach[h] for h in combos) or 1.0
+        strength = {h: st.get(ranges.norm(h), (0.5, 0, 0))[0] for h in combos}
         out = {}
         for h in combos:
+            # mirrors overbet_defence: top of range by strength (MDF) and equity beats the price
+            pct = sum(self.reach[g] for g in combos if strength[g] < strength[h]) / tot
+            if pct < 1 - mdf:
+                out[h] = [(FOLD, None, 1.0)]
+                continue
             eq = ranges.equity_vs_weights(h, board, w, 150, self.rng)
             ok = eq is not None and eq > price + margin
             out[h] = [(CALL, None, 1.0)] if ok else [(FOLD, None, 1.0)]
