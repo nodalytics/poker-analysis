@@ -1,0 +1,19 @@
+{
+ "test_players": 1181,
+ "generic": {
+  "hands": 34875,
+  "mean_rank": 0.1726,
+  "top10_rate": 0.5261
+ },
+ "tilted_per_player": {
+  "hands": 34875,
+  "mean_rank": 0.1692,
+  "top10_rate": 0.5318
+ },
+ "tilted_per_style_cluster": {
+  "hands": 34875,
+  "mean_rank": 0.1703,
+  "top10_rate": 0.5326
+ },
+ "note": "rank 0 = the true holding is the model's top guess; 0.5 = no information. Same showdown hands for all."
+}
