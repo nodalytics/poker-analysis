@@ -1,0 +1,32 @@
+{
+ "short": true,
+ "hands_per_session": 24,
+ "entrants": {
+  "solverbot": {
+   "sessions": 300,
+   "bb_per_100": -6.4,
+   "ci95": [
+    -19.3,
+    6.6
+   ]
+  },
+  "max": {
+   "sessions": 300,
+   "bb_per_100": 6.4,
+   "ci95": [
+    -6.8,
+    19.4
+   ]
+  }
+ },
+ "solver_calls": {
+  "solver_used": 54948,
+  "solver_failed": 0,
+  "solver_seconds": 42229.34734892845,
+  "toolkit_calls": 0,
+  "flop_model_used": 42053,
+  "push_fold_used": 106305,
+  "preflop_deep_used": 0,
+  "ranges_narrowed": 65992
+ }
+}

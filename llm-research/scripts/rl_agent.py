@@ -120,6 +120,10 @@ def reply(state, i, ctx, name):
     base, _, tag = name.partition("#")
     if not _Q and os.path.exists(Q_PATH):
         load()
+    if not _Q and not os.path.exists(Q_PATH) and EPSILON[0] == 0:
+        # evaluation with no policy file would play an empty table (fold everything) and look like a weak agent;
+        # on 2026-11-07 that silently produced -27 bb/100 in all 36 environments
+        raise RuntimeError(f"RL policy missing at {Q_PATH}; set RL_Q (e.g. ~/llm-research/rl_league_short/q.json)")
     k = key(state, i, ctx)
     ok = legal(state)
     choices = [a for a in range(5) if ok[a]]
