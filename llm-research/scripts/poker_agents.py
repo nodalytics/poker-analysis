@@ -367,6 +367,39 @@ def push_fold_advice(state, i):
     return {"hand": hc, "shove": hc in rng, "stack_bb": round(eff, 1), "chart": f"{table}, {c['stack_bb']}bb"}
 
 
+def short_defence(state, i):
+    """Heads-up, 20 big blinds or less, facing a raise before the flop: the push/fold equilibrium's calling range.
+    Facing an all-in (or a raise of 40%+ of our stack): call with the chart's calling range, else fold. Facing a
+    smaller raise: re-shove the calling range (it is stronger than the raiser's opening range), call when the
+    equity against a wide (80%) opening range, x0.85 (short stacks realise most of their equity: little play is left after the flop), covers the price, else fold.
+    Returns {"action", "amount"?, "why"} or None."""
+    n = len(state.statuses)
+    bb = max(getattr(state, "blinds_or_straddles", (1, 2)))
+    live = [j for j in range(n) if state.statuses[j]]
+    to_call = state.checking_or_calling_amount
+    if list(state.get_board_cards(0)) or len(live) != 2 or not to_call or max(state.bets) <= bb:
+        return None
+    j = next(x for x in live if x != i)
+    eff = min(state.stacks[i] + state.bets[i], state.stacks[j] + state.bets[j]) / bb
+    if eff > 20:
+        return None
+    c = min(_chart("push_fold_nash.json"), key=lambda x: abs(x["stack_bb"] - eff), default=None)
+    if not c:
+        return None
+    hc = hand_class169(state.hole_cards[i])
+    strong = hc in c["call"]
+    can_raise = state.can_complete_bet_or_raise_to()
+    if state.stacks[j] == 0 or to_call >= 0.4 * state.stacks[i] or not can_raise:
+        return {"action": "call" if strong else "fold", "why": f"{hc} vs all-in, {c['stack_bb']}bb calling chart"}
+    if strong:
+        return {"action": "raise", "amount": state.max_completion_betting_or_raising_to_amount, "why": "re-shove"}
+    import preflop_deep
+
+    e = preflop_deep.equity(hc, preflop_deep.top(0.8))
+    need = to_call / (state.total_pot_amount + to_call)
+    return {"action": "call" if e * 0.85 >= need else "fold", "why": f"equity {e:.0%} vs a wide open, price {need:.0%}"}
+
+
 def preflop_deep_decision(state, i, ctx):
     """The deep-stack pre-flop strategy (preflop_deep.py) for this spot, or None."""
     import preflop_deep
@@ -390,6 +423,10 @@ def solver_play(state, i, ctx):
     if pf:
         stats["push_fold_used"] += 1
         return _reply("raise", hi) if pf["shove"] and can_raise else (_reply("fold") if to_call else passive)
+    sd = short_defence(state, i)
+    if sd:
+        stats["push_fold_used"] += 1
+        return _reply(sd["action"], sd.get("amount"))
     deep = preflop_deep_decision(state, i, ctx)
     if deep:
         stats["preflop_deep_used"] += 1
