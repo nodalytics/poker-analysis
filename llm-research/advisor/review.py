@@ -88,7 +88,7 @@ def review_hand(h, hero, use_solver=True):
                     # Monte Carlo ignores later betting, so it can only call a decision questionable, not a mistake
                     "grade": "n/a"
                     if adv["source"] == "error"
-                    else min(grade(pct), "questionable")
+                    else "questionable"
                     if adv["source"] == "Monte Carlo equity" and grade(pct) == "mistake"
                     else grade(pct),
                     "pot_bb": round(s.total_pot_amount / bb, 1),
