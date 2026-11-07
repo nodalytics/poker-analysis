@@ -103,9 +103,12 @@ class Blueprint:
                 return ca if _RNG.random() < pa else cb
         return cands[-1][1]
 
-    def walk(self, state, scale):
-        """(abstract node, real street contributions info) after the hand's actions, or None off the tree."""
+    def walk(self, state, scale, full=False):
+        """(abstract node, real street bets, real pot before this street) after the hand's actions, or None off the
+        tree. full=True adds the history [(node, child index, player, board cards dealt by then)] and this street's
+        actions as [(kind, units added)] for the re-solver."""
         node = 0
+        history, street_acts, board_n = [], [], 0
         n_seats = len(state.statuses)
         if n_seats != 2:
             return None
@@ -121,19 +124,26 @@ class Blueprint:
             elif name == "BetCollection":
                 pot += sum(bets)
                 bets = [0, 0]
+            elif name == "BoardDealing":
+                board_n += len(op.cards)
+                street_acts = []
             elif name in ("Folding", "CheckingOrCalling", "CompletionBettingOrRaisingTo"):
                 if self.nodes[node]["kind"] != 0:
                     return None
                 p = 1 - op.player_index
                 if self.nodes[node]["player"] != p:
                     return None
+                before = node
                 if name == "Folding":
+                    street_acts.append(("fold", 0))
                     node = self.child_by_label(node, "fold")
                 elif name == "CheckingOrCalling":
+                    street_acts.append(("call" if op.amount else "check", op.amount))
                     bets[p] = bets[1 - p]
                     node = self.child_by_label(node, "check", "call")
                 else:
                     to = op.amount * scale
+                    street_acts.append(("raise", int(round((to - bets[p]) / scale))))
                     x = self.frac(to, bets[1 - p], bets[p], pot + sum(bets))
                     bets[p] = to
                     # keyed by the action history so far (not id(state): Python reuses ids of discarded copies, and
@@ -146,7 +156,87 @@ class Blueprint:
                     node = self._mapped[key]
                 if node is None:
                     return None
+                history.append((before, self.nodes[before]["children"].index(node), p, board_n))
+        if full:
+            return node, bets, pot, history, street_acts
         return node, bets, pot
+
+    # ---- re-solving (phase A) ----
+    def reach(self, history, player, board, blocked):
+        """Weight of every holding for `player`: the product of the blueprint's probabilities of that player's actions
+        so far, each read at the holding's bucket on the board dealt by then."""
+        import itertools
+
+        deck = [r + s for r in "23456789TJQKA" for s in "cdhs"]
+        combos = [a + b for a, b in itertools.combinations(deck, 2) if a not in blocked and b not in blocked]
+        w = np.ones(len(combos))
+        for node, child, p, nb in history:
+            if p != player:
+                continue
+            n = self.nodes[node]
+            k = len(n["labels"])
+            bks = np.array([self.bucket([c[:2], c[2:]] + board[:nb]) for c in combos])
+            ok = bks >= 0
+            idx = n["offset"] + np.where(ok, bks, 0)[:, None] * k + np.arange(k)[None, :]
+            s = np.asarray(self.avg[idx.ravel()], dtype=float).reshape(-1, k)
+            tot = s.sum(1)
+            pr = np.where(tot > 0, s[:, child] / np.maximum(tot, 1e-12), 1.0 / k)
+            w *= np.where(ok, pr, 0.0)
+        return dict(zip(combos, w))
+
+    @staticmethod
+    def solver_range(w):
+        top = max(w.values()) if w else 0
+        if top <= 0:
+            return None
+        return ",".join(f"{c}:{x / top:.3f}" for c, x in w.items() if x / top >= 0.001)
+
+    def resolve(self, state, i, scale, extra_opponent_range=None, p_exploit=0.0):
+        """TexasSolver's strategy for player i's hand on the turn or river, solved from the start of the street with
+        both players' blueprint ranges; {"BET 12": 0.3, ...} or None. extra_opponent_range / p_exploit: phase B, a
+        read of the opponent blended into their range."""
+        import poker_agents as pa
+
+        if not os.path.exists(pa.SOLVER):
+            return None
+        board = [repr(c) for c in state.get_board_cards(0)] if state.board_count else []
+        if len(board) < 4 or len(state.statuses) != 2:
+            return None
+        w = self.walk(state, scale, full=True)
+        if w is None:
+            return None
+        node, bets, pot, history, street_acts = w
+        hole = [repr(c) for c in state.hole_cards[i]]
+        me = 1 - i  # our blueprint player
+        # ranges at the start of this street: this street's actions are part of the solved tree
+        before = [h for h in history if h[3] < len(board)]
+        r_me = self.reach(before, me, board, set(board))
+        r_op = self.reach(before, 1 - me, board, set(board) | set(hole))
+        if extra_opponent_range and p_exploit > 0:
+            tot_a = sum(r_op.values()) or 1.0
+            tot_b = sum(extra_opponent_range.get(c, 0.0) for c in r_op) or 1.0
+            r_op = {
+                c: (1 - p_exploit) * x / tot_a + p_exploit * extra_opponent_range.get(c, 0.0) / tot_b
+                for c, x in r_op.items()
+            }
+        deck = [r + s for r in "23456789TJQKA" for s in "cdhs"]
+        mine = "".join(sorted(hole, key=deck.index))  # the range keys list cards in deck order
+        r_me[mine] = max(r_me.get(mine, 0.0), max(r_me.values()) * 0.02)  # our hand must be in our range
+        s_me, s_op = self.solver_range(r_me), self.solver_range(r_op)
+        if not s_me or not s_op:
+            return None
+        oop_is_me = i == 0  # PokerKit heads-up: seat 0 (big blind) acts first after the flop
+        ranges = (s_me, s_op) if oop_is_me else (s_op, s_me)
+        street_pot = int(round(pot / scale))
+        eff = min(state.stacks[j] + state.bets[j] for j in (0, 1))  # behind at the start of the street
+        key = ("bp-resolve", tuple((h[0], h[1]) for h in before), tuple(board), i, mine)
+        tree, _ = pa._solve(key, street_pot, eff, board, 0, None, ranges)
+        nd = pa._walk(tree, street_acts) if tree else None
+        strat = (nd or {}).get("strategy", {}).get("strategy", {}) if nd else {}
+        probs = strat.get(hole[0] + hole[1]) or strat.get(hole[1] + hole[0])
+        if not probs:
+            return None
+        return dict(zip(nd["actions"], probs))
 
     # ---- our decision ----
     def distribution(self, state, i, scale, hole=None, walked=None):
@@ -202,9 +292,29 @@ def get():
     return _BP["bp"]
 
 
-def reply(state, i):
-    """JSON reply like the other bots, or None (the caller falls back)."""
+def reply(state, i, resolve=None):
+    """JSON reply like the other bots, or None (the caller falls back). resolve: re-solve turns and rivers with
+    TexasSolver (default from BLUEPRINT_RESOLVE=1)."""
     big = max(getattr(state, "blinds_or_straddles", (1, 2)))
+    if resolve is None:
+        resolve = os.environ.get("BLUEPRINT_RESOLVE") == "1"
+    if resolve:
+        try:
+            strat = get().resolve(state, i, 100 / big)
+        except Exception:  # a failed solve falls back to the blueprint
+            strat = None
+        if strat:
+            pick = _RNG.choices(list(strat), weights=list(strat.values()))[0]
+            kind = pick.split()[0]
+            to_call = state.checking_or_calling_amount
+            if kind == "FOLD":
+                return json.dumps({"action": "fold" if to_call else "check"})
+            if kind in ("CHECK", "CALL") or not state.can_complete_bet_or_raise_to():
+                return json.dumps({"action": "call" if to_call else "check"})
+            lo = state.min_completion_betting_or_raising_to_amount
+            hi = state.max_completion_betting_or_raising_to_amount
+            to = max(lo, min(hi, state.bets[i] + int(float(pick.split()[1]))))
+            return json.dumps({"action": "raise", "amount": int(to)})
     dist = get().distribution(state, i, 100 / big)
     if not dist:
         return None

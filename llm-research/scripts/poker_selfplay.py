@@ -442,7 +442,10 @@ def main(outdir, hands, models, notes=None, short_stack=None):
             elif m.split("#")[0] == "blueprintbot":
                 import blueprint_bot
 
-                text = blueprint_bot.reply(state, i) or pa.solver_play(state, i, ctx) or pa.monte_reply(state, i)
+                resolve = m.endswith("#resolve")  # blueprintbot#resolve: re-solve turns and rivers live
+                text = (
+                    blueprint_bot.reply(state, i, resolve) or pa.solver_play(state, i, ctx) or pa.monte_reply(state, i)
+                )
             elif m.split("#")[0] == "solverbot":
                 text = pa.solver_play(state, i, ctx) or pa.monte_reply(state, i)
             elif m in PERSONAS:
