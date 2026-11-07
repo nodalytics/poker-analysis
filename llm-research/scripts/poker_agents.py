@@ -27,8 +27,21 @@ ROOT = os.environ.get(
 )
 # TEXASSOLVER_BIN: e.g. the optimised build (~/solver-fast/build/console_solver), same answers, 2-3x faster
 SOLVER = os.environ.get("TEXASSOLVER_BIN", os.path.join(ROOT, "tools", "TexasSolver", "build", "console_solver"))
-RESOURCES = os.path.join(ROOT, "tools", "TexasSolver", "resources")
+# Hand-ranking tables TexasSolver needs. Without them it still runs, ranks every hand equal and returns nonsense
+# (on the lab, ~/llm-research has no tools/ beside it: river solves shoved ace-high into a flush until 2026-11-07).
+RESOURCES = os.environ.get("TEXASSOLVER_RESOURCES") or next(
+    (
+        d
+        for d in (
+            os.path.join(ROOT, "tools", "TexasSolver", "resources"),
+            os.path.expanduser("~/poker-analysis/tools/TexasSolver/resources"),
+        )
+        if os.path.exists(os.path.join(d, "compairer", "card5_dic_sorted.txt"))
+    ),
+    os.path.join(ROOT, "tools", "TexasSolver", "resources"),
+)
 SOLVER_THREADS, SOLVER_TIMEOUT = int(os.environ.get("SOLVER_THREADS", 8)), 90
+SOLVER_ITERS = int(os.environ.get("SOLVER_RIVER_ITERS", 200))  # river solves are cheap; 60 left bluff shoves
 WIDE = (
     "AA,KK,QQ,JJ,TT,99,88,77,66,55,44,33,22,AK,AQ,AJ,AT,A9,A8,A7,A6,A5,A4,A3,A2,KQ,KJ,KT,K9,K8,QJ,QT,Q9,"
     "JT,J9,T9,T8,98,97,87,76,65,54"
@@ -48,6 +61,7 @@ stats = {
     "flop_model_used": 0,
     "push_fold_used": 0,
     "preflop_deep_used": 0,
+    "ranges_narrowed": 0,
 }
 # The flop model (ml_flop.py) trained on the solver library; the MLP is 325KB and within 0.006 MAE of the 2.6GB
 # extra-trees model on held-out flops, so it is the one loaded per decision.
@@ -101,10 +115,12 @@ def hand_class(hole):
     return a + b
 
 
-def _solve(key, pot, eff, board, oop, extra=None):
+def _solve(key, pot, eff, board, oop, extra=None, ranges=None):
     if key in _SOLVES:
         return _SOLVES[key]
     tree = None
+    if os.path.exists(SOLVER) and not os.path.exists(os.path.join(RESOURCES, "compairer", "card5_dic_sorted.txt")):
+        raise RuntimeError(f"TexasSolver hand-ranking tables missing at {RESOURCES}; set TEXASSOLVER_RESOURCES")
     if os.path.exists(SOLVER):
         street = "turn" if len(board) == 4 else "river"
         rng = WIDE if not extra or extra in WIDE.split(",") else f"{WIDE},{extra}"
@@ -113,8 +129,8 @@ def _solve(key, pot, eff, board, oop, extra=None):
                 f"set_pot {pot}",
                 f"set_effective_stack {eff}",
                 f"set_board {','.join(board)}",
-                f"set_range_oop {rng}",
-                f"set_range_ip {rng}",
+                f"set_range_oop {ranges[0] if ranges else rng}",
+                f"set_range_ip {ranges[1] if ranges else rng}",
             ]
             for p in ("oop", "ip"):
                 lines += [
@@ -130,7 +146,7 @@ def _solve(key, pot, eff, board, oop, extra=None):
                 "build_tree",
                 f"set_thread_num {SOLVER_THREADS}",
                 "set_accuracy 1.0",
-                "set_max_iteration 60",
+                f"set_max_iteration {SOLVER_ITERS if street == 'river' else 60}",
                 "set_print_interval 20",
                 "set_use_isomorphism 1",
                 "start_solve",
@@ -199,6 +215,26 @@ def sol_reply(state, i, ctx):
     return monte_reply(state, i)
 
 
+def narrowed_ranges(state, i, ctx, board, live):
+    """(oop, ip) TexasSolver ranges read from this hand's betting (ranges.py), or None without a hand log or model.
+    Heads-up only: the out-of-position player is the lowest live seat (PokerKit acting order after the flop)."""
+    log = ctx.get("log")
+    if not log or len(live) != 2 or os.environ.get("NARROW_RANGES", "1") == "0":
+        return None
+    import ranges
+
+    if not ranges.available():
+        return None
+    hole = [repr(c) for c in state.hole_cards[i]]
+    out = []
+    for j in sorted(live):
+        blocked = set(board) | (set() if j == i else set(hole))
+        w = ranges.weights(log, j, blocked)
+        out.append(ranges.solver_range(w, include=ranges.cls("".join(hole)) if j == i else None))
+    stats["ranges_narrowed"] += 1
+    return tuple(out)
+
+
 def solver_strategy(state, i, ctx):
     """TexasSolver's action frequencies for player i's exact hand in this spot, or a reason there are none."""
     board_cards = list(state.get_board_cards(0)) if state.board_count else []
@@ -213,7 +249,8 @@ def solver_strategy(state, i, ctx):
     board = [repr(c) for c in board_cards]
     eff = min(state.stacks[j] + state.bets[j] for j in live)
     cls = hand_class(state.hole_cards[i])
-    tree, _ = _solve((ctx["hand"], len(board), i), ctx["street_pot"], eff, board, min(live), cls)
+    rngs = narrowed_ranges(state, i, ctx, board, live)
+    tree, _ = _solve((ctx["hand"], len(board), i), ctx["street_pot"], eff, board, min(live), cls, rngs)
     node = _walk(tree, ctx["street_actions"]) if tree else None
     hole = [repr(c) for c in state.hole_cards[i]]
     strat = (node or {}).get("strategy", {}).get("strategy", {}) if node else {}
@@ -225,7 +262,9 @@ def solver_strategy(state, i, ctx):
         }
     return {
         "available": True,
-        "assumed_ranges": "wide (plus your own hand class), the same for both players",
+        "assumed_ranges": "narrowed by each player's betting (ranges.py)"
+        if rngs
+        else "wide (plus your own hand class), the same for both players",
         "strategy": {a: round(p, 3) for a, p in zip(node["actions"], probs)},
         "note": "BET/RAISE amounts are chips added this street; frequencies are the solver's mixed strategy",
     }

@@ -23,6 +23,7 @@ from pokerkit import Automation, Mode, NoLimitTexasHoldem, StandardHighHand
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import poker_agents as pa  # noqa: E402
+import ranges  # noqa: E402
 
 warnings.filterwarnings("ignore", message="There is no reason for this player to fold")
 
@@ -370,7 +371,15 @@ def main(outdir, hands, models, notes=None, short_stack=None):
             stats[m]["hands"] += 1
         history, voluntarily = [], set()
         ctx, street_now = (
-            {"hand": h, "street_actions": [], "street_pot": 0, "seats": seat, "profile": profile, "recent": recent},
+            {
+                "hand": h,
+                "street_actions": [],
+                "street_pot": 0,
+                "seats": seat,
+                "profile": profile,
+                "recent": recent,
+                "log": [],
+            },
             None,
         )
         while state.status:
@@ -382,6 +391,7 @@ def main(outdir, hands, models, notes=None, short_stack=None):
             if st != street_now:
                 street_now, ctx["street_actions"], ctx["street_pot"] = st, [], state.total_pot_amount
             bet_before = state.bets[i]
+            snap = ranges.entry(state, i, st, sum(1 for k, _ in ctx["street_actions"] if k == "raise"), None)
             board = cards(list(state.get_board_cards(0))) if state.board_count else "-"
             to_call = state.checking_or_calling_amount
             can_raise = state.can_complete_bet_or_raise_to()
@@ -479,6 +489,8 @@ def main(outdir, hands, models, notes=None, short_stack=None):
                 else:
                     state.fold()
                     done = "folds"
+            snap["action"] = 0 if done == "folds" else 2 if done.startswith("raises") else 1
+            ctx["log"].append(snap)  # hand reading for the solver (ranges.py)
             if st == "preflop" and done.startswith(("calls", "raises")):
                 voluntarily.add(m)
             history.append(f"{short(m)} {done}")
