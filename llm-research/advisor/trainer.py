@@ -28,6 +28,7 @@ BOTS = {
     "monte": "Monte (equity bot)",
     "solverbot": "Solver bot",
     "adaptbot": "Adaptive bot",
+    "blueprintbot": "Blueprint bot (strongest heads-up)",
 }
 HERO = "You"
 
@@ -55,9 +56,11 @@ class TrainerGame:
             seats = [seats[1], seats[0]]  # heads-up: big blind first, then the button
         self.seats = seats
         self.start = [
-            2 * (self.rng.randint(5, 20) if self.depth == "short" else 100) for _ in seats
+            2 * (self.rng.randint(5, 20) if self.depth == "short" else 200 if self.depth == "200bb" else 100)
+            for _ in seats
         ]  # units; 2 per big blind
         self.table = engine.Table(self.start, (1, 2), [None] * len(seats), seed=self.rng.randrange(10**9))
+        self.dealt = (self.hand_no, [" ".join(repr(c) for c in h) for h in self.table.state.hole_cards])
         self.folded = set()
         self.voluntary = set()
         self.history = [f"Hand {self.hand_no}: " + ", ".join(f"{p} {s / 2:g}bb" for p, s in zip(seats, self.start))]
@@ -65,6 +68,9 @@ class TrainerGame:
         self._advance()
 
     def cards(self, i):
+        # remembered at the deal: PokerKit discards a losing hand's cards at showdown
+        if getattr(self, "dealt", None) and self.dealt[0] == self.hand_no:
+            return self.dealt[1][i]
         return " ".join(repr(c) for c in self.table.state.hole_cards[i])
 
     def board(self):
@@ -136,6 +142,14 @@ class TrainerGame:
             text = pa.solver_play(s, i, self.ctx()) or pa.monte_reply(s, i)
         elif name == "adaptbot":
             text = pa.adapt_play(s, i, self.ctx())
+        elif name == "blueprintbot":
+            import blueprint_bot
+
+            try:
+                text = blueprint_bot.reply(s, i)
+            except Exception:  # blueprint files not on this machine
+                text = None
+            text = text or pa.solver_play(s, i, self.ctx()) or pa.monte_reply(s, i)
         else:
             text = pa.monte_reply(s, i)
         act, amt = ps.parse(text)

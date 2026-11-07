@@ -33,6 +33,7 @@ class TrainerTab(ttk.Frame):
         opt.pack(fill="x", pady=(6, 0))
         self.depth = tk.StringVar(value="deep")
         ttk.Radiobutton(opt, text="100bb", value="deep", variable=self.depth).pack(side="left")
+        ttk.Radiobutton(opt, text="200bb", value="200bb", variable=self.depth).pack(side="left", padx=(4, 0))
         ttk.Radiobutton(opt, text="5-20bb", value="short", variable=self.depth).pack(side="left", padx=(4, 12))
         self.coach = tk.BooleanVar(value=True)
         ttk.Checkbutton(opt, text="Verdict after each move", variable=self.coach).pack(side="left")

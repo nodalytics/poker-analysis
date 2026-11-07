@@ -23,15 +23,15 @@ static void write(const std::string& path, const void* data, size_t bytes) {
   fclose(f);
 }
 
-static std::vector<uint8_t> quantile_buckets(const std::vector<float>& v, int B) {
+static std::vector<uint16_t> quantile_buckets(const std::vector<float>& v, int B) {
   std::vector<float> s(v);
   std::sort(s.begin(), s.end());
   std::vector<float> cut(B - 1);
   for (int k = 1; k < B; ++k) cut[k - 1] = s[(size_t)((double)k * s.size() / B)];
-  std::vector<uint8_t> out(v.size());
+  std::vector<uint16_t> out(v.size());
 #pragma omp parallel for schedule(static)
   for (size_t i = 0; i < v.size(); ++i)
-    out[i] = (uint8_t)(std::upper_bound(cut.begin(), cut.end(), v[i]) - cut.begin());
+    out[i] = (uint16_t)(std::upper_bound(cut.begin(), cut.end(), v[i]) - cut.begin());
   return out;
 }
 
@@ -114,9 +114,17 @@ int main(int argc, char** argv) {
   }
   fprintf(stderr, "metrics done %.0fs\n", omp_get_wtime() - t0);
   auto fb = quantile_buckets(fehs2, B), tb = quantile_buckets(tehs2, B), rb = quantile_buckets(hs, B);
-  write(out + "/flop_buckets.u8", fb.data(), fb.size());
-  write(out + "/turn_buckets.u8", tb.data(), tb.size());
-  write(out + "/river_buckets.u8", rb.data(), rb.size());
+  auto save = [&](const std::string& name, const std::vector<uint16_t>& v) {
+    if (B > 255) {
+      write(out + "/" + name + "_buckets.u16", v.data(), v.size() * 2);
+    } else {
+      std::vector<uint8_t> n(v.begin(), v.end());
+      write(out + "/" + name + "_buckets.u8", n.data(), n.size());
+    }
+  };
+  save("flop", fb);
+  save("turn", tb);
+  save("river", rb);
   write(out + "/flop_ehs.f32", fehs.data(), fehs.size() * 4);
   write(out + "/turn_ehs.f32", tehs.data(), tehs.size() * 4);
   write(out + "/river_hs.f32", hs.data(), hs.size() * 4);

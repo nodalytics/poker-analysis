@@ -7,3 +7,5 @@ check
 preclass
 run*/
 libbp.so
+mccfr2
+libbp2.so

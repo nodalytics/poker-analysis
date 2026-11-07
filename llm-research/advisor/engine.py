@@ -123,10 +123,52 @@ def _mix(fold=0.0, call=0.0, raise_=0.0):
     return {"fold": fold / t, "call": call / t, "raise": raise_ / t}
 
 
+BLUEPRINT_MIN_BB = 60  # the blueprint was trained at 200bb; shallower stacks use the charts and solver layers
+
+
+def blueprint_advice(state, i):
+    """The heads-up blueprint's mix for player i, or None (not heads-up, short stacks, files or library missing)."""
+    if len(state.statuses) != 2 or os.environ.get("ADVISOR_BLUEPRINT", "1") == "0":
+        return None
+    bb = max(getattr(state, "blinds_or_straddles", (1, 2)))
+    eff = min(state.stacks[j] + state.bets[j] for j in (0, 1)) / bb
+    if eff < BLUEPRINT_MIN_BB:
+        return None
+    try:
+        import blueprint_bot
+
+        dist = blueprint_bot.get().distribution(state, i, 100 / bb)
+    except Exception:  # no blueprint on this machine (files or the compiled library missing)
+        return None
+    if not dist:
+        return None
+    f = sum(p for k, _, p in dist if k == "fold")
+    c = sum(p for k, _, p in dist if k == "call")
+    r = sum(p for k, _, p in dist if k == "raise")
+    detail = {}
+    for k, to, p in dist:
+        if k == "raise":
+            lab = (
+                "all-in"
+                if state.can_complete_bet_or_raise_to() and to >= state.max_completion_betting_or_raising_to_amount
+                else f"raise to {to / bb:.1f}bb"
+            )
+            detail[lab] = detail.get(lab, 0.0) + p
+    return {
+        "source": "blueprint",
+        "mix": _mix(f, c, r),
+        "detail": detail,
+        "why": "the heads-up blueprint (sampled CFR self-play, 200bb; even with Slumbot after card luck)",
+    }
+
+
 def advise(state, i, ctx, use_solver=True):
     """{'source', 'mix': {fold, call, raise}, 'detail': {...}, 'why'} for player i to act."""
     to_call = state.checking_or_calling_amount
     bb = max(getattr(state, "blinds_or_straddles", (1, 2)))
+    bp = blueprint_advice(state, i)
+    if bp:
+        return bp
     pf = pa.push_fold_advice(state, i)
     if pf:
         shove = pf["shove"]
