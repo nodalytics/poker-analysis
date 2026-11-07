@@ -50,6 +50,7 @@ Each run exposed a real bug that our own simulations had hidden:
 | v3 | −182 (3,000) | On the lab, TexasSolver ran without its hand-ranking tables. It ranked every hand equal, and ace-high shoved into a flush. Now the tables are found or the code raises |
 | v4 | −64.8 [−127, +8] (3,000) | Preflop, flop and turn about even; −54 on the river, where Slumbot's bets were stronger than the generic hand reading assumed |
 | v5 | **+57.5 [+2, +114] (3,000)** | Slumbot-specific hand reading, learned from its revealed hands. The river went from −54 to +56. The adaptive bot reached −22.9 [−96, +47]: its call-down rule for aggressive players backfires against a strong one |
+| v5 repeat | −53.8 [−108, +1] (5,000) | The same bot on fresh hands. **Luck-adjusted** (`aivat_lite.py`: all-in equity, pre-flop and board card luck; variance 1.5–1.8× lower), v5 is +11.8 and the repeat −32.8: together about **−14 bb/100 [−45, +17], roughly even with Slumbot**. v5's raw +57.5 was mostly card luck |
 
 v5 is opponent modelling: the model was trained on Slumbot's own past hands, as one would for a real regular. It
 is not evidence of general strength.

@@ -218,6 +218,7 @@ def slumbot():
         ("v3", "slumbot_solverbot_v3_no_hand_ranking", "bug 3: solver ran without hand-ranking tables"),
         ("v4", "slumbot_solverbot_v4", "all fixed; still losing on the river: Slumbot bets stronger than we read"),
         ("v5", "slumbot_solverbot_v5", "a hand-reading model of Slumbot, learned from its revealed cards"),
+        ("v5 again", "slumbot_solverbot_v5_confirm", "the same bot, 5,000 fresh hands: the win did not repeat"),
     ]
     data = [(v, *stat(d), note) for v, d, note in vers]
 
@@ -236,13 +237,13 @@ def slumbot():
         ax.grid(axis="x", visible=False)
         i = shown - 1
         if t >= len(data) * 3:
-            return "v5 beats Slumbot: +57.5 bb/100 over 3,000 hands (95% interval +2 to +114)."
+            return "Luck-adjusted, v5 and its repeat together: about -14 bb/100 (95% -45 to +17), roughly even."
         return f"{data[i][0]}: {data[i][4]}."
 
     render(
         "17-slumbot.mp4",
         draw,
-        19,
+        22,
         "The outside test: our solver bot vs Slumbot (strong public bot, 200bb)",
         "Real hands over Slumbot's public API, heads-up no-limit. Source: results/slumbot/",
     )

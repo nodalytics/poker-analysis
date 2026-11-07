@@ -13,7 +13,7 @@ committed results; every chart names its source.
 | [`14-robust-exploitation.mp4`](14-robust-exploitation.mp4) (14 s) | Win from weak players and stay hard to beat: at p 0.25, 84% of the maximum profit at 7% of the exposure (Leduc, exact) |
 | [`15-adaptive-opponent.mp4`](15-adaptive-opponent.mp4) (14 s) | A learning opponent punishes pure exploitation within ~3,000 hands; robust strategies leak slowly; the equilibrium is never beaten |
 | [`16-ensembles.mp4`](16-ensembles.mp4) (13 s) | Combining strategies against unknown opponents: reading the opponent (Bayes) earns most and never loses |
-| [`17-slumbot.mp4`](17-slumbot.mp4) (19 s) | The outside test against Slumbot: four runs each caught a real bug; the fifth, reading Slumbot with a model of its own play, wins +57.5 bb/100 over 3,000 hands (95% +2 to +114) |
+| [`17-slumbot.mp4`](17-slumbot.mp4) (22 s) | The outside test against Slumbot: four runs each caught a real bug; v5 looked like a win (+57.5) but its 5,000-hand repeat lost (−53.8); luck-adjusted together about −14 bb/100 (95% −45 to +17), roughly even |
 
 ## Pictures
 

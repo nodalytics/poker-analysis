@@ -95,7 +95,9 @@ def read_rank(args):
         S = np.array([st.get(h, (0.0, 0.0, 0.0)) for h in cand])
         ctx = features((0, 0, 0), r)[3:]
         X = np.hstack([S, np.tile(ctx, (len(cand), 1))])
-        logp += np.log(np.clip(m.predict_proba(X)[:, y], 1e-4, 1))
+        cls = list(m.classes_)
+        p = m.predict_proba(X)[:, cls.index(y)] if y in cls else np.full(len(cand), 1e-4)
+        logp += np.log(np.clip(p, 1e-4, 1))
     if hand["hole"] not in cand:
         return None
     k = cand.index(hand["hole"])
@@ -110,7 +112,7 @@ def fit(rows, path):
 
     X = np.array([x for x, _ in rows])
     y = np.array([a for _, a in rows])
-    if len(set(y)) < 3 or len(y) < 300:
+    if len(set(y)) < 2 or len(y) < 300:  # showdown players never fold, so two classes is normal
         return None
     m = HistGradientBoostingClassifier(max_iter=200, random_state=0).fit(X, y)
     dump(m, path)

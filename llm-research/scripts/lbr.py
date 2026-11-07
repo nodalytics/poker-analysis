@@ -307,7 +307,15 @@ class Hand:
             else:
                 kind, to, _ = self.lbr_choice(t.state, ctx)
                 if kind == "raise":
-                    self.events.append(("lbr_bet", street, to))
+                    s0 = t.state
+                    pot_before = s0.total_pot_amount + s0.checking_or_calling_amount
+                    hi = s0.max_completion_betting_or_raising_to_amount
+                    size = (
+                        "all-in"
+                        if to >= hi
+                        else f"{(to - s0.bets[i] - s0.checking_or_calling_amount) / max(pot_before, 1):.1f}x pot"
+                    )
+                    self.events.append(("lbr_bet", street, size))
                 t.act(kind, to)
 
 
@@ -337,8 +345,24 @@ def main(outdir, hands, workers=48, stack_bb=100):
         ev = [e for r in ok for e in r["events"] if e[0] == "bot_faced_bet" and e[1] == st]
         if ev:
             folds[st] = {"faced": len(ev), "fold_rate": round(sum(e[2] == FOLD for e in ev) / len(ev), 3)}
+    # where LBR's money comes from: hands grouped by its first bet (street and size) and the bot's answer
+    lines = {}
+    for r in ok:
+        first = next((e for e in r["events"] if e[0] == "lbr_bet"), None)
+        if first:
+            ans = next((e[2] for e in r["events"] if e[0] == "bot_faced_bet" and e[1] == first[1]), "-")
+            key = f"{first[1]} {first[2]}, bot {ans}"
+        else:
+            key = "LBR never bets"
+        n, w = lines.get(key, (0, 0.0))
+        lines[key] = (n + 1, w + r["won_bb"])
+    by_line = {
+        k: {"hands": n, "lbr_bb_per_100_hands_overall": round(100 * w / len(ok), 1)}
+        for k, (n, w) in sorted(lines.items(), key=lambda kv: -kv[1][1])
+    }
     rep = {
         "hands": len(ok),
+        "where_lbr_wins": by_line,
         "errors": len(res) - len(ok),
         "stack_bb": stack_bb,
         "lbr_wins_bb100": round(100 * x.mean(), 1),
