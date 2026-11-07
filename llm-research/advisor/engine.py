@@ -183,8 +183,14 @@ def advise(state, i, ctx, use_solver=True):
         }
     hole = pa._cards(state.hole_cards[i])
     board = pa._cards(state.get_board_cards(0)) if state.board_count else []
-    live = sum(1 for j, s in enumerate(state.statuses) if s and j != i)
-    eq = pa.equity_vs_random(hole, board, max(1, live))
+    others = [j for j, s in enumerate(state.statuses) if s and j != i]
+    live = len(others)
+    eq, against = None, f"{live} random hand(s)"
+    if live == 1 and ctx.get("log") and any(e["player"] == others[0] for e in ctx["log"]) and ranges.available():
+        eq = equity_vs_range(state, i, others[0], ctx["log"])
+        against = "the range their betting implies (hand reading)"
+    if eq is None:
+        eq = pa.equity_vs_random(hole, board, max(1, live))
     pot = state.total_pot_amount
     price = to_call / (pot + to_call) if to_call else 0.0
     fair = 1 / (live + 1)
@@ -198,5 +204,30 @@ def advise(state, i, ctx, use_solver=True):
         "source": "Monte Carlo equity",
         "mix": m,
         "detail": {"equity": eq, "price": price},
-        "why": f"equity {eq:.0%} against {live} random hand(s); the price is {price:.0%}",
+        "why": f"equity {eq:.0%} against {against}; the price is {price:.0%} (rough: ignores later betting)",
     }
+
+
+def equity_vs_range(state, i, j, log, sims=3000, seed=0):
+    """Hero's equity against player j's hand-reading posterior (ranges.py), by weighted Monte Carlo."""
+    import eval7
+
+    rng = random.Random(seed)
+    hole = [repr(c) for c in state.hole_cards[i]]
+    board = [repr(c) for c in state.get_board_cards(0)] if state.board_count else []
+    w = ranges.weights(log, j, set(hole) | set(board))
+    combos = [c for c, x in w.items() if x > 1e-4]
+    if not combos:
+        return None
+    weights = [w[c] for c in combos]
+    deck = [c for c in DECK if c not in set(hole) | set(board)]
+    me = [eval7.Card(c) for c in hole]
+    win = 0.0
+    for _ in range(sims):
+        v = rng.choices(combos, weights=weights)[0]
+        vc = {v[:2], v[2:]}
+        rest = rng.sample([c for c in deck if c not in vc], 5 - len(board))
+        b = [eval7.Card(c) for c in board + rest]
+        a, o = eval7.evaluate(me + b), eval7.evaluate([eval7.Card(v[:2]), eval7.Card(v[2:])] + b)
+        win += 1.0 if a > o else 0.5 if a == o else 0.0
+    return win / sims

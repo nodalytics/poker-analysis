@@ -179,3 +179,4 @@ def test_review_nets_and_grades():
         decisions, facts = r
         assert round(facts["net_bb"] * h["blinds"][1]) == units, (h["site"], facts["net_bb"])
         assert decisions and all(d["grade"] in ("agrees", "questionable", "mistake") for d in decisions)
+        assert facts["showdown"] == (text is GG), h["site"]
