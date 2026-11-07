@@ -10,6 +10,10 @@ committed results; every chart names its source.
 | [`../2026-11-05-solver-demo.mp4`](../2026-11-05-solver-demo.mp4) (10 s) | TexasSolver running live on the lab and getting a textbook game exactly right: bet the nuts 100%, bluff 9.9% (theory 9.4%), call 50.0% |
 | [`09-solver-plays-short-stacks.gif`](09-solver-plays-short-stacks.gif) (18 s) | The newest setup at 5-20 big blinds: the solver acts itself (seats marked **S**) wherever it has an answer, the LLM decides only the rest. **P** = the same model playing alone. The three biggest pots of one session |
 | [`../2026-11-05-arena-poker-round8-table1.gif`](../2026-11-05-arena-poker-round8-table1.gif) | The models' poker arena: learners, frozen twins, simulated humans, Monte Carlo and solver bots at one table |
+| [`14-robust-exploitation.mp4`](14-robust-exploitation.mp4) (14 s) | Win from weak players and stay hard to beat: at p 0.25, 84% of the maximum profit at 7% of the exposure (Leduc, exact) |
+| [`15-adaptive-opponent.mp4`](15-adaptive-opponent.mp4) (14 s) | A learning opponent punishes pure exploitation within ~3,000 hands; robust strategies leak slowly; the equilibrium is never beaten |
+| [`16-ensembles.mp4`](16-ensembles.mp4) (13 s) | Combining strategies against unknown opponents: reading the opponent (Bayes) earns most and never loses |
+| [`17-slumbot.mp4`](17-slumbot.mp4) (16 s) | The outside test against Slumbot: not winning yet, and each run caught a real bug the simulations hid |
 
 ## Pictures
 
