@@ -85,8 +85,13 @@ def review_hand(h, hero, use_solver=True):
                     "action": kind + (f" to {amt / bb:.1f}bb" if amt and kind in ("bet", "raise") else ""),
                     "category": cat,
                     "engine_pct": round(pct, 3),
-                    "grade": grade(pct) if adv["source"] != "error" else "n/a",
-                    "pot_bb": round((s.total_pot_amount + to_call) / bb, 1),
+                    # Monte Carlo ignores later betting, so it can only call a decision questionable, not a mistake
+                    "grade": "n/a"
+                    if adv["source"] == "error"
+                    else min(grade(pct), "questionable")
+                    if adv["source"] == "Monte Carlo equity" and grade(pct) == "mistake"
+                    else grade(pct),
+                    "pot_bb": round(s.total_pot_amount / bb, 1),
                     "to_call_bb": round(to_call / bb, 1),
                     "board": " ".join(repr(c) for c in s.get_board_cards(0)) if s.board_count else "",
                     "advice": adv,
@@ -121,7 +126,9 @@ def review_hand(h, hero, use_solver=True):
         t.act({"bet": "raise", "check": "check"}.get(kind, kind), amt)
     invested = h["stacks"][hi] - t.state.stacks[hi]  # the pot is never awarded in a replay (pay=False)
     net = h["collected"].get(hero, 0) + h["returned"].get(hero, 0) - invested
-    live_end = sum(1 for x in t.state.statuses if x)
+    # who was still in at the end, from the file's folds (PokerKit's flags reflect the stand-in cards' mucking)
+    folded = {e[1] for e in h["actions"] if e[0] == "act" and e[2] == "fold"}
+    live_end = sum(1 for p in h["players"] if p not in folded)
     saw_flop = len(h["board"]) >= 3 and not (hero_folded and t.street == 0)
     showdown = not hero_folded and live_end >= 2 and len(h["board"]) == 5
     facts = {
@@ -242,6 +249,10 @@ def _status(v, ref):
     return ("low", "warn") if v < lo else ("high", "warn") if v > hi else ("in range", "ok")
 
 
+def call_txt(d):
+    return f", {d['to_call_bb']}bb to call" if d["to_call_bb"] else ""
+
+
 def to_html(rep):
     e = html.escape
     rows = []
@@ -272,7 +283,7 @@ def to_html(rep):
         cards.append(
             f"<details class='{d['grade']}'><summary><span class=tag>{d['grade']}</span> "
             f"<b>{e(d['cards'] or '')}</b> · {e(d['street'])} {e(d['board'])} · you <b>{e(d['action'])}</b> · pot "
-            f"{d['pot_bb']}bb · engine plays it {d['engine_pct']:.0%}</summary>"
+            f"{d['pot_bb']}bb{call_txt(d)} · engine plays it {d['engine_pct']:.0%}</summary>"
             f"<p><b>{e(d['advice']['source'])}:</b> fold {mix['fold']:.0%}, check/call {mix['call']:.0%}, "
             f"bet/raise {mix['raise']:.0%}{(' (' + e(detail) + ')') if detail else ''}. {e(d['advice']['why'])}</p>"
             f"<pre>{e(d['text'])}</pre></details>"
