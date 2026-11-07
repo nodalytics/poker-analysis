@@ -74,6 +74,9 @@ class Hand:
         combos = [h for h, w in self.reach.items() if w > 1e-9 and not ({h[:2], h[2:]} & set(board))]
         if not board:
             return self.preflop(state, ctx, combos)
+        ob = self.overbet(state, ctx, combos, board)
+        if ob is not None:
+            return ob
         if len(board) == 3:
             p = self.flop(state, ctx, combos, board)
             if p is not None:
@@ -105,6 +108,23 @@ class Hand:
                         d = [(CALL, None, 1.0)]
                 by_class[c] = d
             out[h] = by_class[c]
+        return out
+
+    def overbet(self, state, ctx, combos, board):
+        """Mirror of poker_agents.overbet_defence for every holding: equity against LBR's range as hand reading reads
+        it (computed once, blocked cards removed per holding) against the price."""
+        to_call = state.checking_or_calling_amount
+        pot_before = state.total_pot_amount - to_call
+        if not to_call or to_call < 1.5 * max(pot_before, 1) or not ctx.get("log"):
+            return None
+        w = ranges.weights(ctx["log"], self.lbr, set(board))
+        price = to_call / (state.total_pot_amount + to_call)
+        margin = 0.0 if state.stacks[self.lbr] == 0 or state.stacks[self.bot] <= to_call else 0.05
+        out = {}
+        for h in combos:
+            eq = ranges.equity_vs_weights(h, board, w, 150, self.rng)
+            ok = eq is not None and eq > price + margin
+            out[h] = [(CALL, None, 1.0)] if ok else [(FOLD, None, 1.0)]
         return out
 
     def flop(self, state, ctx, combos, board):

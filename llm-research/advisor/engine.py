@@ -155,6 +155,14 @@ def advise(state, i, ctx, use_solver=True):
             "detail": {f"raise to {amt / bb:.1f}bb": 1.0} if amt else {},
             "why": deep["why"],
         }
+    ob = pa.overbet_defence(state, i, ctx)
+    if ob:
+        return {
+            "source": "overbet defence",
+            "mix": _mix(**{ob["action"]: 1.0}),
+            "detail": {},
+            "why": ob["why"],
+        }
     if use_solver and os.path.exists(pa.SOLVER):
         adv = pa.solver_strategy(state, i, ctx)
         if adv.get("available"):
