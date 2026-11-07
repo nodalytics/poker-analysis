@@ -24,6 +24,7 @@ import os
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OPEN_SHARE = {"EP": 0.13, "LJ": 0.17, "HJ": 0.21, "CO": 0.27, "BTN": 0.42, "SB": 0.36}
 REALISE = {True: 0.8, False: 0.65}
+R3_SHARE_HU, R4_SHARE_HU = 0.25, 0.08  # heads-up 3-bet and 4-bet ranges are far wider (Slumbot 3-bet 25% of opens)
 OPEN_SHARE_HU = 0.8  # heads-up button (small blind) opening range, close to published 100bb solver ranges
 VALUE_3BET, VALUE_4BET = 0.58, 0.56
 R3_SHARE, R3_SHARE_BLINDS, R4_SHARE = 0.06, 0.09, 0.025
@@ -103,8 +104,9 @@ def decide(state, i, ctx, hand):
 
     def continue_or_fold(e, ip, why):
         need = to_call / (pot + to_call) if to_call else 0.0
-        if e * REALISE[ip] >= need:
-            return act("call", why=f"{why}; equity {e:.0%} x {REALISE[ip]} realisation covers the {need:.0%} price")
+        real = 1.05 if n == 2 and ip else REALISE[ip]  # heads-up the deep button realises more than its equity
+        if e * real >= need:
+            return act("call", why=f"{why}; equity {e:.0%} x {real} realisation covers the {need:.0%} price")
         return act("fold", why=f"{why}; equity {e:.0%} does not cover the {need:.0%} price")
 
     if raises == 0:
@@ -134,7 +136,7 @@ def decide(state, i, ctx, hand):
         return continue_or_fold(e, ip, f"facing a {opener_pos} open")
     if raises == 2:
         blinds_vs_late = raiser in (0, 1)
-        rng = top(R3_SHARE_BLINDS if blinds_vs_late else R3_SHARE)
+        rng = top(R3_SHARE_HU if n == 2 else R3_SHARE_BLINDS if blinds_vs_late else R3_SHARE)
         e = equity(hand, rng)
         if e >= VALUE_4BET:
             return act("raise", 2.3 * top_bet, f"{hand} has {e:.0%} equity against a 3-bet range: 4-bet")
@@ -142,7 +144,7 @@ def decide(state, i, ctx, hand):
             return continue_or_fold(e, ip, "facing a 3-bet")
         return act("fold", why=f"cold facing a 3-bet: {hand} has only {e:.0%} against it")
     # facing a 4-bet or more, continuing means all-in: price the whole effective stack against the final pot
-    e = equity(hand, top(R4_SHARE))
+    e = equity(hand, top(R4_SHARE_HU if n == 2 else R4_SHARE))
     stake = eff * bb
     dead = pot - state.bets[i] - top_bet
     need = (stake - state.bets[i]) / (dead + 2 * stake)

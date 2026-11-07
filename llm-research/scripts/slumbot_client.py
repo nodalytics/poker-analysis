@@ -28,6 +28,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from pokerkit import Automation, Mode, NoLimitTexasHoldem  # noqa: E402
 
 import poker_selfplay as ps  # noqa: E402
+import ranges  # noqa: E402
 
 HOST = "https://slumbot.com/api/"
 SCALE = 50  # Slumbot chips per unit of ours
@@ -111,6 +112,7 @@ def replay(resp, rng):
     streets = tokens(resp["action"])
     board_iter = iter(board)
     street_actions, street_pot = [], state.total_pot_amount
+    log = []  # every action with the state it was taken in, for hand reading (ranges.py)
     for si, st in enumerate(streets):
         if si > 0:
             n = 3 if si == 1 else 1
@@ -120,6 +122,8 @@ def replay(resp, rng):
         for a, amt in st:
             i = state.actor_index
             before = state.bets[i]
+            raises = sum(1 for k, _ in street_actions if k == "raise")
+            log.append(ranges.entry(state, i, ranges.STREETS[si], raises, {"f": 0, "k": 1, "c": 1, "b": 2}[a]))
             to_call = state.checking_or_calling_amount
             if a == "f":
                 state.fold()
@@ -142,7 +146,7 @@ def replay(resp, rng):
         n = 3 if k == 0 else 1
         state.deal_board("".join(next(board_iter) for _ in range(n)))
         street_actions, street_pot = [], state.total_pot_amount
-    return state, streets, street_actions, street_pot
+    return state, streets, street_actions, street_pot, log
 
 
 def update_profile(prof, action, slum_pos):
@@ -194,7 +198,7 @@ def session(args):
         while "winnings" not in resp:
             if "error_msg" in resp:
                 raise RuntimeError(resp["error_msg"])
-            state, streets, sa, spot = replay(resp, rng)
+            state, streets, sa, spot, log = replay(resp, rng)
             pos = resp["client_pos"]
             seats = ["us", "slumbot"] if pos == 0 else ["slumbot", "us"]
             ctx = {
@@ -204,6 +208,7 @@ def session(args):
                 "seats": seats,
                 "profile": profile,
                 "recent": profile,
+                "log": log,
             }
             act, amt = ps.parse(decide(bot, state, pos, ctx))
             lo, hi, facing, last = legal_range(streets)
