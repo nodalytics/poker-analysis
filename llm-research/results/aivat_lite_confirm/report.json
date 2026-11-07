@@ -1,0 +1,39 @@
+{
+ "slumbot_solverbot_v5_confirm": {
+  "hands": 5000,
+  "allin_hands_adjusted": 14,
+  "raw": {
+   "bb100": -53.8,
+   "ci95": [
+    -108.4,
+    0.9
+   ],
+   "se": 27.9
+  },
+  "allin_adjusted": {
+   "bb100": -43.3,
+   "ci95": [
+    -93.6,
+    6.9
+   ],
+   "se": 25.6
+  },
+  "allin_and_preflop_card_luck_adjusted": {
+   "bb100": -41.9,
+   "ci95": [
+    -91.9,
+    8.1
+   ],
+   "se": 25.5
+  },
+  "plus_flop_turn_river_card_luck": {
+   "bb100": -32.8,
+   "ci95": [
+    -74.0,
+    8.5
+   ],
+   "se": 21.0
+  },
+  "variance_reduction_factor": 1.76
+ }
+}
