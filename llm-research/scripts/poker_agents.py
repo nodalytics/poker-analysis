@@ -401,6 +401,38 @@ def short_defence(state, i):
     return {"action": "call" if e * 0.85 >= need else "fold", "why": f"equity {e:.0%} vs a wide open, price {need:.0%}"}
 
 
+def overbet_defence(state, i, ctx, ratio=1.5):
+    """Facing a bet of `ratio` x the pot or more after the flop, heads-up: call only when our equity against the
+    bettor's range, read from this hand's betting (ranges.py), beats the price (with a margin of 0.05 when chips are
+    still behind, since later streets cost more). The flop model never saw bets this big and treats an all-in like a
+    2/3-pot bet; LBR won +308 bb/100 from that alone (2026-11-07). Returns {"action", "why"} or None."""
+    board = [repr(c) for c in state.get_board_cards(0)] if state.board_count else []
+    live = [j for j, s in enumerate(state.statuses) if s]
+    to_call = state.checking_or_calling_amount
+    if not board or len(live) != 2 or not to_call or not ctx.get("log"):
+        return None
+    pot_before = state.total_pot_amount - to_call
+    if to_call < ratio * max(pot_before, 1):
+        return None
+    import ranges
+
+    if not ranges.available():
+        return None
+    j = next(x for x in live if x != i)
+    hole = [repr(c) for c in state.hole_cards[i]]
+    w = ranges.weights(ctx["log"], j, set(board) | set(hole))
+    eq = ranges.equity_vs_weights(hole, board, w, 600, _RNG)
+    if eq is None:
+        return None
+    price = to_call / (state.total_pot_amount + to_call)
+    margin = 0.0 if state.stacks[j] == 0 or state.stacks[i] <= to_call else 0.05
+    act = "call" if eq > price + margin else "fold"
+    return {
+        "action": act,
+        "why": f"overbet {to_call / max(pot_before, 1):.1f}x pot: equity {eq:.0%} vs price {price:.0%}",
+    }
+
+
 def preflop_deep_decision(state, i, ctx):
     """The deep-stack pre-flop strategy (preflop_deep.py) for this spot, or None."""
     import preflop_deep
@@ -432,6 +464,9 @@ def solver_play(state, i, ctx):
     if deep:
         stats["preflop_deep_used"] += 1
         return _reply(deep["action"], deep.get("amount"))
+    ob = overbet_defence(state, i, ctx)
+    if ob:
+        return _reply(ob["action"])
     adv = solver_strategy(state, i, ctx)
     if adv.get("available"):
         stats["solver_used"] += 1

@@ -1,0 +1,30 @@
+{
+ "hands": 3000,
+ "errors": 0,
+ "stack_bb": 100,
+ "lbr_wins_bb100": 464.1,
+ "ci95": [
+  320.7,
+  607.5
+ ],
+ "by_lbr_position": {
+  "big blind": 170.5,
+  "button": 757.7
+ },
+ "bot_fold_rate_facing_bets": {
+  "flop": {
+   "faced": 1822,
+   "fold_rate": 0.558
+  },
+  "turn": {
+   "faced": 703,
+   "fold_rate": 0.434
+  },
+  "river": {
+   "faced": 294,
+   "fold_rate": 0.35
+  }
+ },
+ "sample_errors": [],
+ "note": "positive = the bot is beatable by at least this much (lower bound on exploitability)"
+}

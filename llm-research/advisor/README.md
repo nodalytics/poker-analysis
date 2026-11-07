@@ -23,8 +23,41 @@ uv run python -m advisor.sync            # one Hand Sync pass (import new hands;
 uv run --with pytest python -m pytest advisor/tests
 ```
 
-Reports are saved to `~/PokerReview/` and open in your browser. A one-file Windows `.exe` can be built with
-PyInstaller; this is not done yet.
+Reports are saved to `~/PokerReview/` and open in your browser.
+
+## Install and package
+
+**From source (any OS, Python 3.12+):**
+
+```
+pip install -r advisor/packaging/requirements.txt      # or: uv sync   (from llm-research/)
+python -m advisor.app
+```
+
+**As a native app (no Python needed by the user):**
+
+```
+uv run --with pyinstaller==6.22.3 python advisor/packaging/build.py
+```
+
+This builds for the OS it runs on:
+
+| OS | Output | Notes |
+|---|---|---|
+| Windows | `dist/PokerAdvisor.exe` | One file, no console window |
+| macOS | `dist/PokerAdvisor.app` | Unsigned: right-click → Open the first time (Gatekeeper) |
+| Linux | `dist/PokerAdvisor` | One file; needs Tk (`python3-tk`) on minimal systems |
+
+PyInstaller cannot cross-compile, so each OS's app is built on that OS:
+
+- **Locally**, with the command above.
+- **On CI**, with `.github/workflows/advisor-build.yml`: it builds all three, self-tests each app, and attaches
+  them to the run. It runs on demand or on an `advisor-v*` tag. The nodalytics Actions account was
+  billing-blocked when this was written, so the workflow needs that fixed first.
+
+`dist/PokerAdvisor --selftest` answers two spots without opening a window, which checks that a build found its
+models. The bundle includes the advisor and `scripts/` sources, the flop model, the hand-reading models and the
+pre-flop charts. TexasSolver is optional and not bundled: set `TEXASSOLVER_BIN` to use it on turns and rivers.
 
 ## Hand histories it reads
 
@@ -105,6 +138,7 @@ engine plays at least 35% of the time **agrees**, 10–35% is **questionable**, 
 | `spot.py`, `spot_ui.py` | Spot study: the line notation, replay, analysis |
 | `sync.py`, `sync_ui.py` | Hand Sync: library, de-duplication, review after the session, trends page |
 | `trainer_ui.py`, `app.py` | The window (four tabs) |
+| `packaging/` | `launcher.py` (the app's entry point, `--selftest`), `build.py` (PyInstaller per OS), `requirements.txt` |
 | `tests/` | One sample hand per site layout; the trainer plays whole hands against every bot; spot study; Hand Sync with temporary folders and a GG zip |
 
 The engine imports from `../scripts/` (`poker_agents`, `preflop_deep`, `ranges`, `poker_selfplay`). It loads the

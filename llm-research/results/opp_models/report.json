@@ -1,0 +1,77 @@
+{
+ "hands_with_showdown_rows": 68251,
+ "regulars": 2363,
+ "train_players": 1182,
+ "test_players": 1181,
+ "clusters": [
+  {
+   "vpip": 0.268,
+   "pfr": 0.2,
+   "aggression": 0.76,
+   "players": 668
+  },
+  {
+   "vpip": 0.558,
+   "pfr": 0.405,
+   "aggression": 0.726,
+   "players": 150
+  },
+  {
+   "vpip": 0.169,
+   "pfr": 0.13,
+   "aggression": 0.864,
+   "players": 469
+  },
+  {
+   "vpip": 0.43,
+   "pfr": 0.156,
+   "aggression": 0.646,
+   "players": 164
+  },
+  {
+   "vpip": 0.233,
+   "pfr": 0.131,
+   "aggression": 0.602,
+   "players": 331
+  },
+  {
+   "vpip": 0.179,
+   "pfr": 0.115,
+   "aggression": 0.73,
+   "players": 581
+  }
+ ],
+ "generic_on_test": {
+  "hands": 34496,
+  "mean_rank": 0.171,
+  "top10_rate": 0.5289
+ },
+ "style_vs_generic_same_hands": {
+  "hands": 34496,
+  "style": {
+   "mean_rank": 0.3206,
+   "top10_rate": 0.37
+  },
+  "generic": {
+   "mean_rank": 0.171,
+   "top10_rate": 0.5289
+  }
+ },
+ "personal_vs_style_vs_generic_same_hands": {
+  "personal": {
+   "hands": 1442,
+   "mean_rank": 0.3633,
+   "top10_rate": 0.2774
+  },
+  "style": {
+   "hands": 1442,
+   "mean_rank": 0.3141,
+   "top10_rate": 0.3641
+  },
+  "generic": {
+   "hands": 1442,
+   "mean_rank": 0.1545,
+   "top10_rate": 0.5485
+  }
+ }
+}

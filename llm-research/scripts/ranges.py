@@ -119,3 +119,32 @@ def solver_range(w, floor=0.02, include=None):
     if include:
         cw[include] = max(cw.get(include, 0.0), 0.1)
     return ",".join(f"{c}:{v:.3f}" for c, v in sorted(cw.items(), key=lambda x: -x[1]) if v >= floor)
+
+
+def equity_vs_weights(hole, board, w, sims=800, rng=None):
+    """Equity of hole ('AhKd' or ['Ah','Kd']) against a weighted range {combo: weight}, by Monte Carlo."""
+    import random
+
+    import eval7
+
+    rng = rng or random.Random(0)
+    hole = [hole[:2], hole[2:]] if isinstance(hole, str) else list(hole)
+    used = set(hole) | set(board)
+    combos = [c for c, x in w.items() if x > 1e-9 and c[:2] not in used and c[2:] not in used]
+    if not combos:
+        return None
+    card = {c: eval7.Card(c) for c in DECK}
+    me = [card[c] for c in hole]
+    bc = [card[c] for c in board]
+    deck = [c for c in DECK if c not in used]
+    win = 0.0
+    for v in rng.choices(combos, weights=[w[c] for c in combos], k=sims):
+        rest = []
+        while len(rest) < 5 - len(board):
+            c = deck[rng.randrange(len(deck))]
+            if c != v[:2] and c != v[2:] and c not in rest:
+                rest.append(c)
+        b = bc + [card[c] for c in rest]
+        a, o = eval7.evaluate(me + b), eval7.evaluate([card[v[:2]], card[v[2:]]] + b)
+        win += 1.0 if a > o else 0.5 if a == o else 0.0
+    return win / sims
