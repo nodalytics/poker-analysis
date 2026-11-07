@@ -57,3 +57,15 @@
   tool call on every task, where it passed Calculator without it. Test a skills file per model. — verified 2026-11-05
 - Big-Tiger-Gemma clicked Calculator buttons by coordinates and reported 5490 for 123 × 45 (true 5535).
 - Tiger-Gemma 9B wrote pyautogui code or invented tool names ("App Open") instead of calling tools.
+
+## Scripting the VM (non-GUI tools) — verified 2026-11-07
+- `PowerShell` takes `{"command", "timeout"}`; **the timeout defaults to 30 s**, so pass it for installs and builds.
+  Output comes wrapped as `Response: ... Status Code: n`: parse out the part between them.
+- A command line is capped at about 32 KB (Windows), so do not push file contents through `PowerShell`. Upload with
+  `FileSystem` `{"mode": "write", "append": true, "content": <base64 chunk>}` (2 MB chunks worked), then decode
+  inside Windows with `[IO.File]::WriteAllBytes(path, [Convert]::FromBase64String((Get-Content -Raw f.b64)))`.
+- Download by reading byte ranges through PowerShell (`[IO.File]::OpenRead`, `Seek`, `[Convert]::ToBase64String`);
+  1.5 MB chunks moved a 69 MB .exe in about 2 minutes.
+- The VM has internet (pypi.org, python.org) and about 110 GB free. Python 3.14 is in `C:\Python314`;
+  `scripts/win_build.py` adds a per-user Python 3.12 for builds that need older wheels (eval7).
+- Hold `~/windows11/in-use` for the whole run (win_build.py does) and remove build folders afterwards.

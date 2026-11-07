@@ -51,6 +51,10 @@ This builds for the OS it runs on:
 PyInstaller cannot cross-compile, so each OS's app is built on that OS:
 
 - **Locally**, with the command above.
+- **Windows, from the lab's Windows 11 VM:** `python3 scripts/win_build.py build BUNDLE.zip PokerAdvisor.exe`, run on
+  the lab. It installs Python 3.12 in the VM if needed, uploads the sources through Windows-MCP, builds, self-tests
+  the `.exe` inside Windows and copies it back. Done on 2026-11-07: 69 MB, self-test passed, sha256 `ed8b4872…e445`.
+  It is unsigned, so Windows SmartScreen asks "More info → Run anyway" the first time.
 - **On CI**, with `.github/workflows/advisor-build.yml`: it builds all three, self-tests each app, and attaches
   them to the run. It runs on demand or on an `advisor-v*` tag. The nodalytics Actions account was
   billing-blocked when this was written, so the workflow needs that fixed first.
