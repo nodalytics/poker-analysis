@@ -139,7 +139,41 @@ class Hand:
             out[h] = [(CALL, None, 1.0)] if ok else [(FOLD, None, 1.0)]
         return out
 
+    def flop_sized(self, state, ctx, combos, board):
+        """Mirror of poker_agents.sized_flop_strategy for every holding (one batch)."""
+        probe = pa.sized_flop_strategy(state, self.bot, ctx)  # node, bet size and model availability
+        if not probe.get("available"):
+            return None
+        import ml_flop_sized
+
+        live = [0, 1]
+        behind = min(state.stacks[j] for j in live) + min(state.bets[j] for j in live)
+        spot = "spr9.5_wide" if behind / max(1, ctx["street_pot"]) > 7 else "spr4.5_wide"
+        X = [ml_flop_sized.feats(board, h, probe["node"], spot, probe["bet_faced"]) for h in combos]
+        P = np.clip(pa._FLOP_SIZED["model"].predict(X), 0, None)
+        to_call = state.checking_or_calling_amount
+        out = {}
+        for h, p in zip(combos, P):
+            p = list(p)
+            if not to_call:
+                p[0], p[7], p[5] = p[0] + p[7], 0.0, 0.0
+            else:
+                p[1:5] = [0.0] * 4
+            s = sum(p) or 1.0
+            d = []
+            for name, v in zip(pa.SIZED_SLOTS, p):
+                if v <= 0:
+                    continue
+                reply = json.loads(pa.sized_action(state, self.bot, name))
+                kind = {"check": CALL, "call": CALL, "fold": FOLD}.get(reply["action"], "raise")
+                d.append((kind, reply.get("amount"), v / s))
+            out[h] = d
+        return out
+
     def flop(self, state, ctx, combos, board):
+        sized = self.flop_sized(state, ctx, combos, board)
+        if sized is not None:
+            return sized
         live = [0, 1]
         acts = [k for k, _ in ctx["street_actions"] if k != "fold"]
         oop = self.bot == min(live)
