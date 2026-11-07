@@ -38,3 +38,19 @@ def test_gg_zip_in_downloads(tmp_path):
     r = s.step(now=time.time() + 60)
     assert r["added"] == 1 and r["report"]
     assert any("GGPoker" in d for d in os.listdir(home / "library"))
+
+
+def test_hostile_inputs(tmp_path):
+    """A PHH 'time' with path parts stays inside the library; an oversized zip member is skipped."""
+    from advisor.tests.test_handhistory import PHH
+
+    src, home = tmp_path / "hh", tmp_path / "home"
+    src.mkdir()
+    (src / "evil.phh").write_text(PHH + "year = '../../x'\n")
+    with zipfile.ZipFile(src / "bomb.zip", "w", compression=zipfile.ZIP_DEFLATED) as z:
+        z.writestr("big.txt", "0" * (sync.MAX_FILE + 10))
+    s = sync.Sync(home=str(home), sources=[str(src)], idle_minutes=0, hero="Hero")
+    s.import_new()
+    files = [os.path.join(r, n) for r, _, ns in os.walk(tmp_path) for n in ns]
+    assert all(str(home) in f or str(src) in f for f in files)
+    assert os.path.exists(home / "library" / "PHH" / "unknown.txt")

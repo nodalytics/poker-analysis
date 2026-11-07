@@ -227,7 +227,7 @@ def parse_phh(text, hero=None):
             {
                 "id": str(d.get("hand", len(out) + 1)),
                 "site": "PHH",
-                "time": f"{d.get('year', 2000)}/{int(d.get('month', 1)):02d}/{int(d.get('day', 1)):02d} {d.get('time', '00:00:00')}",
+                "time": phh_time(d),
                 "table": str(d.get("table", "")),
                 "scale": scale,
                 "blinds": tuple(int(round(b * scale)) for b in blinds),
@@ -244,6 +244,18 @@ def parse_phh(text, hero=None):
             }
         )
     return out
+
+
+def phh_time(d):
+    """'YYYY/MM/DD HH:MM:SS' from PHH fields, or '' when they are not plain numbers."""
+    try:
+        y, mo, dd = int(d.get("year", 2000)), int(d.get("month", 1)), int(d.get("day", 1))
+        tm = str(d.get("time", "00:00:00"))
+        if not re.fullmatch(r"\d\d:\d\d:\d\d", tm):
+            tm = "00:00:00"
+        return f"{y:04d}/{mo:02d}/{dd:02d} {tm}"
+    except (TypeError, ValueError):
+        return ""
 
 
 def parse_text(text, hero=None):

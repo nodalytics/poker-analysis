@@ -14,9 +14,9 @@ it does not scrape or collect other players' hands from sites.
 import argparse
 import datetime as dt
 import html
-import io
 import json
 import os
+import re
 import sys
 import time
 import zipfile
@@ -31,6 +31,20 @@ DEFAULT_SOURCES = [
     os.path.expandvars(r"%APPDATA%\winamax\documents\accounts"),
     os.path.join(os.path.expanduser("~"), "Downloads"),  # GGPoker PokerCraft zips, Ignition downloads
 ]
+
+
+SITE_DIRS = {
+    "PokerStars": "PokerStars",
+    "GGPoker": "GGPoker",
+    "ACR / WPN": "ACR-WPN",
+    "Ignition": "Ignition",
+    "Bovada": "Bovada",
+    "Winamax": "Winamax",
+    "PHH": "PHH",
+}
+MAX_FILE = 50 * 1024 * 1024  # a hand-history file or zip member larger than this is skipped
+MAX_ZIP_TOTAL = 200 * 1024 * 1024
+MAX_ZIP_MEMBERS = 5000
 
 
 class Sync:
@@ -71,15 +85,25 @@ class Sync:
         if path.lower().endswith(".zip"):
             try:
                 with zipfile.ZipFile(path) as z:
-                    for m in z.namelist():
-                        if m.lower().endswith(handhistory.HAND_FILES):
-                            yield (
-                                f"{path}!{m}",
-                                io.TextIOWrapper(z.open(m), encoding="utf-8-sig", errors="replace").read(),
-                            )
-            except zipfile.BadZipFile:
+                    infos = z.infolist()
+                    if len(infos) > MAX_ZIP_MEMBERS:
+                        return
+                    total = 0
+                    for info in infos:
+                        # zip-bomb guards: a size cap per member and in total, and a sane compression ratio
+                        if not info.filename.lower().endswith(handhistory.HAND_FILES) or info.file_size > MAX_FILE:
+                            continue
+                        if info.compress_size and info.file_size / info.compress_size > 200:
+                            continue
+                        total += info.file_size
+                        if total > MAX_ZIP_TOTAL:
+                            return
+                        with z.open(info) as f:
+                            data = f.read(MAX_FILE + 1)[:MAX_FILE]
+                        yield f"{path}!{info.filename}", data.decode("utf-8-sig", errors="replace")
+            except (zipfile.BadZipFile, OSError, RuntimeError):
                 return
-        else:
+        elif os.path.getsize(path) <= MAX_FILE:
             yield path, open(path, encoding="utf-8-sig", errors="replace").read()
 
     def candidates(self):
@@ -117,10 +141,15 @@ class Sync:
                     if key in self.seen:
                         continue
                     self.seen.add(key)
-                    day = (h["time"] or "unknown")[:10].replace("/", "-")
-                    d = os.path.join(self.lib, h["site"].replace(" / ", "-").replace(" ", "_"))
+                    # path parts come from file contents: only a strict date and a fixed site folder name
+                    day = (h["time"] or "")[:10].replace("/", "-")
+                    day = day if re.fullmatch(r"\d{4}-\d\d-\d\d", day) else "unknown"
+                    d = os.path.join(self.lib, SITE_DIRS.get(h["site"], "other"))
+                    target = os.path.realpath(os.path.join(d, f"{day}.txt"))
+                    if not target.startswith(os.path.realpath(self.lib) + os.sep):
+                        continue
                     os.makedirs(d, exist_ok=True)
-                    with open(os.path.join(d, f"{day}.txt"), "a", encoding="utf-8") as f:
+                    with open(target, "a", encoding="utf-8") as f:
                         f.write(h["text"] + "\n\n\n")
                     self.pending.append(h["text"])
                     added += 1
