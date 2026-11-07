@@ -365,11 +365,44 @@ class Hand:
         return best[1], best[2], info
 
     # ---- play ----
+    def true_equity(self, board):
+        """LBR's equity against the bot's actual cards on this board (exact on the turn, sampled on the flop)."""
+        import eval7
+
+        card = {c: eval7.Card(c) for c in engine.DECK}
+        me = [card[self.holes[self.lbr][:2]], card[self.holes[self.lbr][2:]]]
+        op = [card[self.holes[self.bot][:2]], card[self.holes[self.bot][2:]]]
+        used = set(board) | {self.holes[0][:2], self.holes[0][2:], self.holes[1][:2], self.holes[1][2:]}
+        deck = [c for c in engine.DECK if c not in used]
+        need = 5 - len(board)
+        b = [card[c] for c in board]
+        if need == 0:
+            a, o = eval7.evaluate(me + b), eval7.evaluate(op + b)
+            return 1.0 if a > o else 0.5 if a == o else 0.0
+        if need == 1:
+            runs = [[c] for c in deck]
+        else:
+            rng = random.Random(len(board) * 7919 + sum(map(ord, "".join(board))))
+            runs = [rng.sample(deck, need) for _ in range(1500)]
+        win = 0.0
+        for r in runs:
+            bb = b + [card[c] for c in r]
+            a, o = eval7.evaluate(me + bb), eval7.evaluate(op + bb)
+            win += 1.0 if a > o else 0.5 if a == o else 0.0
+        return win / len(runs)
+
     def play(self):
         t = self.t
+        self.luck = 0.0  # sum over dealt streets of pot x (LBR's equity after the cards - before), in units
+        eq_prev = self.true_equity([])
         while t.state.status:
             if t.needs_board():
+                pot = t.state.total_pot_amount
                 t.deal_street()
+                board = [repr(c) for c in t.state.get_board_cards(0)]
+                eq = self.true_equity(board)
+                self.luck += pot * (eq - eq_prev)
+                eq_prev = eq
                 continue
             i = t.actor()
             if i is None:
@@ -420,7 +453,8 @@ def play_hand(args):
         return {"error": repr(e)[:200]}
     # start is after the blinds were posted: LBR's blind (2 units in the big blind, seat 0; 1 on the button) is lost too
     won = (h.t.state.stacks[h.lbr] - start[h.lbr] - (2 if h.lbr == 0 else 1)) / BB
-    return {"won_bb": won, "lbr_seat": h.lbr, "events": h.events}
+    # card luck removed (AIVAT-style, unbiased: equity is a martingale over the cards)
+    return {"won_bb": won, "adjusted_bb": won - h.luck / BB, "lbr_seat": h.lbr, "events": h.events}
 
 
 def main(outdir, hands, workers=48, stack_bb=100):
@@ -430,6 +464,8 @@ def main(outdir, hands, workers=48, stack_bb=100):
     ok = [r for r in res if "won_bb" in r]
     x = np.array([r["won_bb"] for r in ok])
     se = x.std(ddof=1) / math.sqrt(len(x))
+    xa = np.array([r["adjusted_bb"] for r in ok])
+    sea = xa.std(ddof=1) / math.sqrt(len(xa))
     folds = {}
     for st in ("flop", "turn", "river"):
         ev = [e for r in ok for e in r["events"] if e[0] == "bot_faced_bet" and e[1] == st]
@@ -457,6 +493,9 @@ def main(outdir, hands, workers=48, stack_bb=100):
         "stack_bb": stack_bb,
         "lbr_wins_bb100": round(100 * x.mean(), 1),
         "ci95": [round(100 * (x.mean() - 1.96 * se), 1), round(100 * (x.mean() + 1.96 * se), 1)],
+        "luck_adjusted_bb100": round(100 * xa.mean(), 1),
+        "luck_adjusted_ci95": [round(100 * (xa.mean() - 1.96 * sea), 1), round(100 * (xa.mean() + 1.96 * sea), 1)],
+        "variance_reduction": round(float(x.var() / max(xa.var(), 1e-12)), 2),
         "by_lbr_position": {
             p: round(100 * float(np.mean([r["won_bb"] for r in ok if r["lbr_seat"] == k])), 1)
             for k, p in ((0, "big blind"), (1, "button"))

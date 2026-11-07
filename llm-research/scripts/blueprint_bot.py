@@ -5,7 +5,8 @@ The hand so far is read from PokerKit's operation log and walked down the abstra
   a bet or raise           the child with the nearest size, measured as a fraction of the pot after calling; between
                            two abstract sizes A < x < B it maps to A with probability (B-x)(1+A) / ((B-A)(1+x)), the
                            randomized pseudo-harmonic mapping of Ganzfried & Sandholm used by Libratus and Pluribus
-Our own decision: the average strategy at that node for our card bucket (libbp.so: the trainer's abstraction),
+Our own decision: the average strategy before the flop and the current regret-matching strategy after it (as Pluribus;
+BLUEPRINT_POSTFLOP=average to change), at that node for our card bucket (libbp.so: the trainer's abstraction),
 actions under 5% dropped ("purification", harder to exploit), sampled. An abstract raise is played at the same
 fraction of the real pot. Returns None (caller falls back to the solver bot) for multi-way pots, or when the hand
 leaves the tree.
@@ -49,7 +50,12 @@ class Blueprint:
                 "children": [int(x) for x in r[8].split(",")] if r[8] else [],
             }
         self.avg = np.memmap(os.path.join(run, "avg.f32"), dtype=np.float32, mode="r")
-        self._mapped = {}  # (hand, action position) -> child: an off-tree bet keeps one reading for the whole hand
+        # after the flop, play the current (regret-matching) strategy as Pluribus did: rarely reached spots such as
+        # facing an all-in keep a near-uniform average for a long time, and LBR won +560 bb/100 calling them down
+        rp = os.path.join(run, "regret.f32")
+        self.regret = np.memmap(rp, dtype=np.float32, mode="r") if os.path.exists(rp) else None
+        self.postflop = os.environ.get("BLUEPRINT_POSTFLOP", "average")  # LBR: average +153, current +286
+        self._mapped = {}  # betting history -> child: an off-tree bet keeps one reading for the whole hand
         self.lib = ctypes.CDLL(lib)
         if self.lib.bp_init(absdir.encode()) != 0:
             raise RuntimeError(f"blueprint buckets not found in {absdir}")
@@ -105,8 +111,11 @@ class Blueprint:
             return None
         bets = [0, 0]  # real chips this street, by blueprint player (0 = button / small blind)
         pot = 0
-        for k, op in enumerate(state.operations):
+        sig = []  # the betting so far, for the mapping cache
+        for op in state.operations:
             name = type(op).__name__
+            if name in ("Folding", "CheckingOrCalling", "CompletionBettingOrRaisingTo", "BoardDealing"):
+                sig.append((name[0], getattr(op, "player_index", -1), getattr(op, "amount", 0)))
             if name == "BlindOrStraddlePosting":
                 bets[1 - op.player_index] += op.amount * scale  # PokerKit heads-up: seat 0 big blind, 1 button
             elif name == "BetCollection":
@@ -127,7 +136,9 @@ class Blueprint:
                     to = op.amount * scale
                     x = self.frac(to, bets[1 - p], bets[p], pot + sum(bets))
                     bets[p] = to
-                    key = (id(state), k)
+                    # keyed by the action history so far (not id(state): Python reuses ids of discarded copies, and
+                    # LBR's hypothetical bets then lent their reading to real ones)
+                    key = (tuple(sig), round(x, 6))
                     if key not in self._mapped:
                         if len(self._mapped) > 200000:
                             self._mapped.clear()
@@ -155,8 +166,13 @@ class Blueprint:
         if b < 0:
             return None
         k = len(n["labels"])
-        s = np.array(self.avg[n["offset"] + b * k : n["offset"] + (b + 1) * k], dtype=float)
+        lo_i, hi_i = n["offset"] + b * k, n["offset"] + (b + 1) * k
+        s = np.array(self.avg[lo_i:hi_i], dtype=float)
         s = s / s.sum() if s.sum() > 0 else np.full(k, 1 / k)
+        if n["street"] > 0 and self.postflop == "current" and self.regret is not None:
+            r = np.clip(np.array(self.regret[lo_i:hi_i], dtype=float), 0, None)
+            if r.sum() > 0:
+                s = r / r.sum()
         s[s < PURIFY] = 0.0
         s = s / s.sum() if s.sum() > 0 else np.full(k, 1 / k)
         can_raise = state.can_complete_bet_or_raise_to()
