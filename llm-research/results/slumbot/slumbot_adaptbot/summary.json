@@ -1,0 +1,10 @@
+{
+ "bot": "adaptbot",
+ "hands": 3000,
+ "bb100": -41.5,
+ "ci95": [
+  -132.7,
+  41.1
+ ],
+ "fallbacks_after_illegal_reply": 0
+}
