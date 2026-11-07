@@ -54,6 +54,11 @@ def selftest():
     print(spot.describe(spot.analyse(6, 100, "BB", "AhKd", "f f r2.5 f f c [Qs7h2c] x r3")))
     print(spot.describe(spot.analyse(2, 15, "BTN", "Kh7c", "")))
     print("selftest ok")
+    # a windowed build has no console, so the result is also written where a build script can read it
+    import tempfile as _t
+
+    with open(os.path.join(_t.gettempdir(), "poker_advisor_selftest.txt"), "w") as f:
+        f.write("selftest ok\n")
 
 
 if __name__ == "__main__":
