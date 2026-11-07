@@ -1,0 +1,10 @@
+{
+ "bot": "solverbot",
+ "hands": 3000,
+ "bb100": -64.8,
+ "ci95": [
+  -127.3,
+  7.7
+ ],
+ "fallbacks_after_illegal_reply": 0
+}

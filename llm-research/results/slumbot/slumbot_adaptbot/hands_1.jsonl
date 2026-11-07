@@ -1,0 +1,1000 @@
+{"bot": "adaptbot", "pos": 0, "hole": ["Kd", "8c"], "slumbot_hole": ["3c", "2d"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ks", "2s"], "slumbot_hole": ["7s", "5h"], "board": ["Jc", "8s", "7d", "Qc", "7h"], "action": "b250c/kk/kk/kk", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["8h", "2c"], "slumbot_hole": ["7h", "4c"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["9s", "8s"], "slumbot_hole": ["Ts", "9h"], "board": ["Jc", "4s", "3h", "Qh"], "action": "b250c/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["8s", "5d"], "slumbot_hole": ["7c", "5s"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["5s", "4s"], "slumbot_hole": ["Ac", "2s"], "board": ["Jh", "8c", "7s", "5d", "2d"], "action": "b250c/kk/kk/kk", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qd", "7c"], "slumbot_hole": ["Qh", "5c"], "board": ["Kd", "Ts", "6c", "Jc", "Ac"], "action": "b200c/kk/kb200c/kb800b2000c", "winnings_chips": 0}
+{"bot": "adaptbot", "pos": 1, "hole": ["7d", "5c"], "slumbot_hole": ["4s", "3s"], "board": ["Kc", "7c", "3c", "Jh", "8h"], "action": "b250c/kk/kk/kk", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["As", "Kc"], "slumbot_hole": ["9s", "2s"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["8h", "7s"], "slumbot_hole": ["As", "Jc"], "board": ["7c", "5s", "3d", "5d", "Ah"], "action": "b250b750c/kk/kk/b1500c", "winnings_chips": -2250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ac", "5h"], "slumbot_hole": ["Kd", "2h"], "board": ["Jh", "Td", "5c", "8c", "8d"], "action": "b200c/kb200c/kb400c/kb800c", "winnings_chips": 1600}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qh", "7d"], "slumbot_hole": ["8c", "5c"], "board": ["9c", "3d", "2s"], "action": "b250c/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["6h", "2d"], "slumbot_hole": ["8s", "4c"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["9c", "4h"], "slumbot_hole": ["Ah", "Js"], "board": [], "action": "b250b750f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["5h", "2d"], "slumbot_hole": ["Qh", "6d"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qd", "6s"], "slumbot_hole": ["9d", "7c"], "board": [], "action": "b250b750f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kh", "Th"], "slumbot_hole": ["Kc", "3s"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Tc", "5d"], "slumbot_hole": ["Js", "5c"], "board": ["Kc", "7h", "4h", "Jc", "6h"], "action": "b250c/kk/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Td", "3s"], "slumbot_hole": ["5s", "5h"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ac", "8c"], "slumbot_hole": ["8s", "6s"], "board": ["7s", "6d", "2c", "Qd"], "action": "b250b750c/b750c/b1500f", "winnings_chips": -1500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ad", "6d"], "slumbot_hole": ["9h", "5d"], "board": ["Kc", "Tc", "3s"], "action": "b200c/b250f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kd", "Js"], "slumbot_hole": ["4d", "2s"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["4h", "2s"], "slumbot_hole": ["Jd", "3c"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ad", "Td"], "slumbot_hole": ["Jd", "5d"], "board": ["Kc", "8d", "3s", "Ah"], "action": "b250c/kk/kb350f", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ts", "5d"], "slumbot_hole": ["Jd", "8s"], "board": ["Kd", "Th", "7d", "7c", "Js"], "action": "b200c/b250c/kb350c/kk", "winnings_chips": -800}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qh", "Th"], "slumbot_hole": ["Ah", "Qc"], "board": ["Kc", "Jc", "6h", "8d", "3d"], "action": "b250b750c/b1500c/b4500c/kk", "winnings_chips": -6750}
+{"bot": "adaptbot", "pos": 0, "hole": ["9s", "4h"], "slumbot_hole": ["Kc", "2s"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Tc", "4s"], "slumbot_hole": ["6h", "3h"], "board": ["Ah", "7h", "3c", "4c", "Kh"], "action": "b250c/kk/kk/b250c", "winnings_chips": -500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Td", "7h"], "slumbot_hole": ["5s", "2d"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kh", "Ts"], "slumbot_hole": ["As", "7c"], "board": ["Js", "Th", "Td", "Kd", "Jd"], "action": "b250c/kb350c/kb900c/kb2250c", "winnings_chips": 3750}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qc", "3d"], "slumbot_hole": ["4h", "3h"], "board": ["8s", "5c", "2d", "Jd", "Kc"], "action": "b200c/kb200c/kk/kb800f", "winnings_chips": -400}
+{"bot": "adaptbot", "pos": 1, "hole": ["7d", "5s"], "slumbot_hole": ["9c", "8h"], "board": ["Ts", "3c", "2s", "3d", "4s"], "action": "b250c/kk/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["9s", "6s"], "slumbot_hole": ["2d", "2c"], "board": ["As", "9d", "4c", "4s", "Jh"], "action": "b200c/b300c/b750c/kb2350c", "winnings_chips": 3600}
+{"bot": "adaptbot", "pos": 1, "hole": ["3c", "2h"], "slumbot_hole": ["6d", "5s"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["7h", "4d"], "slumbot_hole": ["Ad", "3h"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ah", "9d"], "slumbot_hole": ["Ad", "Qc"], "board": ["8s", "7s", "5c", "6h"], "action": "b250b750c/kk/kb1100f", "winnings_chips": 750}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jh", "6s"], "slumbot_hole": ["5d", "3c"], "board": ["Kd", "8h", "7c", "Tc", "2c"], "action": "b200c/kb200c/kk/kk", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["8c", "4h"], "slumbot_hole": ["Td", "9s"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qh", "Tc"], "slumbot_hole": ["7d", "4h"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["9s", "5d"], "slumbot_hole": ["2s", "2d"], "board": ["9d", "8s", "6d"], "action": "b250c/kb350f", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ad", "3h"], "slumbot_hole": ["5s", "4s"], "board": ["Qc", "7c", "5d", "Kc", "7d"], "action": "b200c/kk/kk/kk", "winnings_chips": -200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Js", "3s"], "slumbot_hole": ["Qc", "3d"], "board": ["9d", "7d", "5s", "Jd", "Jh"], "action": "b250c/kk/b250c/b500c", "winnings_chips": 1000}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ah", "2s"], "slumbot_hole": ["9s", "9d"], "board": ["Qs", "5s", "3d", "Td", "Kc"], "action": "b200c/kb200c/kk/kk", "winnings_chips": -400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kh", "Th"], "slumbot_hole": ["Qd", "Qc"], "board": ["Jd", "Td", "7s", "Kd", "As"], "action": "b250b750c/b750c/kk/b1500c", "winnings_chips": -3000}
+{"bot": "adaptbot", "pos": 0, "hole": ["7c", "3h"], "slumbot_hole": ["Qh", "8s"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["6s", "5h"], "slumbot_hole": ["Ts", "7h"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qh", "2d"], "slumbot_hole": ["As", "Jc"], "board": ["8s", "7d", "5c", "9s"], "action": "b200c/kb200c/b550f", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jh", "5c"], "slumbot_hole": ["Ac", "9d"], "board": ["Ts", "4s", "4h", "Jd", "Ks"], "action": "b250c/kk/kk/kk", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qs", "8h"], "slumbot_hole": ["7h", "3d"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["6s", "5c"], "slumbot_hole": ["Js", "9c"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jc", "5d"], "slumbot_hole": ["6h", "2s"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["7s", "2h"], "slumbot_hole": ["Js", "9d"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qs", "8s"], "slumbot_hole": ["6h", "3h"], "board": ["Ks", "6c", "5s", "2s", "4s"], "action": "b200c/kb200c/kk/b550c", "winnings_chips": 950}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jd", "6h"], "slumbot_hole": ["Kc", "3d"], "board": ["8s", "6c", "2h", "Jh"], "action": "b250c/kk/b250b1550f", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Td", "5h"], "slumbot_hole": ["Qs", "7s"], "board": ["9s", "5s", "4c", "6h", "Ts"], "action": "b200c/b250c/kb350c/kb1600b4000b19200c", "winnings_chips": -20000}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ah", "7s"], "slumbot_hole": ["9s", "7d"], "board": ["Ks", "6s", "4h", "4c", "2d"], "action": "b250b750c/b750c/kk/b1500c", "winnings_chips": 3000}
+{"bot": "adaptbot", "pos": 0, "hole": ["9d", "5s"], "slumbot_hole": ["Kc", "8s"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jh", "2s"], "slumbot_hole": ["9h", "8d"], "board": ["Ah", "Qh", "4s", "2d", "Kd"], "action": "b250c/kk/kk/b250c", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ac", "2c"], "slumbot_hole": ["7h", "3d"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jd", "4h"], "slumbot_hole": ["6d", "5d"], "board": ["Tc", "9c", "6s", "9d"], "action": "b250c/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qd", "3d"], "slumbot_hole": ["6d", "4h"], "board": ["Ah", "6s", "6c", "8c", "As"], "action": "b200c/b250c/kk/kb750c", "winnings_chips": -1200}
+{"bot": "adaptbot", "pos": 1, "hole": ["8c", "4s"], "slumbot_hole": ["Kd", "8s"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ah", "3d"], "slumbot_hole": ["4s", "3s"], "board": ["Jc", "9c", "6h", "Jh", "3h"], "action": "b200c/kk/kk/kk", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Tc", "3h"], "slumbot_hole": ["6h", "6c"], "board": [], "action": "b250b750f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ac", "5d"], "slumbot_hole": ["Tc", "5h"], "board": ["Qh", "Th", "9h", "4s", "5c"], "action": "b200c/kk/kb200c/kb800c", "winnings_chips": -1200}
+{"bot": "adaptbot", "pos": 1, "hole": ["7h", "2c"], "slumbot_hole": ["Kh", "7d"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Td", "5h"], "slumbot_hole": ["8c", "3c"], "board": ["Qh", "7d", "6h", "7s", "Js"], "action": "b200c/kb200c/kk/b550f", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["7s", "2c"], "slumbot_hole": ["7d", "4d"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["8h", "6h"], "slumbot_hole": ["Jh", "Td"], "board": ["7s", "7c", "6d", "2c"], "action": "b200c/kk/b250f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kh", "Qd"], "slumbot_hole": ["Qc", "2s"], "board": ["7h", "7c", "4d", "9h", "6c"], "action": "b250c/kk/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["As", "6d"], "slumbot_hole": ["7d", "5h"], "board": ["Ks", "8c", "4h", "9h", "Qc"], "action": "b200c/kb200c/kb800c/kb2400f", "winnings_chips": -1200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Th", "5h"], "slumbot_hole": ["7s", "3s"], "board": ["Qh", "Ts", "2d", "Ks", "6h"], "action": "b250c/kk/b250c/kk", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["As", "3h"], "slumbot_hole": ["Ac", "Jc"], "board": ["Kd", "Tc", "2c", "8h", "6s"], "action": "b200c/kb200c/kb800c/kk", "winnings_chips": -1200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qc", "6c"], "slumbot_hole": ["9c", "5d"], "board": ["Qs", "Tc", "8s", "5s", "2h"], "action": "b250c/b250c/b1000c/kk", "winnings_chips": 1500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jc", "2d"], "slumbot_hole": ["Kc", "7h"], "board": ["Ks", "8h", "3d", "Qc", "4h"], "action": "b200c/kb200c/kk/b550c", "winnings_chips": -950}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ks", "3s"], "slumbot_hole": ["9h", "6d"], "board": ["Qs", "Ts", "5h", "Ah", "7d"], "action": "b250c/kk/kk/kk", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Th", "9c"], "slumbot_hole": ["Qs", "5c"], "board": ["Ts", "4s", "4h", "Jd", "9d"], "action": "b200c/kb200c/kb400c/kb1600c", "winnings_chips": 2400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Tc", "8h"], "slumbot_hole": ["Ts", "8d"], "board": ["Ah", "7d", "6d", "3s"], "action": "b250c/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["8d", "4s"], "slumbot_hole": ["Ts", "9s"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["9h", "5h"], "slumbot_hole": ["9d", "3h"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Td", "9c"], "slumbot_hole": ["Js", "2d"], "board": ["6d", "6c", "4s", "7h"], "action": "b200c/kb200c/b550f", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["9s", "5s"], "slumbot_hole": ["4h", "4c"], "board": ["Qs", "Qc", "8h", "8c", "6c"], "action": "b250b750c/kk/kk/b750f", "winnings_chips": -750}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ts", "Tc"], "slumbot_hole": ["Th", "8s"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kc", "4s"], "slumbot_hole": ["Qd", "Jh"], "board": ["Th", "Td", "6s", "7d"], "action": "b250b750c/kk/b750f", "winnings_chips": -750}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kh", "Qc"], "slumbot_hole": ["Ac", "4c"], "board": ["Ah", "Kd", "5d", "Jd", "9s"], "action": "b200b800c/kk/kb800c/kb1600c", "winnings_chips": -3200}
+{"bot": "adaptbot", "pos": 1, "hole": ["4d", "3d"], "slumbot_hole": ["Ad", "9d"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Tc", "8s"], "slumbot_hole": ["Ts", "8h"], "board": ["Qs", "Qh", "Jc", "Qc", "3s"], "action": "b200c/kk/kk/kk", "winnings_chips": 0}
+{"bot": "adaptbot", "pos": 1, "hole": ["8h", "4c"], "slumbot_hole": ["6h", "2h"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["9d", "5h"], "slumbot_hole": ["Jh", "7h"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qh", "9s"], "slumbot_hole": ["Td", "9c"], "board": ["Ah", "Ad", "Ac", "Th", "6d"], "action": "b250c/kk/b250c/b1000c", "winnings_chips": -1500}
+{"bot": "adaptbot", "pos": 0, "hole": ["9c", "6s"], "slumbot_hole": ["9s", "4s"], "board": ["Kc", "6c", "4d", "Jh", "2h"], "action": "b200c/kk/kk/kk", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jd", "9s"], "slumbot_hole": ["9c", "5h"], "board": ["Kc", "Jh", "7c"], "action": "b250c/b250b19750f", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Td", "2c"], "slumbot_hole": ["7d", "2h"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kh", "6c"], "slumbot_hole": ["Ac", "5h"], "board": ["5d", "4h", "3c", "6s", "5c"], "action": "b250c/kk/b250c/b500c", "winnings_chips": -1000}
+{"bot": "adaptbot", "pos": 0, "hole": ["Td", "3s"], "slumbot_hole": ["Kc", "Jd"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ts", "5c"], "slumbot_hole": ["8h", "7c"], "board": ["Kc", "5s", "5d"], "action": "b250c/kb350f", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kh", "4s"], "slumbot_hole": ["7h", "6s"], "board": ["Ad", "5h", "2h", "Td", "4d"], "action": "b200c/kk/kk/kb200c", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kc", "Js"], "slumbot_hole": ["5s", "3h"], "board": ["Qh", "7d", "2h", "5d", "Ah"], "action": "b250c/kk/b250c/kk", "winnings_chips": -500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ac", "9s"], "slumbot_hole": ["Ah", "3c"], "board": ["Ts", "6h", "3s", "2h", "5h"], "action": "b200b800c/kk/kb800c/kk", "winnings_chips": -1600}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qd", "4h"], "slumbot_hole": ["Td", "9d"], "board": ["Qc", "4c", "3h"], "action": "b250c/kb350f", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ks", "8c"], "slumbot_hole": ["Jh", "3h"], "board": ["Tc", "9c", "7c"], "action": "b200c/b250f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kh", "4c"], "slumbot_hole": ["Qs", "2c"], "board": ["Jc", "9c", "6d", "Qd"], "action": "b250c/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["2h", "2c"], "slumbot_hole": ["Ts", "4h"], "board": ["Ac", "Kc", "Td"], "action": "b200c/b250f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["6h", "6d"], "slumbot_hole": ["4s", "2c"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["7d", "3h"], "slumbot_hole": ["Td", "9h"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qd", "Jh"], "slumbot_hole": ["Tc", "2h"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kh", "Kd"], "slumbot_hole": ["9s", "9d"], "board": ["7s", "6s", "5s", "2c", "4s"], "action": "b200b800c/kk/kb800c/kk", "winnings_chips": -1600}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kh", "9s"], "slumbot_hole": ["6s", "3c"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["9s", "9d"], "slumbot_hole": ["8s", "2d"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qs", "3h"], "slumbot_hole": ["Kh", "5c"], "board": ["Jh", "6h", "6d", "8h"], "action": "b250c/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jd", "5c"], "slumbot_hole": ["7s", "7c"], "board": ["Qd", "8h", "3h", "4s", "6d"], "action": "b200c/kk/kk/b250c", "winnings_chips": -450}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qd", "6c"], "slumbot_hole": ["8d", "2s"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["6c", "4d"], "slumbot_hole": ["9s", "3c"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["9s", "4s"], "slumbot_hole": ["Kc", "4d"], "board": ["Qd", "6h", "3h", "Qs", "5h"], "action": "b250c/kk/kk/kk", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["5s", "2h"], "slumbot_hole": ["Ks", "Tc"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["As", "5c"], "slumbot_hole": ["Kd", "4c"], "board": ["8h", "7h", "4d", "2h", "7s"], "action": "b250c/kk/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["3c", "2h"], "slumbot_hole": ["Ah", "8h"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qd", "3c"], "slumbot_hole": ["Kh", "6c"], "board": ["Td", "8s", "2s", "Jd", "8d"], "action": "b250c/kk/kk/kk", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ts", "5c"], "slumbot_hole": ["9h", "8s"], "board": ["Ah", "8d", "7d", "9d", "2c"], "action": "b200c/kk/kb200c/kb800f", "winnings_chips": -400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ah", "Tc"], "slumbot_hole": ["8d", "5h"], "board": ["Ks", "Th", "4d", "8c", "3s"], "action": "b250c/kk/b250c/kk", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kh", "3h"], "slumbot_hole": ["Qc", "5c"], "board": ["Kd", "Kc", "4s"], "action": "b200c/kb200b650f", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["7s", "5c"], "slumbot_hole": ["Ad", "Qc"], "board": ["Jc", "Tc", "4h"], "action": "b250b750c/b750f", "winnings_chips": -750}
+{"bot": "adaptbot", "pos": 0, "hole": ["Td", "8c"], "slumbot_hole": ["Js", "6h"], "board": ["Kd", "3s", "2d", "6d"], "action": "b200c/kb200c/b550f", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qd", "6d"], "slumbot_hole": ["Qh", "Td"], "board": ["6h", "6c", "4h", "7h", "8h"], "action": "b250c/kb350c/kk/kk", "winnings_chips": -600}
+{"bot": "adaptbot", "pos": 0, "hole": ["7s", "5c"], "slumbot_hole": ["Jd", "8h"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ah", "9s"], "slumbot_hole": ["Ad", "2h"], "board": ["Qh", "Js", "7s", "9h", "Ks"], "action": "b250c/kk/kk/kk", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Th", "5s"], "slumbot_hole": ["Ah", "Kh"], "board": ["Jd", "8c", "3h", "7c", "5d"], "action": "b200c/kb200c/b550c/kb650c", "winnings_chips": 1600}
+{"bot": "adaptbot", "pos": 1, "hole": ["6h", "2c"], "slumbot_hole": ["5s", "4s"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qd", "6d"], "slumbot_hole": ["As", "7s"], "board": ["6s", "6c", "4s", "Ks", "3s"], "action": "b200c/b250b1000b1950c/kb250b3650b17850c/", "winnings_chips": -20000}
+{"bot": "adaptbot", "pos": 1, "hole": ["8d", "3h"], "slumbot_hole": ["Jh", "Ts"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["9d", "2c"], "slumbot_hole": ["Jd", "5h"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["5s", "4h"], "slumbot_hole": ["4s", "3h"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["7s", "5h"], "slumbot_hole": ["Ah", "6c"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["6h", "6d"], "slumbot_hole": ["Th", "3c"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["5h", "3c"], "slumbot_hole": ["Ks", "Jd"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ts", "9h"], "slumbot_hole": ["7c", "5d"], "board": ["Qd", "4s", "3c", "3s"], "action": "b250c/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ad", "8h"], "slumbot_hole": ["8s", "3d"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Th", "8d"], "slumbot_hole": ["Js", "3s"], "board": ["8s", "4c", "2h", "7c", "2d"], "action": "b250c/kk/kk/kk", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["4c", "3d"], "slumbot_hole": ["Kc", "3s"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ah", "4s"], "slumbot_hole": ["7s", "2c"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["7s", "5c"], "slumbot_hole": ["Ah", "6d"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["7d", "6h"], "slumbot_hole": ["Ts", "6s"], "board": ["Qd", "8c", "4c", "4h", "7h"], "action": "b250c/kk/kk/b250c", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kc", "4c"], "slumbot_hole": ["Jd", "7s"], "board": ["Ad", "5h", "3d", "9c", "4d"], "action": "b200c/kk/kb200c/kb400c", "winnings_chips": 800}
+{"bot": "adaptbot", "pos": 1, "hole": ["9c", "3c"], "slumbot_hole": ["Th", "9s"], "board": ["Ac", "Qc", "8c"], "action": "b250c/kb350f", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["As", "Jd"], "slumbot_hole": ["Ts", "3d"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["9s", "8d"], "slumbot_hole": ["Th", "9d"], "board": ["Ac", "Qs", "Jc", "4h", "Td"], "action": "b250c/kk/kk/kk", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["7h", "5c"], "slumbot_hole": ["6h", "2c"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["7h", "5d"], "slumbot_hole": ["Jc", "4c"], "board": ["Kd", "9c", "6d", "5c", "5h"], "action": "b250c/kk/b250c/kb750f", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Td", "9h"], "slumbot_hole": ["9c", "2h"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qd", "Qc"], "slumbot_hole": ["Ts", "7s"], "board": [], "action": "b250b750b1700f", "winnings_chips": 750}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qh", "5d"], "slumbot_hole": ["3s", "2s"], "board": ["5c", "3h", "3d", "6h", "Kh"], "action": "b200c/b250b1000c/kb2400c/kk", "winnings_chips": -3600}
+{"bot": "adaptbot", "pos": 1, "hole": ["8h", "4c"], "slumbot_hole": ["Ac", "Jc"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["As", "9s"], "slumbot_hole": ["Th", "9c"], "board": ["Qc", "4d", "4c"], "action": "b200b800c/b1050f", "winnings_chips": 800}
+{"bot": "adaptbot", "pos": 1, "hole": ["9c", "6h"], "slumbot_hole": ["Ks", "4s"], "board": ["Qh", "8d", "3d", "Kh", "2h"], "action": "b250b750c/kk/kk/b1500b4500c", "winnings_chips": -5250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ts", "4h"], "slumbot_hole": ["As", "Jc"], "board": ["Js", "Jd", "8d", "Kd", "Ks"], "action": "b200c/kk/kk/kb200c", "winnings_chips": -400}
+{"bot": "adaptbot", "pos": 1, "hole": ["8c", "4c"], "slumbot_hole": ["Ks", "Kh"], "board": ["7d", "5c", "3s"], "action": "b250b750c/b750f", "winnings_chips": -750}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ad", "Qs"], "slumbot_hole": ["Kd", "Js"], "board": [], "action": "b200b800b2400f", "winnings_chips": -800}
+{"bot": "adaptbot", "pos": 1, "hole": ["4s", "3s"], "slumbot_hole": ["Kc", "Td"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kc", "4h"], "slumbot_hole": ["Qh", "2h"], "board": ["6h", "5c", "3s", "As", "3d"], "action": "b200c/kb200c/kb800c/kk", "winnings_chips": 1200}
+{"bot": "adaptbot", "pos": 1, "hole": ["6h", "3c"], "slumbot_hole": ["3d", "2d"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["9d", "7h"], "slumbot_hole": ["Qd", "7c"], "board": ["Kd", "Jd", "4h", "2d"], "action": "b200c/kb200c/b550f", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kc", "4d"], "slumbot_hole": ["9h", "4c"], "board": ["7c", "6c", "3d", "4s", "2h"], "action": "b250c/kk/kk/b250c", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["9d", "7s"], "slumbot_hole": ["4h", "2h"], "board": ["6h", "5s", "3h", "Kd"], "action": "b200c/kb200c/kb800f", "winnings_chips": -400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kh", "5h"], "slumbot_hole": ["9h", "5s"], "board": ["Ah", "Ad", "Qs", "Qh", "Tc"], "action": "b250c/b250c/kk/kk", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["8s", "4s"], "slumbot_hole": ["Kh", "7h"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ac", "Jc"], "slumbot_hole": ["Td", "8h"], "board": ["Qc", "6c", "5c"], "action": "b250c/kb350f", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kc", "3h"], "slumbot_hole": ["Qh", "7d"], "board": ["9s", "7c", "4h", "Qs"], "action": "b200c/kb200c/kb800f", "winnings_chips": -400}
+{"bot": "adaptbot", "pos": 1, "hole": ["8d", "6c"], "slumbot_hole": ["Js", "8h"], "board": ["5s", "3d", "2d", "7h", "Ts"], "action": "b250c/kk/kk/kk", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qc", "Jh"], "slumbot_hole": ["Tc", "5s"], "board": ["Jd", "6d", "2s", "Qh", "3c"], "action": "b200c/kb200c/kk/b550f", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["6d", "4s"], "slumbot_hole": ["8s", "4h"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["6c", "5d"], "slumbot_hole": ["Th", "Tc"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qc", "9d"], "slumbot_hole": ["Qs", "4d"], "board": ["Th", "6c", "3s", "5c"], "action": "b250c/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["As", "3c"], "slumbot_hole": ["Jc", "5s"], "board": ["Ks", "Qs", "9c"], "action": "b200c/b250f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jh", "4c"], "slumbot_hole": ["As", "5s"], "board": [], "action": "b250b750f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qd", "Qc"], "slumbot_hole": ["Ad", "8s"], "board": ["7s", "3d", "2h", "Jc"], "action": "b200b800c/kb800c/kb3200b8000f", "winnings_chips": 4800}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ad", "8h"], "slumbot_hole": ["7s", "5d"], "board": ["Jd", "Th", "6s", "3c", "Js"], "action": "b250c/kk/kk/kk", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Tc", "7s"], "slumbot_hole": ["Jh", "5c"], "board": ["8s", "6s", "3s"], "action": "b200c/b250f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["As", "5c"], "slumbot_hole": ["Td", "2h"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["9c", "5d"], "slumbot_hole": ["Jh", "4h"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["9c", "3s"], "slumbot_hole": ["Js", "4s"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kc", "5h"], "slumbot_hole": ["Qh", "3h"], "board": ["9s", "6d", "5s", "7s", "9d"], "action": "b200c/kb200c/kb800c/kb2400c", "winnings_chips": 3600}
+{"bot": "adaptbot", "pos": 1, "hole": ["Js", "Jc"], "slumbot_hole": ["Kd", "5s"], "board": ["As", "Qd", "Qc", "Tc", "Kh"], "action": "b250c/kk/kk/kb350c", "winnings_chips": 600}
+{"bot": "adaptbot", "pos": 0, "hole": ["7s", "3h"], "slumbot_hole": ["9s", "4c"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Js", "8h"], "slumbot_hole": ["Jc", "2c"], "board": ["Jh", "Jd", "4s", "Th", "Kc"], "action": "b250c/kb350c/kb900c/kb2250c", "winnings_chips": 0}
+{"bot": "adaptbot", "pos": 0, "hole": ["Th", "9c"], "slumbot_hole": ["7c", "6s"], "board": ["As", "5s", "3d", "4d", "6h"], "action": "b200c/kb200c/kk/b550b1200f", "winnings_chips": -950}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qs", "4c"], "slumbot_hole": ["9d", "5s"], "board": ["Th", "6h", "3d", "Ad", "Ac"], "action": "b250c/kk/kk/b250b1550f", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Tc", "8s"], "slumbot_hole": ["As", "5c"], "board": ["9s", "4h", "3s", "7s", "8c"], "action": "b200c/b250c/b600c/kk", "winnings_chips": 1050}
+{"bot": "adaptbot", "pos": 1, "hole": ["6d", "2s"], "slumbot_hole": ["3d", "2c"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["9s", "3s"], "slumbot_hole": ["Ah", "3h"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["7d", "5h"], "slumbot_hole": ["9h", "8c"], "board": ["Ad", "6d", "5c", "2s", "6h"], "action": "b250c/kk/b250c/kk", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ks", "2s"], "slumbot_hole": ["4h", "3c"], "board": ["9s", "6s", "6h"], "action": "b200c/b250f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qh", "7c"], "slumbot_hole": ["Ah", "2c"], "board": ["Qs", "Jd", "3d", "2d", "3s"], "action": "b250c/kk/kk/kk", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["5h", "5d"], "slumbot_hole": ["9c", "7h"], "board": ["8s", "4c", "3h", "Ks", "2s"], "action": "b200c/b250c/kk/kb350c", "winnings_chips": 800}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jc", "3d"], "slumbot_hole": ["Qs", "3h"], "board": ["As", "Tc", "4d", "6c"], "action": "b250c/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Tc", "2h"], "slumbot_hole": ["9h", "7h"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ts", "Th"], "slumbot_hole": ["9s", "6s"], "board": [], "action": "b250b750b1700f", "winnings_chips": 750}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qc", "8d"], "slumbot_hole": ["5c", "2c"], "board": ["Ac", "Jh", "4h", "Kh", "Kc"], "action": "b200c/kb200c/kk/kk", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Td", "8c"], "slumbot_hole": ["Ks", "4h"], "board": ["Ah", "Ac", "9h", "7s", "Ts"], "action": "b250c/kk/kk/kk", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ks", "Kc"], "slumbot_hole": ["Jd", "3s"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ks", "Js"], "slumbot_hole": ["Kc", "3s"], "board": ["Jd", "7c", "5d", "6d", "8h"], "action": "b250c/kk/kk/b250c", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kc", "9h"], "slumbot_hole": ["8c", "4s"], "board": ["Qh", "Qd", "5s", "Qs", "3s"], "action": "b200c/kb200c/kb800c/kb2400c", "winnings_chips": 3600}
+{"bot": "adaptbot", "pos": 1, "hole": ["Th", "2s"], "slumbot_hole": ["Js", "Jc"], "board": [], "action": "b250b750f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qc", "8c"], "slumbot_hole": ["Qh", "6d"], "board": ["Ts", "4h", "3c"], "action": "b200c/b250f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Js", "Jc"], "slumbot_hole": ["Qh", "4c"], "board": ["Qc", "7s", "6h", "Ac", "2d"], "action": "b250c/b250c/kk/b500c", "winnings_chips": -1000}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jd", "4c"], "slumbot_hole": ["8s", "3c"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["9h", "7h"], "slumbot_hole": ["Jc", "2s"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ad", "Jc"], "slumbot_hole": ["Kc", "2c"], "board": ["Qc", "9d", "7d", "4h", "4c"], "action": "b200b800c/kb1600c/kk/kk", "winnings_chips": 2400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Td", "4d"], "slumbot_hole": ["Ts", "2h"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jc", "8d"], "slumbot_hole": ["Qc", "Jh"], "board": ["Th", "5h", "4s", "Kc"], "action": "b200c/kb200c/kb800f", "winnings_chips": -400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jh", "2c"], "slumbot_hole": ["9s", "3d"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["6c", "4d"], "slumbot_hole": ["5s", "2h"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qc", "8h"], "slumbot_hole": ["4d", "2d"], "board": ["Qh", "Th", "5c", "6c", "8d"], "action": "b250c/kk/kk/b250c", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Td", "4h"], "slumbot_hole": ["Ad", "Qh"], "board": ["Js", "2s", "2d", "Kc", "Th"], "action": "b200c/kb200c/kk/kb800c", "winnings_chips": -1200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kh", "Th"], "slumbot_hole": ["Ac", "4h"], "board": ["Ad", "7h", "5c", "9d"], "action": "b250c/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["9d", "6h"], "slumbot_hole": ["Td", "7s"], "board": ["Kc", "Js", "2s", "6d", "4c"], "action": "b200c/kk/kb200c/kb800c", "winnings_chips": 1200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kh", "Qs"], "slumbot_hole": ["Qc", "Th"], "board": ["Ks", "9d", "7d", "Ad", "Jh"], "action": "b250c/kk/kk/kk", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kh", "3d"], "slumbot_hole": ["Td", "8c"], "board": ["Ad", "Js", "4d", "3c", "8s"], "action": "b200c/kb200c/kk/kk", "winnings_chips": -400}
+{"bot": "adaptbot", "pos": 1, "hole": ["5c", "3c"], "slumbot_hole": ["Ac", "7c"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jd", "2s"], "slumbot_hole": ["Ac", "Ts"], "board": ["As", "Jh", "5s", "3d", "4h"], "action": "b200c/kb200c/kk/b550c", "winnings_chips": 950}
+{"bot": "adaptbot", "pos": 1, "hole": ["Th", "6h"], "slumbot_hole": ["Td", "9c"], "board": ["Js", "9h", "5d", "7h", "8c"], "action": "b250c/kk/b250b1550c/kb2700b11700b18200c", "winnings_chips": 0}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ad", "8s"], "slumbot_hole": ["9h", "2s"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qh", "Jd"], "slumbot_hole": ["Ts", "4c"], "board": ["Th", "6c", "5d", "8s", "7c"], "action": "b250c/kk/b250c/b500f", "winnings_chips": -500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qs", "5h"], "slumbot_hole": ["Ts", "8d"], "board": ["Kh", "Qh", "4d", "2d", "5s"], "action": "b200c/kk/kb200c/kb800b2000f", "winnings_chips": 1200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Js", "6s"], "slumbot_hole": ["5h", "4d"], "board": ["Qh", "Th", "3h", "8h", "9h"], "action": "b250c/kk/kk/b250c", "winnings_chips": -500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qs", "4s"], "slumbot_hole": ["9s", "4c"], "board": ["Ks", "Qc", "3c", "5h", "Ad"], "action": "b200c/kb200c/kk/kk", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["8s", "4c"], "slumbot_hole": ["7s", "2s"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["7s", "6d"], "slumbot_hole": ["Ad", "3s"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["As", "5s"], "slumbot_hole": ["Kc", "7h"], "board": ["Ts", "6c", "2c", "7d"], "action": "b250c/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ac", "2h"], "slumbot_hole": ["Qh", "8h"], "board": ["8d", "4d", "3s", "Td", "9c"], "action": "b200c/kk/kb200c/kk", "winnings_chips": -400}
+{"bot": "adaptbot", "pos": 1, "hole": ["3d", "2h"], "slumbot_hole": ["Jh", "6c"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ad", "3s"], "slumbot_hole": ["Jh", "5s"], "board": ["As", "Ks", "4d", "9c"], "action": "b200c/kb200c/kb800b2000f", "winnings_chips": 1200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ts", "7c"], "slumbot_hole": ["5c", "3c"], "board": ["Kc", "Qd", "4s", "4d", "Ah"], "action": "b250c/kk/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["As", "Ah"], "slumbot_hole": ["5h", "4d"], "board": ["Ts", "9d", "3c", "7c", "6d"], "action": "b200b800c/kk/kb800c/kb3200c", "winnings_chips": -4800}
+{"bot": "adaptbot", "pos": 1, "hole": ["7s", "5h"], "slumbot_hole": ["6d", "4d"], "board": ["As", "7c", "2c", "Qs", "Qc"], "action": "b250c/kk/kk/b250c", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qs", "9h"], "slumbot_hole": ["Th", "7d"], "board": ["Ks", "Kh", "Kd"], "action": "b200c/b250f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["6h", "5h"], "slumbot_hole": ["4h", "3h"], "board": ["Jd", "9c", "3c", "Ah", "Ts"], "action": "b250c/kk/kk/kk", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["4s", "2c"], "slumbot_hole": ["9h", "6c"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jd", "3c"], "slumbot_hole": ["Ad", "4s"], "board": ["Ts", "6s", "5h", "Qd", "Qs"], "action": "b250c/kk/kk/kk", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["5d", "2c"], "slumbot_hole": ["5c", "3d"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ac", "5d"], "slumbot_hole": ["Ts", "Tc"], "board": ["As", "Ah", "4s", "Qs"], "action": "b250b750c/kb1100c/kb2750f", "winnings_chips": 1850}
+{"bot": "adaptbot", "pos": 0, "hole": ["Th", "7h"], "slumbot_hole": ["9s", "4h"], "board": ["Qc", "8h", "5c"], "action": "b200c/b250f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ks", "7d"], "slumbot_hole": ["8h", "2h"], "board": ["As", "Ts", "2c", "Qh"], "action": "b250c/b250c/b1000f", "winnings_chips": -500}
+{"bot": "adaptbot", "pos": 0, "hole": ["As", "Js"], "slumbot_hole": ["8h", "8c"], "board": ["Kd", "Th", "9h", "2d", "4h"], "action": "b200b800c/kk/kk/b1050f", "winnings_chips": 800}
+{"bot": "adaptbot", "pos": 1, "hole": ["As", "8d"], "slumbot_hole": ["Qs", "6s"], "board": ["Ac", "4c", "2s", "8c", "Qd"], "action": "b250b750c/kk/kk/b750c", "winnings_chips": 1500}
+{"bot": "adaptbot", "pos": 0, "hole": ["9d", "8c"], "slumbot_hole": ["Jh", "Td"], "board": ["Th", "9s", "4h", "5s", "Ad"], "action": "b200c/kb200c/kb800c/kb1200c", "winnings_chips": -2400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qc", "Ts"], "slumbot_hole": ["7s", "2s"], "board": ["Qh", "7d", "6c", "As", "4h"], "action": "b250c/kk/b250c/kk", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["9c", "5d"], "slumbot_hole": ["6h", "6c"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["6h", "2c"], "slumbot_hole": ["Qc", "3d"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["6d", "6c"], "slumbot_hole": ["8d", "4c"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["3h", "2s"], "slumbot_hole": ["4s", "2d"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Th", "7d"], "slumbot_hole": ["Jd", "3s"], "board": ["Qc", "Ts", "8c", "8h", "2d"], "action": "b200c/kk/kb200c/kb800c", "winnings_chips": 1200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ac", "Jh"], "slumbot_hole": ["7c", "5c"], "board": ["Kh", "Qs", "7s", "7d", "4h"], "action": "b250b750b1700c/b550c/b4500c/b13250c", "winnings_chips": -20000}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qd", "4c"], "slumbot_hole": ["Th", "8s"], "board": ["7s", "5s", "2s", "2d"], "action": "b200c/kb200c/kb800f", "winnings_chips": -400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qc", "2h"], "slumbot_hole": ["Jh", "8d"], "board": ["Kd", "7c", "3s", "Qh", "4d"], "action": "b250c/kk/b250c/b500b2950f", "winnings_chips": 1000}
+{"bot": "adaptbot", "pos": 0, "hole": ["As", "6s"], "slumbot_hole": ["7c", "5s"], "board": ["9d", "6d", "4s", "Qs", "Ks"], "action": "b200c/kk/b250b1000c/kb2400b6000f", "winnings_chips": 3600}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ad", "Th"], "slumbot_hole": ["Ah", "Qh"], "board": ["Jh", "9h", "8h", "2s", "6d"], "action": "b250b750c/b1500c/b4500c/b13250f", "winnings_chips": -6750}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qc", "5d"], "slumbot_hole": ["Th", "Td"], "board": ["Jd", "5s", "2h", "Kc", "Ts"], "action": "b200c/kb200c/kk/kb800c", "winnings_chips": -1200}
+{"bot": "adaptbot", "pos": 1, "hole": ["8d", "3h"], "slumbot_hole": ["7h", "5c"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["6s", "2d"], "slumbot_hole": ["Th", "3h"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kh", "6h"], "slumbot_hole": ["9c", "3s"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qs", "6s"], "slumbot_hole": ["Ks", "Tc"], "board": ["Ac", "Th", "4d", "6c", "3c"], "action": "b200c/kk/kk/kb200c", "winnings_chips": -400}
+{"bot": "adaptbot", "pos": 1, "hole": ["6h", "2s"], "slumbot_hole": ["9s", "7h"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["6c", "3d"], "slumbot_hole": ["Kd", "7d"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ad", "8c"], "slumbot_hole": ["9s", "4d"], "board": ["8s", "7d", "7c", "2d", "4s"], "action": "b250c/kk/kk/b250c", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ks", "Tc"], "slumbot_hole": ["4h", "3d"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qh", "4s"], "slumbot_hole": ["8c", "5c"], "board": ["Kd", "Tc", "5s", "4c", "7h"], "action": "b250c/kk/kk/kk", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jd", "2h"], "slumbot_hole": ["Qh", "Jc"], "board": ["Ah", "4c", "2d"], "action": "b200c/b250f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["9d", "6c"], "slumbot_hole": ["Js", "3d"], "board": ["Jd", "Jc", "6d", "6h", "8d"], "action": "b250c/kk/kb350c/kb900b3900b7500c", "winnings_chips": -8100}
+{"bot": "adaptbot", "pos": 0, "hole": ["9d", "6h"], "slumbot_hole": ["Jh", "3d"], "board": ["Ad", "Qs", "Qh", "5h"], "action": "b200c/kb200c/kb800f", "winnings_chips": -400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qd", "9d"], "slumbot_hole": ["Jc", "6c"], "board": ["Kh", "Jd", "4h", "8c", "Ac"], "action": "b250c/kk/kk/kk", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qc", "4c"], "slumbot_hole": ["Ad", "Kh"], "board": ["Qh", "Jc", "8c", "7d", "Th"], "action": "b200c/kb200c/b550c/kb650c", "winnings_chips": -1600}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ad", "7d"], "slumbot_hole": ["Js", "6s"], "board": ["Ac", "Td", "9c", "8d", "Qs"], "action": "b250c/kk/b250c/b500c", "winnings_chips": -1000}
+{"bot": "adaptbot", "pos": 0, "hole": ["Th", "2h"], "slumbot_hole": ["8d", "7s"], "board": ["As", "9s", "3s"], "action": "b200c/kb200f", "winnings_chips": -200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ks", "Qh"], "slumbot_hole": ["Qc", "7d"], "board": ["9s", "9c", "2s", "7s", "6d"], "action": "b250c/kk/b250c/b500c", "winnings_chips": -1000}
+{"bot": "adaptbot", "pos": 0, "hole": ["7h", "4c"], "slumbot_hole": ["Ac", "7s"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Tc", "3s"], "slumbot_hole": ["Kd", "8c"], "board": [], "action": "b250b750f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ad", "2c"], "slumbot_hole": ["8s", "4h"], "board": ["8d", "6c", "4c", "8c", "Th"], "action": "b200c/kb200c/kb800c/kb2400c", "winnings_chips": -3600}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qd", "Td"], "slumbot_hole": ["3d", "2d"], "board": ["Qh", "5d", "3h", "8s", "Ts"], "action": "b250c/kk/kk/kb350b1250b2450c", "winnings_chips": 2700}
+{"bot": "adaptbot", "pos": 0, "hole": ["7d", "4d"], "slumbot_hole": ["8c", "5c"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["6h", "3d"], "slumbot_hole": ["8h", "8c"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qs", "3c"], "slumbot_hole": ["Kh", "4c"], "board": ["Td", "7c", "2d", "As", "2h"], "action": "b200c/kk/kk/b250f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kd", "Qd"], "slumbot_hole": ["7c", "4d"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Td", "4s"], "slumbot_hole": ["Qh", "9h"], "board": ["Jc", "9c", "2c", "Kh", "7s"], "action": "b200c/kk/kk/b250c", "winnings_chips": -450}
+{"bot": "adaptbot", "pos": 1, "hole": ["9h", "6d"], "slumbot_hole": ["8h", "2h"], "board": ["7d", "3c", "2c"], "action": "b250c/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kd", "9s"], "slumbot_hole": ["Kh", "Td"], "board": ["Qd", "Jh", "7s", "3c", "4c"], "action": "b200c/b250c/kb350c/kk", "winnings_chips": -800}
+{"bot": "adaptbot", "pos": 1, "hole": ["As", "Ks"], "slumbot_hole": ["4s", "2s"], "board": ["Kd", "Th", "8s"], "action": "b250c/kb350f", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kc", "9c"], "slumbot_hole": ["4c", "2d"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qc", "Td"], "slumbot_hole": ["4h", "2d"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["6c", "2c"], "slumbot_hole": ["Js", "6h"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["8c", "3c"], "slumbot_hole": ["Kc", "Jc"], "board": ["As", "9s", "4c", "Js", "9h"], "action": "b250b750c/kk/kk/kk", "winnings_chips": -750}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qd", "Td"], "slumbot_hole": ["7h", "6h"], "board": ["As", "4s", "3c", "Ah", "3s"], "action": "b200c/kk/kk/kb200c", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ah", "Ks"], "slumbot_hole": ["Td", "6s"], "board": ["Qd", "Th", "3c", "Qc", "5d"], "action": "b250c/kk/kk/b250c", "winnings_chips": -500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ac", "Js"], "slumbot_hole": ["Ks", "4s"], "board": ["4h", "3h", "2s", "8s", "Td"], "action": "b200b800c/kk/kk/kb800c", "winnings_chips": -1600}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qh", "5d"], "slumbot_hole": ["8s", "3c"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ac", "5d"], "slumbot_hole": ["9s", "3h"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kd", "9d"], "slumbot_hole": ["Qh", "Qc"], "board": ["Ks", "6h", "5d", "9h", "Qs"], "action": "b250b750c/b750c/kb2250c/kb5600b16250c", "winnings_chips": -20000}
+{"bot": "adaptbot", "pos": 0, "hole": ["8d", "5h"], "slumbot_hole": ["9h", "6s"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ac", "Td"], "slumbot_hole": ["9s", "5h"], "board": ["Ah", "8c", "3s"], "action": "b250c/kb350f", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["9h", "8d"], "slumbot_hole": ["Kh", "9d"], "board": ["Qc", "7d", "5d", "7c"], "action": "b200c/kb200c/b550f", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Js", "5h"], "slumbot_hole": ["Ac", "8c"], "board": [], "action": "b250b750f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["9c", "6s"], "slumbot_hole": ["Tc", "9s"], "board": ["Qc", "6c", "2c", "8d", "Ts"], "action": "b200c/kk/kb200c/kk", "winnings_chips": -400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qd", "4c"], "slumbot_hole": ["9d", "4d"], "board": ["Js", "Ts", "Td", "5c", "7d"], "action": "b250c/kk/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Tc", "3c"], "slumbot_hole": ["Kc", "4s"], "board": ["Jh", "Th", "2d", "3h"], "action": "b200c/kk/b250f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Th", "3h"], "slumbot_hole": ["8s", "5s"], "board": ["Ad", "Ac", "Qd", "9s"], "action": "b250c/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["9d", "5s"], "slumbot_hole": ["Kh", "Qh"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qh", "3c"], "slumbot_hole": ["Ac", "2h"], "board": ["5h", "3d", "2c", "6s", "3h"], "action": "b250c/kk/kk/b250c", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["7h", "5h"], "slumbot_hole": ["Jd", "4c"], "board": ["Ad", "Qc", "7c", "Ah", "Qd"], "action": "b200c/kb200c/kk/b550b2000f", "winnings_chips": -950}
+{"bot": "adaptbot", "pos": 1, "hole": ["8s", "4h"], "slumbot_hole": ["Ts", "5c"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jh", "5h"], "slumbot_hole": ["7s", "4s"], "board": ["As", "9d", "8d", "9s", "Js"], "action": "b200c/kb200c/kk/kb800c", "winnings_chips": -1200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Th", "4c"], "slumbot_hole": ["9h", "9d"], "board": [], "action": "b250b750f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jh", "9d"], "slumbot_hole": ["Ks", "Td"], "board": ["Qd", "8h", "5s", "6c"], "action": "b200c/kk/b250f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["9s", "2c"], "slumbot_hole": ["4d", "2d"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kc", "2h"], "slumbot_hole": ["Th", "4h"], "board": ["Ks", "8h", "5s", "Kh", "9s"], "action": "b200c/kk/b250c/b600f", "winnings_chips": 450}
+{"bot": "adaptbot", "pos": 1, "hole": ["9h", "4c"], "slumbot_hole": ["Qs", "9c"], "board": ["Jd", "8c", "5h", "5c", "2h"], "action": "b250c/kk/kk/kk", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["5h", "2s"], "slumbot_hole": ["9c", "2d"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["5c", "3d"], "slumbot_hole": ["Ad", "2d"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["9h", "2h"], "slumbot_hole": ["Qd", "2c"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Th", "9h"], "slumbot_hole": ["Ad", "7h"], "board": ["7d", "6d", "4s", "8d", "6c"], "action": "b250c/kk/kb350c/kb900c", "winnings_chips": 1500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jc", "2c"], "slumbot_hole": ["5c", "2s"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ts", "5h"], "slumbot_hole": ["7s", "4d"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Js", "4c"], "slumbot_hole": ["7h", "5c"], "board": ["Kd", "8h", "4d", "6d", "Td"], "action": "b200c/kb200c/kb800c/kk", "winnings_chips": -1200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qc", "Tc"], "slumbot_hole": ["6h", "5c"], "board": ["Ac", "9d", "7c", "2c"], "action": "b250c/kk/b250b1550f", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["6s", "5c"], "slumbot_hole": ["Qc", "9s"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["9d", "8c"], "slumbot_hole": ["Ac", "Tc"], "board": ["7s", "7d", "5h", "Qd", "2s"], "action": "b250b750c/kk/kk/kk", "winnings_chips": -750}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ts", "3s"], "slumbot_hole": ["Kd", "7d"], "board": ["Td", "8d", "6d", "Ac", "As"], "action": "b200c/kb200c/b550b1200c/kb3200c", "winnings_chips": -4800}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ah", "Ad"], "slumbot_hole": ["9c", "2h"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qh", "Tc"], "slumbot_hole": ["Ah", "Qs"], "board": ["As", "8c", "6s", "4d"], "action": "b200c/kb200c/kb800f", "winnings_chips": -400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ad", "Js"], "slumbot_hole": ["As", "6d"], "board": ["Jh", "5c", "3h", "3c", "6c"], "action": "b250c/kk/kk/b250c", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ks", "5c"], "slumbot_hole": ["9h", "6s"], "board": ["Ac", "Ts", "2h", "Qd", "8h"], "action": "b200c/kb200c/kb400c/kk", "winnings_chips": 800}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ts", "8d"], "slumbot_hole": ["Js", "Tc"], "board": ["8s", "5s", "3c", "6d", "7h"], "action": "b250c/kk/b250c/b500c", "winnings_chips": 1000}
+{"bot": "adaptbot", "pos": 0, "hole": ["9c", "8h"], "slumbot_hole": ["2d", "2c"], "board": ["9d", "7c", "3h", "7s", "6c"], "action": "b200c/b250c/kb350c/kk", "winnings_chips": 800}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jc", "7d"], "slumbot_hole": ["Ts", "5d"], "board": ["As", "Kd", "6c", "4s", "8d"], "action": "b250c/kk/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["8d", "6h"], "slumbot_hole": ["Ac", "Th"], "board": ["8c", "4h", "3d", "Jd", "7s"], "action": "b200c/b250c/kk/kk", "winnings_chips": 450}
+{"bot": "adaptbot", "pos": 1, "hole": ["4h", "2s"], "slumbot_hole": ["Js", "9c"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["5c", "3d"], "slumbot_hole": ["As", "7c"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["8h", "5s"], "slumbot_hole": ["Td", "3h"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ah", "7d"], "slumbot_hole": ["Qc", "3h"], "board": ["9s", "9d", "5s", "2h", "2s"], "action": "b200c/kb200c/kk/kk", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["As", "9d"], "slumbot_hole": ["Th", "Td"], "board": ["7s", "6h", "3c", "4d"], "action": "b250b750c/b1500c/b2250f", "winnings_chips": -2250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ad", "9d"], "slumbot_hole": ["Kd", "3d"], "board": ["7d", "3c", "2s", "9h", "2c"], "action": "b200b800c/kk/b1050c/kk", "winnings_chips": 1850}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kd", "9d"], "slumbot_hole": ["Kh", "Qd"], "board": ["Js", "Jh", "4d", "6c", "5d"], "action": "b250b750c/kk/b750c/kk", "winnings_chips": -1500}
+{"bot": "adaptbot", "pos": 0, "hole": ["7s", "7d"], "slumbot_hole": ["Qd", "8s"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["7c", "3d"], "slumbot_hole": ["8s", "5c"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["9c", "6d"], "slumbot_hole": ["Jh", "6c"], "board": ["Jd", "8h", "8d", "9h", "Kh"], "action": "b200c/kb200c/kk/kb400c", "winnings_chips": -800}
+{"bot": "adaptbot", "pos": 1, "hole": ["Js", "3h"], "slumbot_hole": ["Ac", "2d"], "board": ["Kc", "Qs", "3c", "Ah", "3s"], "action": "b250c/kk/b250c/b500c", "winnings_chips": 1000}
+{"bot": "adaptbot", "pos": 0, "hole": ["8c", "2s"], "slumbot_hole": ["Ad", "2h"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["9h", "5d"], "slumbot_hole": ["7h", "2c"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ks", "Th"], "slumbot_hole": ["Jh", "5s"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["As", "2h"], "slumbot_hole": ["9c", "5h"], "board": ["8d", "6h", "5d", "Tc", "Ad"], "action": "b250c/kk/kk/kk", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qd", "8s"], "slumbot_hole": ["Ks", "5s"], "board": ["9s", "4d", "2s", "Th", "Tc"], "action": "b200c/kb200c/kb800c/kk", "winnings_chips": -1200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qd", "9d"], "slumbot_hole": ["Kd", "9h"], "board": ["Ts", "6c", "5c", "Jc", "Td"], "action": "b250c/kk/kk/kk", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ts", "7d"], "slumbot_hole": ["8c", "6c"], "board": ["Kd", "7s", "5d", "6h", "Qc"], "action": "b200c/kb200c/kk/kk", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["As", "8s"], "slumbot_hole": ["9h", "4d"], "board": ["Qh", "Th", "3s", "Qd", "3d"], "action": "b250c/kk/kk/kk", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["4s", "2c"], "slumbot_hole": ["Kh", "Js"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qd", "8h"], "slumbot_hole": ["7h", "4h"], "board": ["6d", "5h", "4d", "3h", "8d"], "action": "b250c/kk/b250c/kk", "winnings_chips": -500}
+{"bot": "adaptbot", "pos": 0, "hole": ["As", "Jc"], "slumbot_hole": ["6s", "4h"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qd", "9s"], "slumbot_hole": ["8s", "5s"], "board": ["Td", "5c", "3h", "Qh", "4c"], "action": "b250c/kk/kk/b250c", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Js", "Jh"], "slumbot_hole": ["Ad", "7h"], "board": ["Qs", "9s", "3h", "3c"], "action": "b200b800c/kk/b1050f", "winnings_chips": 800}
+{"bot": "adaptbot", "pos": 1, "hole": ["3c", "2c"], "slumbot_hole": ["9d", "3h"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ah", "5s"], "slumbot_hole": ["Qs", "5d"], "board": ["Qd", "Jc", "Th", "4s", "7c"], "action": "b200c/kb200c/kk/kb800f", "winnings_chips": -400}
+{"bot": "adaptbot", "pos": 1, "hole": ["3c", "2c"], "slumbot_hole": ["Ac", "Jh"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ad", "6s"], "slumbot_hole": ["Ts", "3s"], "board": ["Th", "6d", "6c", "Td", "9h"], "action": "b200c/b250c/kb350b1250c/kb1500b5150c", "winnings_chips": -6850}
+{"bot": "adaptbot", "pos": 1, "hole": ["Th", "8c"], "slumbot_hole": ["Ac", "5d"], "board": ["Ah", "5c", "4c", "4d", "Kc"], "action": "b250c/kk/kk/kk", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["8s", "8c"], "slumbot_hole": ["4d", "3h"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["7d", "6d"], "slumbot_hole": ["Kc", "6h"], "board": ["Ac", "Qh", "6s", "Tc", "9c"], "action": "b250c/kk/b250c/b500f", "winnings_chips": -500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qd", "3d"], "slumbot_hole": ["Td", "6d"], "board": ["8c", "6s", "4c", "2s"], "action": "b200c/kb200c/b550f", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kc", "5h"], "slumbot_hole": ["Ah", "Tc"], "board": ["Th", "9d", "3d", "8h"], "action": "b250c/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ts", "2s"], "slumbot_hole": ["Ah", "9d"], "board": ["Jh", "6d", "3s", "3h", "7h"], "action": "b200c/b250c/kk/kk", "winnings_chips": -450}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qc", "8s"], "slumbot_hole": ["Td", "8c"], "board": ["Ah", "5h", "3s", "4c", "2d"], "action": "b250c/kk/kk/kk", "winnings_chips": 0}
+{"bot": "adaptbot", "pos": 0, "hole": ["Th", "4h"], "slumbot_hole": ["Js", "Jh"], "board": ["Qc", "Ts", "3s", "As", "3c"], "action": "b200c/b250c/kk/kk", "winnings_chips": -450}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jd", "5c"], "slumbot_hole": ["Kd", "7h"], "board": ["Qc", "Jh", "9h", "Qd", "Td"], "action": "b250c/kk/b250c/b500c", "winnings_chips": -1000}
+{"bot": "adaptbot", "pos": 0, "hole": ["8s", "8d"], "slumbot_hole": ["Jh", "2c"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kc", "7c"], "slumbot_hole": ["Ad", "Js"], "board": ["7h", "6c", "5h", "8h", "Ac"], "action": "b250b750c/kk/kk/kk", "winnings_chips": -750}
+{"bot": "adaptbot", "pos": 0, "hole": ["8s", "5s"], "slumbot_hole": ["Ks", "5d"], "board": ["Kc", "7d", "6c", "6d", "Jc"], "action": "b200c/kk/b250c/kb350f", "winnings_chips": -450}
+{"bot": "adaptbot", "pos": 1, "hole": ["7s", "4s"], "slumbot_hole": ["Ad", "2d"], "board": ["Jd", "5h", "2s", "Ks", "4c"], "action": "b250c/kk/kk/kk", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ah", "Ad"], "slumbot_hole": ["7c", "4h"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["5c", "4d"], "slumbot_hole": ["Td", "4h"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["5c", "4s"], "slumbot_hole": ["Kd", "Jd"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kh", "Kc"], "slumbot_hole": ["Jd", "7d"], "board": [], "action": "b250b750b1700f", "winnings_chips": 750}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ad", "9d"], "slumbot_hole": ["Kh", "Qc"], "board": ["Ts", "7h", "2d", "5d", "5c"], "action": "b200b800c/kk/kb1600c/b3150f", "winnings_chips": 2400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Js", "6h"], "slumbot_hole": ["8c", "3s"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["9h", "6c"], "slumbot_hole": ["Qc", "2h"], "board": ["Qd", "Td", "8s", "7c"], "action": "b200c/kk/kb200b650f", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kd", "5d"], "slumbot_hole": ["9s", "7s"], "board": ["Js", "9c", "5s", "8h", "6d"], "action": "b250b750c/b750c/kk/kk", "winnings_chips": -1500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ts", "4d"], "slumbot_hole": ["Jd", "3s"], "board": ["Jc", "9c", "7h", "Kd", "Kc"], "action": "b200c/kk/b250c/kk", "winnings_chips": -450}
+{"bot": "adaptbot", "pos": 1, "hole": ["As", "Tc"], "slumbot_hole": ["Ac", "9c"], "board": ["8c", "6h", "4c", "8d", "Jd"], "action": "b250b750c/b750c/kk/kk", "winnings_chips": 1500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kh", "4d"], "slumbot_hole": ["Jd", "8d"], "board": ["Ad", "7h", "4c", "Qh", "6d"], "action": "b200c/kb200c/kk/kb800c", "winnings_chips": 1200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ac", "Jd"], "slumbot_hole": ["Kc", "6s"], "board": ["Ks", "Jh", "8h", "As", "8d"], "action": "b250c/kk/kb350c/kb900c", "winnings_chips": 1500}
+{"bot": "adaptbot", "pos": 0, "hole": ["7d", "3s"], "slumbot_hole": ["Ad", "Qs"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Th", "4s"], "slumbot_hole": ["9c", "8s"], "board": ["7d", "3s", "3c", "7s"], "action": "b250c/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["6s", "4c"], "slumbot_hole": ["6d", "6c"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qs", "6d"], "slumbot_hole": ["Jd", "4s"], "board": ["6h", "6c", "2h"], "action": "b250c/kb350f", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ah", "Jh"], "slumbot_hole": ["Jd", "9s"], "board": ["Tc", "7s", "3d", "4d"], "action": "b200b800c/b1050c/b2450f", "winnings_chips": 1850}
+{"bot": "adaptbot", "pos": 1, "hole": ["8s", "4d"], "slumbot_hole": ["Kh", "9h"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ah", "4h"], "slumbot_hole": ["Kh", "Qc"], "board": ["8c", "7c", "6s", "2d", "3h"], "action": "b200c/kb200c/kk/b550f", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kd", "Js"], "slumbot_hole": ["Jh", "9c"], "board": ["Kh", "7h", "6d", "3h", "Tc"], "action": "b250c/kk/b250c/kk", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["8d", "7c"], "slumbot_hole": ["7h", "2d"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qh", "7d"], "slumbot_hole": ["Ts", "2d"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ts", "3d"], "slumbot_hole": ["7h", "6c"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kd", "5s"], "slumbot_hole": ["9s", "6h"], "board": ["7s", "7d", "2d", "Qc"], "action": "b250c/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ac", "8h"], "slumbot_hole": ["9s", "9d"], "board": ["8s", "5d", "3s", "6h", "Th"], "action": "b200b800c/b1050c/kk/b2450c", "winnings_chips": -4300}
+{"bot": "adaptbot", "pos": 1, "hole": ["5s", "4h"], "slumbot_hole": ["Ts", "5d"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["9s", "2h"], "slumbot_hole": ["Ah", "3c"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ks", "9s"], "slumbot_hole": ["9c", "4h"], "board": ["8d", "2d", "2c", "5c", "Kc"], "action": "b250c/kk/kk/b250c", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kh", "3d"], "slumbot_hole": ["Kd", "7d"], "board": ["Qc", "8h", "4c", "4h", "7c"], "action": "b200c/kb200c/kk/b550c", "winnings_chips": -950}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kh", "9h"], "slumbot_hole": ["Ts", "5d"], "board": ["Kd", "9c", "5s", "2d"], "action": "b250c/kb350c/b400b3600f", "winnings_chips": 1000}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jh", "6s"], "slumbot_hole": ["Ad", "Qh"], "board": ["Js", "Td", "9h", "Th", "Ts"], "action": "b200c/kk/b250c/kk", "winnings_chips": 450}
+{"bot": "adaptbot", "pos": 1, "hole": ["3d", "2d"], "slumbot_hole": ["4s", "2s"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jh", "Th"], "slumbot_hole": ["Kc", "7h"], "board": ["Kh", "9h", "2s", "5d", "6h"], "action": "b200c/kb200c/b550b1200c/kk", "winnings_chips": 1600}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qc", "9h"], "slumbot_hole": ["8c", "3d"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Th", "8d"], "slumbot_hole": ["Js", "Jd"], "board": ["Td", "7s", "3c", "Ac", "9c"], "action": "b200c/b250b600c/kk/kb800c", "winnings_chips": -1600}
+{"bot": "adaptbot", "pos": 1, "hole": ["9d", "2s"], "slumbot_hole": ["7h", "5c"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ah", "5h"], "slumbot_hole": ["Ac", "Jh"], "board": ["Th", "8h", "3h", "Qd", "Kc"], "action": "b200c/kk/kk/b250b1600b3850c", "winnings_chips": 4050}
+{"bot": "adaptbot", "pos": 1, "hole": ["9h", "8s"], "slumbot_hole": ["Ah", "Jd"], "board": ["Tc", "8c", "6s", "3s", "Ts"], "action": "b250b750c/kk/kk/kk", "winnings_chips": 750}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ks", "4c"], "slumbot_hole": ["Tc", "5s"], "board": ["Th", "7d", "6d", "7h", "Qh"], "action": "b200c/kk/kb200c/kk", "winnings_chips": -400}
+{"bot": "adaptbot", "pos": 1, "hole": ["7c", "4h"], "slumbot_hole": ["Js", "Td"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qd", "4c"], "slumbot_hole": ["7c", "2h"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kd", "Kc"], "slumbot_hole": ["As", "9s"], "board": ["Ad", "Qd", "5d", "4h", "Jd"], "action": "b250b750b1700c/kk/b2800c/kb6750f", "winnings_chips": 4500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ks", "6s"], "slumbot_hole": ["Jc", "6d"], "board": ["9s", "9h", "7h"], "action": "b200c/b250f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kc", "Qs"], "slumbot_hole": ["Jh", "4s"], "board": ["As", "5d", "2d", "7d", "3s"], "action": "b250c/kk/b250c/b1000c", "winnings_chips": -1500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ah", "Jc"], "slumbot_hole": ["Js", "2h"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ac", "Kd"], "slumbot_hole": ["7d", "2s"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kh", "4d"], "slumbot_hole": ["4s", "4c"], "board": ["Js", "9h", "6c", "4h", "6d"], "action": "b200c/kk/kb200c/kb400c", "winnings_chips": -800}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ac", "Kh"], "slumbot_hole": ["8h", "2c"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jh", "8c"], "slumbot_hole": ["Kh", "Qs"], "board": ["Qh", "7h", "6d", "5s", "5c"], "action": "b200c/kb200c/b550c/kb650c", "winnings_chips": -1600}
+{"bot": "adaptbot", "pos": 1, "hole": ["Js", "8s"], "slumbot_hole": ["2s", "2c"], "board": ["Tc", "8c", "7c", "6d", "Ts"], "action": "b250c/kk/kk/kk", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qs", "3h"], "slumbot_hole": ["Jc", "7s"], "board": ["Qd", "7c", "3c", "Ac", "6c"], "action": "b200c/b250c/kk/kb750c", "winnings_chips": -1200}
+{"bot": "adaptbot", "pos": 1, "hole": ["5d", "2s"], "slumbot_hole": ["9s", "8c"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qs", "9h"], "slumbot_hole": ["Td", "7h"], "board": ["Jh", "Th", "3h", "7d", "Ac"], "action": "b200c/b250c/b600c/kb1350f", "winnings_chips": -1050}
+{"bot": "adaptbot", "pos": 1, "hole": ["Tc", "2s"], "slumbot_hole": ["8s", "6s"], "board": [], "action": "b250b750f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ah", "6c"], "slumbot_hole": ["Qs", "3d"], "board": ["Ad", "Qh", "7d", "8h", "3c"], "action": "b200c/kk/b250c/kb1350b3000c", "winnings_chips": -3450}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qh", "7d"], "slumbot_hole": ["Ah", "Ad"], "board": [], "action": "b250b750f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kh", "6h"], "slumbot_hole": ["5s", "2c"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qc", "8s"], "slumbot_hole": ["Ks", "Th"], "board": ["Qd", "Td", "9c", "Tc", "3c"], "action": "b250c/kk/b250c/b1000c", "winnings_chips": -1500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ac", "5c"], "slumbot_hole": ["Ad", "6c"], "board": ["Ah", "Kh", "4h", "Kd", "Th"], "action": "b200c/kb200c/kk/kk", "winnings_chips": 0}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qs", "5h"], "slumbot_hole": ["5c", "4d"], "board": ["8c", "7d", "4h", "Kh", "6c"], "action": "b250c/kk/kk/kb350b1250b2450c", "winnings_chips": 0}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kc", "8c"], "slumbot_hole": ["Qc", "9d"], "board": ["Qh", "Jh", "3c", "8h", "4s"], "action": "b200c/kb200c/kb400c/kk", "winnings_chips": -800}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qs", "9s"], "slumbot_hole": ["Ac", "6s"], "board": ["Jh", "5s", "4s", "6c", "3s"], "action": "b250c/kk/b250c/kb750f", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["3d", "2d"], "slumbot_hole": ["Ac", "3s"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["8d", "4h"], "slumbot_hole": ["Qh", "5s"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["4h", "3c"], "slumbot_hole": ["9d", "8d"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jd", "7s"], "slumbot_hole": ["Ac", "6d"], "board": ["Tc", "6c", "5s", "Jh", "6s"], "action": "b250c/kk/b250c/kk", "winnings_chips": -500}
+{"bot": "adaptbot", "pos": 0, "hole": ["6s", "3h"], "slumbot_hole": ["Js", "8d"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kh", "Ts"], "slumbot_hole": ["Qd", "4c"], "board": ["Tc", "7c", "2c", "9h", "2h"], "action": "b250c/b250c/kk/kk", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kh", "7s"], "slumbot_hole": ["9d", "5d"], "board": ["Kd", "9c", "5s", "Tc", "8c"], "action": "b200c/kb200c/b550c/kk", "winnings_chips": -950}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kh", "8h"], "slumbot_hole": ["Kc", "6s"], "board": ["Ac", "Jc", "4h", "Kd", "As"], "action": "b250c/kk/kk/kk", "winnings_chips": 0}
+{"bot": "adaptbot", "pos": 0, "hole": ["8c", "5h"], "slumbot_hole": ["Js", "4h"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Tc", "5c"], "slumbot_hole": ["7s", "2d"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kd", "7d"], "slumbot_hole": ["Ac", "4c"], "board": ["Qs", "3s", "3d", "9d", "8s"], "action": "b200c/kk/kk/kk", "winnings_chips": -200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jh", "2s"], "slumbot_hole": ["As", "9d"], "board": ["Ac", "Kc", "8h", "7d"], "action": "b250c/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kh", "5s"], "slumbot_hole": ["Ts", "6d"], "board": ["Jc", "2d", "2c"], "action": "b200c/b250f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qs", "3s"], "slumbot_hole": ["5h", "4h"], "board": ["Ac", "Qd", "6h", "Tc", "3c"], "action": "b250b750c/b1500c/kk/kb3350f", "winnings_chips": 2250}
+{"bot": "adaptbot", "pos": 0, "hole": ["7d", "5s"], "slumbot_hole": ["Qh", "9d"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qc", "Js"], "slumbot_hole": ["Th", "7c"], "board": ["7d", "6h", "6d", "9c", "Ts"], "action": "b250c/kk/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["9s", "2s"], "slumbot_hole": ["8d", "6c"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["8h", "3c"], "slumbot_hole": ["Kh", "8s"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Td", "Tc"], "slumbot_hole": ["Qs", "7c"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["8c", "6c"], "slumbot_hole": ["Ks", "Td"], "board": ["Ac", "5d", "2d", "Qc", "4c"], "action": "b250c/kk/kk/kb350f", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kh", "9d"], "slumbot_hole": ["Qc", "6s"], "board": ["Kc", "Qd", "3d", "Jd", "8d"], "action": "b200c/b250c/kk/b600f", "winnings_chips": 450}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qs", "Tc"], "slumbot_hole": ["3h", "2c"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kh", "Tc"], "slumbot_hole": ["3s", "2s"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["8d", "6s"], "slumbot_hole": ["Kc", "Js"], "board": ["Ac", "Qh", "6d", "3s", "2d"], "action": "b250b750c/b750c/kk/kk", "winnings_chips": 1500}
+{"bot": "adaptbot", "pos": 0, "hole": ["7h", "4h"], "slumbot_hole": ["Tc", "6h"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["6c", "5c"], "slumbot_hole": ["8d", "8c"], "board": ["5s", "4h", "3s", "8h", "Qd"], "action": "b250c/kk/b250c/b500c", "winnings_chips": -1000}
+{"bot": "adaptbot", "pos": 0, "hole": ["Th", "2c"], "slumbot_hole": ["Tc", "3s"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jd", "6d"], "slumbot_hole": ["Jc", "Tc"], "board": ["Ts", "9c", "2s", "6s", "Qc"], "action": "b250b750c/kk/b750c/kk", "winnings_chips": -1500}
+{"bot": "adaptbot", "pos": 0, "hole": ["3h", "2h"], "slumbot_hole": ["6h", "3d"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["6c", "4c"], "slumbot_hole": ["Ad", "5d"], "board": ["Jc", "8s", "7h", "9d"], "action": "b250b750c/kk/b750f", "winnings_chips": -750}
+{"bot": "adaptbot", "pos": 0, "hole": ["Tc", "7d"], "slumbot_hole": ["Jc", "4h"], "board": ["Ah", "4d", "2c", "5s"], "action": "b200c/kb200c/b550f", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["4s", "3c"], "slumbot_hole": ["5d", "3s"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Js", "Tc"], "slumbot_hole": ["Ts", "6h"], "board": ["Kh", "4d", "3s", "Ah", "8h"], "action": "b200c/kb200c/kk/kb400f", "winnings_chips": -400}
+{"bot": "adaptbot", "pos": 1, "hole": ["8d", "2h"], "slumbot_hole": ["Ac", "2s"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ts", "7c"], "slumbot_hole": ["As", "5h"], "board": ["Ad", "Jh", "8c", "Qd", "5d"], "action": "b200c/kk/kk/b250b1600f", "winnings_chips": -450}
+{"bot": "adaptbot", "pos": 1, "hole": ["3c", "2c"], "slumbot_hole": ["Ac", "2s"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Td", "9s"], "slumbot_hole": ["8d", "7d"], "board": ["Qh", "Qd", "Jc", "Ad", "2d"], "action": "b200c/kb200c/kb800c/kb2400c", "winnings_chips": -3600}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jc", "5s"], "slumbot_hole": ["Td", "7d"], "board": [], "action": "b250b750f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["6s", "2s"], "slumbot_hole": ["9d", "5d"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["5s", "3d"], "slumbot_hole": ["Kd", "Td"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["8c", "6h"], "slumbot_hole": ["Kd", "4s"], "board": ["As", "9h", "7d", "8d", "Jd"], "action": "b200c/kk/kk/kk", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kh", "4c"], "slumbot_hole": ["Ks", "2d"], "board": ["Jh", "Ts", "6d", "3c", "5c"], "action": "b250c/kk/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jd", "5c"], "slumbot_hole": ["8h", "8d"], "board": ["Jh", "7d", "4d", "7s", "3d"], "action": "b200c/kb200c/kb400c/kk", "winnings_chips": 800}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kc", "2d"], "slumbot_hole": ["9d", "4c"], "board": ["As", "Kd", "2s"], "action": "b250c/kb350f", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kh", "3d"], "slumbot_hole": ["Js", "Td"], "board": ["6h", "6c", "3s", "Qh", "Th"], "action": "b200c/b250b600c/kb800c/kk", "winnings_chips": -1600}
+{"bot": "adaptbot", "pos": 1, "hole": ["8d", "2s"], "slumbot_hole": ["As", "6s"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["7s", "6s"], "slumbot_hole": ["4s", "4c"], "board": ["Qs", "3h", "3c", "Qd", "Kh"], "action": "b200c/b250c/kb350c/kk", "winnings_chips": -800}
+{"bot": "adaptbot", "pos": 1, "hole": ["Th", "5d"], "slumbot_hole": ["3c", "2d"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ts", "8h"], "slumbot_hole": ["Kc", "Jd"], "board": ["8c", "4h", "3s", "As", "8d"], "action": "b200c/b250c/kk/b600c", "winnings_chips": 1050}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qd", "3c"], "slumbot_hole": ["Th", "3d"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["7c", "3s"], "slumbot_hole": ["6d", "3c"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ks", "2h"], "slumbot_hole": ["Jd", "Td"], "board": ["Tc", "8s", "2d", "6c", "2c"], "action": "b250b750c/kk/b750c/b1500c", "winnings_chips": 3000}
+{"bot": "adaptbot", "pos": 0, "hole": ["7h", "5h"], "slumbot_hole": ["5s", "2c"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["8h", "5c"], "slumbot_hole": ["9s", "7c"], "board": [], "action": "b250b750f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["5s", "4h"], "slumbot_hole": ["Kc", "8s"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kh", "4s"], "slumbot_hole": ["Ks", "3h"], "board": ["Kd", "Qd", "6d", "3s", "3d"], "action": "b250c/kk/b250c/b500c", "winnings_chips": -1000}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ac", "8h"], "slumbot_hole": ["Qh", "8c"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jc", "5c"], "slumbot_hole": ["9c", "2h"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ks", "7c"], "slumbot_hole": ["6c", "5d"], "board": ["Jd", "9c", "8d"], "action": "b200c/b250f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Th", "7h"], "slumbot_hole": ["Ah", "2c"], "board": ["Kh", "8c", "5d", "5h", "5c"], "action": "b250c/kk/kk/kk", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Js", "3c"], "slumbot_hole": ["Ac", "6s"], "board": ["5c", "4h", "4c", "2c", "9h"], "action": "b200c/kk/kb200c/kk", "winnings_chips": -400}
+{"bot": "adaptbot", "pos": 1, "hole": ["As", "6h"], "slumbot_hole": ["Qd", "5h"], "board": ["Ks", "7h", "3c", "6s", "Ts"], "action": "b250c/kk/b250c/b500c", "winnings_chips": 1000}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jc", "7d"], "slumbot_hole": ["Kc", "6c"], "board": ["9d", "5d", "4d"], "action": "b200c/b250f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ad", "3d"], "slumbot_hole": ["2d", "2c"], "board": ["Ac", "Jc", "Th", "As"], "action": "b250c/b250c/kb750f", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qs", "5c"], "slumbot_hole": ["4h", "2s"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ah", "Qs"], "slumbot_hole": ["7c", "5s"], "board": ["Qc", "9d", "4d", "8h", "Kd"], "action": "b250c/kk/kk/kk", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jh", "4d"], "slumbot_hole": ["Qh", "3h"], "board": ["Kh", "Ts", "8s", "6d"], "action": "b200c/kb200c/kb800f", "winnings_chips": -400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Th", "3h"], "slumbot_hole": ["4s", "4d"], "board": ["7c", "2s", "2h"], "action": "b250b750c/b750f", "winnings_chips": -750}
+{"bot": "adaptbot", "pos": 0, "hole": ["Th", "7s"], "slumbot_hole": ["7h", "2h"], "board": ["As", "6c", "4s", "8h"], "action": "b200c/kb200c/b550f", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qh", "3s"], "slumbot_hole": ["Js", "7d"], "board": ["Td", "Tc", "9d", "4c"], "action": "b250c/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["9s", "6h"], "slumbot_hole": ["6d", "3s"], "board": ["5s", "5h", "3h", "8s"], "action": "b200c/b250b1000c/b1600f", "winnings_chips": 1200}
+{"bot": "adaptbot", "pos": 1, "hole": ["9c", "8d"], "slumbot_hole": ["Jh", "3d"], "board": ["7h", "5c", "3s", "8c", "Ah"], "action": "b250c/kk/kk/kk", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ah", "Ac"], "slumbot_hole": ["2d", "2c"], "board": ["Qd", "8d", "2s", "9c", "Qs"], "action": "b200b800c/kb1600b4000c/b15200c/", "winnings_chips": -20000}
+{"bot": "adaptbot", "pos": 1, "hole": ["4c", "3s"], "slumbot_hole": ["8h", "2d"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jc", "7h"], "slumbot_hole": ["Ts", "8d"], "board": ["9h", "6h", "3c", "Ac", "Td"], "action": "b200c/kb200c/kk/b550c", "winnings_chips": -950}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ac", "6d"], "slumbot_hole": ["Ah", "7c"], "board": ["Ks", "5h", "5d", "5c", "Js"], "action": "b250c/kk/b250c/kk", "winnings_chips": 0}
+{"bot": "adaptbot", "pos": 0, "hole": ["As", "Ad"], "slumbot_hole": ["Jc", "2d"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Th", "4d"], "slumbot_hole": ["8s", "2d"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kd", "9h"], "slumbot_hole": ["9d", "9c"], "board": ["Ks", "Jd", "6h", "2d", "8c"], "action": "b200c/b250c/kk/b600c", "winnings_chips": 1050}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jd", "2s"], "slumbot_hole": ["7d", "2h"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kh", "2d"], "slumbot_hole": ["Tc", "2c"], "board": ["9s", "9d", "5d", "6s", "Ks"], "action": "b200c/kb200c/kk/kk", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ac", "3d"], "slumbot_hole": ["9h", "6c"], "board": ["8c", "3h", "2h", "Tc", "Kh"], "action": "b250c/b250c/kk/kk", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["5s", "5c"], "slumbot_hole": ["6s", "6c"], "board": ["Qd", "8c", "2c", "Kd", "9d"], "action": "b200c/kk/kk/kk", "winnings_chips": -200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ah", "Qh"], "slumbot_hole": ["8c", "7h"], "board": ["Kh", "Tc", "4s", "Jc"], "action": "b250c/kk/kb350f", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ac", "5s"], "slumbot_hole": ["5d", "2h"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ad", "Qc"], "slumbot_hole": ["Ah", "6d"], "board": ["Th", "3c", "2s", "7s", "Kd"], "action": "b250c/kk/kk/kk", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kh", "9s"], "slumbot_hole": ["9c", "3h"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ts", "3h"], "slumbot_hole": ["As", "7h"], "board": ["8c", "3s", "2d", "3c", "Ks"], "action": "b250c/kk/kb350c/kb900c", "winnings_chips": 1500}
+{"bot": "adaptbot", "pos": 0, "hole": ["6s", "4d"], "slumbot_hole": ["5d", "3h"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["As", "Ks"], "slumbot_hole": ["5s", "4s"], "board": ["Jh", "6h", "2c", "Ad", "2d"], "action": "b250b750b1700c/kk/b550c/b4500c", "winnings_chips": 6750}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qh", "3d"], "slumbot_hole": ["Kd", "Js"], "board": ["Kh", "Th", "8h", "3s", "5d"], "action": "b200c/kb200c/kb800c/kk", "winnings_chips": -1200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Js", "8d"], "slumbot_hole": ["Jh", "Jd"], "board": ["Qd", "8s", "6h", "Ts", "Qh"], "action": "b250b750c/kk/b750c/b1500c", "winnings_chips": -3000}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ks", "Qs"], "slumbot_hole": ["Th", "9s"], "board": ["Kd", "3h", "3c", "2d"], "action": "b200b800c/kk/b1050f", "winnings_chips": 800}
+{"bot": "adaptbot", "pos": 1, "hole": ["Js", "3d"], "slumbot_hole": ["Ah", "8c"], "board": [], "action": "b250b750f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["6s", "2h"], "slumbot_hole": ["7h", "6c"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["As", "3c"], "slumbot_hole": ["9s", "8h"], "board": ["Kc", "9c", "5h", "5c", "Td"], "action": "b250c/kk/kk/kk", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Js", "5h"], "slumbot_hole": ["Ks", "5c"], "board": ["Jd", "Jc", "7d", "Ac", "Td"], "action": "b200c/kk/kk/b250c", "winnings_chips": 450}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kc", "5h"], "slumbot_hole": ["Ks", "8h"], "board": ["Qs", "Jh", "4c"], "action": "b250b750c/b750f", "winnings_chips": -750}
+{"bot": "adaptbot", "pos": 0, "hole": ["6h", "3d"], "slumbot_hole": ["Qh", "8h"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ad", "6c"], "slumbot_hole": ["Jc", "4s"], "board": ["Js", "9c", "4d", "3d"], "action": "b250c/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["9s", "6d"], "slumbot_hole": ["Qh", "3s"], "board": ["7s", "4h", "2c", "8c"], "action": "b200c/kb200c/b550f", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["8s", "4c"], "slumbot_hole": ["Qc", "8c"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qc", "5d"], "slumbot_hole": ["8h", "3h"], "board": ["9s", "9d", "9c", "4h", "Js"], "action": "b200c/kb200c/kb400c/kb1600c", "winnings_chips": 2400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Js", "5d"], "slumbot_hole": ["4h", "3h"], "board": ["9h", "5s", "2d", "Jd", "5c"], "action": "b250c/kk/b250b1550c/kb2700f", "winnings_chips": 1800}
+{"bot": "adaptbot", "pos": 0, "hole": ["9h", "2c"], "slumbot_hole": ["Kd", "Qd"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kd", "4d"], "slumbot_hole": ["Kh", "2c"], "board": ["Th", "8s", "6d", "Ks", "Ad"], "action": "b250c/kk/kk/b250c", "winnings_chips": 0}
+{"bot": "adaptbot", "pos": 0, "hole": ["3d", "3c"], "slumbot_hole": ["7d", "6c"], "board": ["Ah", "Qc", "4h"], "action": "b200c/b250f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kd", "5s"], "slumbot_hole": ["Kh", "Ts"], "board": ["Qc", "8d", "2d", "Jd"], "action": "b250c/kk/b250b1550f", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qs", "Th"], "slumbot_hole": ["Qc", "9c"], "board": ["9s", "5h", "3s", "Kh", "Ad"], "action": "b200c/kb200c/kk/kb800c", "winnings_chips": -1200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kc", "Jc"], "slumbot_hole": ["8s", "3d"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["5h", "4s"], "slumbot_hole": ["Qh", "6c"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jd", "3h"], "slumbot_hole": ["8c", "3d"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["As", "Jh"], "slumbot_hole": ["8d", "6d"], "board": ["7s", "5h", "2s", "Qs", "Jc"], "action": "b200b800c/kk/b1050c/kb5350c", "winnings_chips": 7200}
+{"bot": "adaptbot", "pos": 1, "hole": ["6d", "5d"], "slumbot_hole": ["Ah", "8c"], "board": ["Qh", "9s", "3h"], "action": "b250b750c/b750f", "winnings_chips": -750}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ah", "6d"], "slumbot_hole": ["Jd", "4h"], "board": ["6s", "3d", "2s"], "action": "b200c/b250f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["7d", "4s"], "slumbot_hole": ["5d", "4d"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["3c", "2c"], "slumbot_hole": ["Kd", "3d"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kd", "Kc"], "slumbot_hole": ["8c", "7h"], "board": ["Jc", "4h", "3s", "3c"], "action": "b250c/kk/kb350f", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["5h", "4d"], "slumbot_hole": ["Ad", "9d"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jh", "Th"], "slumbot_hole": ["Tc", "2s"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qh", "Jh"], "slumbot_hole": ["Jd", "3s"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["9h", "9c"], "slumbot_hole": ["8d", "8c"], "board": ["8s", "3s", "2s", "2c", "9d"], "action": "b250c/kk/b250c/kb750b4000b7550b19500c", "winnings_chips": 20000}
+{"bot": "adaptbot", "pos": 0, "hole": ["As", "4s"], "slumbot_hole": ["Kd", "7c"], "board": ["Qc", "5c", "3h", "9c", "Ts"], "action": "b200c/b250c/kk/kb750f", "winnings_chips": -450}
+{"bot": "adaptbot", "pos": 1, "hole": ["6s", "3d"], "slumbot_hole": ["Kc", "3c"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Js", "8h"], "slumbot_hole": ["Qc", "5h"], "board": ["Kc", "Jc", "Tc", "3c", "6h"], "action": "b200c/b250b600c/kk/kb1600c", "winnings_chips": -2400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kh", "8s"], "slumbot_hole": ["6s", "2d"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["8s", "5d"], "slumbot_hole": ["Kc", "Qd"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ts", "2c"], "slumbot_hole": ["6d", "3s"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ac", "8h"], "slumbot_hole": ["Jh", "6c"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["9d", "9c"], "slumbot_hole": ["7d", "3h"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["7h", "5c"], "slumbot_hole": ["Th", "3h"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["9h", "6h"], "slumbot_hole": ["7s", "4c"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Js", "8d"], "slumbot_hole": ["Qd", "2h"], "board": ["Ah", "Ts", "6h"], "action": "b200c/b250f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["6h", "3c"], "slumbot_hole": ["Js", "3s"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["7h", "5c"], "slumbot_hole": ["8c", "2c"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["8s", "5h"], "slumbot_hole": ["8h", "6h"], "board": [], "action": "b250b750f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jd", "3c"], "slumbot_hole": ["Jc", "3s"], "board": ["Kd", "9c", "8h", "Qs", "Qd"], "action": "b200c/kb200c/kb800c/b1600f", "winnings_chips": 1200}
+{"bot": "adaptbot", "pos": 1, "hole": ["5c", "3d"], "slumbot_hole": ["Ad", "7s"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kd", "2s"], "slumbot_hole": ["Qd", "4s"], "board": ["Kc", "Td", "6h", "2h"], "action": "b200c/kb200c/b550f", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Td", "4h"], "slumbot_hole": ["Js", "8s"], "board": [], "action": "b250b750f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qs", "2s"], "slumbot_hole": ["8c", "3s"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qd", "Jc"], "slumbot_hole": ["Qs", "5d"], "board": ["Kd", "Qc", "Ts", "5h", "7h"], "action": "b250c/kk/b250c/b1000c", "winnings_chips": -1500}
+{"bot": "adaptbot", "pos": 0, "hole": ["5d", "3d"], "slumbot_hole": ["Jc", "4c"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["5s", "5c"], "slumbot_hole": ["Qc", "2s"], "board": ["Tc", "9h", "4h", "2c", "6s"], "action": "b250c/kk/kk/kk", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kd", "2d"], "slumbot_hole": ["Ts", "9h"], "board": ["Th", "7s", "7d", "5c", "Qs"], "action": "b200c/b250c/kb350c/kk", "winnings_chips": -800}
+{"bot": "adaptbot", "pos": 1, "hole": ["7h", "7d"], "slumbot_hole": ["8s", "2d"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Js", "7d"], "slumbot_hole": ["8c", "7c"], "board": ["Jc", "5s", "2s", "Qc", "6s"], "action": "b200c/kb200c/kk/kk", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qd", "8s"], "slumbot_hole": ["Tc", "8h"], "board": ["Kc", "5d", "4c", "8d", "7s"], "action": "b250c/kk/kk/b250c", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ad", "7s"], "slumbot_hole": ["Js", "Jh"], "board": ["Jc", "Ts", "4d", "7h", "Qd"], "action": "b200c/kb200c/kb800c/kb2400c", "winnings_chips": -3600}
+{"bot": "adaptbot", "pos": 1, "hole": ["4d", "2d"], "slumbot_hole": ["Jh", "9c"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["9d", "4s"], "slumbot_hole": ["4h", "3c"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ac", "Kd"], "slumbot_hole": ["Kh", "8s"], "board": ["Qd", "6h", "6c", "9h", "3h"], "action": "b250b750b1700c/b100c/kk/kk", "winnings_chips": 1800}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kd", "5h"], "slumbot_hole": ["Qh", "4h"], "board": ["Kc", "6h", "4c", "Tc", "Ad"], "action": "b200c/kk/kk/kk", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["8h", "2h"], "slumbot_hole": ["8d", "4c"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["8d", "6d"], "slumbot_hole": ["7c", "4h"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ad", "Td"], "slumbot_hole": ["9h", "6s"], "board": ["Ah", "Ts", "4d"], "action": "b250c/kb350f", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ks", "2c"], "slumbot_hole": ["9h", "6d"], "board": ["7d", "6h", "5d", "4h"], "action": "b200c/b250b600c/b1050f", "winnings_chips": 800}
+{"bot": "adaptbot", "pos": 1, "hole": ["6h", "5c"], "slumbot_hole": ["Ks", "Jh"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ac", "4h"], "slumbot_hole": ["9d", "2s"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["4h", "4d"], "slumbot_hole": ["Qc", "5s"], "board": ["Kh", "8h", "3s", "Jc", "2d"], "action": "b250c/kk/kk/b250c", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Th", "7c"], "slumbot_hole": ["8s", "4h"], "board": ["Qh", "Jd", "3h", "Qd", "2c"], "action": "b200c/kb200c/kk/b550f", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qh", "3s"], "slumbot_hole": ["Qs", "3h"], "board": ["As", "8d", "2h", "2s", "5s"], "action": "b250c/kk/kk/kk", "winnings_chips": 0}
+{"bot": "adaptbot", "pos": 0, "hole": ["9h", "7c"], "slumbot_hole": ["Ac", "4s"], "board": ["Qs", "6h", "2c", "7s"], "action": "b200c/kk/b250f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["6h", "5c"], "slumbot_hole": ["Td", "3h"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["4d", "3s"], "slumbot_hole": ["9s", "8d"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Th", "9s"], "slumbot_hole": ["5s", "4h"], "board": ["Jh", "Jd", "9d", "7h", "Td"], "action": "b250c/kk/kk/kk", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jd", "Tc"], "slumbot_hole": ["5h", "3d"], "board": ["Ac", "8c", "5c", "2d", "5s"], "action": "b200c/kk/kk/b250b1000f", "winnings_chips": -450}
+{"bot": "adaptbot", "pos": 1, "hole": ["7h", "4d"], "slumbot_hole": ["Ts", "3d"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Td", "3c"], "slumbot_hole": ["Ts", "3d"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["5s", "4d"], "slumbot_hole": ["Jh", "8h"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kh", "Jd"], "slumbot_hole": ["Qh", "2c"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ad", "2c"], "slumbot_hole": ["Kc", "5c"], "board": ["Kh", "Qc", "9s", "8c"], "action": "b250b750c/kk/b1500f", "winnings_chips": -750}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kd", "Kc"], "slumbot_hole": ["Tc", "7s"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kh", "8s"], "slumbot_hole": ["Jc", "9h"], "board": ["Kc", "Jh", "7s", "8c", "Kd"], "action": "b250c/kk/kb350c/kb900c", "winnings_chips": 1500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qd", "3c"], "slumbot_hole": ["9s", "9c"], "board": ["Qh", "3h", "2d", "2h", "5s"], "action": "b200c/b250c/b600c/b1400f", "winnings_chips": 1050}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qh", "Tc"], "slumbot_hole": ["Jd", "5h"], "board": ["8c", "6d", "3s", "As", "8s"], "action": "b250c/kk/kk/kk", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jh", "2c"], "slumbot_hole": ["Ad", "Js"], "board": ["8d", "7d", "3c"], "action": "b200c/kb200f", "winnings_chips": -200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kc", "7s"], "slumbot_hole": ["Qd", "9h"], "board": ["Th", "Tc", "4s", "Jh", "Jd"], "action": "b250c/kk/b250c/kk", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["5h", "2h"], "slumbot_hole": ["4d", "3d"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Th", "5d"], "slumbot_hole": ["Ks", "2c"], "board": ["7s", "4s", "3h", "6d", "8h"], "action": "b250c/kk/b250c/b500c", "winnings_chips": 1000}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ts", "9h"], "slumbot_hole": ["Qh", "9d"], "board": ["Ah", "Kh", "2c", "4h", "6d"], "action": "b200c/kk/b250c/kb750f", "winnings_chips": -450}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jh", "9c"], "slumbot_hole": ["Kh", "Kd"], "board": ["9d", "5d", "2h", "Qs", "8h"], "action": "b250b750c/b1500c/b2250c/b9000c", "winnings_chips": -13500}
+{"bot": "adaptbot", "pos": 0, "hole": ["9h", "5c"], "slumbot_hole": ["Kh", "Jc"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Tc", "6h"], "slumbot_hole": ["3c", "2h"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kc", "7d"], "slumbot_hole": ["6d", "4d"], "board": ["Ks", "Qc", "Td", "2d", "Kd"], "action": "b200c/kb200c/b550c/kb2650b6050f", "winnings_chips": 3600}
+{"bot": "adaptbot", "pos": 1, "hole": ["6c", "5c"], "slumbot_hole": ["7s", "6d"], "board": ["Qh", "Td", "Tc", "Qc", "9s"], "action": "b250c/kk/kk/kk", "winnings_chips": 0}
+{"bot": "adaptbot", "pos": 0, "hole": ["9h", "2s"], "slumbot_hole": ["8s", "5s"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Td", "5h"], "slumbot_hole": ["Qc", "Jd"], "board": [], "action": "b250b750f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["7s", "3s"], "slumbot_hole": ["Jh", "6d"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jh", "4c"], "slumbot_hole": ["Jc", "4d"], "board": ["Ad", "6d", "5h"], "action": "b250c/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["As", "8c"], "slumbot_hole": ["Qh", "Jd"], "board": ["Qs", "Js", "5c", "7d", "8s"], "action": "b200b800c/kb1600c/kb4800c/kk", "winnings_chips": -7200}
+{"bot": "adaptbot", "pos": 1, "hole": ["9d", "7h"], "slumbot_hole": ["Qc", "8s"], "board": ["Kc", "Jh", "Ts", "3d"], "action": "b250c/kk/b250b1550f", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Td", "5c"], "slumbot_hole": ["Ah", "Kd"], "board": ["Th", "7h", "3c", "Qs", "Js"], "action": "b200c/kb200c/kb800c/kb1200c", "winnings_chips": -2400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jd", "3d"], "slumbot_hole": ["Qd", "9c"], "board": ["Kd", "8s", "8c", "2c", "9h"], "action": "b250c/kk/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Tc", "8h"], "slumbot_hole": ["Qc", "3c"], "board": ["6s", "3s", "2d", "5s", "Ah"], "action": "b200c/kk/kk/kk", "winnings_chips": -200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qd", "Js"], "slumbot_hole": ["Qc", "Ts"], "board": ["Tc", "9h", "2s", "Qs", "6s"], "action": "b250c/kk/kk/kk", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kd", "9s"], "slumbot_hole": ["Jd", "3s"], "board": ["Ac", "Kh", "2d", "4c", "8c"], "action": "b200c/kb200c/kb800c/kk", "winnings_chips": 1200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qs", "3d"], "slumbot_hole": ["Ad", "2h"], "board": ["Td", "5s", "5d", "Jc", "8c"], "action": "b250c/kk/kk/kk", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["6c", "4h"], "slumbot_hole": ["Kh", "Jh"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Tc", "5s"], "slumbot_hole": ["Kh", "3s"], "board": ["9s", "3c", "2c", "8h", "4d"], "action": "b250c/kk/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["8h", "5s"], "slumbot_hole": ["7c", "3d"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jh", "5h"], "slumbot_hole": ["Qh", "Qc"], "board": ["Ac", "Jc", "8c", "3d", "3s"], "action": "b250b750c/kk/kk/b750c", "winnings_chips": -1500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qd", "Ts"], "slumbot_hole": ["Qh", "8c"], "board": ["Js", "8s", "3c", "Ac", "7h"], "action": "b200c/b250c/kk/kk", "winnings_chips": -450}
+{"bot": "adaptbot", "pos": 1, "hole": ["Js", "4d"], "slumbot_hole": ["Ac", "2s"], "board": ["9c", "7s", "2c"], "action": "b250c/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["9h", "6c"], "slumbot_hole": ["Jh", "Tc"], "board": ["As", "Js", "7d", "6h", "Ac"], "action": "b200c/kk/kb200c/kb800c", "winnings_chips": -1200}
+{"bot": "adaptbot", "pos": 1, "hole": ["As", "3c"], "slumbot_hole": ["Ts", "9s"], "board": ["Th", "7d", "5h", "Jc"], "action": "b250c/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["3s", "3d"], "slumbot_hole": ["4s", "4d"], "board": ["Jd", "9c", "4h", "2d", "4c"], "action": "b200c/kb200c/kb800c/kb2400c", "winnings_chips": -3600}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qc", "6h"], "slumbot_hole": ["Qs", "Qd"], "board": [], "action": "b250b750f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ks", "3s"], "slumbot_hole": ["Td", "9d"], "board": ["Tc", "5d", "3h", "8c", "6s"], "action": "b200c/b250c/kb750c/kb1200c", "winnings_chips": -2400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Th", "7s"], "slumbot_hole": ["Qd", "8s"], "board": ["Qh", "9c", "3c", "9d", "8d"], "action": "b250c/kk/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qh", "8c"], "slumbot_hole": ["4h", "2d"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ks", "Jh"], "slumbot_hole": ["As", "4s"], "board": ["6h", "4d", "3s"], "action": "b250b750c/b750f", "winnings_chips": -750}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ad", "Ac"], "slumbot_hole": ["6s", "4h"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kc", "7h"], "slumbot_hole": ["Jh", "4d"], "board": ["Js", "Jd", "7c", "9h", "Ks"], "action": "b250c/kk/b250c/b1000c", "winnings_chips": -1500}
+{"bot": "adaptbot", "pos": 0, "hole": ["9c", "3h"], "slumbot_hole": ["Kh", "5c"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["8c", "3d"], "slumbot_hole": ["Js", "7s"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ks", "Jd"], "slumbot_hole": ["Jh", "Th"], "board": [], "action": "b200b800b2400f", "winnings_chips": -800}
+{"bot": "adaptbot", "pos": 1, "hole": ["6s", "4h"], "slumbot_hole": ["5h", "2d"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["7c", "6h"], "slumbot_hole": ["As", "8c"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jh", "2h"], "slumbot_hole": ["6h", "4c"], "board": ["Td", "9s", "9h", "2s", "5c"], "action": "b250c/kk/kk/b250c", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qd", "3c"], "slumbot_hole": ["As", "Ac"], "board": ["Jh", "5s", "2s", "5h", "5d"], "action": "b200c/b250c/kk/kb350c", "winnings_chips": -800}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ts", "6d"], "slumbot_hole": ["Ks", "Th"], "board": ["Kc", "8h", "2s", "2d"], "action": "b250c/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Tc", "9c"], "slumbot_hole": ["5c", "3s"], "board": ["Qs", "2s", "2h", "Kc", "8d"], "action": "b200c/kb200c/kk/b550f", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kc", "7h"], "slumbot_hole": ["Ah", "Jh"], "board": ["4h", "3h", "2c", "Js"], "action": "b250b750c/kk/b1500f", "winnings_chips": -750}
+{"bot": "adaptbot", "pos": 0, "hole": ["9c", "8c"], "slumbot_hole": ["As", "Ks"], "board": ["Qh", "Ts", "6d", "Kd", "Jc"], "action": "b200c/b250c/kk/b600b1350c", "winnings_chips": -1800}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ts", "3s"], "slumbot_hole": ["Ac", "2d"], "board": ["Tc", "9h", "7s", "Qh", "Qd"], "action": "b250c/kk/kk/kk", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jh", "4s"], "slumbot_hole": ["Th", "7d"], "board": ["Ah", "8h", "4d", "8d", "3h"], "action": "b200c/kb200c/kk/kb800c", "winnings_chips": 1200}
+{"bot": "adaptbot", "pos": 1, "hole": ["As", "9c"], "slumbot_hole": ["8c", "3h"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["9s", "9d"], "slumbot_hole": ["Kd", "2c"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["8h", "7c"], "slumbot_hole": ["Jd", "4c"], "board": ["Kc", "Jc", "2d", "4h", "Ah"], "action": "b250c/kk/kk/kk", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Td", "7s"], "slumbot_hole": ["6s", "2c"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kc", "Qc"], "slumbot_hole": ["Js", "2c"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ks", "Td"], "slumbot_hole": ["Jc", "5s"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["3h", "2s"], "slumbot_hole": ["Kh", "Th"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kc", "5h"], "slumbot_hole": ["4c", "2c"], "board": ["Qd", "3c", "2h", "Ks", "8c"], "action": "b200c/kb200c/kk/b550f", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Td", "3c"], "slumbot_hole": ["Ac", "4h"], "board": ["Qd", "9h", "3h", "Ad", "4d"], "action": "b250c/kk/b250c/b500b2950c", "winnings_chips": -3450}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kd", "5c"], "slumbot_hole": ["Ad", "Ac"], "board": ["Qd", "Js", "Ts", "6h", "Tc"], "action": "b200c/b250c/kk/kb1350f", "winnings_chips": -450}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kc", "9s"], "slumbot_hole": ["9c", "3c"], "board": ["Ah", "5d", "2c", "4h", "8d"], "action": "b250c/kk/b250c/b1000f", "winnings_chips": -500}
+{"bot": "adaptbot", "pos": 0, "hole": ["6d", "5c"], "slumbot_hole": ["6s", "2d"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qd", "5c"], "slumbot_hole": ["6d", "2c"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["8s", "2d"], "slumbot_hole": ["9s", "5s"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Js", "Th"], "slumbot_hole": ["8h", "4c"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ad", "Jc"], "slumbot_hole": ["7c", "6c"], "board": ["Ac", "6s", "2c", "Ks", "7s"], "action": "b200b800c/kb800b2600b8800b15950b19200c//", "winnings_chips": -20000}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qs", "5c"], "slumbot_hole": ["8h", "3s"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jd", "4c"], "slumbot_hole": ["9h", "4h"], "board": ["Kd", "9s", "6h", "7c"], "action": "b200c/kk/kb200f", "winnings_chips": -200}
+{"bot": "adaptbot", "pos": 1, "hole": ["4c", "3d"], "slumbot_hole": ["Ah", "4h"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kd", "Td"], "slumbot_hole": ["Ah", "Qs"], "board": [], "action": "b200b800b2400f", "winnings_chips": -800}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kd", "7h"], "slumbot_hole": ["9s", "8h"], "board": ["Ad", "Jc", "4d", "Kc", "2c"], "action": "b250c/kk/kk/kk", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qh", "Qc"], "slumbot_hole": ["Ts", "2d"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["6s", "6c"], "slumbot_hole": ["6d", "5d"], "board": ["Tc", "6h", "3s", "Ah"], "action": "b250c/kb350c/kb900f", "winnings_chips": 600}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ac", "Td"], "slumbot_hole": ["6c", "5s"], "board": ["9d", "8d", "4h", "6d"], "action": "b200b800c/kb800c/b2100f", "winnings_chips": 1600}
+{"bot": "adaptbot", "pos": 1, "hole": ["8h", "4c"], "slumbot_hole": ["Jd", "2d"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jc", "6c"], "slumbot_hole": ["Qc", "2s"], "board": ["Jh", "7c", "6s", "Kd"], "action": "b200c/kk/b250f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["8s", "7d"], "slumbot_hole": ["5c", "4d"], "board": ["Ad", "Kc", "Qd"], "action": "b250c/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["7d", "2s"], "slumbot_hole": ["Jh", "6d"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ks", "8c"], "slumbot_hole": ["Th", "5h"], "board": ["9s", "6s", "4s", "2h", "Kh"], "action": "b250c/kk/kk/b250c", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kh", "Js"], "slumbot_hole": ["9s", "7h"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["8s", "6h"], "slumbot_hole": ["9s", "4h"], "board": ["Qd", "7h", "6d", "Jh", "2c"], "action": "b250c/kk/kk/b250c", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["4d", "3c"], "slumbot_hole": ["Qc", "Jd"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Td", "4s"], "slumbot_hole": ["Qc", "8h"], "board": ["Tc", "4h", "3s"], "action": "b250c/kb350f", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Td", "4s"], "slumbot_hole": ["Ad", "Js"], "board": ["Ac", "8s", "7c", "Ks"], "action": "b200c/kb200c/kb800f", "winnings_chips": -400}
+{"bot": "adaptbot", "pos": 1, "hole": ["6s", "3d"], "slumbot_hole": ["8s", "2c"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qc", "7h"], "slumbot_hole": ["Kc", "5h"], "board": ["Qs", "9d", "2h"], "action": "b200c/b250f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qd", "8s"], "slumbot_hole": ["As", "6d"], "board": ["Ad", "Kh", "Td", "2c", "Js"], "action": "b250c/kk/b250c/kb750f", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Tc", "6d"], "slumbot_hole": ["3s", "3c"], "board": ["7s", "5d", "4h", "5h", "Ah"], "action": "b200c/b250c/kb350c/kk", "winnings_chips": -800}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ts", "2h"], "slumbot_hole": ["Qc", "4c"], "board": [], "action": "b250b750f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["7s", "7c"], "slumbot_hole": ["Ah", "8h"], "board": ["Ac", "Kh", "5c", "9h", "7d"], "action": "b200b800c/kk/kb1600c/b17600c", "winnings_chips": 20000}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kh", "6s"], "slumbot_hole": ["5s", "5c"], "board": ["Kc", "Qc", "Th", "2h", "6c"], "action": "b250b750c/kk/kk/kb1100f", "winnings_chips": 750}
+{"bot": "adaptbot", "pos": 0, "hole": ["4s", "3c"], "slumbot_hole": ["9h", "2d"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ks", "2d"], "slumbot_hole": ["Td", "8c"], "board": ["Qc", "7h", "7d", "4h", "Jc"], "action": "b250c/kk/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["5c", "3s"], "slumbot_hole": ["Jd", "6s"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["8h", "5h"], "slumbot_hole": ["8d", "3h"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["8c", "4d"], "slumbot_hole": ["6c", "2d"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Tc", "3s"], "slumbot_hole": ["Ad", "5c"], "board": ["Qs", "7s", "2d", "Jc", "7d"], "action": "b250c/kk/kk/kk", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jc", "2h"], "slumbot_hole": ["Ac", "8c"], "board": ["As", "6s", "2d", "7h", "Jd"], "action": "b200c/kk/kb200c/kb800b2000f", "winnings_chips": 1200}
+{"bot": "adaptbot", "pos": 1, "hole": ["7h", "6h"], "slumbot_hole": ["Ah", "Jh"], "board": ["Ac", "9d", "8c", "Ks"], "action": "b250b750c/kk/b1500f", "winnings_chips": -750}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jd", "5h"], "slumbot_hole": ["Kh", "9d"], "board": ["Jh", "5d", "3c", "Js", "3s"], "action": "b200c/b250c/kk/kk", "winnings_chips": 450}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ts", "7c"], "slumbot_hole": ["9c", "8d"], "board": ["Kh", "9s", "6d", "6c", "Qd"], "action": "b250c/kk/kk/kk", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jd", "3s"], "slumbot_hole": ["Th", "5h"], "board": ["6d", "4h", "2d", "7d"], "action": "b200c/kb200c/b550f", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["4d", "4c"], "slumbot_hole": ["3h", "2h"], "board": ["Qd", "7s", "5s", "8d", "2d"], "action": "b250c/kk/kk/b250c", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["8d", "2d"], "slumbot_hole": ["7s", "6h"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["3h", "2h"], "slumbot_hole": ["7s", "5s"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Th", "9c"], "slumbot_hole": ["9s", "2s"], "board": ["7d", "6d", "4d", "8c"], "action": "b200c/kb200c/kb800b2000f", "winnings_chips": 1200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Tc", "2h"], "slumbot_hole": ["Ad", "Kh"], "board": [], "action": "b250b750f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Th", "3d"], "slumbot_hole": ["Ac", "7h"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["As", "Qs"], "slumbot_hole": ["Tc", "9h"], "board": ["9s", "4s", "3s", "8s"], "action": "b250c/kb350c/kb900f", "winnings_chips": 600}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ah", "5s"], "slumbot_hole": ["9h", "7h"], "board": ["As", "Kh", "7c", "8d", "3c"], "action": "b200c/kk/kk/b250c", "winnings_chips": 450}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jh", "6s"], "slumbot_hole": ["Qh", "5d"], "board": ["Qs", "Qd", "Th", "7h"], "action": "b250c/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ac", "9s"], "slumbot_hole": ["7d", "2d"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jh", "Th"], "slumbot_hole": ["5h", "2h"], "board": ["Qd", "6d", "2s", "8h", "6h"], "action": "b250b750c/kk/kk/kk", "winnings_chips": -750}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kh", "3c"], "slumbot_hole": ["6d", "4c"], "board": ["Qs", "Qh", "5d", "Ac", "7d"], "action": "b200c/kb200c/kk/kb400c", "winnings_chips": 800}
+{"bot": "adaptbot", "pos": 1, "hole": ["8h", "6c"], "slumbot_hole": ["7c", "5h"], "board": ["Ad", "Jc", "2s", "9c", "9h"], "action": "b250c/kk/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["6s", "4c"], "slumbot_hole": ["Td", "8c"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["5d", "4c"], "slumbot_hole": ["Jc", "9c"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qh", "7c"], "slumbot_hole": ["8d", "6d"], "board": ["Qs", "9h", "9d", "6c", "8s"], "action": "b200c/kb200c/kk/b550c", "winnings_chips": 950}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kd", "6c"], "slumbot_hole": ["6d", "5d"], "board": ["8h", "4s", "2h", "Qs"], "action": "b250c/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["8c", "7h"], "slumbot_hole": ["Th", "7c"], "board": ["6h", "3s", "2c"], "action": "b200c/kb200f", "winnings_chips": -200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ah", "Ad"], "slumbot_hole": ["Qd", "5s"], "board": ["Qs", "3s", "2c", "8d", "Td"], "action": "b250c/kb350c/kb900c/kb2250c", "winnings_chips": 3750}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ts", "3c"], "slumbot_hole": ["Tc", "9s"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ac", "Th"], "slumbot_hole": ["Js", "3d"], "board": ["Ah", "4h", "3c", "5h", "8s"], "action": "b250c/b250c/b500c/b2000c", "winnings_chips": 3000}
+{"bot": "adaptbot", "pos": 0, "hole": ["5d", "3c"], "slumbot_hole": ["Ad", "Js"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kc", "9s"], "slumbot_hole": ["As", "8c"], "board": ["6d", "5c", "3h", "Kh", "3c"], "action": "b250b750c/kk/kk/kk", "winnings_chips": 750}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qd", "5c"], "slumbot_hole": ["9s", "6s"], "board": ["Js", "6d", "3c", "Jc", "2d"], "action": "b200c/b250c/kk/kb350c", "winnings_chips": -800}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ac", "Qd"], "slumbot_hole": ["5s", "2s"], "board": ["As", "Qc", "7s", "2c"], "action": "b250b750b1700c/b100c/b2700b18200f", "winnings_chips": 4500}
+{"bot": "adaptbot", "pos": 0, "hole": ["6h", "5s"], "slumbot_hole": ["6d", "3d"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["7h", "3c"], "slumbot_hole": ["Kh", "8s"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jh", "8h"], "slumbot_hole": ["9d", "3d"], "board": ["9c", "7s", "2d", "2s", "6h"], "action": "b200c/b250b1000c/kk/b1600b6000f", "winnings_chips": -2800}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ks", "7s"], "slumbot_hole": ["Jh", "4h"], "board": ["Ah", "Tc", "3s", "Qh", "3c"], "action": "b250c/b250c/b500c/kk", "winnings_chips": 1000}
+{"bot": "adaptbot", "pos": 0, "hole": ["9s", "2d"], "slumbot_hole": ["4h", "4c"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Js", "7s"], "slumbot_hole": ["Kc", "Qh"], "board": ["8d", "7h", "7c"], "action": "b250b750c/kb1100f", "winnings_chips": 750}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ad", "9c"], "slumbot_hole": ["6s", "6h"], "board": ["As", "Tc", "7h", "Jh", "Th"], "action": "b200b800c/kk/kk/b1050f", "winnings_chips": 800}
+{"bot": "adaptbot", "pos": 1, "hole": ["7c", "6d"], "slumbot_hole": ["8h", "3s"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ks", "Js"], "slumbot_hole": ["Tc", "3c"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["As", "6c"], "slumbot_hole": ["Ad", "Jd"], "board": ["Js", "Jh", "5s", "Ac", "Kc"], "action": "b250b750c/b750c/kk/b3000c", "winnings_chips": -4500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ts", "5c"], "slumbot_hole": ["5d", "4s"], "board": ["Ad", "Jd", "4c", "5h", "Jh"], "action": "b200c/kk/kk/kb200c", "winnings_chips": 0}
+{"bot": "adaptbot", "pos": 1, "hole": ["3h", "2s"], "slumbot_hole": ["Ac", "9h"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kc", "6s"], "slumbot_hole": ["6h", "6d"], "board": ["Qc", "Js", "8s", "7s", "9h"], "action": "b200c/kk/kk/b250c", "winnings_chips": -450}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kh", "4d"], "slumbot_hole": ["Qc", "2d"], "board": ["Qh", "9d", "5c"], "action": "b250c/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Td", "3d"], "slumbot_hole": ["7h", "2d"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kc", "6c"], "slumbot_hole": ["Ts", "2c"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["4h", "2d"], "slumbot_hole": ["8s", "7c"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["8h", "3c"], "slumbot_hole": ["7h", "4h"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Js", "Jc"], "slumbot_hole": ["Tc", "9c"], "board": ["7c", "5d", "2d"], "action": "b200b800c/b1050f", "winnings_chips": 800}
+{"bot": "adaptbot", "pos": 1, "hole": ["As", "7h"], "slumbot_hole": ["Kh", "8s"], "board": ["Ts", "7s", "2c", "7d"], "action": "b250b750c/b1500c/kb3350f", "winnings_chips": 2250}
+{"bot": "adaptbot", "pos": 0, "hole": ["4c", "3h"], "slumbot_hole": ["Qs", "9d"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kc", "Th"], "slumbot_hole": ["6d", "2c"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qc", "Td"], "slumbot_hole": ["Ah", "7h"], "board": ["Jd", "6c", "3d", "6s", "9c"], "action": "b200c/kk/kk/kk", "winnings_chips": -200}
+{"bot": "adaptbot", "pos": 1, "hole": ["9s", "6d"], "slumbot_hole": ["Kd", "2c"], "board": ["Tc", "9c", "5d", "2s", "6s"], "action": "b250c/kk/kk/kb350f", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qs", "Qh"], "slumbot_hole": ["Ts", "5s"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kh", "Tc"], "slumbot_hole": ["9h", "7s"], "board": ["6h", "4c", "3h", "9c"], "action": "b250b750c/kk/b750f", "winnings_chips": -750}
+{"bot": "adaptbot", "pos": 0, "hole": ["8h", "8d"], "slumbot_hole": ["Th", "3c"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["As", "Qs"], "slumbot_hole": ["Jh", "Jd"], "board": ["Kh", "Th", "5c", "6d", "Ad"], "action": "b250b750b1700c/kk/kk/kb2550c", "winnings_chips": 4250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ac", "Th"], "slumbot_hole": ["9c", "7d"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kd", "9s"], "slumbot_hole": ["9h", "3d"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["6h", "2s"], "slumbot_hole": ["8s", "6s"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kh", "2h"], "slumbot_hole": ["6d", "4h"], "board": ["Ks", "9d", "4d", "8h", "Jc"], "action": "b250c/kk/kk/kk", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["7h", "3s"], "slumbot_hole": ["8c", "4d"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["7d", "5d"], "slumbot_hole": ["Qc", "6c"], "board": ["Js", "9s", "7h", "8c", "5s"], "action": "b250b750c/kk/b750c/b1500c", "winnings_chips": -3000}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ac", "2d"], "slumbot_hole": ["5h", "5d"], "board": ["Th", "Td", "4h", "Js", "Jc"], "action": "b200c/kb200c/kk/kk", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["5s", "5c"], "slumbot_hole": ["Ah", "9s"], "board": ["Qh", "9c", "7s", "Qs", "7c"], "action": "b250c/kk/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["9d", "3h"], "slumbot_hole": ["8s", "5h"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ts", "7d"], "slumbot_hole": ["Qs", "9s"], "board": ["7s", "6d", "2d", "3c", "5d"], "action": "b250c/kk/kk/b250c", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qh", "Qd"], "slumbot_hole": ["Ah", "Qs"], "board": [], "action": "b200b800b2400b20000f", "winnings_chips": 2400}
+{"bot": "adaptbot", "pos": 1, "hole": ["8d", "5c"], "slumbot_hole": ["Ad", "6d"], "board": ["Qs", "Qd", "Ts", "7c", "Qc"], "action": "b250c/kk/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["9s", "7c"], "slumbot_hole": ["8s", "2d"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Js", "2d"], "slumbot_hole": ["8s", "4d"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kh", "Qh"], "slumbot_hole": ["Th", "2h"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Td", "7c"], "slumbot_hole": ["8d", "4s"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["9s", "9c"], "slumbot_hole": ["Kh", "Jd"], "board": [], "action": "b200b800b2400b20000f", "winnings_chips": 2400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jh", "5d"], "slumbot_hole": ["Ac", "9h"], "board": ["As", "9s", "7d", "7c"], "action": "b250c/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ac", "2h"], "slumbot_hole": ["Ts", "6c"], "board": ["Kh", "7d", "5d", "7c", "Jh"], "action": "b200c/kb200c/kk/kk", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["4h", "2s"], "slumbot_hole": ["9c", "7s"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ks", "5h"], "slumbot_hole": ["7c", "3d"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qh", "8h"], "slumbot_hole": ["Js", "4h"], "board": ["As", "Ks", "Tc", "7c", "7d"], "action": "b250c/kk/b250c/kk", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jd", "9h"], "slumbot_hole": ["9s", "8c"], "board": ["Jh", "Td", "6h", "Ac", "Ad"], "action": "b200c/kb200c/kb800c/kk", "winnings_chips": 1200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kc", "Jc"], "slumbot_hole": ["Jd", "5c"], "board": ["Ah", "Js", "8c", "As", "9c"], "action": "b250c/kk/b250c/b500c", "winnings_chips": 1000}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ts", "9c"], "slumbot_hole": ["8s", "6c"], "board": ["Ad", "8h", "6s", "4d"], "action": "b200c/kb200c/kb800f", "winnings_chips": -400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qs", "Tc"], "slumbot_hole": ["As", "Qh"], "board": ["Ks", "7s", "2s", "8s", "Kh"], "action": "b250b750c/kk/b1500b4500c/b3750c", "winnings_chips": -9000}
+{"bot": "adaptbot", "pos": 0, "hole": ["5c", "3h"], "slumbot_hole": ["Td", "7d"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ac", "4c"], "slumbot_hole": ["Tc", "7c"], "board": ["Qh", "6d", "4s", "8d", "5c"], "action": "b250b750c/kk/kk/kk", "winnings_chips": -750}
+{"bot": "adaptbot", "pos": 0, "hole": ["As", "6h"], "slumbot_hole": ["Ts", "4h"], "board": ["Ah", "Qc", "Jd", "4s", "3h"], "action": "b200c/kb200c/kk/b550f", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jh", "7s"], "slumbot_hole": ["7d", "5c"], "board": ["Qh", "9s", "8c", "9d", "8s"], "action": "b250c/kk/kk/kk", "winnings_chips": 0}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kc", "5d"], "slumbot_hole": ["8d", "3s"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["9d", "5c"], "slumbot_hole": ["Ks", "4d"], "board": ["7h", "7d", "6c", "Qc", "4s"], "action": "b250c/kk/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["7c", "4c"], "slumbot_hole": ["Ad", "4h"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ah", "2d"], "slumbot_hole": ["Qh", "4c"], "board": ["As", "Tc", "2h"], "action": "b250c/kb350f", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["3h", "3c"], "slumbot_hole": ["Td", "9c"], "board": ["8d", "4h", "2s", "Ah", "9s"], "action": "b200c/b250c/kb350c/kb800c", "winnings_chips": -1600}
+{"bot": "adaptbot", "pos": 1, "hole": ["Js", "2s"], "slumbot_hole": ["Jd", "8s"], "board": ["7s", "6c", "4d", "6d"], "action": "b250c/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jh", "Tc"], "slumbot_hole": ["Qc", "3c"], "board": ["8c", "6c", "2c", "2d", "8d"], "action": "b200c/kb200c/b550c/kk", "winnings_chips": -950}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ks", "6s"], "slumbot_hole": ["Js", "Td"], "board": ["9s", "9c", "2s", "Qh", "Kh"], "action": "b250c/kk/b250c/kk", "winnings_chips": -500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Th", "9h"], "slumbot_hole": ["Qc", "7d"], "board": ["Jc", "9c", "4h", "Kc", "7s"], "action": "b200c/b250c/kb350c/kb800c", "winnings_chips": 1600}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kh", "7c"], "slumbot_hole": ["5h", "3c"], "board": ["8s", "8c", "7h", "Jd", "2d"], "action": "b250c/kk/kk/kk", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Js", "6c"], "slumbot_hole": ["Ts", "8s"], "board": ["As", "8d", "6h", "3d", "4s"], "action": "b200c/b250c/kk/kb350c", "winnings_chips": -800}
+{"bot": "adaptbot", "pos": 1, "hole": ["7d", "5d"], "slumbot_hole": ["Ac", "5h"], "board": ["Ks", "Tc", "3h", "2c", "Ts"], "action": "b250c/kk/kk/kk", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["7s", "3c"], "slumbot_hole": ["Ts", "7d"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jc", "9s"], "slumbot_hole": ["9c", "4h"], "board": ["Ac", "4s", "3d", "Qs", "8s"], "action": "b250c/kk/kk/kk", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["9c", "7d"], "slumbot_hole": ["Jc", "4c"], "board": ["As", "9h", "2c", "Jh", "Td"], "action": "b200c/kb200c/kk/kb400c", "winnings_chips": -800}
+{"bot": "adaptbot", "pos": 1, "hole": ["6s", "5c"], "slumbot_hole": ["6h", "2s"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["4s", "4c"], "slumbot_hole": ["Kd", "8h"], "board": ["Jc", "9h", "2c", "5h", "Js"], "action": "b200c/kk/kk/kk", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["7d", "2s"], "slumbot_hole": ["7h", "4d"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["8c", "7s"], "slumbot_hole": ["Kh", "2d"], "board": ["Ks", "Js", "8d", "Ad", "8h"], "action": "b200c/kk/kb200c/kk", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kc", "9c"], "slumbot_hole": ["8c", "7s"], "board": ["Qs", "9s", "5h", "Qh", "Ac"], "action": "b250c/kk/b250c/kk", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["3h", "2c"], "slumbot_hole": ["6d", "5d"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ac", "3h"], "slumbot_hole": ["6c", "2d"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["7c", "3d"], "slumbot_hole": ["Ac", "2h"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["8c", "3s"], "slumbot_hole": ["Ah", "4s"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Tc", "9h"], "slumbot_hole": ["Js", "3d"], "board": ["Kh", "Ts", "9d", "5s"], "action": "b200c/kk/kb200b650f", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ac", "7c"], "slumbot_hole": ["Ts", "Td"], "board": ["Kh", "Kc", "3s", "As", "6h"], "action": "b250b750c/b750c/b1500c/kb4500f", "winnings_chips": 3000}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ad", "Js"], "slumbot_hole": ["9s", "5c"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["7c", "4c"], "slumbot_hole": ["As", "9s"], "board": ["Ts", "Td", "9d", "7d", "Kh"], "action": "b250b750c/kk/kk/b750c", "winnings_chips": -1500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Th", "6d"], "slumbot_hole": ["Qd", "4s"], "board": ["As", "Qc", "8h", "8s", "5s"], "action": "b200c/kk/kb200c/kk", "winnings_chips": -400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ad", "7s"], "slumbot_hole": ["Tc", "9h"], "board": ["Qh", "4c", "2c", "Ac", "5h"], "action": "b250c/kk/b250c/kk", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qd", "Jc"], "slumbot_hole": ["Kd", "5h"], "board": ["9d", "8h", "5d", "4h", "Ah"], "action": "b200c/b250b1000c/kk/b1600c", "winnings_chips": -2800}
+{"bot": "adaptbot", "pos": 1, "hole": ["Th", "Td"], "slumbot_hole": ["5h", "5c"], "board": ["7s", "5d", "3h", "6d", "9d"], "action": "b250b750b1700c/kk/kk/kk", "winnings_chips": -1700}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kc", "Js"], "slumbot_hole": ["As", "Ad"], "board": [], "action": "b200b800b2400f", "winnings_chips": -800}
+{"bot": "adaptbot", "pos": 1, "hole": ["5s", "2c"], "slumbot_hole": ["Tc", "8s"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["9s", "2s"], "slumbot_hole": ["8d", "2h"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kd", "3c"], "slumbot_hole": ["4c", "3s"], "board": ["Qs", "Qd", "8d", "6d", "4h"], "action": "b250c/kk/kk/kk", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ts", "7d"], "slumbot_hole": ["Qc", "8h"], "board": ["Jc", "7c", "3d", "9c", "5d"], "action": "b200c/kb200c/kb800c/kb1200c", "winnings_chips": 2400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jd", "Td"], "slumbot_hole": ["8d", "4s"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["6h", "6c"], "slumbot_hole": ["9h", "2h"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["As", "Ad"], "slumbot_hole": ["Js", "8c"], "board": ["Ks", "4h", "3d"], "action": "b250c/kb350f", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["8c", "3d"], "slumbot_hole": ["Js", "6s"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["As", "3c"], "slumbot_hole": ["4d", "3d"], "board": ["Jh", "5s", "3h", "9h", "6c"], "action": "b250c/kk/kk/kk", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Js", "8d"], "slumbot_hole": ["Td", "6d"], "board": ["Ts", "7c", "5s", "3d"], "action": "b200c/b250c/kb1350f", "winnings_chips": -450}
+{"bot": "adaptbot", "pos": 1, "hole": ["9h", "2s"], "slumbot_hole": ["6s", "4c"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["8s", "6d"], "slumbot_hole": ["Kc", "Qd"], "board": ["Jd", "Td", "4d", "9h", "Kd"], "action": "b200c/kk/b250c/kb750c", "winnings_chips": -1200}
+{"bot": "adaptbot", "pos": 1, "hole": ["As", "5c"], "slumbot_hole": ["Kc", "6s"], "board": ["8h", "7h", "6c", "5h", "8s"], "action": "b250c/kk/kk/kk", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["9h", "5h"], "slumbot_hole": ["Jc", "4s"], "board": ["Kd", "Qh", "2s", "Tc", "As"], "action": "b200c/kk/kb200c/b550b1200f", "winnings_chips": -950}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kd", "7c"], "slumbot_hole": ["Ks", "Qd"], "board": ["Qc", "9h", "8h", "Qh", "5s"], "action": "b250b750c/kk/kk/kk", "winnings_chips": -750}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ad", "Kc"], "slumbot_hole": ["6s", "5c"], "board": ["Js", "8h", "6h", "Kd", "2s"], "action": "b200b800c/kk/b1050c/b2450f", "winnings_chips": 1850}
+{"bot": "adaptbot", "pos": 1, "hole": ["9c", "3s"], "slumbot_hole": ["Ad", "Td"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["6s", "4d"], "slumbot_hole": ["Kd", "Td"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["9h", "6s"], "slumbot_hole": ["7c", "2s"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Td", "9h"], "slumbot_hole": ["Ac", "5c"], "board": ["Kd", "6d", "2s", "8d"], "action": "b200c/kk/b250f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["6c", "2d"], "slumbot_hole": ["7s", "2h"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["5d", "2s"], "slumbot_hole": ["7s", "3s"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ks", "Qc"], "slumbot_hole": ["3s", "2h"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Td", "5h"], "slumbot_hole": ["9h", "7h"], "board": ["Jc", "5s", "4c", "Tc"], "action": "b200c/kb200c/b550f", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kh", "4s"], "slumbot_hole": ["Jc", "5h"], "board": ["As", "Th", "8d", "Qh"], "action": "b250c/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["7c", "5h"], "slumbot_hole": ["6h", "5c"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kd", "6d"], "slumbot_hole": ["Ac", "Jd"], "board": ["Ad", "Ts", "7h", "5h"], "action": "b250b750c/b1500c/b2250f", "winnings_chips": -2250}
+{"bot": "adaptbot", "pos": 0, "hole": ["8c", "6s"], "slumbot_hole": ["9d", "3d"], "board": ["Ks", "Qc", "6h", "7s", "3s"], "action": "b200c/kk/kk/kk", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qd", "3h"], "slumbot_hole": ["9s", "7c"], "board": [], "action": "b250b750f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kc", "Td"], "slumbot_hole": ["7s", "6h"], "board": ["Ac", "6s", "3s", "2d", "4d"], "action": "b200b800c/kb1600c/kb4800c/kk", "winnings_chips": -7200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ad", "5c"], "slumbot_hole": ["8h", "5h"], "board": ["Td", "4s", "2c", "6h", "Kc"], "action": "b250c/kk/b250c/kk", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ah", "8h"], "slumbot_hole": ["Kc", "5d"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ks", "Qc"], "slumbot_hole": ["4s", "2c"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Js", "8h"], "slumbot_hole": ["7c", "5d"], "board": ["Kh", "Qh", "5s", "5c", "9d"], "action": "b200c/b250c/kb750c/kb2400c", "winnings_chips": -3600}
+{"bot": "adaptbot", "pos": 1, "hole": ["Tc", "7d"], "slumbot_hole": ["Js", "9s"], "board": ["Th", "8c", "7s", "6h", "Ac"], "action": "b250c/kk/kk/kk", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jh", "Jd"], "slumbot_hole": ["Td", "3d"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ks", "4c"], "slumbot_hole": ["Jc", "3d"], "board": ["Ac", "Kc", "3s", "Js", "Qs"], "action": "b250c/b250c/b500c/kk", "winnings_chips": -1000}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qs", "Qc"], "slumbot_hole": ["5c", "2h"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ah", "Jc"], "slumbot_hole": ["Kc", "9c"], "board": ["Kd", "Qs", "6s", "6h", "2s"], "action": "b250c/kk/b250c/b500f", "winnings_chips": -500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ad", "Td"], "slumbot_hole": ["Qc", "3s"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kh", "3c"], "slumbot_hole": ["As", "Tc"], "board": ["Jh", "6h", "4c", "Ac"], "action": "b250c/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ah", "5c"], "slumbot_hole": ["Js", "8s"], "board": ["Td", "9s", "9h", "9d", "8d"], "action": "b200c/kb200c/kb800c/kk", "winnings_chips": -1200}
+{"bot": "adaptbot", "pos": 1, "hole": ["9d", "5s"], "slumbot_hole": ["8c", "3c"], "board": ["Tc", "7s", "6d"], "action": "b250c/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qs", "5h"], "slumbot_hole": ["Ks", "9s"], "board": ["Qc", "8s", "7h", "7c", "9d"], "action": "b200c/kb200c/kk/kk", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kh", "8h"], "slumbot_hole": ["Ah", "Jh"], "board": ["Kc", "9s", "8s"], "action": "b250b750c/kb1100f", "winnings_chips": 750}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kc", "9c"], "slumbot_hole": ["Ad", "7c"], "board": ["Jc", "8c", "2s", "8d"], "action": "b200b800c/kb1600c/b3150f", "winnings_chips": 2400}
+{"bot": "adaptbot", "pos": 1, "hole": ["5d", "2h"], "slumbot_hole": ["Ah", "3c"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["7d", "4s"], "slumbot_hole": ["As", "5h"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kc", "5d"], "slumbot_hole": ["Ac", "5s"], "board": ["Jd", "8h", "7s", "Ks", "8d"], "action": "b250c/kk/kk/kk", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jc", "7d"], "slumbot_hole": ["Ad", "9c"], "board": ["Ks", "7c", "6s"], "action": "b200c/b250f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["5d", "3d"], "slumbot_hole": ["6s", "3h"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kc", "Th"], "slumbot_hole": ["Ac", "2h"], "board": ["Qs", "Js", "3h", "Jd"], "action": "b200b800c/kb1600c/b3150f", "winnings_chips": 2400}
+{"bot": "adaptbot", "pos": 1, "hole": ["9c", "6d"], "slumbot_hole": ["5h", "4s"], "board": ["8s", "6s", "5s", "2d", "Kc"], "action": "b250c/kk/kk/kk", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ah", "Kc"], "slumbot_hole": ["6h", "3h"], "board": ["5d", "4d", "2s", "Ac", "5h"], "action": "b200b800c/kb800c/b2100b4800c/kb13600c", "winnings_chips": -20000}
+{"bot": "adaptbot", "pos": 1, "hole": ["4d", "2s"], "slumbot_hole": ["Qc", "3c"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["7d", "2s"], "slumbot_hole": ["Qc", "Tc"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["As", "6h"], "slumbot_hole": ["8d", "7h"], "board": ["9d", "7d", "2d", "Qc", "9c"], "action": "b250c/kk/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["6c", "3d"], "slumbot_hole": ["Qd", "Qc"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ad", "9s"], "slumbot_hole": ["7h", "3h"], "board": ["5s", "4s", "4d", "4h", "Jh"], "action": "b250c/kk/kk/b250c", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["9s", "4h"], "slumbot_hole": ["Qs", "Jd"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["8c", "5c"], "slumbot_hole": ["Ad", "Qs"], "board": ["Jc", "7s", "3d", "3c", "6s"], "action": "b250b750c/kk/kk/kk", "winnings_chips": -750}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jd", "6s"], "slumbot_hole": ["Ks", "4d"], "board": ["Tc", "8s", "6h", "2s", "5d"], "action": "b200c/kk/kk/b250f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kd", "8d"], "slumbot_hole": ["Kh", "7c"], "board": ["Ac", "3s", "2h", "2d", "Jd"], "action": "b250c/kk/kk/kk", "winnings_chips": 0}
+{"bot": "adaptbot", "pos": 0, "hole": ["As", "Kc"], "slumbot_hole": ["Qc", "Jc"], "board": ["Ks", "Ts", "2s", "8c"], "action": "b200b800c/b1050c/b2450f", "winnings_chips": 1850}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qs", "2s"], "slumbot_hole": ["Js", "5d"], "board": ["Kc", "Qh", "3c", "Kd", "9d"], "action": "b250c/kk/kk/kk", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ks", "7c"], "slumbot_hole": ["Td", "4h"], "board": ["Js", "5h", "2s", "Qd", "Ad"], "action": "b200c/kb200c/kb400c/kb1600c", "winnings_chips": 2400}
+{"bot": "adaptbot", "pos": 1, "hole": ["7h", "2c"], "slumbot_hole": ["Qd", "8s"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["As", "Qc"], "slumbot_hole": ["5d", "4d"], "board": ["Td", "9c", "5h", "2c", "7d"], "action": "b200b800c/kk/kk/kk", "winnings_chips": -800}
+{"bot": "adaptbot", "pos": 1, "hole": ["5d", "4h"], "slumbot_hole": ["Th", "Tc"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["9h", "4d"], "slumbot_hole": ["Jc", "7d"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ks", "6c"], "slumbot_hole": ["8h", "8d"], "board": ["9c", "6s", "5h", "Qh", "Qd"], "action": "b250c/kk/b250c/b500c", "winnings_chips": -1000}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ah", "Qh"], "slumbot_hole": ["7d", "7c"], "board": ["Td", "9c", "4h", "5s", "4d"], "action": "b200b800c/kk/kk/kb800c", "winnings_chips": -1600}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ts", "2h"], "slumbot_hole": ["7c", "2c"], "board": ["6c", "4d", "3c", "8c", "5s"], "action": "b250c/kk/kk/b250c", "winnings_chips": -500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kc", "Th"], "slumbot_hole": ["Qd", "Jd"], "board": ["Kh", "9h", "9c", "6d"], "action": "b200b800c/kk/b1050f", "winnings_chips": 800}
+{"bot": "adaptbot", "pos": 1, "hole": ["4h", "4d"], "slumbot_hole": ["Qs", "3h"], "board": ["9s", "8c", "6d", "2h", "2s"], "action": "b250c/kk/kk/b250c", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qs", "3s"], "slumbot_hole": ["Kd", "6s"], "board": ["Th", "6d", "2d", "Ah", "7d"], "action": "b200c/kb200c/kk/kk", "winnings_chips": -400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ad", "5h"], "slumbot_hole": ["9c", "7c"], "board": ["9h", "8d", "4s"], "action": "b250b750c/b1500f", "winnings_chips": -750}
+{"bot": "adaptbot", "pos": 0, "hole": ["3c", "2c"], "slumbot_hole": ["9h", "6s"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ah", "8c"], "slumbot_hole": ["Kd", "5h"], "board": ["Ac", "9h", "8h"], "action": "b250c/kb350f", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jh", "Th"], "slumbot_hole": ["Ac", "5s"], "board": ["Kh", "Qs", "5c", "2c", "3s"], "action": "b200c/b250c/b600c/kk", "winnings_chips": -1050}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kc", "2d"], "slumbot_hole": ["5s", "5h"], "board": ["Ac", "Jh", "8c", "6h", "6c"], "action": "b250b750c/kk/kk/kk", "winnings_chips": -750}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ac", "7s"], "slumbot_hole": ["Kc", "Tc"], "board": ["Th", "9h", "5h", "5d", "4d"], "action": "b200c/kk/kb200c/kb800c", "winnings_chips": -1200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jd", "Jc"], "slumbot_hole": ["Kc", "9d"], "board": ["5s", "5h", "3h", "4h", "Tc"], "action": "b250c/kk/kk/kk", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jh", "5s"], "slumbot_hole": ["Ac", "8s"], "board": ["Js", "9s", "8h", "Qh", "Kc"], "action": "b200c/kk/b250c/kk", "winnings_chips": 450}
+{"bot": "adaptbot", "pos": 1, "hole": ["5s", "2c"], "slumbot_hole": ["6d", "4s"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["3c", "2c"], "slumbot_hole": ["8h", "7h"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["7h", "2c"], "slumbot_hole": ["Jc", "4h"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kd", "7h"], "slumbot_hole": ["Qd", "9c"], "board": ["Ks", "6s", "3d", "4d", "As"], "action": "b200c/kb200c/kk/kk", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qd", "4c"], "slumbot_hole": ["9c", "2d"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qc", "6c"], "slumbot_hole": ["Kc", "7s"], "board": ["Ah", "6h", "5d", "7c", "7d"], "action": "b200c/kk/kk/kb200c", "winnings_chips": -400}
+{"bot": "adaptbot", "pos": 1, "hole": ["9s", "2d"], "slumbot_hole": ["8c", "5s"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qd", "7s"], "slumbot_hole": ["Kd", "8c"], "board": ["Kh", "8d", "5d", "Ks"], "action": "b200c/kb200c/b550b1200f", "winnings_chips": -950}
+{"bot": "adaptbot", "pos": 1, "hole": ["9s", "4d"], "slumbot_hole": ["Ad", "Ts"], "board": ["8h", "6c", "3s", "Tc", "2s"], "action": "b250c/kk/kk/kk", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ks", "Th"], "slumbot_hole": ["9c", "8h"], "board": ["6d", "6c", "4s", "6h"], "action": "b200b800c/kb1600c/b17600f", "winnings_chips": 2400}
+{"bot": "adaptbot", "pos": 1, "hole": ["6c", "2h"], "slumbot_hole": ["Td", "8d"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["5c", "2d"], "slumbot_hole": ["9h", "7h"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ah", "5c"], "slumbot_hole": ["9d", "7h"], "board": ["4c", "3h", "2h", "Kd"], "action": "b250b750c/b750c/kb2250f", "winnings_chips": 1500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Js", "6h"], "slumbot_hole": ["8c", "5c"], "board": ["Kh", "8s", "4d", "7c"], "action": "b200c/kb200c/b550f", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Js", "5d"], "slumbot_hole": ["8d", "4d"], "board": ["Kh", "9d", "2s", "Ah", "3s"], "action": "b250c/kk/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kd", "2s"], "slumbot_hole": ["Ts", "3h"], "board": ["Th", "6s", "4s", "8d", "6d"], "action": "b200c/kb200c/kk/b550c", "winnings_chips": -950}
+{"bot": "adaptbot", "pos": 1, "hole": ["9h", "7d"], "slumbot_hole": ["Jc", "6d"], "board": ["Jd", "8d", "7s", "3d", "Ah"], "action": "b250c/b250c/b500b2950c/kk", "winnings_chips": -3450}
+{"bot": "adaptbot", "pos": 0, "hole": ["8d", "2s"], "slumbot_hole": ["9h", "4s"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ah", "Tc"], "slumbot_hole": ["Ks", "2c"], "board": ["8c", "6d", "2h", "7h", "5s"], "action": "b250c/kk/kk/kk", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Qh", "9s"], "slumbot_hole": ["8s", "6s"], "board": ["Jc", "Tc", "6d"], "action": "b200c/b250f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["8h", "7c"], "slumbot_hole": ["Qs", "3h"], "board": ["As", "4h", "2d", "Kd", "3d"], "action": "b250c/kk/kk/kk", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jd", "4d"], "slumbot_hole": ["Kd", "4h"], "board": ["Ad", "Td", "5h", "3h"], "action": "b200c/kb200c/b550f", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["6s", "2s"], "slumbot_hole": ["5d", "3d"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["8h", "2c"], "slumbot_hole": ["7c", "5s"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qs", "7c"], "slumbot_hole": ["Th", "Td"], "board": [], "action": "b250b750f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["7s", "2h"], "slumbot_hole": ["5c", "2d"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Th", "8s"], "slumbot_hole": ["Tc", "4d"], "board": ["Ad", "6h", "5d"], "action": "b250c/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["9h", "2h"], "slumbot_hole": ["Js", "7c"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ah", "Ac"], "slumbot_hole": ["Ad", "6h"], "board": ["Tc", "3c", "2h"], "action": "b250c/kb350f", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["7h", "3c"], "slumbot_hole": ["Th", "9s"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["9s", "8h"], "slumbot_hole": ["Qd", "6d"], "board": ["Kh", "Kd", "4d"], "action": "b250b750c/b750f", "winnings_chips": -750}
+{"bot": "adaptbot", "pos": 0, "hole": ["6c", "5c"], "slumbot_hole": ["Jh", "4c"], "board": ["Kh", "5s", "4d"], "action": "b200c/b250f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ah", "7c"], "slumbot_hole": ["8c", "6s"], "board": ["As", "Kh", "Qd", "Qh", "Kd"], "action": "b250c/kk/kk/b250c", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["5s", "5c"], "slumbot_hole": ["Th", "7d"], "board": ["8d", "6s", "4c", "8h", "9h"], "action": "b200c/b250c/kb750c/kb2400c", "winnings_chips": -3600}
+{"bot": "adaptbot", "pos": 1, "hole": ["8c", "7d"], "slumbot_hole": ["Kd", "5d"], "board": ["Th", "Td", "7s", "7c"], "action": "b250b750c/kk/kb1100f", "winnings_chips": 750}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jd", "7c"], "slumbot_hole": ["Ad", "2h"], "board": ["As", "9s", "2c", "Js", "8s"], "action": "b200c/kb200c/kk/kb400c", "winnings_chips": -800}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kd", "6s"], "slumbot_hole": ["Kc", "Qc"], "board": ["8s", "4s", "2d", "Jh", "7d"], "action": "b250b750c/kk/kk/kk", "winnings_chips": -750}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kd", "6s"], "slumbot_hole": ["8c", "7h"], "board": ["Qh", "6c", "5h", "4s", "Qd"], "action": "b200c/kb200c/kb800c/kb1200c", "winnings_chips": -2400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ah", "3d"], "slumbot_hole": ["Kh", "Tc"], "board": ["Th", "Td", "7d", "Kd", "As"], "action": "b250c/kk/b250c/kk", "winnings_chips": -500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jc", "2c"], "slumbot_hole": ["Ah", "3d"], "board": ["As", "7d", "5d", "Tc", "Th"], "action": "b200c/b250c/kk/kb750f", "winnings_chips": -450}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ks", "6h"], "slumbot_hole": ["7h", "3d"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["9c", "4d"], "slumbot_hole": ["8d", "2h"], "board": [], "action": "f", "winnings_chips": 50}
+{"bot": "adaptbot", "pos": 1, "hole": ["Js", "7h"], "slumbot_hole": ["2s", "2c"], "board": ["Td", "8c", "3d", "8s", "4s"], "action": "b250c/kk/kk/kk", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jh", "2s"], "slumbot_hole": ["Ad", "Qd"], "board": ["Qh", "6s", "5s", "Th"], "action": "b200c/kb200c/kb800f", "winnings_chips": -400}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kd", "4c"], "slumbot_hole": ["As", "8d"], "board": ["Ah", "Kc", "2s", "Js", "3h"], "action": "b250b750c/kk/b750c/b1500c", "winnings_chips": -3000}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kc", "7d"], "slumbot_hole": ["Js", "3s"], "board": ["Kh", "9c", "7c"], "action": "b200c/kb200b650f", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["8s", "7c"], "slumbot_hole": ["Jc", "6h"], "board": ["Ac", "Kd", "Qc"], "action": "b250c/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Kh", "Qs"], "slumbot_hole": ["8d", "3d"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Qh", "9s"], "slumbot_hole": ["9c", "5h"], "board": ["8c", "6c", "5d", "Ks", "As"], "action": "b250c/kk/kk/kk", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["7c", "6s"], "slumbot_hole": ["Ks", "3h"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ac", "2h"], "slumbot_hole": ["Js", "Jd"], "board": ["Qh", "6d", "5c", "6c", "4s"], "action": "b250b750c/b750c/kk/b1500f", "winnings_chips": -1500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ad", "Tc"], "slumbot_hole": ["8c", "7c"], "board": ["9c", "5c", "3s", "9d", "4d"], "action": "b200b800c/kb800c/kb3200c/kb15200c", "winnings_chips": 20000}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kc", "Jc"], "slumbot_hole": ["Kd", "6s"], "board": ["Th", "4s", "2c", "Ah", "9c"], "action": "b250c/kk/kk/kk", "winnings_chips": 250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ac", "Ks"], "slumbot_hole": ["Ad", "2s"], "board": ["Jh", "8s", "8c"], "action": "b200b800c/b1050f", "winnings_chips": 800}
+{"bot": "adaptbot", "pos": 1, "hole": ["Th", "2d"], "slumbot_hole": ["Ad", "3h"], "board": ["6d", "4d", "3c", "Qd", "8c"], "action": "b250c/kk/b250b1550c/kk", "winnings_chips": -1800}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ac", "Qs"], "slumbot_hole": ["Jh", "6d"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["6d", "3s"], "slumbot_hole": ["Qc", "7h"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["7s", "7h"], "slumbot_hole": ["9h", "9d"], "board": ["Th", "Tc", "2c", "Jh", "8s"], "action": "b200b800c/b1050c/b2450c/kk", "winnings_chips": -4300}
+{"bot": "adaptbot", "pos": 1, "hole": ["7h", "3d"], "slumbot_hole": ["9d", "5c"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["As", "9h"], "slumbot_hole": ["2h", "2d"], "board": ["Ad", "5d", "3c", "5c", "6c"], "action": "b200b800c/b1050c/kb2950c/kb4800c", "winnings_chips": 9600}
+{"bot": "adaptbot", "pos": 1, "hole": ["4s", "2d"], "slumbot_hole": ["6c", "5d"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jc", "6s"], "slumbot_hole": ["9c", "6h"], "board": ["Kc", "Qd", "2c", "2s", "7c"], "action": "b200c/kk/kb200c/b550f", "winnings_chips": 400}
+{"bot": "adaptbot", "pos": 1, "hole": ["As", "9h"], "slumbot_hole": ["5h", "3h"], "board": ["Kc", "6c", "5d"], "action": "b250c/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jc", "6d"], "slumbot_hole": ["Ac", "5c"], "board": ["9h", "9d", "6h", "As", "Kd"], "action": "b200c/kb200c/kk/kb800c", "winnings_chips": -1200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ac", "7c"], "slumbot_hole": ["Qh", "7d"], "board": ["Ad", "Ks", "3s", "3c", "Js"], "action": "b250c/kk/kb350c/kk", "winnings_chips": 600}
+{"bot": "adaptbot", "pos": 0, "hole": ["5s", "2s"], "slumbot_hole": ["6h", "4s"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["7s", "6d"], "slumbot_hole": ["9s", "5d"], "board": ["Ts", "Td", "5h", "8c", "Kc"], "action": "b250c/kk/b250b1550c/kk", "winnings_chips": -1800}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ah", "8s"], "slumbot_hole": ["Qs", "8h"], "board": [], "action": "b200b800f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Tc", "8c"], "slumbot_hole": ["7c", "3c"], "board": ["Kh", "Kc", "8s", "Ts", "6h"], "action": "b250c/kk/kk/b250c", "winnings_chips": 500}
+{"bot": "adaptbot", "pos": 0, "hole": ["Jc", "8d"], "slumbot_hole": ["Js", "6d"], "board": ["Kh", "Td", "7s"], "action": "b200c/b250f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["5d", "4h"], "slumbot_hole": ["Ad", "Jc"], "board": [], "action": "f", "winnings_chips": -50}
+{"bot": "adaptbot", "pos": 0, "hole": ["Js", "9d"], "slumbot_hole": ["As", "5h"], "board": ["8s", "6d", "4h", "2d", "4d"], "action": "b200c/b250b600c/kk/b1050f", "winnings_chips": 800}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jh", "7h"], "slumbot_hole": ["9d", "6c"], "board": ["Kd", "Qc", "3d", "As"], "action": "b250c/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ts", "9h"], "slumbot_hole": ["Qs", "Qc"], "board": ["Qh", "Tc", "7h", "6d", "Kc"], "action": "b200c/kb200c/kb800c/kb2400c", "winnings_chips": -3600}
+{"bot": "adaptbot", "pos": 1, "hole": ["Jc", "9h"], "slumbot_hole": ["9s", "5h"], "board": ["Ks", "7c", "4c", "2c", "Jh"], "action": "b250c/kk/b250c/b500c", "winnings_chips": 1000}
+{"bot": "adaptbot", "pos": 0, "hole": ["8h", "4d"], "slumbot_hole": ["Jh", "6s"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["As", "Qs"], "slumbot_hole": ["4d", "3h"], "board": ["Kd", "7d", "6d"], "action": "b250c/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Js", "5s"], "slumbot_hole": ["9d", "4d"], "board": ["5c", "4h", "2s"], "action": "b200c/b250f", "winnings_chips": 200}
+{"bot": "adaptbot", "pos": 1, "hole": ["Kh", "Qd"], "slumbot_hole": ["6h", "3c"], "board": [], "action": "b250f", "winnings_chips": 100}
+{"bot": "adaptbot", "pos": 0, "hole": ["8d", "4h"], "slumbot_hole": ["Jd", "3c"], "board": [], "action": "b200f", "winnings_chips": -100}
+{"bot": "adaptbot", "pos": 1, "hole": ["Ac", "Ts"], "slumbot_hole": ["Qh", "3s"], "board": ["Kc", "Qs", "8h", "4d", "6d"], "action": "b250c/kk/kk/b250f", "winnings_chips": -250}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ks", "9s"], "slumbot_hole": ["6h", "5h"], "board": [], "action": "b200b800b2400f", "winnings_chips": -800}
+{"bot": "adaptbot", "pos": 1, "hole": ["6c", "4c"], "slumbot_hole": ["Qs", "5h"], "board": ["7d", "5s", "3s", "Jd"], "action": "b250c/kb350c/kb900f", "winnings_chips": 600}
+{"bot": "adaptbot", "pos": 0, "hole": ["Ac", "4s"], "slumbot_hole": ["5h", "4d"], "board": ["Qh", "5s", "3d", "3h", "6d"], "action": "b200c/kb200c/b550c/kk", "winnings_chips": -950}
+{"bot": "adaptbot", "pos": 1, "hole": ["9h", "6h"], "slumbot_hole": ["Td", "2d"], "board": ["Ts", "8h", "4c", "4s", "9d"], "action": "b250c/kk/kk/b250c", "winnings_chips": -500}
