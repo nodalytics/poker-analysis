@@ -1,0 +1,77 @@
+{
+ "hands": 660000,
+ "players": 32103,
+ "sessions": 96854,
+ "median_session_hands": 14.0,
+ "quit_more_when_ahead_than_behind": {
+  "real": {
+   "players": 2889,
+   "mean": 0.00225,
+   "t": 6.54
+  },
+  "shuffled_null": {
+   "players": 3036,
+   "mean": 0.00055,
+   "t": 1.72
+  }
+ },
+ "looser_when_stuck_20bb": {
+  "real": {
+   "players": 2951,
+   "mean": 0.01168,
+   "t": 8.78
+  },
+  "shuffled_null": {
+   "players": 3140,
+   "mean": -0.00064,
+   "t": -0.49
+  }
+ },
+ "fatigue": {
+  "players": 630,
+  "vpip_61-180_minus_1-60": -0.0037,
+  "vpip_61-180_minus_1-60_t": -2.44,
+  "vpip_181+_minus_1-60": -0.0018,
+  "vpip_181+_minus_1-60_t": -0.97,
+  "postflop_aggression_61-180_minus_1-60": -0.0027,
+  "postflop_aggression_61-180_minus_1-60_t": -0.56,
+  "postflop_aggression_181+_minus_1-60": -0.0118,
+  "postflop_aggression_181+_minus_1-60_t": -2.31,
+  "bb100_61-180_minus_1-60": 3.2452,
+  "bb100_61-180_minus_1-60_t": 0.97,
+  "bb100_181+_minus_1-60": -0.4553,
+  "bb100_181+_minus_1-60_t": -0.12
+ },
+ "bet_size_tells": {
+  "river_bets_with_cards": 32829,
+  "small <40% pot": {
+   "n": 9375,
+   "mean_strength": 0.714,
+   "share_bluffs_below_median_hand": 0.17,
+   "share_nutted_top_5pct": 0.111
+  },
+  "medium 40-80%": {
+   "n": 12567,
+   "mean_strength": 0.723,
+   "share_bluffs_below_median_hand": 0.22,
+   "share_nutted_top_5pct": 0.2
+  },
+  "pot 80-120%": {
+   "n": 5456,
+   "mean_strength": 0.753,
+   "share_bluffs_below_median_hand": 0.204,
+   "share_nutted_top_5pct": 0.289
+  },
+  "overbet >120%": {
+   "n": 1430,
+   "mean_strength": 0.767,
+   "share_bluffs_below_median_hand": 0.192,
+   "share_nutted_top_5pct": 0.366
+  },
+  "river_raises": {
+   "n": 4001,
+   "mean_strength": 0.862,
+   "share_bluffs_below_median_hand": 0.085
+  }
+ }
+}
