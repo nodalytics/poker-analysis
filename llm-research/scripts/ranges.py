@@ -25,17 +25,23 @@ RANKS = "23456789TJQKA"
 DECK = [r + s for r in RANKS for s in "cdhs"]
 ALL = [a + b for a, b in itertools.combinations(DECK, 2)]
 STREETS = ["preflop", "flop", "turn", "river"]
-_MODEL = None
+_MODELS = {}
 _STRENGTH = {}
 
 
-def model():
-    global _MODEL
-    if _MODEL is None:
+def model(path=None):
+    """The action model at `path` (default $RANGE_MODEL or the Pluribus-trained one), or False if missing."""
+    path = path or os.environ.get("RANGE_MODEL", MODEL_PATH)
+    if path not in _MODELS:
         from joblib import load
 
-        _MODEL = load(MODEL_PATH) if os.path.exists(MODEL_PATH) else False
-    return _MODEL
+        _MODELS[path] = load(path) if os.path.exists(path) else False
+    return _MODELS[path]
+
+
+def norm(h):
+    a, b = h[:2], h[2:]
+    return a + b if DECK.index(a) < DECK.index(b) else b + a
 
 
 def available():
@@ -72,11 +78,11 @@ def strengths(board):
     return _STRENGTH[key]
 
 
-def weights(log, player, blocked):
+def weights(log, player, blocked, model_path=None):
     """Posterior weight per holding (dict combo -> weight, max 1) for `player`, from their actions in `log`."""
     cand = [h for h in ALL if h[:2] not in blocked and h[2:] not in blocked]
     logp = np.zeros(len(cand))
-    m = model()
+    m = model(model_path)
     for e in log:
         if e["player"] != player:
             continue

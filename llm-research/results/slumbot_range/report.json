@@ -1,0 +1,36 @@
+{
+ "hands_logged": 19199,
+ "hands_train": 14436,
+ "hands_test": 3609,
+ "slumbot_decisions_train": 42709,
+ "action_accuracy": {
+  "slumbot_model": 0.8098,
+  "pluribus_model": 0.6343
+ },
+ "hand_reading_on_test_hands": {
+  "all": {
+   "pluribus_model": {
+    "n": 3609,
+    "mean_rank": 0.3352,
+    "top10_rate": 0.2469
+   },
+   "slumbot_model": {
+    "n": 3609,
+    "mean_rank": 0.2275,
+    "top10_rate": 0.3674
+   }
+  },
+  "3+ Slumbot actions": {
+   "pluribus_model": {
+    "n": 2137,
+    "mean_rank": 0.3269,
+    "top10_rate": 0.2377
+   },
+   "slumbot_model": {
+    "n": 2137,
+    "mean_rank": 0.208,
+    "top10_rate": 0.3659
+   }
+  }
+ }
+}
