@@ -433,7 +433,9 @@ def overbet_defence(state, i, ctx, ratio=None):
     # even; equity against a read of an overbet alone was too optimistic (LBR still won +267 bb/100 from calls)
     mdf = pot_before / max(pot_before + to_call, 1)
     pct = own_range_percentile(ctx["log"], i, board, hole)
-    act = "call" if eq > price + margin and pct >= 1 - mdf else "fold"
+    # up to 1.5x pot, defend exactly the top MDF of our range (bluffs break even; requiring equity as well made the
+    # bot fold 60-70% to pot bets, LBR v4 +88); bigger overbets also need equity against the read range
+    act = "call" if pct >= 1 - mdf and (to_call <= 1.5 * max(pot_before, 1) or eq > price + margin) else "fold"
     return {
         "action": act,
         "why": f"overbet {to_call / max(pot_before, 1):.1f}x pot: equity {eq:.0%} vs price {price:.0%}; "

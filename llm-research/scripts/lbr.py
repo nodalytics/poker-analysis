@@ -131,6 +131,9 @@ class Hand:
             if pct < 1 - mdf:
                 out[h] = [(FOLD, None, 1.0)]
                 continue
+            if to_call <= 1.5 * max(pot_before, 1):  # mirrors overbet_defence: MDF alone up to 1.5x pot
+                out[h] = [(CALL, None, 1.0)]
+                continue
             eq = ranges.equity_vs_weights(h, board, w, 150, self.rng)
             ok = eq is not None and eq > price + margin
             out[h] = [(CALL, None, 1.0)] if ok else [(FOLD, None, 1.0)]
