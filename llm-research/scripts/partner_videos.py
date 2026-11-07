@@ -216,7 +216,8 @@ def slumbot():
         ("v1", "slumbot_solverbot_v1_allin_bug", "bug 1: bluff-shoving 50x the pot on the river"),
         ("v2", "slumbot_solverbot_v2_river_fix_only", "bug 2: heads-up seats swapped (button limped)"),
         ("v3", "slumbot_solverbot_v3_no_hand_ranking", "bug 3: solver ran without hand-ranking tables"),
-        ("v4", "slumbot_solverbot", "all fixed + hand reading; running"),
+        ("v4", "slumbot_solverbot_v4", "all fixed; still losing on the river: Slumbot bets stronger than we read"),
+        ("v5", "slumbot_solverbot_v5", "a hand-reading model of Slumbot, learned from its revealed cards"),
     ]
     data = [(v, *stat(d), note) for v, d, note in vers]
 
@@ -226,25 +227,22 @@ def slumbot():
             col = AQUA if i == len(data) - 1 else GREY
             ax.bar(i, m, 0.55, color=col)
             ax.errorbar(i, m, yerr=ci, color=INK2, capsize=6, lw=1.5)
-            ax.text(i, 30, f"{m:+.0f}\n{n:,} hands", ha="center", va="bottom", fontsize=10)
+            ax.text(i, (m + ci + 12) if m > 0 else 30, f"{m:+.0f}\n{n:,} hands", ha="center", va="bottom", fontsize=10)
         ax.axhline(0, color=INK2, lw=1)
         ax.set_xticks(range(len(data)), [d[0] for d in data])
         ax.set_xlim(-0.6, len(data) - 0.4)
-        ax.set_ylim(-420, 160)
+        ax.set_ylim(-420, 230)
         ax.set_ylabel("big blinds per 100 hands vs Slumbot")
         ax.grid(axis="x", visible=False)
         i = shown - 1
         if t >= len(data) * 3:
-            return (
-                "Not beating Slumbot yet, but every real test found a real bug the simulations hid. "
-                "Bars: 95% intervals."
-            )
+            return "v5 beats Slumbot: +57.5 bb/100 over 3,000 hands (95% interval +2 to +114)."
         return f"{data[i][0]}: {data[i][4]}."
 
     render(
         "17-slumbot.mp4",
         draw,
-        16,
+        19,
         "The outside test: our solver bot vs Slumbot (strong public bot, 200bb)",
         "Real hands over Slumbot's public API, heads-up no-limit. Source: results/slumbot/",
     )

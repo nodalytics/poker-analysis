@@ -49,7 +49,7 @@ Each run exposed a real bug that our own simulations had hidden:
 | v2 | −68 (1,252) | In heads-up play, PokerKit seats the big blind at 0 and the button at 1, the reverse of our charts. The button limped and the big blind defended against the wrong range |
 | v3 | −182 (3,000) | On the lab, TexasSolver ran without its hand-ranking tables. It ranked every hand equal, and ace-high shoved into a flush. Now the tables are found or the code raises |
 | v4 | −64.8 [−127, +8] (3,000) | Preflop, flop and turn about even; −54 on the river, where Slumbot's bets were stronger than the generic hand reading assumed |
-| v5 | *running*; +80 ±104 at 1,076 hands | Slumbot-specific hand reading. The river moved to +77 |
+| v5 | **+57.5 [+2, +114] (3,000)** | Slumbot-specific hand reading, learned from its revealed hands. The river went from −54 to +56. The adaptive bot reached −22.9 [−96, +47]: its call-down rule for aggressive players backfires against a strong one |
 
 v5 is opponent modelling: the model was trained on Slumbot's own past hands, as one would for a real regular. It
 is not evidence of general strength.
