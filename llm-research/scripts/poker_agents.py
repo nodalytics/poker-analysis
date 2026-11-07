@@ -229,7 +229,8 @@ def narrowed_ranges(state, i, ctx, board, live):
     out = []
     for j in sorted(live):
         blocked = set(board) | (set() if j == i else set(hole))
-        w = ranges.weights(log, j, blocked)
+        # the opponent can have its own model (RANGE_MODEL_OPPONENT, e.g. trained on Slumbot's revealed hands)
+        w = ranges.weights(log, j, blocked, None if j == i else os.environ.get("RANGE_MODEL_OPPONENT"))
         out.append(ranges.solver_range(w, include=ranges.cls("".join(hole)) if j == i else None))
     stats["ranges_narrowed"] += 1
     return tuple(out)
