@@ -1,0 +1,187 @@
+{
+ "slumbot_solverbot_v4": {
+  "hands": 3000,
+  "allin_hands_adjusted": 4,
+  "raw": {
+   "bb100": -64.8,
+   "ci95": [
+    -133.4,
+    3.9
+   ],
+   "se": 35.0
+  },
+  "allin_adjusted": {
+   "bb100": -53.9,
+   "ci95": [
+    -119.4,
+    11.5
+   ],
+   "se": 33.4
+  },
+  "allin_and_preflop_card_luck_adjusted": {
+   "bb100": -55.9,
+   "ci95": [
+    -121.1,
+    9.4
+   ],
+   "se": 33.3
+  },
+  "plus_flop_turn_river_card_luck": {
+   "bb100": -51.5,
+   "ci95": [
+    -105.3,
+    2.2
+   ],
+   "se": 27.4
+  },
+  "variance_reduction_factor": 1.63
+ },
+ "slumbot_solverbot_v5": {
+  "hands": 3000,
+  "allin_hands_adjusted": 5,
+  "raw": {
+   "bb100": 57.5,
+   "ci95": [
+    -0.8,
+    115.7
+   ],
+   "se": 29.7
+  },
+  "allin_adjusted": {
+   "bb100": 48.0,
+   "ci95": [
+    -7.9,
+    103.8
+   ],
+   "se": 28.5
+  },
+  "allin_and_preflop_card_luck_adjusted": {
+   "bb100": 49.4,
+   "ci95": [
+    -6.0,
+    104.8
+   ],
+   "se": 28.3
+  },
+  "plus_flop_turn_river_card_luck": {
+   "bb100": 11.8,
+   "ci95": [
+    -35.9,
+    59.5
+   ],
+   "se": 24.3
+  },
+  "variance_reduction_factor": 1.49
+ },
+ "slumbot_solverbot_v5_confirm": {
+  "hands": 3926,
+  "allin_hands_adjusted": 12,
+  "raw": {
+   "bb100": -56.7,
+   "ci95": [
+    -120.1,
+    6.8
+   ],
+   "se": 32.4
+  },
+  "allin_adjusted": {
+   "bb100": -48.9,
+   "ci95": [
+    -106.9,
+    9.2
+   ],
+   "se": 29.6
+  },
+  "allin_and_preflop_card_luck_adjusted": {
+   "bb100": -49.7,
+   "ci95": [
+    -107.5,
+    8.2
+   ],
+   "se": 29.5
+  },
+  "plus_flop_turn_river_card_luck": {
+   "bb100": -35.7,
+   "ci95": [
+    -83.6,
+    12.1
+   ],
+   "se": 24.4
+  },
+  "variance_reduction_factor": 1.76
+ },
+ "slumbot_adaptbot_v5": {
+  "hands": 3000,
+  "allin_hands_adjusted": 4,
+  "raw": {
+   "bb100": -22.9,
+   "ci95": [
+    -93.0,
+    47.2
+   ],
+   "se": 35.8
+  },
+  "allin_adjusted": {
+   "bb100": -31.6,
+   "ci95": [
+    -98.5,
+    35.3
+   ],
+   "se": 34.1
+  },
+  "allin_and_preflop_card_luck_adjusted": {
+   "bb100": -30.2,
+   "ci95": [
+    -97.0,
+    36.6
+   ],
+   "se": 34.1
+  },
+  "plus_flop_turn_river_card_luck": {
+   "bb100": -18.3,
+   "ci95": [
+    -70.7,
+    34.2
+   ],
+   "se": 26.8
+  },
+  "variance_reduction_factor": 1.79
+ },
+ "slumbot_monte": {
+  "hands": 3000,
+  "allin_hands_adjusted": 6,
+  "raw": {
+   "bb100": -65.3,
+   "ci95": [
+    -134.9,
+    4.3
+   ],
+   "se": 35.5
+  },
+  "allin_adjusted": {
+   "bb100": -56.9,
+   "ci95": [
+    -124.9,
+    11.0
+   ],
+   "se": 34.7
+  },
+  "allin_and_preflop_card_luck_adjusted": {
+   "bb100": -59.6,
+   "ci95": [
+    -127.2,
+    7.9
+   ],
+   "se": 34.5
+  },
+  "plus_flop_turn_river_card_luck": {
+   "bb100": -81.6,
+   "ci95": [
+    -139.1,
+    -24.1
+   ],
+   "se": 29.3
+  },
+  "variance_reduction_factor": 1.47
+ }
+}
