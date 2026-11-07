@@ -1,0 +1,81 @@
+{
+ "hands": 660000,
+ "regulars_scored": 393,
+ "folders": 21,
+ "spearman_with_second_half_bb100": {
+  "own result (persistence)": {
+   "rho": 0.033,
+   "ci95": [
+    -0.068,
+    0.138
+   ]
+  },
+  "PageRank on money flow": {
+   "rho": 0.087,
+   "ci95": [
+    -0.012,
+    0.18
+   ]
+  },
+  "network rating (opponent-adjusted)": {
+   "rho": 0.012,
+   "ci95": [
+    -0.097,
+    0.117
+   ]
+  },
+  "style only (ridge)": {
+   "rho": 0.113,
+   "ci95": [
+    0.016,
+    0.215
+   ]
+  },
+  "style + graph convolution (SGC)": {
+   "rho": 0.074,
+   "ci95": [
+    -0.034,
+    0.176
+   ]
+  }
+ },
+ "deciles": {
+  "own result (persistence)": {
+   "top_10pct_second_half_bb100": 4.0,
+   "bottom_10pct_second_half_bb100": -5.0
+  },
+  "PageRank on money flow": {
+   "top_10pct_second_half_bb100": 7.5,
+   "bottom_10pct_second_half_bb100": -10.2
+  },
+  "network rating (opponent-adjusted)": {
+   "top_10pct_second_half_bb100": 5.4,
+   "bottom_10pct_second_half_bb100": -2.9
+  },
+  "style only (ridge)": {
+   "top_10pct_second_half_bb100": 18.4,
+   "bottom_10pct_second_half_bb100": 2.4
+  },
+  "style + graph convolution (SGC)": {
+   "top_10pct_second_half_bb100": 18.1,
+   "bottom_10pct_second_half_bb100": 8.7
+  }
+ },
+ "collusion_screen": {
+  "pairs": 1138,
+  "real_z_quantiles_1_50_99": [
+   -2.85,
+   -0.98,
+   3.18
+  ],
+  "null_z_quantiles_1_50_99": [
+   -1.8,
+   -0.04,
+   1.96
+  ],
+  "pairs_below_null_1st_percentile": 193,
+  "expected_if_like_null": 11.4,
+  "pairs_below_minus_6": 0,
+  "robust_outliers_5sd_below_population": 0
+ }
+}
