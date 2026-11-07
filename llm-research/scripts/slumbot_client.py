@@ -175,6 +175,10 @@ def update_profile(prof, action, slum_pos):
 
 def decide(bot, state, i, ctx):
     name = bot.split("#")[0]
+    if name == "blueprintbot":
+        import blueprint_bot
+
+        return blueprint_bot.reply(state, i) or ps.pa.solver_play(state, i, ctx) or ps.pa.monte_reply(state, i)
     if name == "solverbot":
         return ps.pa.solver_play(state, i, ctx) or ps.pa.monte_reply(state, i)
     if name == "adaptbot":

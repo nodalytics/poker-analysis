@@ -70,6 +70,30 @@ class Hand:
 
     def policy(self, state, ctx):
         """combo -> list of (kind, raise_to, prob) for the bot at this state."""
+        if os.environ.get("LBR_BOT") == "blueprint":
+            return self.blueprint_policy(state)
+        return self.solverbot_policy(state, ctx)
+
+    def blueprint_policy(self, state):
+        """The blueprint bot's distribution for every holding in its range (one tree walk for all)."""
+        import blueprint_bot
+
+        bp = blueprint_bot.get()
+        scale = 100 / BB
+        walked = bp.walk(state, scale)
+        board = [repr(c) for c in state.get_board_cards(0)] if state.board_count else []
+        out = {}
+        if walked is None:
+            return self.strength_rule(state, [h for h, w in self.reach.items() if w > 1e-9], board) if board else {}
+        for h, w in self.reach.items():
+            if w <= 1e-9 or {h[:2], h[2:]} & set(board):
+                continue
+            d = bp.distribution(state, self.bot, scale, hole=[h[:2], h[2:]], walked=walked)
+            if d:
+                out[h] = [(FOLD if k == "fold" else CALL if k == "call" else "raise", to, p) for k, to, p in d]
+        return out
+
+    def solverbot_policy(self, state, ctx):
         board = [repr(c) for c in state.get_board_cards(0)] if state.board_count else []
         combos = [h for h, w in self.reach.items() if w > 1e-9 and not ({h[:2], h[2:]} & set(board))]
         if not board:

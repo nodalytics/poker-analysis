@@ -439,6 +439,10 @@ def main(outdir, hands, models, notes=None, short_stack=None):
                 text = pa.adapt_play(state, i, ctx)
             elif m.split("#")[0] == "adaptbot_recent":
                 text = pa.adapt_play(state, i, ctx, recent=True)
+            elif m.split("#")[0] == "blueprintbot":
+                import blueprint_bot
+
+                text = blueprint_bot.reply(state, i) or pa.solver_play(state, i, ctx) or pa.monte_reply(state, i)
             elif m.split("#")[0] == "solverbot":
                 text = pa.solver_play(state, i, ctx) or pa.monte_reply(state, i)
             elif m in PERSONAS:

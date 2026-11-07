@@ -13,7 +13,7 @@ CFLAGS = -O3 -march=native -std=c99 -Ideps/phe/cpp/include -Ideps/iso/src
 PHE_SRC = $(addprefix deps/phe/cpp/src/,evaluator7.c hash.c hashtable.c hashtable7.c dptables.c tables_bitwise.c)
 ISO_SRC = deps/iso/src/hand_index.c deps/iso/src/deck.c
 
-all: abstraction check mccfr preclass
+all: abstraction check mccfr preclass libbp.so
 
 deps/phe deps/iso:
 	mkdir -p deps
@@ -31,6 +31,13 @@ mccfr: mccfr.cpp common.hpp deps/libdeps.a
 
 preclass: preclass.cpp common.hpp deps/libdeps.a
 	$(CXX) $(CXXFLAGS) preclass.cpp deps/libdeps.a -o $@
+
+# position-independent copy of the dependencies for the Python library (separate, so a running mccfr is untouched)
+deps/libdeps_pic.a: deps/phe deps/iso
+	mkdir -p deps/pic && cd deps && for f in $(patsubst deps/%,%,$(PHE_SRC) $(ISO_SRC)); do $(CC) -fPIC $(patsubst -Ideps/%,-I%,$(CFLAGS)) -c $$f -o pic/$$(echo $$f | tr / _).o || exit 1; done && ar rcs libdeps_pic.a pic/*.o
+
+libbp.so: bp.cpp common.hpp deps/libdeps_pic.a
+	$(CXX) $(CXXFLAGS) -fPIC -shared bp.cpp deps/libdeps_pic.a -o $@
 
 check: check.cpp common.hpp deps/libdeps.a
 	$(CXX) $(CXXFLAGS) check.cpp deps/libdeps.a -o $@
