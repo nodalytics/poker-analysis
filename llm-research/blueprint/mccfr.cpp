@@ -26,7 +26,7 @@
 #include "common.hpp"
 
 static const int STACK = 20000, SB = 50, BB = 100;
-static const int BUCKETS[4] = {169, 200, 200, 200};
+static int BUCKETS[4] = {169, 200, 200, 200};  // flop..river set from the abstraction's meta.txt
 
 struct Node {
   int8_t kind = 0;  // 0 decision, 1 fold (player `folder` folded), 2 showdown
@@ -149,23 +149,8 @@ struct Deal {
   int rank[2];  // 7-card ranks, lower is stronger
 };
 
-static std::vector<uint8_t> FB, TB, RB;
+static std::vector<uint16_t> FB, TB, RB;
 static Indexers* IX;
-
-static std::vector<uint8_t> load_u8(const std::string& p) {
-  FILE* f = fopen(p.c_str(), "rb");
-  if (!f) {
-    fprintf(stderr, "missing %s\n", p.c_str());
-    exit(1);
-  }
-  fseek(f, 0, SEEK_END);
-  size_t n = ftell(f);
-  fseek(f, 0, SEEK_SET);
-  std::vector<uint8_t> v(n);
-  if (fread(v.data(), 1, n, f) != n) exit(1);
-  fclose(f);
-  return v;
-}
 
 static void deal(std::mt19937_64& rng, Deal& d) {
   uint8_t deck[52];
@@ -266,6 +251,7 @@ int main(int argc, char** argv) {
     else if (a == "--checkpoint-minutes") ckpt = atof(argv[++i]);
     else if (a == "--discount-minutes") discount_minutes = atof(argv[++i]);
   }
+  BUCKETS[1] = BUCKETS[2] = BUCKETS[3] = bucket_count(abs);
   T.reserve(1 << 20);
   build({0, 0, SB, BB, 0, 0, BB});
   uint64_t total = 0, decisions = 0;
@@ -293,9 +279,13 @@ int main(int argc, char** argv) {
   if (dry) return 0;
   Indexers ix;
   IX = &ix;
-  FB = load_u8(abs + "/flop_buckets.u8");
-  TB = load_u8(abs + "/turn_buckets.u8");
-  RB = load_u8(abs + "/river_buckets.u8");
+  FB = load_buckets(abs, "flop");
+  TB = load_buckets(abs, "turn");
+  RB = load_buckets(abs, "river");
+  if (FB.empty() || TB.empty() || RB.empty()) {
+    fprintf(stderr, "bucket tables missing in %s\n", abs.c_str());
+    return 1;
+  }
   R = (float*)calloc(total, sizeof(float));
   A = (float*)calloc(total, sizeof(float));
   if (!R || !A) {

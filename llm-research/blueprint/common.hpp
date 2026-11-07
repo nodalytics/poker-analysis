@@ -40,3 +40,41 @@ inline std::string card_str(int c) {
   static const char* S = "cdhs";
   return std::string(1, R[c >> 2]) + S[c & 3];
 }
+
+// Bucket tables: 16-bit (OUT/<street>_buckets.u16, written when there are more than 255 buckets) or 8-bit (.u8).
+inline std::vector<uint16_t> load_buckets(const std::string& dir, const char* street) {
+  std::vector<uint16_t> out;
+  std::string p16 = dir + "/" + street + "_buckets.u16", p8 = dir + "/" + street + "_buckets.u8";
+  FILE* f = fopen(p16.c_str(), "rb");
+  bool wide = f != nullptr;
+  if (!f) f = fopen(p8.c_str(), "rb");
+  if (!f) return out;
+  fseek(f, 0, SEEK_END);
+  size_t n = ftell(f) / (wide ? 2 : 1);
+  fseek(f, 0, SEEK_SET);
+  out.resize(n);
+  if (wide) {
+    if (fread(out.data(), 2, n, f) != n) out.clear();
+  } else {
+    std::vector<uint8_t> b(n);
+    if (fread(b.data(), 1, n, f) != n) out.clear();
+    else
+      for (size_t i = 0; i < n; ++i) out[i] = b[i];
+  }
+  fclose(f);
+  return out;
+}
+
+inline int bucket_count(const std::string& dir) {
+  FILE* f = fopen((dir + "/meta.txt").c_str(), "r");
+  int b = 200;
+  if (f) {
+    char key[64];
+    int v;
+    while (fscanf(f, "%63s %d", key, &v) == 2)
+      if (std::string(key) == "buckets") b = v;
+    fclose(f);
+  }
+  return b;
+}
+

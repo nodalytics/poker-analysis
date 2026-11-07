@@ -9,25 +9,15 @@
 #include "common.hpp"
 
 static Indexers* IX = nullptr;
-static std::vector<uint8_t> FB, TB, RB;
-
-static bool load(const std::string& p, std::vector<uint8_t>& v) {
-  FILE* f = fopen(p.c_str(), "rb");
-  if (!f) return false;
-  fseek(f, 0, SEEK_END);
-  size_t n = ftell(f);
-  fseek(f, 0, SEEK_SET);
-  v.resize(n);
-  bool ok = fread(v.data(), 1, n, f) == n;
-  fclose(f);
-  return ok;
-}
+static std::vector<uint16_t> FB, TB, RB;
 
 extern "C" int bp_init(const char* dir) {
   if (IX) return 0;
   std::string d(dir);
-  if (!load(d + "/flop_buckets.u8", FB) || !load(d + "/turn_buckets.u8", TB) || !load(d + "/river_buckets.u8", RB))
-    return 1;
+  FB = load_buckets(d, "flop");
+  TB = load_buckets(d, "turn");
+  RB = load_buckets(d, "river");
+  if (FB.empty() || TB.empty() || RB.empty()) return 1;
   IX = new Indexers();
   return 0;
 }
