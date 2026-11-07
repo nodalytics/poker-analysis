@@ -6,7 +6,8 @@ A desktop tool that puts our solver stack to work on your own game, away from th
 |---|---|---|
 | **Session review** | Reads your finished hands from hand-history files and grades every decision you made. Lists your costliest mistakes and compares your frequencies with winning ranges | Working |
 | **Trainer** | A table where you play our bots, with a **Hint** button before you act and a verdict after each move | Working |
-| **Spot study** | Type in any situation and see the solver's mix, the opponent's likely range and the chart answer | Next |
+| **Spot study** | Type in any situation and see the engine's mix, each opponent's likeliest holdings from hand reading, and your equity against them | Working |
+| **Hand Sync** | Collects your finished hands from every site into one library, reviews each session after it ends, and keeps a trend table across sessions | Working |
 
 It never reads the screen, watches a table or advises during a hand. Real-money sites ban real-time assistance,
 and it would cheat the other players. It works on finished hands, the practice table, or a spot you type in
@@ -18,6 +19,7 @@ between sessions.
 cd llm-research
 uv run python -m advisor.app             # the window (Windows, macOS, Linux; Tkinter ships with Python)
 uv run python -m advisor.review FOLDER   # session review from the command line -> session_review.html
+uv run python -m advisor.sync            # one Hand Sync pass (import new hands; review if the session is over)
 uv run --with pytest python -m pytest advisor/tests
 ```
 
@@ -41,6 +43,35 @@ fix any quirk with a test. 888, partypoker and iPoker (XML) are not supported ye
 
 Only no-limit hold'em hands with one small and one big blind are reviewed. Hands with a straddle, a dead blind, or
 lines the replay cannot follow are skipped and counted in the report.
+
+## Spot study notation
+
+Give the number of players, the stacks, your position and cards, then the action so far in acting order:
+
+| Token | Meaning |
+|---|---|
+| `f` / `x` / `c` | fold / check / call |
+| `r2.5` | bet or raise to 2.5 big blinds (this street's total) |
+| `a` | all-in |
+| `[Qs7h2c]` | the next street's board cards |
+
+Example: 6-max, you in the big blind with AhKd: `f f r2.5 f f c [Qs7h2c] x r3`. UTG and HJ fold, CO opens to
+2.5bb, BTN and SB fold, you call; on the flop you check and CO bets 3bb. The answer is for the player to act and
+must be you. It shows the engine's mix, CO's likeliest holdings (sets, overpairs and top pair lead), and your
+equity against that range.
+
+## Hand Sync (auto mode)
+
+- **Watches your hand-history folders.** These are the sites' default folders plus `Downloads`, for GGPoker's
+  PokerCraft zips. You can add any folder.
+- **Imports each hand once** into `~/PokerReview/library/<site>/<date>.txt`; a state file tracks what it has seen.
+- **Reviews only when a session is over:** no new hands for 20 minutes, which you can change. It saves the report,
+  opens it, and adds a row to `~/PokerReview/trends.html` with hands, bb/100, VPIP, PFR, 3-bet, fold to 3-bet,
+  c-bet and mistakes per 100 decisions.
+- **Auto** checks every 5 minutes while the app is open; **Sync now** checks immediately.
+- **It reads your own files only.** It never reviews while hands are still arriving, and it never scrapes or
+  collects other players' hands from sites. Hands of opponents you played are in your own files, so opponent
+  modelling still works on them.
 
 ## How the advice is made (`engine.py`)
 
@@ -71,8 +102,10 @@ engine plays at least 35% of the time **agrees**, 10–35% is **questionable**, 
 | `handhistory.py` | Parsers: the PokerStars family (Stars, GG, ACR, Ignition, Bovada, Winamax) and PHH |
 | `review.py` | Grades decisions, computes frequencies and behavioural patterns, writes the HTML report |
 | `trainer.py` | Game logic for the practice table and the bots |
-| `trainer_ui.py`, `app.py` | The window |
-| `tests/` | One sample hand per site layout; the trainer plays whole hands against every bot |
+| `spot.py`, `spot_ui.py` | Spot study: the line notation, replay, analysis |
+| `sync.py`, `sync_ui.py` | Hand Sync: library, de-duplication, review after the session, trends page |
+| `trainer_ui.py`, `app.py` | The window (four tabs) |
+| `tests/` | One sample hand per site layout; the trainer plays whole hands against every bot; spot study; Hand Sync with temporary folders and a GG zip |
 
 The engine imports from `../scripts/` (`poker_agents`, `preflop_deep`, `ranges`, `poker_selfplay`). It loads the
 committed models `mlflop/mlp.joblib`, `range_inference/action_model.joblib`, the push/fold charts in

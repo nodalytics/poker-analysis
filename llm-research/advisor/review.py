@@ -162,7 +162,10 @@ def pct(a, b):
 
 def run(paths, hero=None, use_solver=True, progress=None):
     files = handhistory.find_files(paths)
-    hands = handhistory.parse_files(files, hero)
+    return run_hands(handhistory.parse_files(files, hero), hero, use_solver, progress, len(files))
+
+
+def run_hands(hands, hero=None, use_solver=True, progress=None, n_files=0):
     hero = hero or detect_hero(hands)
     rows, skipped = [], 0
     for k, h in enumerate(hands):
@@ -173,7 +176,7 @@ def run(paths, hero=None, use_solver=True, progress=None):
             rows.append((h, *r))
         if progress:
             progress(k + 1, len(hands))
-    return summarise(rows, hero, skipped, len(files))
+    return summarise(rows, hero, skipped, n_files)
 
 
 def summarise(rows, hero, skipped, n_files):
