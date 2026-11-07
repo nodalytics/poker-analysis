@@ -63,7 +63,7 @@ class Table:
                 self.state.deal_hole(h)
             else:
                 self.state.deal_hole(free.pop() + free.pop())
-        self.board_used = set()
+        self.deck = free  # the cards nobody holds, for dealing the board in a live game (deal_street)
         self.street = 0
         self.street_actions = []
         self.street_pot = self.state.total_pot_amount
@@ -76,6 +76,11 @@ class Table:
         self.state.deal_board(cs)
         self.street = STREETS.index({3: "flop", 4: "turn", 5: "river"}[len(list(self.state.get_board_cards(0)))])
         self.street_actions, self.street_pot = [], self.state.total_pot_amount
+
+    def deal_street(self):
+        """Deal the next street from the deck (live play: trainer)."""
+        n = 3 if not list(self.state.get_board_cards(0)) else 1
+        self.deal("".join(self.deck.pop() for _ in range(n)))
 
     def needs_board(self):
         return bool(self.state.status) and self.state.actor_index is None and self.state.can_deal_board()
@@ -208,7 +213,7 @@ def advise(state, i, ctx, use_solver=True):
     }
 
 
-def equity_vs_range(state, i, j, log, sims=3000, seed=0):
+def equity_vs_range(state, i, j, log, sims=1500, seed=0):
     """Hero's equity against player j's hand-reading posterior (ranges.py), by weighted Monte Carlo."""
     import eval7
 
@@ -219,15 +224,20 @@ def equity_vs_range(state, i, j, log, sims=3000, seed=0):
     combos = [c for c, x in w.items() if x > 1e-4]
     if not combos:
         return None
-    weights = [w[c] for c in combos]
     deck = [c for c in DECK if c not in set(hole) | set(board)]
-    me = [eval7.Card(c) for c in hole]
+    card = {c: eval7.Card(c) for c in DECK}
+    me = [card[c] for c in hole]
+    bc = [card[c] for c in board]
+    draws = rng.choices(combos, weights=[w[c] for c in combos], k=sims)  # one weighted draw for all sims
+    need = 5 - len(board)
     win = 0.0
-    for _ in range(sims):
-        v = rng.choices(combos, weights=weights)[0]
-        vc = {v[:2], v[2:]}
-        rest = rng.sample([c for c in deck if c not in vc], 5 - len(board))
-        b = [eval7.Card(c) for c in board + rest]
-        a, o = eval7.evaluate(me + b), eval7.evaluate([eval7.Card(v[:2]), eval7.Card(v[2:])] + b)
+    for v in draws:
+        rest = []
+        while len(rest) < need:  # rejection sampling: far faster than rebuilding the deck each time
+            c = deck[rng.randrange(len(deck))]
+            if c != v[:2] and c != v[2:] and c not in rest:
+                rest.append(c)
+        b = bc + [card[c] for c in rest]
+        a, o = eval7.evaluate(me + b), eval7.evaluate([card[v[:2]], card[v[2:]]] + b)
         win += 1.0 if a > o else 0.5 if a == o else 0.0
     return win / sims
