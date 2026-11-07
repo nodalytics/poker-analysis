@@ -1,0 +1,80 @@
+{
+ "hands": 1200,
+ "where_lbr_wins": {
+  "flop 1.0x pot, bot call": {
+   "hands": 264,
+   "lbr_bb_per_100_hands_overall": 76.0
+  },
+  "flop 1.0x pot, bot fold": {
+   "hands": 266,
+   "lbr_bb_per_100_hands_overall": 43.5
+  },
+  "river 1.0x pot, bot call": {
+   "hands": 19,
+   "lbr_bb_per_100_hands_overall": 12.6
+  },
+  "turn 1.0x pot, bot fold": {
+   "hands": 34,
+   "lbr_bb_per_100_hands_overall": 9.2
+  },
+  "river all-in, bot fold": {
+   "hands": 26,
+   "lbr_bb_per_100_hands_overall": 8.3
+  },
+  "flop all-in, bot fold": {
+   "hands": 37,
+   "lbr_bb_per_100_hands_overall": 7.0
+  },
+  "river 1.0x pot, bot fold": {
+   "hands": 20,
+   "lbr_bb_per_100_hands_overall": 5.7
+  },
+  "turn all-in, bot fold": {
+   "hands": 4,
+   "lbr_bb_per_100_hands_overall": 2.3
+  },
+  "turn 1.0x pot, bot call": {
+   "hands": 44,
+   "lbr_bb_per_100_hands_overall": -4.0
+  },
+  "turn all-in, bot call": {
+   "hands": 1,
+   "lbr_bb_per_100_hands_overall": -8.3
+  },
+  "river all-in, bot call": {
+   "hands": 4,
+   "lbr_bb_per_100_hands_overall": -16.7
+  },
+  "LBR never bets": {
+   "hands": 481,
+   "lbr_bb_per_100_hands_overall": -56.7
+  }
+ },
+ "errors": 0,
+ "stack_bb": 100,
+ "lbr_wins_bb100": 79.1,
+ "ci95": [
+  -8.8,
+  167.0
+ ],
+ "by_lbr_position": {
+  "big blind": 16.0,
+  "button": 142.2
+ },
+ "bot_fold_rate_facing_bets": {
+  "flop": {
+   "faced": 567,
+   "fold_rate": 0.534
+  },
+  "turn": {
+   "faced": 227,
+   "fold_rate": 0.559
+  },
+  "river": {
+   "faced": 149,
+   "fold_rate": 0.651
+  }
+ },
+ "sample_errors": [],
+ "note": "positive = the bot is beatable by at least this much (lower bound on exploitability)"
+}
