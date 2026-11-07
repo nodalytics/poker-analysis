@@ -60,6 +60,58 @@ Bugs 2 and 3 invalidate earlier heads-up results and solver-driven lab results l
 `env_suite_ens`, `hedge_long_*` and `meta_game_v2`. The Leduc work, the flop library and the value library are
 unaffected.
 
+## Finding our own leaks: local best response (LBR)
+
+`scripts/lbr.py` is LBR (Lisý & Bowling 2017), with 1,200–3,000 hands per run at 100bb, heads-up.
+
+- **How it plays:** LBR tracks the solver bot's range over all 1,326 holdings and, at each of its decisions, takes the
+  best of fold, call, a pot-size bet or all-in, assuming the hand then checks down. Pre-flop it only calls.
+- **How the bot's policy is computed:** for every holding, by the bot's own layers. Charts pre-flop, the flop model,
+  TexasSolver on turns and rivers solved on its tracked range, and a strength rule elsewhere.
+- **What it measures:** its winnings are a lower bound on how beatable the bot is.
+
+| Run | LBR wins (bb/100) | Biggest source |
+|---|---|---|
+| v1 (3,000 hands) | +464 [+321, +608] | — |
+| diagnostic (1,200) | +459 [+238, +681] | flop all-in, the bot calls: +308. The flop model only saw 2/3-pot bets and treats a shove like one |
+| v2, overbet defence (call when equity against the bettor's read range beats the price) | +288 [+134, +442] | flop all-in, bot calls: +267 (half as many calls) |
+| v3, plus minimum defence frequency (against B into P, defend only the top P/(P+B) of our range) | +288 [+170, +406] | the all-in leak is gone; now flop pot-size bets: bot calls +111, raises +100, folds +67 |
+| v4, the same defence from 0.9x pot | *running* | |
+
+The remaining leak is the same root cause: **the flop model has no notion of bet size**. The lasting fix is to
+train it on solves with several bet sizes (pot, 2x pot, all-in) in the tree.
+
+## Opponent modelling at scale (real players)
+
+These runs use HandHQ: 660,000 hands and 1,181 held-out regulars. Each model is scored on the held-out players'
+showdown hands, by the rank of the true holding.
+
+| Model | Top-10% rate | Mean rank |
+|---|---|---|
+| Generic (trained on Pluribus's hands) | 52.6% | 0.173 |
+| Trained on showdown hands, per style cluster (`opp_models.py`) | 37.0% | 0.321 |
+| Trained on showdown hands, per player | 27.7% | 0.363 |
+| **Generic, tilted to each player's action rates** (`opp_adjust.py`) | **53.2%** | **0.169** |
+| Generic, tilted to their style cluster's rates | 53.3% | 0.170 |
+
+- **Showdown-only training fails.** Players who reach showdown never fold, so those models cannot learn which hands
+  fold.
+- **The Slumbot model worked because every hand's cards were revealed.**
+- **Tilting the generic model with each player's observed fold, call and raise rates** (from all their hands, cards
+  or not) is unbiased and helps slightly. A player's overall frequencies say little about their specific hand.
+
+## Outside opponents
+
+- **Slumbot is the only strong heads-up no-limit bot available to play.** It has a free public API.
+- **No strong open-source bot can be run.** Libratus, Pluribus and DeepStack were never released, and community
+  rebuilds such as DeepHoldem need the retired Lua Torch stack. OpenSpiel's heads-up no-limit game runs on the lab,
+  but only with a fold / call / pot / all-in action set, and nothing trained there is strong.
+- **Training our own** (Deep CFR at heads-up no-limit scale) would take weeks of GPU time.
+- **A smaller option:** train a sparring bot on OpenSpiel's simplified game on the lab GPU. That gives a bot of a
+  different style, not a strong one.
+- **Meanwhile:** Slumbot (a strong outside opponent), LBR (our worst leaks, found automatically) and our 8 bots plus
+  the random-style population cover what another opponent would add.
+
 ## Ecology (meta-game, heads-up 5–20bb, rerun with both fixes)
 
 - Two random hyper-aggressive styles take over the population (replicator dynamics: 99.9%; an open ecosystem with

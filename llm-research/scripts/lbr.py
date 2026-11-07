@@ -115,7 +115,7 @@ class Hand:
         it (computed once, blocked cards removed per holding) against the price."""
         to_call = state.checking_or_calling_amount
         pot_before = state.total_pot_amount - to_call
-        if not to_call or to_call < 1.5 * max(pot_before, 1) or not ctx.get("log"):
+        if not to_call or to_call < pa.OVERBET_RATIO * max(pot_before, 1) or not ctx.get("log"):
             return None
         w = ranges.weights(ctx["log"], self.lbr, set(board))
         price = to_call / (state.total_pot_amount + to_call)

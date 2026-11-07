@@ -401,7 +401,10 @@ def short_defence(state, i):
     return {"action": "call" if e * 0.85 >= need else "fold", "why": f"equity {e:.0%} vs a wide open, price {need:.0%}"}
 
 
-def overbet_defence(state, i, ctx, ratio=1.5):
+OVERBET_RATIO = float(os.environ.get("OVERBET_RATIO", 0.9))  # LBR found leaks against pot-size bets too
+
+
+def overbet_defence(state, i, ctx, ratio=None):
     """Facing a bet of `ratio` x the pot or more after the flop, heads-up: call only when our equity against the
     bettor's range, read from this hand's betting (ranges.py), beats the price (with a margin of 0.05 when chips are
     still behind, since later streets cost more). The flop model never saw bets this big and treats an all-in like a
@@ -412,7 +415,7 @@ def overbet_defence(state, i, ctx, ratio=1.5):
     if not board or len(live) != 2 or not to_call or not ctx.get("log"):
         return None
     pot_before = state.total_pot_amount - to_call
-    if to_call < ratio * max(pot_before, 1):
+    if to_call < (ratio or OVERBET_RATIO) * max(pot_before, 1):
         return None
     import ranges
 
