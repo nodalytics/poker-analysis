@@ -3,3 +3,6 @@ abstraction
 mccfr
 *.o
 out/
+check
+preclass
+run*/
