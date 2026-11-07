@@ -130,7 +130,8 @@ def replay(resp, rng):
                 street_actions.append(("fold", 0))
             elif a in ("k", "c"):
                 state.check_or_call()
-                street_actions.append(("call", to_call))
+                # "check" vs "call" matters: the solver tree and the flop model look up CHECK and CALL separately
+                street_actions.append(("call" if to_call else "check", to_call))
             else:
                 if state.can_complete_bet_or_raise_to():
                     lo = state.min_completion_betting_or_raising_to_amount
