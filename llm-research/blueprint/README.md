@@ -55,7 +55,8 @@ Summary as of 2026-11-08:
 | File | What it does |
 |---|---|
 | `abstraction.cpp` | Card abstraction. For every suit-isomorphic hand and board: river hand strength against all 990 opponent hands, turn and flop expected strength and strength², cut into equal-population buckets (200 → `out/`, 1,000 → `out1000/`). Verified against eval7. |
-| `mccfr.cpp` | The trainer: builds the betting tree and runs external-sampling MCCFR with lock-free threads, linear-CFR discounting, checkpoints and resume. |
+| `mccfr.cpp`, `tree.hpp` | The trainer: builds the betting tree (`tree.hpp`, shared) and runs external-sampling MCCFR with lock-free threads, linear-CFR discounting, checkpoints and resume. Flags add DCFR, pruning, PCFR+, stratified dealing and a multigrid start. |
+| `mccfr_vec.cpp` | The vector trainer (public chance sampling): deals a board and updates every hand of both players at once, with card-removal-exact fold and showdown values. It checks itself against brute force on start; `--bench S` gives hand pairs a second on one core. |
 | `bp.cpp` → `libbp.so` | Bucket lookup for Python (`libbp2.so` for the 1,000-bucket tables). |
 | `check.cpp`, `preclass.cpp`, `inspect_blueprint.py` | Correctness check against eval7; pre-flop class names; reading a strategy. |
 | `abstraction_pa.cpp` | Distribution-aware abstraction: k-means on the CDF of next-street strength (flop, turn) and on strength against 8 opponent groups (OCHS, river); 500 buckets → `out_pa/` |
@@ -77,6 +78,8 @@ Summary as of 2026-11-08:
 | `run3` | 1,000 | 2.2 GB | 24 h |
 | `run4` | 500, distribution-aware | 1.1 GB | 24 h, MCCFR (the A/B baseline) |
 | `run5` | 500, distribution-aware | 1.1 GB | 24 h, **DCFR + pruning** (`mccfr3 --dcfr --prune-after-minutes 30`) |
+| `run6` | 500, distribution-aware | 1.1 GB | 24 h, **PCFR+** (`mccfr4 --pcfr`) |
+| `runvec` | 500, distribution-aware | 1.1 GB | 24 h on 8 threads, **vector CFR + DCFR** (`mccfr_vec --dcfr`); judged on LBR per core-hour |
 
 ## Building and running (on the lab)
 

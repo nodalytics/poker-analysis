@@ -1,0 +1,18 @@
+train 90264 val 12931 test 25827 examples on cuda
+logreg: log-loss 0.5225 acc 0.839 (11s)
+mlp: log-loss 0.1178 acc 0.946 (11s)
+lstm: log-loss 0.1407 acc 0.933 (11s)
+tf_raw: log-loss 0.5261 acc 0.758 (28s)
+tf: log-loss 0.1410 acc 0.934 (25s)
+tf_moe: log-loss 0.1440 acc 0.934 (82s)
+tf_s: log-loss 0.1439 acc 0.933 (42s)
+tf_l: log-loss 0.1389 acc 0.934 (35s)
+freq     0.5097  vs mlp +0.3919 [+0.3852, +0.3988]
+logreg   0.5225  vs mlp +0.4047 [+0.3968, +0.4128]
+mlp      0.1178  vs mlp +0.0000 [+0.0000, +0.0000]
+lstm     0.1407  vs mlp +0.0229 [+0.0179, +0.0278]
+tf_raw   0.5261  vs mlp +0.4083 [+0.3992, +0.4171]
+tf       0.1410  vs mlp +0.0232 [+0.0182, +0.0283]
+tf_moe   0.1440  vs mlp +0.0262 [+0.0215, +0.0312]
+tf_s     0.1439  vs mlp +0.0261 [+0.0210, +0.0315]
+tf_l     0.1389  vs mlp +0.0211 [+0.0165, +0.0261]
