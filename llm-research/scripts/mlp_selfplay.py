@@ -22,6 +22,12 @@ the same simplified game: an exact head-to-head with no bet mapping, in bb/100 w
 self-play with the KL reference set to that copy; with --magnet-tau 0 the reference stays the blueprint copy for
 good, as RLHF keeps its reference model.
 
+--opponent TABLE --opponent-share P: phase B, exploiting a known opponent. A share P of every batch is played
+against a fixed table (a clone of a human, clone_table.py), the rest is self-play, and the KL pull keeps the policy
+near its reference (with --distill and --magnet-tau 0, the blueprint copy): a restricted Nash response with a KL
+anchor, which wins from the opponent while staying hard to exploit. --eval-opponent reports a second table (a clone
+of held-out hands) so the gain is measured on an opponent the net did not train against.
+
 Usage (lab, GPU venv): .venv-gpu/bin/python scripts/mlp_selfplay.py OUT [--tree blueprint/run2] [--abs blueprint/out]
     [--lib blueprint/libbp3.so] [--batch 65536] [--minutes 1440] [--vs blueprint/run2] [--eval-minutes 30]
 """
@@ -340,6 +346,9 @@ def main():
     ap.add_argument("--entropy", type=float, default=0.003)
     ap.add_argument("--distill", default=None, help="start by copying this blueprint run's table (e.g. blueprint/run2)")
     ap.add_argument("--distill-minutes", type=float, default=60)
+    ap.add_argument("--opponent", default=None, help="a fixed table to exploit (e.g. a clone_table.py table)")
+    ap.add_argument("--opponent-share", type=float, default=0.5, help="share of each batch played against --opponent")
+    ap.add_argument("--eval-opponent", default=None, help="a second table to report the head-to-head against")
     args = ap.parse_args()
     dev = "cuda"
     os.makedirs(args.out, exist_ok=True)
@@ -363,6 +372,8 @@ def main():
     for m in (magnet, avg):
         m.requires_grad_(False)
     table = Table(args.vs, tree, dev) if args.vs else None
+    opponent = Table(args.opponent, tree, dev) if args.opponent else None
+    eval_opp = Table(args.eval_opponent, tree, dev) if args.eval_opponent else None
     if args.distill and hands == 0:
         distill(net, opt, tree, dealer, Table(args.distill, tree, dev), args, table)
         magnet.load_state_dict(net.state_dict())  # the KL reference is now the blueprint copy
@@ -375,13 +386,22 @@ def main():
     h_start, adv_scale = hands, 1.0
     while time.time() - t0 < args.minutes * 60:
         bk, rk, w = dealer.deal(args.batch)
-        rec, u0 = play(tree, dealer, [net, net], bk, rk)
-        games = torch.cat([r[0] for r in rec])
-        seat = tree.player[torch.cat([r[1] for r in rec])]
-        G = torch.where(seat == 0, u0[games], -u0[games]) / 100  # big blinds won by the player who acted
-        wg = w[games]
-        f, s, b, st = (torch.cat([r[k] for r in rec]) for k in (2, 3, 4, 5))
-        labs, a = torch.cat([r[6] for r in rec]), torch.cat([r[7] for r in rec])
+        # self-play, plus (with --opponent) games against the fixed table in either seat; the net learns only from
+        # its own seats' decisions
+        k = int(args.batch * args.opponent_share) // 2 if opponent is not None else 0
+        parts = [(slice(2 * k, None), [net, net], (0, 1))]
+        if k:
+            parts += [(slice(0, k), [net, opponent], (0,)), (slice(k, 2 * k), [opponent, net], (1,))]
+        cols = [[] for _ in range(8)]
+        for sl, pols, mine in parts:
+            rec, u0 = play(tree, dealer, pols, bk[sl], rk[sl])
+            games = torch.cat([r[0] for r in rec])
+            seat = tree.player[torch.cat([r[1] for r in rec])]
+            keep = (seat == mine[0]) if len(mine) == 1 else torch.ones_like(seat, dtype=torch.bool)
+            G = torch.where(seat == 0, u0[games], -u0[games]) / 100  # big blinds won by the player who acted
+            for j, x in enumerate([G, w[sl][games]] + [torch.cat([r[q] for r in rec]) for q in (2, 3, 4, 5, 6, 7)]):
+                cols[j].append(x[keep])
+        G, wg, f, s, b, st, labs, a = (torch.cat(c) for c in cols)
         lg, v = net(f, s, b, st)
         logp = F.log_softmax(masked_logits(lg, labs), 1)
         with torch.no_grad():
@@ -419,6 +439,10 @@ def main():
             if table is not None:
                 m, lo, hi, n = h2h(tree, dealer, avg, table, 2_000_000, args.batch)
                 line += f"  vs {os.path.basename(args.vs)}: {m:+.1f} bb/100 [{lo:+.1f}, {hi:+.1f}] over {n} hands"
+            for name, tb in ((args.opponent, opponent), (args.eval_opponent, eval_opp)):
+                if tb is not None:
+                    m, lo, hi, n = h2h(tree, dealer, avg, tb, 2_000_000, args.batch)
+                    line += f"  vs {os.path.basename(name)}: {m:+.1f} [{lo:+.1f}, {hi:+.1f}]"
             log.write(line + "\n")
             print(line, flush=True)
             last_eval = time.time()

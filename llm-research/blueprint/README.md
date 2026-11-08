@@ -50,6 +50,8 @@ Summary as of 2026-11-08:
 - **LBR:** +104 at best.
 - **Re-solving:** unsafe re-solving is exploitable (LBR +996) and stays off.
 
+**The mathematics, written as a paper: [`model.md`](model.md).**
+
 ## The pieces
 
 | File | What it does |
@@ -60,6 +62,7 @@ Summary as of 2026-11-08:
 | `bp.cpp` → `libbp.so` | Bucket lookup for Python (`libbp2.so` for the 1,000-bucket tables). |
 | `check.cpp`, `preclass.cpp`, `inspect_blueprint.py` | Correctness check against eval7; pre-flop class names; reading a strategy. |
 | `abstraction_pa.cpp` | Distribution-aware abstraction: k-means on the CDF of next-street strength (flop, turn) and on strength against 8 opponent groups (OCHS, river); 500 buckets → `out_pa/` |
+| `br_vec.cpp`, `vec.hpp` | Best response to a table inside its own abstraction, street by street, cross-validated over sampled boards: abstract exploitability with tight intervals, next to LBR's real-game reading. `vec.hpp` holds the dealing and fold/showdown code it shares with `mccfr_vec`. |
 | `lbr_trend.sh` | Runs LBR on every new checkpoint, giving the convergence curve in `RUN/lbr_trend.tsv`. |
 | `../scripts/blueprint_bot.py` | Plays the blueprint. It walks the real hand down the tree with pseudo-harmonic bet mapping, plays the average strategy with 5% purification, applies the minimum-defence floor, and can re-solve turns and rivers live (`BLUEPRINT_RESOLVE=1`). |
 

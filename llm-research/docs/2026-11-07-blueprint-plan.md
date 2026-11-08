@@ -96,3 +96,31 @@ Dates and findings are from the published papers, as recalled. Check the papers 
 | **NFSP** (Heinrich & Silver, 2016) | Deep RL self-play with an averaged policy | Weaker at heads-up no-limit; our own RL results agree; skipped |
 
 The order chosen is the roadmap table above. The user asked to do all of them on 2026-11-08.
+
+## Next eight, in order (2026-11-08, evening)
+
+The user approved all eight.
+
+| # | Item | What we build | Done means |
+|---|---|---|---|
+| 1 | **A sharper yardstick: best response in the simplified game** | A vector best-response tool (`blueprint/br_vec`): street by street from the river back, it estimates each betting-node-and-bucket's action values over thousands of sampled boards, picks the best action, then plays that best response against the table to measure it. It gives each checkpoint's exploitability *inside its own abstraction*, with intervals a few bb/100 wide instead of LBR's ±65. It is a lower bound that tightens with more boards. It complements LBR, which plays the real game and catches abstraction and bet-mapping leaks | Runs 4/5/6/vec and the MLP runs ranked with non-overlapping intervals |
+| 2 | **Opponent adaptation (phase B)** | Turn a professional clone into a table in the simplified game. Fine-tune the copied MLP against it, mixed with self-play and anchored by the KL pull to the blueprint copy (a restricted Nash response with a KL anchor). Train against a clone of half the hands, and test against a clone of the *other* half at the bot table, so the test is not the training opponent | Wins clearly more than the blueprint's +64 against the held-out clone, with LBR not much worse |
+| 3 | **Slumbot rematch** | 5,000 hands each for runvec and run 6 (4.5–5 h checkpoints) and `runmlp2` (from scratch, 1.8 billion hands, LBR +104) | Compare with run 2's +30.9 [−10, +72] |
+| 4 | **Safe re-solving** (Libratus) | Our own vector turn/river solver (built from `mccfr_vec`'s fold and showdown code) with the max-margin safety gadget, so a re-solve cannot do worse than the blueprint | Beats the plain blueprint head-to-head and lowers LBR (unsafe re-solving: +996) |
+| 5 | **Ship the blueprint in the advisor** | The copied MLP (3.5 MB) instead of the 0.22 GB table, plus today's fixes; rebuild the Windows exe in the lab VM | The exe gives blueprint advice on a heads-up spot |
+| 6 | **One combined run** | After the 24-hour A/B: the winning trainer on about 56 threads with the distribution-aware buckets | A new best on items 1 and 3 |
+| 7 | **Vector trainer speed** | Strategy computed once per bucket, not once per hand; regret pruning | About 2× hand pairs a second per core, same self-test |
+| 8 | **Partner videos and page** | Refresh with today's results: blueprint vs everyone, the professional clones, and the MLP learning curves | Page republished |
+
+### Progress on the eight (2026-11-08, 15:30 lab time)
+
+| # | State |
+|---|---|
+| 1 | **Built, verified, weaker than hoped.** `br_vec` (in `model.md` §7.2) decides level by level, and the in-sample check passes (+227). A plain argmax overfits: 40 boards gave −53 out of sample. So deviations are cross-validated (chosen on even boards, kept only if odd boards agree). At 400 boards it bounds run 2's abstract exploitability at **+2.3 [−1.1, +5.6]**: honest but loose. A 3,000-board run (about 3 h) is running to see how the bound grows. A GPU version is the way to make it routine |
+| 2 | **Running.** Clones of disjoint halves of the professionals' hands (`pros_a`, `pros_b`) became tables in the simplified game (`clone_table.py`). Run 2's table beats them by +42.2 and +40.2 [+38.9, +41.4]: the bar. `runexploit` copies run 2 (60 min), then trains with half of each batch against `pros_a`, anchored to the blueprint copy, and reports against `pros_b` every 30 min. Live baseline (blueprint vs `clone#pros_b` at the bot table) is running |
+| 3 | **Done.** Luck-adjusted against Slumbot, 5,000 hands each: runvec **+18.4 [−17, +54]**, run 6 **+6.0 [−36, +48]**, `runmlp2` (MLP from scratch, 2 h) **−31.8 [−79, +16]**. Run 2 with the floor read +30.9 [−10, +72]. None is distinguishable from the others or from zero at this sample size |
+| 4 | Next |
+| 5 | Next |
+| 6 | After the 24-hour A/B (runs 4–6 and runvec end about 09:00 lab time on 2026-11-09) |
+| 7 | **Half done.** Strategies and regret writes are now per distinct bucket (`mccfr_vec2`): **1.6×** on one core under the same load (0.77–0.78M against 0.44–0.51M hand pairs a second), self-test unchanged. Pruning is still to add |
+| 8 | Next |
