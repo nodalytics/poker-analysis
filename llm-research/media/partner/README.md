@@ -14,6 +14,10 @@ committed results; every chart names its source.
 | [`15-adaptive-opponent.mp4`](15-adaptive-opponent.mp4) (14 s) | A learning opponent punishes pure exploitation within ~3,000 hands; robust strategies leak slowly; the equilibrium is never beaten |
 | [`16-ensembles.mp4`](16-ensembles.mp4) (13 s) | Combining strategies against unknown opponents: reading the opponent (Bayes) earns most and never loses |
 | [`17-slumbot.mp4`](17-slumbot.mp4) (22 s) | The outside test against Slumbot: four runs each caught a real bug; v5 looked like a win (+57.5) but its 5,000-hand repeat lost (−53.8); luck-adjusted together about −14 bb/100 (95% −45 to +17), roughly even |
+| [`18-blueprint-vs-slumbot-hands.mp4`](18-blueprint-vs-slumbot-hands.mp4) | Real hands of the blueprint against Slumbot, replayed |
+| [`19-blueprint-vs-everyone.mp4`](19-blueprint-vs-everyone.mp4) (16 s) | The blueprint (our self-play strategy) against every opponent we have, with 95% intervals: positive against all 12, significant against 9, including the professionals' clone (+64) |
+| [`20-lbr-curves.mp4`](20-lbr-curves.mp4) (16 s) | How hard each training run is to beat (LBR, lower is better): predictive CFR+ stays near +30, against run 2's +104. An MLP learning from scratch stalls with a weak pull toward its own past and reaches +104 in about 2 hours with a strong one |
+| [`21-slumbot-rematch.mp4`](21-slumbot-rematch.mp4) (13 s) | The newest strategies against Slumbot, luck-adjusted, 5,000 hands each: run 2 +30.9, runvec +18.4, run 6 +6.0, MLP −31.8, every interval crossing zero |
 
 ## Pictures
 

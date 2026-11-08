@@ -6,6 +6,10 @@ Every number is read from committed results (named on each clip). Same palette a
   15-adaptive-opponent.mp4     how fast a learning opponent finds each strategy's leak
   16-ensembles.mp4             combining strategies: reading the opponent beats every single strategy
   17-slumbot.mp4               the outside test against Slumbot, and the three bugs it caught
+  19-blueprint-vs-everyone.mp4 the blueprint against every opponent: engines, simulated humans, LLMs, pros' clones
+  20-lbr-curves.mp4            how hard each training run is to beat (LBR) as it trains, CFR runs and MLP self-play
+  21-slumbot-rematch.mp4       the new blueprints and the self-taught MLP against Slumbot, luck-adjusted
+Run one clip: uv run python scripts/partner_videos.py 19
 """
 
 import glob
@@ -249,8 +253,150 @@ def slumbot():
     )
 
 
+# blueprint run 2 (purification + defence floor) against everyone, bb/100 with 95% intervals.
+# Engines, simulated humans and LLMs: docs/2026-11-08-blueprint-speed-accuracy.md (results table); Slumbot:
+# luck-adjusted, the same doc; the professionals' clone: results/vs_humans/blueprint_run2.json.
+BLUEPRINT_VS = [
+    ("Max (maniac)", 178.7, 91, 271),
+    ("Qwen2.5-VL 32B (LLM)", 97.5, -58, 279),
+    ("Carl (calling station)", 82.3, 37, 130),
+    ("Big-Tiger-Gemma 27B (LLM)", 78.5, 69, 86),
+    ("Monte (equity bot)", 73.9, 27, 119),
+    ("Nora (nit)", 55.9, 45, 68),
+    ("Tina+", 50.0, 17, 83),
+    ("Bob (recreational)", 36.4, 5, 69),
+    ("Slumbot (luck-adjusted)", 30.9, -10, 72),
+    ("Tina", 27.5, -6, 63),
+    ("Our solver bot", 26.3, 6, 46),
+]
+
+
+def blueprint_vs_everyone():
+    pros = json.load(open(os.path.join(HERE, "results/vs_humans/blueprint_run2.json")))["entrants"]["blueprintbot"]
+    rows = sorted(
+        BLUEPRINT_VS + [("Pros' clone (Pluribus hands)", pros["bb_per_100"], *pros["ci95"])], key=lambda r: r[1]
+    )
+
+    def draw(ax, t):
+        shown = min(len(rows), int(t / 0.9) + 1)
+        for i, (name, m, lo, hi) in enumerate(rows[:shown]):
+            sig = lo > 0
+            col = AQUA if "clone" in name else (BLUE if sig else GREY)
+            ax.barh(i, m, 0.62, color=col)
+            ax.errorbar(m, i, xerr=[[m - lo], [hi - m]], color=INK2, capsize=4, lw=1.3)
+            ax.text(max(hi, m) + 6, i, f"{m:+.0f}" + ("" if sig else "  n.s."), va="center", fontsize=9.5)
+        ax.axvline(0, color=INK2, lw=1)
+        ax.set_yticks(range(len(rows)), [r[0] for r in rows], fontsize=9.5)
+        ax.set_ylim(-0.6, len(rows) - 0.4)
+        ax.set_xlim(-70, 300)
+        ax.set_xlabel("blueprint's winnings, big blinds per 100 hands (95% interval)")
+        ax.grid(axis="y", visible=False)
+        if t < 11:
+            return "Heads-up at 200 big blinds. Grey: the interval crosses zero (n.s.)."
+        return "Positive against every opponent; significant against 9 of 12. Level with or slightly ahead of Slumbot."
+
+    render(
+        "19-blueprint-vs-everyone.mp4",
+        draw,
+        16,
+        "The blueprint (our self-play strategy) against everyone we have",
+        "Blueprint run 2 with purification and the defence floor. Sources: docs/2026-11-08-blueprint-speed-accuracy.md,"
+        " results/vs_humans/",
+        rect=(0.3, 0.2, 0.66, 0.66),
+    )
+
+
+def lbr_curves():
+    def load(run):
+        rows = [ln.split("\t") for ln in open(os.path.join(HERE, "results/lbr_curves", run + ".tsv"))][1:]
+        return [float(r[1]) for r in rows]
+
+    cfr = [
+        ("run4: better buckets", load("run4"), GREY),
+        ("run5: + DCFR + pruning", load("run5"), YELLOW),
+        ("run6: + predictive CFR+", load("run6"), BLUE),
+        ("runvec: vector CFR, 8 threads", load("runvec"), AQUA),
+    ]
+    mlp = [("MLP, weak pull: stalls", load("runmlp"), ORANGE), ("MLP, strong pull: converges", load("runmlp2"), BLUE)]
+
+    def draw(ax, t):
+        phase2 = t >= 9
+        series = mlp if phase2 else cfr
+        frac = ease((t - 9) / 5 if phase2 else t / 7)
+        top = 1000 if phase2 else 200
+        for name, ys, col in series:
+            k = max(1, int(round(frac * len(ys))))
+            xs = [0.5 * (i + 1) for i in range(k)]
+            ax.plot(xs, ys[:k], "-o", color=col, lw=2.2, ms=4, label=name)
+        ax.axhline(104, color=INK2, lw=1, ls="--")
+        ax.text(0.3, 104 + top * 0.02, "run 2's best: +104", fontsize=9, color=INK2)
+        ax.set_xlim(0, 6.2)
+        ax.set_ylim(0, top)
+        ax.set_xlabel("hours of training")
+        ax.set_ylabel("LBR's edge, bb/100 (lower is better)")
+        ax.legend(loc="upper right", fontsize=9.5, frameon=False)
+        if phase2:
+            return "From scratch on one GPU: a weak pull stalls near +600; a strong pull reaches run 2's +104 in ~2 h."
+        return "Lower is better (0 = nothing found; each point about +-65). Predictive CFR+ (run6) stays near +30."
+
+    render(
+        "20-lbr-curves.mp4",
+        draw,
+        16,
+        "How hard is each new blueprint to beat, as it trains?",
+        "LBR (local best response), 3,000 luck-adjusted hands every 30-minute checkpoint. Source: results/lbr_curves/",
+    )
+
+
+def slumbot_rematch():
+    def adj(run):
+        d = json.load(open(os.path.join(HERE, "results/slumbot_rematch", run + ".json")))
+        r = next(iter(d.values()))["plus_flop_turn_river_card_luck"]
+        return r["bb100"], *r["ci95"]
+
+    rows = [
+        ("run 2 (earlier)", 30.9, -10, 72),
+        ("runvec", *adj("runvec")),
+        ("run 6", *adj("run6")),
+        ("MLP from scratch", *adj("runmlp2")),
+    ]
+
+    def draw(ax, t):
+        shown = min(len(rows), int(t / 2.5) + 1)
+        for i, (name, m, lo, hi) in enumerate(rows[:shown]):
+            ax.bar(i, m, 0.55, color=GREY if lo < 0 < hi else BLUE)
+            ax.errorbar(i, m, yerr=[[m - lo], [hi - m]], color=INK2, capsize=6, lw=1.5)
+            ax.text(i, hi + 4, f"{m:+.1f}\nn.s.", ha="center", va="bottom", fontsize=10)
+        ax.axhline(0, color=INK2, lw=1)
+        ax.set_xticks(range(len(rows)), [r[0] for r in rows])
+        ax.set_xlim(-0.6, len(rows) - 0.4)
+        ax.set_ylim(-100, 110)
+        ax.set_ylabel("bb/100 vs Slumbot, luck-adjusted")
+        ax.grid(axis="x", visible=False)
+        if t < 10:
+            return "5,000 hands each against Slumbot, the strong public heads-up bot."
+        return "Every interval crosses zero: none of these is distinguishable from even, or from the others."
+
+    render(
+        "21-slumbot-rematch.mp4",
+        draw,
+        13,
+        "Rematch: the newest strategies against Slumbot",
+        "Luck-adjusted (AIVAT-lite: all-in, pre-flop and per-street card luck). Source: results/slumbot_rematch/",
+    )
+
+
 if __name__ == "__main__":
-    robust_exploitation()
-    adaptive_opponent()
-    ensembles()
-    slumbot()
+    import sys
+
+    clips = {
+        "14": robust_exploitation,
+        "15": adaptive_opponent,
+        "16": ensembles,
+        "17": slumbot,
+        "19": blueprint_vs_everyone,
+        "20": lbr_curves,
+        "21": slumbot_rematch,
+    }
+    for key in sys.argv[1:] or clips:
+        clips[key]()
