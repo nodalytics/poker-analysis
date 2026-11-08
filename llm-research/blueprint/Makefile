@@ -13,7 +13,7 @@ CFLAGS = -O3 -march=native -std=c99 -Ideps/phe/cpp/include -Ideps/iso/src
 PHE_SRC = $(addprefix deps/phe/cpp/src/,evaluator7.c hash.c hashtable.c hashtable7.c dptables.c tables_bitwise.c)
 ISO_SRC = deps/iso/src/hand_index.c deps/iso/src/deck.c
 
-all: abstraction abstraction_pa check mccfr2 preclass libbp2.so
+all: abstraction abstraction_pa check mccfr3 preclass libbp2.so
 
 deps/phe deps/iso:
 	mkdir -p deps
@@ -29,7 +29,7 @@ abstraction: abstraction.cpp common.hpp deps/libdeps.a
 abstraction_pa: abstraction_pa.cpp common.hpp deps/libdeps.a
 	$(CXX) $(CXXFLAGS) abstraction_pa.cpp deps/libdeps.a -o $@
 
-mccfr mccfr2: mccfr.cpp common.hpp deps/libdeps.a
+mccfr mccfr2 mccfr3: mccfr.cpp common.hpp deps/libdeps.a
 	$(CXX) $(CXXFLAGS) mccfr.cpp deps/libdeps.a -o $@
 
 preclass: preclass.cpp common.hpp deps/libdeps.a
