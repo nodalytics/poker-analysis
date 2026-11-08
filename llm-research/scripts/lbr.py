@@ -111,10 +111,21 @@ class Hand:
                     return out
         if walked is None:
             return self.strength_rule(state, [h for h, w in self.reach.items() if w > 1e-9], board) if board else {}
+        safe = None
+        if os.environ.get("BLUEPRINT_RESOLVE") == "safe" and len(board) == 5:  # our safe river re-solve
+            try:
+                safe = bp.safe_strategies(state, self.bot, scale)
+            except Exception:  # a failed solve falls back to the blueprint
+                safe = None
+        deck = [r + s for r in "23456789TJQKA" for s in "cdhs"]
         for h, w in self.reach.items():
             if w <= 1e-9 or {h[:2], h[2:]} & set(board):
                 continue
-            d = bp.distribution(state, self.bot, scale, hole=[h[:2], h[2:]], walked=walked)
+            strategy = None
+            if safe:
+                c = sorted([h[:2], h[2:]], key=deck.index)
+                strategy = safe.get(c[0] + c[1])
+            d = bp.distribution(state, self.bot, scale, hole=[h[:2], h[2:]], walked=walked, strategy=strategy)
             if d:
                 out[h] = [(FOLD if k == "fold" else CALL if k == "call" else "raise", to, p) for k, to, p in d]
         return out

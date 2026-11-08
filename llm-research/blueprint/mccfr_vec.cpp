@@ -8,7 +8,7 @@
 // pass from the weakest hand up and one from the strongest down, keeping per-card sums.
 //
 // Usage: mccfr_vec ABSTRACTION_DIR OUTDIR [--threads N] [--minutes M] [--checkpoint-minutes C] [--dcfr]
-//        [--dcfr-seconds S] [--bench SECONDS]
+//        [--dcfr-seconds S] [--prune-after-minutes P] [--prune-threshold C] [--bench SECONDS]
 // --bench runs single-threaded for SECONDS and prints hand pairs per second per core, then exits.
 #include <omp.h>
 #include <sys/mman.h>
@@ -23,6 +23,10 @@
 
 static float* R;
 static float* A;
+// regret-based pruning (as mccfr.cpp): after a warm-up, a traverser action whose regret is below -PRUNE_C in every
+// bucket on the board has probability 0 for every hand; 95% of the time its subtree is skipped and its regrets left
+static std::atomic<bool> PRUNE_ON(false);
+static float PRUNE_C = 1e5f;
 
 // returns the traverser's counterfactual values in `out` for every live hand
 static void cfr(int id, int trav, const Board& b, const float* rt, const float* ro, float* out, Arena& ar) {
@@ -68,7 +72,19 @@ static void cfr(int id, int trav, const Board& b, const float* rt, const float* 
   if (nd.player == trav) {
     float* vals = ar.get((size_t)na * n);
     std::fill(out, out + n, 0.0f);
+    bool skip[16] = {false};
+    static thread_local uint64_t prng = 0x9E3779B97F4A7C15ULL ^ (uint64_t)omp_get_thread_num();
+    const bool prune = PRUNE_ON.load(std::memory_order_relaxed) && st < 3 &&
+                       ((prng = prng * 6364136223846793005ULL + 1442695040888963407ULL) >> 33) % 100 < 95;
     for (int a = 0; a < na; ++a) {
+      if (prune) {
+        bool all_low = true;
+        for (int u = 0; u < nu && all_low; ++u) all_low = R[nd.offset + (uint64_t)b.ub[st][u] * na + a] < -PRUNE_C;
+        if (all_low) {  // probability 0 for every hand: out is unchanged, the regrets stay as they are
+          skip[a] = true;
+          continue;
+        }
+      }
       for (int i = 0; i < n; ++i) reach[i] = rt[i] * sig[a * n + i];
       cfr(nd.children[a], trav, b, reach, ro, vals + (size_t)a * n, ar);
       for (int i = 0; i < n; ++i) out[i] += sig[a * n + i] * vals[(size_t)a * n + i];
@@ -82,7 +98,7 @@ static void cfr(int id, int trav, const Board& b, const float* rt, const float* 
       float* r = dr + (size_t)b.uidx[i][st] * na;
       float* av = da + (size_t)b.uidx[i][st] * na;
       for (int a = 0; a < na; ++a) {
-        r[a] += vals[(size_t)a * n + i] - out[i];
+        if (!skip[a]) r[a] += vals[(size_t)a * n + i] - out[i];
         av[a] += rt[i] * sig[a * n + i];
       }
     }
@@ -129,7 +145,7 @@ int main(int argc, char** argv) {
   }
   std::string abs = argv[1], out = argv[2];
   int threads = 48;
-  double minutes = 60, ckpt = 30, dcfr_seconds = 60, bench = 0;
+  double minutes = 60, ckpt = 30, dcfr_seconds = 60, bench = 0, prune_after = -1;
   bool dcfr = false;
   for (int i = 3; i < argc; ++i) {
     std::string a = argv[i];
@@ -139,6 +155,8 @@ int main(int argc, char** argv) {
     else if (a == "--dcfr") dcfr = true;
     else if (a == "--dcfr-seconds") dcfr_seconds = atof(argv[++i]);
     else if (a == "--bench") bench = atof(argv[++i]);
+    else if (a == "--prune-after-minutes") prune_after = atof(argv[++i]);
+    else if (a == "--prune-threshold") PRUNE_C = (float)atof(argv[++i]);
   }
   uint64_t total = vec_init(abs);
   if (!total) return 1;
@@ -177,6 +195,7 @@ int main(int argc, char** argv) {
   }
   const size_t ARENA = (size_t)1326 * 80 * 64;  // vectors per depth x depth, generous
   if (bench > 0) {
+    if (prune_after >= 0) PRUNE_ON.store(true);  // benchmark pruning from a loaded checkpoint
     Rng rng(1);
     Board* b = new Board;
     Arena ar;
@@ -239,6 +258,7 @@ int main(int argc, char** argv) {
       {
         double now = omp_get_wtime();
         if ((now - t0) / 60 >= minutes) stop.store(true);
+        if (prune_after >= 0 && (now - t0) / 60 >= prune_after) PRUNE_ON.store(true);
         if (dcfr && now - last_disc >= dcfr_seconds) {
           ++disc_round;
           double t = disc_round, pa = std::pow(t, 1.5);

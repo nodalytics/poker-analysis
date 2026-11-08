@@ -325,12 +325,34 @@ Our range at the node is the blueprint's own reach-weighted range, $\pi_i^{\bar\
 \bar\sigma(I_k(h), a_k)$ over our earlier actions. If our holding lies in the top MDF of that range by strength, its
 fold probability moves to call. This cut LBR's edge from +135 to +104.
 
-### 5.4 Re-solving
+### 5.4 Re-solving (`resolve.cpp`)
 
-Unsafe re-solving solves the turn or river with the blueprint's ranges, which a deviating opponent exploits. It
-measured +996 for LBR, so it stays off. **Safe** re-solving (Brown and Sandholm 2017) adds a gadget in which the
-opponent may take their blueprint value $\mathrm{CBV}^{\bar\sigma}(I)$ instead of entering the subgame. This bounds
-the re-solved strategy's exploitability by the blueprint's (roadmap item 4).
+Unsafe re-solving solves the turn or river with the blueprint's ranges, which a deviating opponent exploits. LBR
+measured it at +996, so it stays off.
+
+**Safe** re-solving (Brown and Sandholm 2017; the re-solve gadget of Burch, Johanson and Bowling 2014) solves the
+river subgame from the start of the street, with exact cards, by vector CFR+. Let $r_u$ and $r_o$ be the players'
+blueprint reach at the subgame root. For each opponent holding $h$, the opponent's counterfactual best-response
+value against the blueprint is
+
+$$\mathrm{CBV}(h) = \max_{\sigma_o} v_o^{(\bar\sigma_u, \sigma_o)}(h).$$
+
+Before the subgame, the opponent chooses per holding to enter or to take $\mathrm{CBV}(h)$. The re-solve minimises
+
+$$\sum_h \tilde r_o(h) \max\big(v_o(h), \mathrm{CBV}(h)\big), \qquad \tilde r_o(h) = \max\big(r_o(h),\ 0.02 \max_{h'} r_o(h')\big).$$
+
+The floor matters: an opponent who deviates earlier can arrive with holdings the blueprint never brings here, and
+with zero weight the re-solve would ignore them. Without it, the worst single-hand gain was +808; with it, +1.4.
+
+**Measured on 200 river spots** (1,000 iterations, exact best responses in the subgame):
+
+| Strategy | Opponent's best response vs blueprint | Worst single-hand gain over CBV |
+|---|---|---|
+| Unsafe re-solve | −573 ± 46 | +1,179 |
+| **Safe re-solve** | **−161 ± 17** | **+1.4** |
+
+The subgame must start **before** the opponent's choices on the street. The first live version re-solved from the
+node after the opponent's bet, which trusts the blueprint's betting range; LBR measured it at +176 [+98, +254].
 
 ## 6. Hand-reading models (`../scripts/opp_mlp_*.py`, `../scripts/human_clone.py`)
 

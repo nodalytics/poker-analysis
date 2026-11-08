@@ -44,15 +44,25 @@ struct Rng {
   }
 };
 
+static void set_board(Board& b, const uint8_t* cards);
+
 static void deal_board(Rng& rng, Board& b) {
   bool used[52] = {false};
+  uint8_t cards[5];
   for (int k = 0; k < 5; ++k) {
     int c;
     do c = (int)(rng() % 52);
     while (used[c]);
     used[c] = true;
-    b.card[k] = (uint8_t)c;
+    cards[k] = (uint8_t)c;
   }
+  set_board(b, cards);
+}
+
+// a given 5-card board: every live hand's buckets per street, showdown rank and the distinct-bucket lists
+static void set_board(Board& b, const uint8_t* cards) {
+  bool used[52] = {false};
+  for (int k = 0; k < 5; ++k) b.card[k] = cards[k], used[cards[k]] = true;
   b.n = 0;
   for (int h = 0; h < 1326; ++h) {
     int a = COMBO_A[h], c = COMBO_B[h];

@@ -23,11 +23,22 @@ import random
 import numpy as np
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-RUN = os.environ.get("BLUEPRINT_RUN", os.path.join(ROOT, "blueprint", "run2"))
-ABS = os.environ.get("BLUEPRINT_ABS", os.path.join(ROOT, "blueprint", "out"))
-LIB = os.environ.get("BLUEPRINT_LIB", os.path.join(ROOT, "blueprint", "libbp.so"))
+# training runs (run2 + out + libbp.so) when present, else the advisor's data pack (blueprint/pack, with bp.dll on
+# Windows): tree, 8-bit strategy, flop/turn buckets and river cut points
+_PACK = os.path.join(ROOT, "blueprint", "pack")
+_TRAINED = os.path.exists(os.path.join(ROOT, "blueprint", "run2", "avg.f32"))
+RUN = os.environ.get("BLUEPRINT_RUN", os.path.join(ROOT, "blueprint", "run2") if _TRAINED else _PACK)
+ABS = os.environ.get("BLUEPRINT_ABS", os.path.join(ROOT, "blueprint", "out") if _TRAINED else _PACK)
+LIB = os.environ.get(
+    "BLUEPRINT_LIB",
+    os.path.join(ROOT, "blueprint", "libbp.so")
+    if _TRAINED
+    else os.path.join(_PACK, "bp.dll" if os.name == "nt" else "libbp.so"),
+)
 PURIFY = float(os.environ.get("BLUEPRINT_PURIFY", 0.05))  # drop actions under this probability
 _RNG = random.Random(97)
+_DECK = [r + s for r in "23456789TJQKA" for s in "cdhs"]
+_COMBO_INDEX = {a + b: j for j, (a, b) in enumerate((a, b) for k, a in enumerate(_DECK) for b in _DECK[k + 1 :])}
 _BP = {}
 
 
@@ -37,6 +48,7 @@ def card_int(c):
 
 class Blueprint:
     def __init__(self, run=RUN, absdir=ABS, lib=LIB):
+        self.run, self.absdir = run, absdir  # for the safe re-solver, which loads the same table
         rows = [ln.rstrip("\n").split("\t") for ln in open(os.path.join(run, "tree.tsv"))][1:]
         self.nodes = {}
         for r in rows:
@@ -49,7 +61,14 @@ class Blueprint:
                 "labels": r[7].split(",") if r[7] else [],
                 "children": [int(x) for x in r[8].split(",")] if r[8] else [],
             }
-        self.avg = np.memmap(os.path.join(run, "avg.f32"), dtype=np.float32, mode="r")
+        # avg.f32 from training, or avg.u8 in the advisor's data pack (blueprint/advisor_pack.py): every reader
+        # normalises per (node, bucket), so 8-bit probabilities play the same strategy within rounding
+        f32 = os.path.join(run, "avg.f32")
+        self.avg = (
+            np.memmap(f32, dtype=np.float32, mode="r")
+            if os.path.exists(f32)
+            else np.memmap(os.path.join(run, "avg.u8"), dtype=np.uint8, mode="r")
+        )
         # after the flop, play the current (regret-matching) strategy as Pluribus did: rarely reached spots such as
         # facing an all-in keep a near-uniform average for a long time, and LBR won +560 bb/100 calling them down
         rp = os.path.join(run, "regret.f32")
@@ -238,6 +257,57 @@ class Blueprint:
             return None
         return dict(zip(nd["actions"], probs))
 
+    # ---- safe re-solving on the river (resolve.cpp: exact cards, the re-solve gadget) ----
+    _RS = None
+
+    def safe_strategies(self, state, i, scale):
+        """Safe re-solve of this river spot for player i: {combo: probabilities over the node's actions} for every
+        holding, or None. Solved at the current node with both players' blueprint ranges; the gadget keeps every
+        opponent hand at or below its value against the blueprint (blueprint/resolve.cpp). Cached per spot."""
+        board = [repr(c) for c in state.get_board_cards(0)] if state.board_count else []
+        if len(board) != 5 or len(state.statuses) != 2:
+            return None
+        w = self.walk(state, scale, full=True)
+        if w is None:
+            return None
+        node, _, _, history, _ = w
+        if self.nodes[node]["kind"] != 0 or self.nodes[node]["player"] != 1 - i:
+            return None
+        # solved from the start of the river with the ranges there, so the opponent's bets on this street (bluffs
+        # included) are inside the solve; we read our strategy at the current node. Re-solving from after the
+        # opponent's bet trusts the blueprint's betting range, and LBR's bluffs exploited that (+176 bb/100)
+        before = [h for h in history if h[3] < len(board)]
+        on_river = [h for h in history if h[3] == len(board)]
+        root = on_river[0][0] if on_river else node
+        key = ("safe", tuple((h[0], h[1]) for h in history), tuple(board))
+        if key in self._mapped:
+            return self._mapped[key]
+        if Blueprint._RS is None:
+            lib = ctypes.CDLL(os.environ.get("BLUEPRINT_RESOLVE_LIB", os.path.join(ROOT, "blueprint", "libresolve.so")))
+            lib.rs_solve.argtypes = (
+                [ctypes.c_int, ctypes.c_int] + [ctypes.c_void_p] * 3 + [ctypes.c_int, ctypes.c_int, ctypes.c_void_p]
+            )
+            lib.rs_init.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_double, ctypes.c_double]
+            if lib.rs_init(self.absdir.encode(), self.run.encode(), PURIFY, 0.02) != 0:
+                raise RuntimeError("libresolve could not load the blueprint")
+            Blueprint._RS = lib
+        deck = [r + s for r in "23456789TJQKA" for s in "cdhs"]
+        combos = [a + b for k, a in enumerate(deck) for b in deck[k + 1 :]]
+        reach = [np.zeros(1326, np.float32), np.zeros(1326, np.float32)]
+        for p in (0, 1):
+            for c, x in self.reach(before, p, board, set(board)).items():
+                reach[p][_COMBO_INDEX[c]] = x
+        cards = np.array([card_int(c) for c in board], np.int32)
+        out = np.zeros(1326 * 6, np.float32)
+        iters = int(os.environ.get("BLUEPRINT_RESOLVE_ITERS", 500))
+        rc = Blueprint._RS.rs_solve(
+            root, node, cards.ctypes.data, reach[0].ctypes.data, reach[1].ctypes.data, iters, 1, out.ctypes.data
+        )
+        k = len(self.nodes[node]["labels"])
+        res = None if rc else {c: out[j * 6 : j * 6 + k].astype(float) for j, c in enumerate(combos)}
+        self._mapped[key] = res
+        return res
+
     def resolve_all(self, state, i, scale):
         """One re-solve of this spot for every holding in player i's blueprint range (LBR needs the whole range):
         {combo: {action name: prob}} or None. Same solve as resolve(), without forcing a particular hand in."""
@@ -323,9 +393,10 @@ class Blueprint:
         return s
 
     # ---- our decision ----
-    def distribution(self, state, i, scale, hole=None, walked=None):
+    def distribution(self, state, i, scale, hole=None, walked=None, strategy=None):
         """[(kind, raise_to_in_harness_units or None, prob)] for player i, or None. `walked`: a walk() result to reuse
-        (LBR asks for every holding at the same spot)."""
+        (LBR asks for every holding at the same spot). `strategy`: probabilities over the node's actions to play
+        instead of the table's (a safe re-solve); purified, without the defence floor."""
         w = walked or self.walk(state, scale)
         if w is None:
             return None
@@ -340,16 +411,21 @@ class Blueprint:
         if b < 0:
             return None
         k = len(n["labels"])
-        lo_i, hi_i = n["offset"] + b * k, n["offset"] + (b + 1) * k
-        s = np.array(self.avg[lo_i:hi_i], dtype=float)
-        s = s / s.sum() if s.sum() > 0 else np.full(k, 1 / k)
-        if n["street"] > 0 and self.postflop == "current" and self.regret is not None:
-            r = np.clip(np.array(self.regret[lo_i:hi_i], dtype=float), 0, None)
-            if r.sum() > 0:
-                s = r / r.sum()
-        s[s < PURIFY] = 0.0
-        s = s / s.sum() if s.sum() > 0 else np.full(k, 1 / k)
-        s = self.defence_floor(state, i, scale, n, s, hole, board)
+        if strategy is not None and np.sum(strategy) > 0:
+            s = np.array(strategy, dtype=float)[:k]
+            s[s < PURIFY] = 0.0
+            s = s / s.sum() if s.sum() > 0 else np.full(k, 1 / k)
+        else:
+            lo_i, hi_i = n["offset"] + b * k, n["offset"] + (b + 1) * k
+            s = np.array(self.avg[lo_i:hi_i], dtype=float)
+            s = s / s.sum() if s.sum() > 0 else np.full(k, 1 / k)
+            if n["street"] > 0 and self.postflop == "current" and self.regret is not None:
+                r = np.clip(np.array(self.regret[lo_i:hi_i], dtype=float), 0, None)
+                if r.sum() > 0:
+                    s = r / r.sum()
+            s[s < PURIFY] = 0.0
+            s = s / s.sum() if s.sum() > 0 else np.full(k, 1 / k)
+            s = self.defence_floor(state, i, scale, n, s, hole, board)
         can_raise = state.can_complete_bet_or_raise_to()
         lo = state.min_completion_betting_or_raising_to_amount if can_raise else None
         hi = state.max_completion_betting_or_raising_to_amount if can_raise else None
@@ -378,11 +454,12 @@ def get():
 
 
 def reply(state, i, resolve=None):
-    """JSON reply like the other bots, or None (the caller falls back). resolve: re-solve turns and rivers with
-    TexasSolver (default from BLUEPRINT_RESOLVE=1)."""
+    """JSON reply like the other bots, or None (the caller falls back). resolve: True re-solves turns and rivers with
+    TexasSolver (unsafe), "safe" re-solves rivers with our safe re-solver; None reads BLUEPRINT_RESOLVE (1 or safe)."""
     big = max(getattr(state, "blinds_or_straddles", (1, 2)))
-    if resolve is None:
-        resolve = os.environ.get("BLUEPRINT_RESOLVE") == "1"
+    mode = os.environ.get("BLUEPRINT_RESOLVE") if resolve is None else resolve
+    safe_mode = mode == "safe"  # our own safe river re-solve; True or "1": TexasSolver (unsafe)
+    resolve = mode in (True, "1")
     if resolve:
         try:
             strat = get().resolve(state, i, 100 / big)
@@ -400,7 +477,17 @@ def reply(state, i, resolve=None):
             hi = state.max_completion_betting_or_raising_to_amount
             to = max(lo, min(hi, state.bets[i] + int(float(pick.split()[1]))))
             return json.dumps({"action": "raise", "amount": int(to)})
-    dist = get().distribution(state, i, 100 / big)
+    strategy = None
+    if safe_mode:  # our own safe river re-solve (resolve.cpp)
+        try:
+            all_s = get().safe_strategies(state, i, 100 / big)
+        except Exception:  # a failed solve falls back to the blueprint
+            all_s = None
+        if all_s:
+            deck = [r + s for r in "23456789TJQKA" for s in "cdhs"]
+            hole = sorted((repr(c) for c in state.hole_cards[i]), key=deck.index)
+            strategy = all_s.get(hole[0] + hole[1])
+    dist = get().distribution(state, i, 100 / big, strategy=strategy)
     if not dist:
         return None
     kind, to, _ = _RNG.choices(dist, weights=[p for _, _, p in dist])[0]

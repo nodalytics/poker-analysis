@@ -22,6 +22,9 @@ DATA = [
     ("slumbot_range/action_model.joblib", "slumbot_range"),
     ("results/preflop", "results/preflop"),
 ]
+# the heads-up blueprint's data pack (blueprint/advisor_pack.py, about 80 MB, with bp.dll on Windows), when built
+if os.path.exists(os.path.join(ROOT, "blueprint", "pack", "avg.u8")):
+    DATA.append(("blueprint/pack", "blueprint/pack"))
 
 
 def main():

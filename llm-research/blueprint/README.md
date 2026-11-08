@@ -63,6 +63,8 @@ Summary as of 2026-11-08:
 | `check.cpp`, `preclass.cpp`, `inspect_blueprint.py` | Correctness check against eval7; pre-flop class names; reading a strategy. |
 | `abstraction_pa.cpp` | Distribution-aware abstraction: k-means on the CDF of next-street strength (flop, turn) and on strength against 8 opponent groups (OCHS, river); 500 buckets → `out_pa/` |
 | `br_vec.cpp`, `vec.hpp` | Best response to a table inside its own abstraction, street by street, cross-validated over sampled boards: abstract exploitability with tight intervals, next to LBR's real-game reading. `vec.hpp` holds the dealing and fold/showdown code it shares with `mccfr_vec`. |
+| `resolve.cpp` → `resolve`, `libresolve.so` | **Safe re-solving on the river** with exact cards. It solves from the start of the river with both blueprint ranges, and the re-solve gadget gives every opponent hand (each with at least 2% of the top reach) the option of its blueprint value. Test mode compares blueprint, unsafe and safe re-solves on sampled spots by exact best responses. `blueprint_bot.py` uses it with `BLUEPRINT_RESOLVE=safe`, or as the seat `blueprintbot#safe`. |
+| `advisor_pack.py` | Builds `pack/` for the advisor app: 8-bit strategy, flop/turn buckets, river cut points (80 MB instead of 0.8 GB). `bp.cpp` computes river buckets from the cut points when the river table is absent. |
 | `lbr_trend.sh` | Runs LBR on every new checkpoint, giving the convergence curve in `RUN/lbr_trend.tsv`. |
 | `../scripts/blueprint_bot.py` | Plays the blueprint. It walks the real hand down the tree with pseudo-harmonic bet mapping, plays the average strategy with 5% purification, applies the minimum-defence floor, and can re-solve turns and rivers live (`BLUEPRINT_RESOLVE=1`). |
 
