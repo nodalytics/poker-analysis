@@ -1,0 +1,32 @@
+{
+ "short": false,
+ "hands_per_session": 40,
+ "entrants": {
+  "blueprintbot": {
+   "sessions": 10,
+   "bb_per_100": 148.0,
+   "ci95": [
+    67.2,
+    231.2
+   ]
+  },
+  "hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M": {
+   "sessions": 10,
+   "bb_per_100": -148.0,
+   "ci95": [
+    -235.2,
+    -67.9
+   ]
+  }
+ },
+ "solver_calls": {
+  "solver_used": 2,
+  "solver_failed": 0,
+  "solver_seconds": 9.559447288513184,
+  "toolkit_calls": 0,
+  "flop_model_used": 0,
+  "push_fold_used": 0,
+  "preflop_deep_used": 0,
+  "ranges_narrowed": 2
+ }
+}
