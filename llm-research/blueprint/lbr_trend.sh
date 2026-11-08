@@ -3,6 +3,8 @@
 # Run on the lab: sh blueprint/lbr_trend.sh RUN_DIR [HANDS] [WORKERS]  ->  RUN_DIR/lbr_trend.tsv
 # Each checkpoint is copied to a snapshot first, so training can keep writing.
 RUN=${1:-blueprint/run2}; HANDS=${2:-3000}; WORKERS=${3:-12}
+# the run's abstraction and bucket library: BLUEPRINT_ABS / BLUEPRINT_LIB (run3: blueprint/out1000, blueprint/libbp2.so)
+export BLUEPRINT_ABS=${BLUEPRINT_ABS:-blueprint/out} BLUEPRINT_LIB=${BLUEPRINT_LIB:-blueprint/libbp.so}
 cd ~/llm-research || exit 1
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 LBR_BOT=blueprint
 SNAP=$RUN/snapshot
