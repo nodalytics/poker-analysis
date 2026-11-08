@@ -104,3 +104,42 @@ practice, not its code.
 | Topology / geometry | Persistent homology on hand-strength space | Weak here: our earlier topology studies found nothing beyond average strength; skipped |
 
 Proposed next as A/B runs: PCFR+ (run 6), a multigrid start, and stratified quasi-random dealing.
+
+## Engineering: towards 1 million iterations per second
+
+`mccfr4` adds these, with the same maths unless a flag says otherwise:
+
+- **Lazy buckets and ranks.** A hand's flop, turn and river buckets and its showdown rank are computed only when the
+  traversal reaches that street. Many hands end before the flop.
+- **A faster random generator:** xoshiro256** instead of mt19937_64.
+- **2 MB huge pages** for the regret and strategy tables (`madvise`), for fewer slow address lookups on random
+  access.
+- **Two traversals per deal:** both players update on each dealt hand, sharing its lookups.
+- **New maths flags:**
+  - `--pcfr`: predictive CFR+;
+  - `--stratified`: every thread cycles through all 1,326 starting hands;
+  - `--init-from RUN --init-abs DIR`: multigrid start from a coarser solved run.
+
+**Measured so far:**
+
+| Build | Iterations per second | Conditions |
+|---|---|---|
+| Run 2, 24 threads | 520k (22k per thread) | lab moderately busy |
+| Run 3, 16 threads | 353k (22k per thread) | 1,000 buckets |
+| `mccfr4`, 16 threads | 250–307k | lab oversubscribed: load 94 on 64 cores, so not a fair comparison |
+
+**Path to 1M per second:**
+
+1. Re-benchmark on a quiet lab.
+2. Then one run on about 56 dedicated threads.
+3. Pruning (run 5) should add up to 2–3× once regrets settle.
+4. Vector traversal per dealt board (public chance sampling) is the next multiplier if still short.
+
+## Chaos theory and fractals (2026-11-08)
+
+| Idea | Relevance | Verdict |
+|---|---|---|
+| **Chaos in learning dynamics** (Sato, Galla & Farmer; Bailey & Piliouras) | Regret-based learning in games can cycle or turn chaotic instead of converging. That is why CFR averages strategies, and why predictive CFR+ damps the cycling | Relevant. Measure the Lyapunov exponent of our training (do nearby starts diverge?) to check that averaging and optimism do their job |
+| **Self-similarity of the game tree** | Bet and raise subtrees repeat on every street | Already used: abstraction and strategy sharing |
+| **Hurst exponent** (rescaled range, DFA) on players' result and style series | Do tilt and style regimes persist longer than chance? | A useful niche test; extends the regime study on HandHQ |
+| **Fractal dimension of strategy landscapes** | | Little practical value; skipped |
