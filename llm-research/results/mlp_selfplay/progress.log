@@ -1,0 +1,4 @@
+30.0 min 486735872 hands 270407 hands/s loss 5.7204 kl 0.0228 entropy 0.569  vs run2: -25.1 bb/100 [-26.8, -23.4] over 1966080 hands
+60.1 min 1043529728 hands 289545 hands/s loss 9.5162 kl 0.0117 entropy 0.457  vs run2: -33.9 bb/100 [-36.3, -31.5] over 1966080 hands
+90.1 min 1641938944 hands 303626 hands/s loss 10.3350 kl 0.0155 entropy 0.393  vs run2: -38.5 bb/100 [-41.0, -35.9] over 1966080 hands
+120.2 min 2246770688 hands 311570 hands/s loss 8.7866 kl 0.0149 entropy 0.377  vs run2: -40.0 bb/100 [-42.4, -37.6] over 1966080 hands
