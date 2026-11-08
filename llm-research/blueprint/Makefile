@@ -38,6 +38,12 @@ mccfr_vec mccfr_vec2: mccfr_vec.cpp vec.hpp tree.hpp common.hpp deps/libdeps.a
 br_vec: br_vec.cpp vec.hpp tree.hpp common.hpp deps/libdeps.a
 	$(CXX) $(CXXFLAGS) br_vec.cpp deps/libdeps.a -o $@
 
+resolve: resolve.cpp vec.hpp tree.hpp common.hpp deps/libdeps.a
+	$(CXX) $(CXXFLAGS) resolve.cpp deps/libdeps.a -o $@
+
+libresolve.so: resolve.cpp vec.hpp tree.hpp common.hpp deps/libdeps_pic.a
+	$(CXX) $(CXXFLAGS) -fPIC -shared -DRESOLVE_LIB resolve.cpp deps/libdeps_pic.a -o $@
+
 preclass: preclass.cpp common.hpp deps/libdeps.a
 	$(CXX) $(CXXFLAGS) preclass.cpp deps/libdeps.a -o $@
 
@@ -45,7 +51,7 @@ preclass: preclass.cpp common.hpp deps/libdeps.a
 deps/libdeps_pic.a: deps/phe deps/iso
 	mkdir -p deps/pic && cd deps && for f in $(patsubst deps/%,%,$(PHE_SRC) $(ISO_SRC)); do $(CC) -fPIC $(patsubst -Ideps/%,-I%,$(CFLAGS)) -c $$f -o pic/$$(echo $$f | tr / _).o || exit 1; done && ar rcs libdeps_pic.a pic/*.o
 
-libbp.so libbp2.so libbp3.so: bp.cpp common.hpp deps/libdeps_pic.a
+libbp.so libbp2.so libbp3.so libbp4.so: bp.cpp common.hpp deps/libdeps_pic.a
 	$(CXX) $(CXXFLAGS) -fPIC -shared bp.cpp deps/libdeps_pic.a -o $@
 
 check: check.cpp common.hpp deps/libdeps.a

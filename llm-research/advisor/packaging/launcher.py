@@ -53,6 +53,12 @@ def selftest():
     spot.engine.pa.SOLVER = "/nonexistent"
     print(spot.describe(spot.analyse(6, 100, "BB", "AhKd", "f f r2.5 f f c [Qs7h2c] x r3")))
     print(spot.describe(spot.analyse(2, 15, "BTN", "Kh7c", "")))
+    # a heads-up 200bb spot must come from the blueprint when its data pack is bundled (blueprint/pack, bp.dll)
+    hu = spot.describe(spot.analyse(2, 200, "BTN", "AhKd", ""))
+    print(hu)
+    root = getattr(sys, "_MEIPASS", os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+    if os.path.exists(os.path.join(root, "blueprint", "pack", "avg.u8")) and "blueprint" not in hu.lower():
+        raise SystemExit("selftest failed: the blueprint pack is bundled but was not used")
     print("selftest ok")
     # a windowed build has no console, so the result is also written where a build script can read it
     import tempfile as _t

@@ -53,15 +53,26 @@ PyInstaller cannot cross-compile, so each OS's app is built on that OS:
 - **Locally**, with the command above.
 - **Windows, from the lab's Windows 11 VM:** `python3 scripts/win_build.py build BUNDLE.zip PokerAdvisor.exe`, run on
   the lab. It installs Python 3.12 in the VM if needed, uploads the sources through Windows-MCP, builds, self-tests
-  the `.exe` inside Windows and copies it back. Done on 2026-11-07: 69 MB, self-test passed, sha256 `ed8b4872…e445`.
+  the `.exe` inside Windows and copies it back. Rebuilt on 2026-11-08 with the heads-up blueprint inside: 108 MB,
+  self-test passed in Windows (including a 200bb heads-up spot answered by the blueprint), sha256 `3e1548be…35dd`.
   It is unsigned, so Windows SmartScreen asks "More info → Run anyway" the first time.
 - **On CI**, with `.github/workflows/advisor-build.yml`: it builds all three, self-tests each app, and attaches
   them to the run. It runs on demand or on an `advisor-v*` tag. The nodalytics Actions account was
   billing-blocked when this was written, so the workflow needs that fixed first.
 
 `dist/PokerAdvisor --selftest` answers two spots without opening a window, which checks that a build found its
-models. The bundle includes the advisor and `scripts/` sources, the flop model, the hand-reading models and the
-pre-flop charts. TexasSolver is optional and not bundled: set `TEXASSOLVER_BIN` to use it on turns and rivers.
+models. The bundle includes the advisor and `scripts/` sources, the flop model, the hand-reading models, the
+pre-flop charts and, when built, the **blueprint data pack** (`blueprint/pack`, 80 MB; `python blueprint/advisor_pack.py
+blueprint/run2 blueprint/out blueprint/pack` on the lab):
+
+- the 8-bit average strategy;
+- the flop and turn bucket tables;
+- 200 river cut points, in place of the 123 MB river table: the library computes the hand's strength and cuts it;
+- `bp.dll`, cross-compiled with MinGW (no dependencies beyond `KERNEL32` and `msvcrt`).
+
+On 20,000 random hands the cut points match the river table exactly for 93.6% and within one bucket for 100%; 8-bit
+storage moves no probability by more than 0.0094. Under Wine, `bp.dll` returned the same buckets as the Linux
+library on all 160 lookups tested. TexasSolver is optional and not bundled: set `TEXASSOLVER_BIN` to use it on turns and rivers.
 
 ## Hand histories it reads
 

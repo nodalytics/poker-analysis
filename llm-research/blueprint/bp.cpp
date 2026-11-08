@@ -5,8 +5,11 @@
 //   void bp_deal(int n, uint64_t seed, int32_t* buckets, int32_t* ranks)
 // Deals n heads-up hands for GPU self-play (mlp_selfplay.py): buckets[n][2][4] (pre-flop class, flop, turn,
 // river bucket per player) and ranks[n][2] (7-card rank, lower is stronger). Multithreaded with OpenMP.
+#ifdef _OPENMP  // bp_deal's threads; the Windows build for the advisor goes without
 #include <omp.h>
+#endif
 
+#include <algorithm>
 #include <cstring>
 #include <string>
 #include <vector>
@@ -15,6 +18,29 @@
 
 static Indexers* IX = nullptr;
 static std::vector<uint16_t> FB, TB, RB;
+// Without the 123 MB river table (the advisor's data pack), river buckets come from hand strength: river buckets are
+// equal-population cuts of HS, so bucket = the first b with HS <= cut[b] (river_cuts.f32, one upper edge per bucket).
+static std::vector<float> RCUT;
+
+static int river_bucket_from_hs(const uint8_t* c) {
+  bool used[52] = {false};
+  for (int k = 0; k < 7; ++k) used[c[k]] = true;
+  int me = evaluate_7cards(c[0], c[1], c[2], c[3], c[4], c[5], c[6]);
+  double win = 0;
+  int n = 0;
+  for (int a = 0; a < 52; ++a) {
+    if (used[a]) continue;
+    for (int b = a + 1; b < 52; ++b) {
+      if (used[b]) continue;
+      int op = evaluate_7cards(a, b, c[2], c[3], c[4], c[5], c[6]);
+      win += me < op ? 1.0 : me == op ? 0.5 : 0.0;
+      ++n;
+    }
+  }
+  float hs = (float)(win / n);
+  int bk = (int)(std::lower_bound(RCUT.begin(), RCUT.end(), hs) - RCUT.begin());
+  return std::min(bk, (int)RCUT.size() - 1);
+}
 
 extern "C" int bp_init(const char* dir) {
   if (IX) return 0;
@@ -22,7 +48,17 @@ extern "C" int bp_init(const char* dir) {
   FB = load_buckets(d, "flop");
   TB = load_buckets(d, "turn");
   RB = load_buckets(d, "river");
-  if (FB.empty() || TB.empty() || RB.empty()) return 1;
+  if (RB.empty()) {
+    FILE* f = fopen((d + "/river_cuts.f32").c_str(), "rb");
+    if (f) {
+      fseek(f, 0, SEEK_END);
+      RCUT.resize(ftell(f) / 4);
+      fseek(f, 0, SEEK_SET);
+      if (fread(RCUT.data(), 4, RCUT.size(), f) != RCUT.size()) RCUT.clear();
+      fclose(f);
+    }
+  }
+  if (FB.empty() || TB.empty() || (RB.empty() && RCUT.empty())) return 1;
   IX = new Indexers();
   return 0;
 }
@@ -39,7 +75,7 @@ extern "C" int bp_bucket(const int* cards, int n) {
   if (n == 2) return (int)hand_index_last(&IX->pre, c);
   if (n == 5) return FB[hand_index_last(&IX->flop, c)];
   if (n == 6) return TB[hand_index_last(&IX->turn, c)];
-  return RB[hand_index_last(&IX->river, c)];
+  return RB.empty() ? river_bucket_from_hs(c) : RB[hand_index_last(&IX->river, c)];
 }
 
 static inline uint64_t splitmix(uint64_t& x) {
@@ -66,7 +102,7 @@ extern "C" void bp_deal(int n, uint64_t seed, int32_t* bk, int32_t* rk) {
       b[0] = (int32_t)hand_index_last(&IX->pre, c);
       b[1] = FB[hand_index_last(&IX->flop, c)];
       b[2] = TB[hand_index_last(&IX->turn, c)];
-      b[3] = RB[hand_index_last(&IX->river, c)];
+      b[3] = RB.empty() ? river_bucket_from_hs(c) : RB[hand_index_last(&IX->river, c)];
       rk[(size_t)g * 2 + p] = evaluate_7cards(c[0], c[1], c[2], c[3], c[4], c[5], c[6]);
     }
   }
