@@ -124,3 +124,26 @@ The user approved all eight.
 | 6 | After the 24-hour A/B (runs 4–6 and runvec end about 09:00 lab time on 2026-11-09) |
 | 7 | **Done at 1.6×.** Strategies and regret writes per distinct bucket: 1.6× on one core. **Pruning does not carry over to vector updates.** In runvec's checkpoint a third of individual regrets are below −10⁵, but an action can only be skipped when it is dead in *every* bucket on the board, which is rare across a few hundred buckets; the benchmark showed no clear gain. The flag stays, off by default |
 | 8 | **Done.** Clips 19–21 (blueprint vs everyone, the LBR curves, the Slumbot rematch) and partner page version 8 |
+
+### Update, 2026-11-08 17:00 lab time
+
+- **Phase B works on a held-out opponent.** `runexploit` was copied from run 2, then fine-tuned for 30 minutes with
+  half of each batch against the `pros_a` clone, anchored to the copy. In the simplified game (2 million hands
+  each):
+
+  | Opponent | Run 2's table | runexploit |
+  |---|---|---|
+  | `pros_a` (trained against) | +42.2 | +57.3 [+55.5, +59.2] |
+  | `pros_b` (held out) | +40.2 [+38.9, +41.4] | +48.2 [+46.6, +49.9] |
+  | run 2 | — | −3.3 |
+
+  That is **+8 bb/100 more from an opponent it never saw**, at almost no cost against the blueprint. LBR's curve
+  on it is now running.
+- **Safe re-solving, live:**
+
+  | Version | LBR's edge | vs the plain blueprint | vs `pros_b` clone |
+  |---|---|---|---|
+  | From the street's start (v2) | +146 [+76, +215] | −18.6 [−48, +11] | +36.5 [+11, +64] (plain: +20.0 [−10, +50]) |
+
+  No measurable gain yet. LBR still wins with river bets into folds. Next: v2 with the defence floor on top
+  (running).

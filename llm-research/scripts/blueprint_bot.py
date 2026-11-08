@@ -396,7 +396,7 @@ class Blueprint:
     def distribution(self, state, i, scale, hole=None, walked=None, strategy=None):
         """[(kind, raise_to_in_harness_units or None, prob)] for player i, or None. `walked`: a walk() result to reuse
         (LBR asks for every holding at the same spot). `strategy`: probabilities over the node's actions to play
-        instead of the table's (a safe re-solve); purified, without the defence floor."""
+        instead of the table's (a safe re-solve); purified, with the defence floor unless BLUEPRINT_SAFE_FLOOR=0."""
         w = walked or self.walk(state, scale)
         if w is None:
             return None
@@ -415,6 +415,8 @@ class Blueprint:
             s = np.array(strategy, dtype=float)[:k]
             s[s < PURIFY] = 0.0
             s = s / s.sum() if s.sum() > 0 else np.full(k, 1 / k)
+            if os.environ.get("BLUEPRINT_SAFE_FLOOR", "1") == "1":  # the defence floor on top of the re-solve
+                s = self.defence_floor(state, i, scale, n, s, hole, board)
         else:
             lo_i, hi_i = n["offset"] + b * k, n["offset"] + (b + 1) * k
             s = np.array(self.avg[lo_i:hi_i], dtype=float)
