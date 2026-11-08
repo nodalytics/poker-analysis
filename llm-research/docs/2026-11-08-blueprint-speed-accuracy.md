@@ -87,3 +87,20 @@ practice, not its code.
    locking** on top of it for opponent adaptation (phase B).
 4. **8-bit strategy storage**, so the blueprint ships in the advisor app.
 5. **GPU tracks:** PyTorch is installing on the lab; AlphaHoldem-style RL first, then Deep CFR / ReBeL.
+
+## Ideas from other fields (2026-11-08)
+
+| Field | Idea | What it would do for the blueprint |
+|---|---|---|
+| Maths: online convex optimisation | **Predictive / optimistic regret matching (PCFR+)**: predict the next regret update from the last | Often converges several times faster than CFR+/DCFR in published tests. Speed; cheap to try as run 6 |
+| Numerical analysis: multigrid | Solve a coarse version first, then use it to start the fine one | Start the 500/1,000-bucket blueprint from the solved 200-bucket one instead of from zero. Speed |
+| Particle physics / Monte Carlo | **Quasi-Monte Carlo and stratified sampling**: deal cards from low-discrepancy sequences, balanced across board textures | Less noise per iteration, the same accuracy in fewer iterations |
+| Maths: optimal transport | **True potential-aware abstraction**: Wasserstein distance between distributions over next-street buckets | The next step beyond run 4's one-dimensional version (Johanson et al. 2013). Accuracy |
+| Control theory | **Kalman filter** for drifting opponent tendencies; **bandits** (Thompson sampling) to choose how hard to exploit | Phase B: fast, risk-controlled adaptation |
+| Ecology / evolution | **PSRO** (a population of strategies evolving against each other) and **population-based training** | GPU deep-RL track: robust bots that do not overfit to one opponent |
+| Signal processing | Low-rank and 8-bit compression of strategy tables | Shrinks the blueprint so the Windows app can carry it |
+| Statistical physics | Temperature / annealing (quantal response, entropy-regularised mirror descent) | Smoother early training; modest gain |
+| Information theory | Minimum description length to choose bucket counts per street | Principled abstraction sizes |
+| Topology / geometry | Persistent homology on hand-strength space | Weak here: our earlier topology studies found nothing beyond average strength; skipped |
+
+Proposed next as A/B runs: PCFR+ (run 6), a multigrid start, and stratified quasi-random dealing.
