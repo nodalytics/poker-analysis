@@ -181,6 +181,21 @@ Log-loss per decision; lower is better. "Own − pooled" has a 95% interval from
 
   It started at 12:28 lab time and is judged on the same two curves.
 
+**Update, 14:30 lab time:**
+
+| Run | Setting | vs run 2 (bb/100), by half hour | LBR's edge |
+|---|---|---|---|
+| `runmlp` | weak pull | −25 → −34 → −39 → −40 → −40 → −42 → −41 → −41 | +165, then 530–650 for 3 billion hands. **Stalled; stopped at 4.1 billion hands** |
+| **`runmlp2`** | **strong pull** | **−258 → −168 → −83 → −46** | **+946 → +272 → +104** |
+| `runmlp3` | copied from run 2 | −20.5 after 1 minute, then −6.5 to −8.8 from 20 minutes on | fine-tuning starts at 120 minutes |
+
+**The strong KL pull works.** `runmlp2` started slower, but it improves steadily instead of stalling. In 2 hours
+on one GPU its LBR edge reached **+104, run 2's best** (run 2 took 12 hours on 24 CPU threads, plus purification
+and the defence floor). The weak pull let self-play cycle into an exploitable policy and stay there.
+
+**Copying the blueprint into the MLP works.** The copy plays within about 7 bb/100 of run 2 in the simplified game,
+from a 3.5 MB network instead of a 0.22 GB table.
+
 ## Playing human professionals, through clones (2026-11-08)
 
 A recorded hand cannot be replayed against a new strategy: nobody knows how the human would have answered a
