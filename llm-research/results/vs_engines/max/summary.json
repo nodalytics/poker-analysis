@@ -1,0 +1,32 @@
+{
+ "short": false,
+ "hands_per_session": 100,
+ "entrants": {
+  "blueprintbot": {
+   "sessions": 60,
+   "bb_per_100": 178.7,
+   "ci95": [
+    90.8,
+    270.7
+   ]
+  },
+  "max": {
+   "sessions": 60,
+   "bb_per_100": -178.7,
+   "ci95": [
+    -265.6,
+    -91.5
+   ]
+  }
+ },
+ "solver_calls": {
+  "solver_used": 58,
+  "solver_failed": 0,
+  "solver_seconds": 232.60756731033325,
+  "toolkit_calls": 0,
+  "flop_model_used": 35,
+  "push_fold_used": 0,
+  "preflop_deep_used": 0,
+  "ranges_narrowed": 58
+ }
+}
