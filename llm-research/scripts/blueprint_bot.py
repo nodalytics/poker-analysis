@@ -26,7 +26,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RUN = os.environ.get("BLUEPRINT_RUN", os.path.join(ROOT, "blueprint", "run2"))
 ABS = os.environ.get("BLUEPRINT_ABS", os.path.join(ROOT, "blueprint", "out"))
 LIB = os.environ.get("BLUEPRINT_LIB", os.path.join(ROOT, "blueprint", "libbp.so"))
-PURIFY = 0.05
+PURIFY = float(os.environ.get("BLUEPRINT_PURIFY", 0.05))  # drop actions under this probability
 _RNG = random.Random(97)
 _BP = {}
 
@@ -238,6 +238,55 @@ class Blueprint:
             return None
         return dict(zip(nd["actions"], probs))
 
+    # ---- minimum defence frequency ----
+    MDF_FROM = float(os.environ.get("BLUEPRINT_MDF_FROM", 0.9))  # bet / pot at which the floor applies; 0 disables
+
+    def own_range_strength(self, state, i, scale, board):
+        """(our range from the blueprint's probabilities of our actions so far, strength per holding), cached per spot."""
+        w = self.walk(state, scale, full=True)
+        if w is None:
+            return None
+        history = w[3]
+        key = ("own", tuple((h[0], h[1]) for h in history), tuple(board), i)
+        if key not in self._mapped:
+            import ranges
+
+            r = self.reach(history, 1 - i, board, set(board))
+            st = ranges.strengths(board)
+            self._mapped[key] = (r, {c: st.get(ranges.norm(c), (0.5, 0, 0))[0] for c in r})
+        return self._mapped[key]
+
+    def defence_floor(self, state, i, scale, n, s, hole, board):
+        """Facing a bet of MDF_FROM x the pot or more after the flop: a hand in the top P/(P+B) of our own range
+        never folds (its fold probability moves to call). Otherwise a bettor's bluffs show a profit: LBR won with
+        pot and all-in bets while the blueprint folded 61% / 71% / 79% on flop / turn / river (2026-11-08)."""
+        if not self.MDF_FROM or not board or "fold" not in n["labels"]:
+            return s
+        to_call = state.checking_or_calling_amount
+        pot_before = state.total_pot_amount - to_call
+        if to_call < self.MDF_FROM * max(pot_before, 1):
+            return s
+        rs = self.own_range_strength(state, i, scale, board)
+        if not rs:
+            return s
+        r, strength = rs
+        import ranges
+
+        mine = strength.get(next((c for c in r if {c[:2], c[2:]} == set(hole)), ""), None)
+        if mine is None:
+            mine = ranges.strengths(board).get(ranges.norm("".join(hole)), (0.5, 0, 0))[0]
+        tot = sum(r.values()) or 1.0
+        pct = sum(x for c, x in r.items() if strength[c] < mine) / tot
+        mdf = pot_before / max(pot_before + to_call, 1)
+        if pct < 1 - mdf:
+            return s
+        s = s.copy()
+        fi, ci = n["labels"].index("fold"), n["labels"].index("call") if "call" in n["labels"] else None
+        if ci is not None and s[fi] > 0:
+            s[ci] += s[fi]
+            s[fi] = 0.0
+        return s
+
     # ---- our decision ----
     def distribution(self, state, i, scale, hole=None, walked=None):
         """[(kind, raise_to_in_harness_units or None, prob)] for player i, or None. `walked`: a walk() result to reuse
@@ -265,6 +314,7 @@ class Blueprint:
                 s = r / r.sum()
         s[s < PURIFY] = 0.0
         s = s / s.sum() if s.sum() > 0 else np.full(k, 1 / k)
+        s = self.defence_floor(state, i, scale, n, s, hole, board)
         can_raise = state.can_complete_bet_or_raise_to()
         lo = state.min_completion_betting_or_raising_to_amount if can_raise else None
         hi = state.max_completion_betting_or_raising_to_amount if can_raise else None
