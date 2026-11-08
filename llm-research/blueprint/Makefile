@@ -42,7 +42,7 @@ preclass: preclass.cpp common.hpp deps/libdeps.a
 deps/libdeps_pic.a: deps/phe deps/iso
 	mkdir -p deps/pic && cd deps && for f in $(patsubst deps/%,%,$(PHE_SRC) $(ISO_SRC)); do $(CC) -fPIC $(patsubst -Ideps/%,-I%,$(CFLAGS)) -c $$f -o pic/$$(echo $$f | tr / _).o || exit 1; done && ar rcs libdeps_pic.a pic/*.o
 
-libbp.so libbp2.so: bp.cpp common.hpp deps/libdeps_pic.a
+libbp.so libbp2.so libbp3.so: bp.cpp common.hpp deps/libdeps_pic.a
 	$(CXX) $(CXXFLAGS) -fPIC -shared bp.cpp deps/libdeps_pic.a -o $@
 
 check: check.cpp common.hpp deps/libdeps.a

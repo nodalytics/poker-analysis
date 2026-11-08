@@ -239,3 +239,29 @@ Each run has `lbr_trend.sh` scoring every 30-minute checkpoint with 3,000 LBR ha
   `2026-11-07-blueprint-plan.md`.
 - **Ideas from LLMs:** tested and listed in `2026-11-08-llm-ideas-for-the-blueprint.md`. Attention did not beat a
   small MLP at predicting Slumbot's actions, and end-to-end learning from tokens failed at our data scale.
+
+## LBR curves, 3 hours in (2026-11-08, 12:25 lab time)
+
+LBR's edge in bb/100 (lower is better), 3,000 hands a point, so each interval is about ±65. These are all with
+purification and the defence floor, so compare with run 2's **+104** and its plateau near +140.
+
+| Run | Trainer | Threads | Points so far (oldest → newest) | Recent level |
+|---|---|---|---|---|
+| run4 | MCCFR, distribution-aware buckets | 16 | +89, +98, +130, +121, +81, +108 | about +100 |
+| run5 | + DCFR + pruning | 16 | +91, +46, +54, +44, +87, +70 | about +60 |
+| **run6** | **+ PCFR+** | 16 | +27, +18, +10, +44, +63, +21 | **about +30** |
+| **runvec** | **vector CFR + DCFR** | **8** | +105, +71, +27, +30, +40 | **about +35** |
+| runmlp | MLP self-play, GPU | 1 GPU | +165, +607, +567 | getting worse |
+
+- **The distribution-aware buckets alone (run 4) already match run 2's best.**
+- **PCFR+ (run 6) and the vector trainer (runvec) are the best so far,** about +30.
+- **The vector trainer gets there on half the threads.** Per core-hour it leads, which is what route A was chosen
+  for.
+- The intervals overlap, so the ranking needs the full 24 hours.
+
+Iterations a second: run 4 177k, run 5 321k (pruning nearly doubles it), run 6 191k, runvec 3.7 vector iterations
+a second (each about 1.2 million hand pairs).
+
+**A mirror-match check:** the blueprint against itself (1,500 sessions, data for distillation) read +19.9
+[+0.7, +38.8] for one copy. Two identical bots must be level, so this is a 1-in-20 fluke at the 95% level, or a
+seat asymmetry in bot_sim worth checking before trusting a small head-to-head edge.

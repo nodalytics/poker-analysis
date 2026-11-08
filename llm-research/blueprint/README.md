@@ -80,6 +80,7 @@ Summary as of 2026-11-08:
 | `run5` | 500, distribution-aware | 1.1 GB | 24 h, **DCFR + pruning** (`mccfr3 --dcfr --prune-after-minutes 30`) |
 | `run6` | 500, distribution-aware | 1.1 GB | 24 h, **PCFR+** (`mccfr4 --pcfr`) |
 | `runvec` | 500, distribution-aware | 1.1 GB | 24 h on 8 threads, **vector CFR + DCFR** (`mccfr_vec --dcfr`); judged on LBR per core-hour |
+| `runmlp`, `runmlp2` | 200 (`out`) | 0.22 GB exported | 24 h each on one GPU: **an MLP learning from scratch by self-play** (`../scripts/mlp_selfplay.py`), about 300k hands a second, exported in this table layout |
 
 ## Building and running (on the lab)
 
