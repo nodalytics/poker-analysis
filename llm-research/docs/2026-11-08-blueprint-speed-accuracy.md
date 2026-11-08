@@ -143,3 +143,99 @@ Proposed next as A/B runs: PCFR+ (run 6), a multigrid start, and stratified quas
 | **Self-similarity of the game tree** | Bet and raise subtrees repeat on every street | Already used: abstraction and strategy sharing |
 | **Hurst exponent** (rescaled range, DFA) on players' result and style series | Do tilt and style regimes persist longer than chance? | A useful niche test; extends the regime study on HandHQ |
 | **Fractal dimension of strategy landscapes** | | Little practical value; skipped |
+
+## One million a second on one core (2026-11-08)
+
+**The target as first stated cannot be met.** One external-sampling iteration walks one dealt hand down the tree,
+and most of its time is spent waiting on memory:
+
+- a regret-table read at every decision, a random address in 1.1 GB;
+- at roughly 100 ns a miss and some 20–40 decisions an iteration, a core tops out near 25–50k iterations a second;
+- we measure 22k.
+
+No instruction-level trick (SIMD, assembly) helps a program that is waiting on memory. One million such
+iterations a second on one core is about 20× past that bound.
+
+**Three routes were considered:**
+
+| Route | Idea | Verdict |
+|---|---|---|
+| **A. Vector updates** (public chance sampling) | Deal a board, then update every hand of both players at once: about 1,081 × 1,081 hand pairs a traversal, as array arithmetic | **Chosen.** Measured in hand pairs a second per core, and judged by LBR's edge per core-hour |
+| B. Smaller tables | 8-bit regrets, fewer buckets, so more of the table fits in cache | Helps a little; costs accuracy |
+| C. Many cores | Already done: 16–56 threads a run | Scales total speed, not per core |
+
+### Route A built: `mccfr_vec`
+
+`blueprint/mccfr_vec.cpp` uses the same tree (now shared as `tree.hpp`), abstraction and table layout as `mccfr`,
+so `blueprint_bot.py` and LBR read its runs unchanged.
+
+- **Fold values** with card removal by inclusion–exclusion over each hand's two cards.
+- **Showdown values** by two sorted passes with per-card sums and tie groups.
+- A **built-in self-test** checks both against brute force on every start. Maximum error 0.0000 (fold) and 0.0002
+  (showdown, float rounding).
+- **Zero-reach skipping:** a node the opponent cannot reach with any hand is skipped. External sampling never visits
+  such nodes either, so the two trainers compute the same quantities.
+- DCFR discounting, checkpoints and resume as in `mccfr`.
+
+**Measured (lab load about 84 on 64 cores, so not a clean number):**
+
+| Trainer | Per core | Unit |
+|---|---|---|
+| `mccfr` external sampling | 13–22k | hands (one hand pair) a second |
+| **`mccfr_vec`** | **0.48–0.56M** | **hand pairs a second** |
+
+Hand pairs are not the same unit as external-sampling iterations: a vector traversal also walks every action at
+every node instead of sampling one. **The honest comparison is LBR's edge per core-hour.** `runvec` (8 threads,
+24 h, DCFR) runs alongside runs 4–6 with its own LBR curve.
+
+### Profile, and the assembly question
+
+`perf` is blocked on the lab (no root), so the profile is from `gprof` on a single-core benchmark:
+
+| Part | Share of time |
+|---|---|
+| The tree walk: strategy from regrets, regret and average updates per hand | 66% |
+| Showdown values | 25% |
+| Fold values | 9% |
+
+The walk's time goes on reads and writes into the regret table, gathered by each hand's bucket, which is memory
+again. Hand-written assembly is not worth it:
+
+- the compiler already emits AVX-512 for the plain loops (`-O3 -march=native` on the lab's Zen 5 Threadripper);
+- the hot part waits on memory, not arithmetic.
+
+If a later profile shows compute-bound loops, AVX-512 *intrinsics* give the same instructions as assembly and stay
+maintainable.
+
+The bigger wins are algorithmic:
+
+- compute each strategy once per **bucket** instead of once per hand (about 400 buckets against 1,081 hands on a
+  river);
+- skip actions whose regret is very negative (the pruning of run 5);
+- sample turn and river cards per street, so the preflop and flop work is shared across many run-outs.
+
+## Status of every run (2026-11-08, 09:30 lab time)
+
+| Run | Trainer | State |
+|---|---|---|
+| run2 | `mccfr`, 200 buckets | Finished: 21.5 billion iterations; the bot in use |
+| run3 | `mccfr2`, 1,000 buckets | Stopped at a 20.3 billion checkpoint (resumable); LBR +173 at 19.5 billion, worse than run 2 |
+| run4 | `mccfr2`, out_pa (A/B baseline) | Restarted 08:59, 24 h, 16 threads; about 200k iterations a second under load |
+| run5 | `mccfr3`, out_pa, DCFR + pruning | Restarted, 24 h, 16 threads |
+| run6 | `mccfr4`, out_pa, PCFR+ | Restarted, 24 h, 16 threads |
+| runvec | `mccfr_vec`, out_pa, DCFR | Started 09:27, 24 h, 8 threads |
+| Flop library | TexasSolver | Paused at 122 of 240 flops (resumable) |
+
+Each run has `lbr_trend.sh` scoring every 30-minute checkpoint with 3,000 LBR hands. The GPU environment
+(`.venv-gpu`, PyTorch 2.9.1 with CUDA) is installed and working.
+
+## Answers given in conversation, recorded
+
+- **Is every move legal?** Every action goes through PokerKit's rules engine, and Slumbot's server checks every
+  action we send. No illegal action was recorded in 92,780 self-play decisions or 31,000 Slumbot hands.
+- **Does the blueprint learn by itself?** Yes, by self-play: MCCFR plays the simplified game against itself
+  billions of times, and regret minimisation moves it toward an equilibrium. It does not learn from opponents
+  during play; that is phase B (opponent adaptation) and phase C (continual learning from Hand Sync), in
+  `2026-11-07-blueprint-plan.md`.
+- **Ideas from LLMs:** tested and listed in `2026-11-08-llm-ideas-for-the-blueprint.md`. Attention did not beat a
+  small MLP at predicting Slumbot's actions, and end-to-end learning from tokens failed at our data scale.
