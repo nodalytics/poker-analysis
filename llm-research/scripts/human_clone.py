@@ -8,6 +8,7 @@ plays a clone as a seat ("clone#MrBlue", "clone#pros").
 
     extract (main venv):  python scripts/human_clone.py extract PLURIBUS_DIR results/human_clones/decisions.npz
     train   (GPU venv):   python scripts/human_clone.py train results/human_clones/decisions.npz results/human_clones
+    (also writes pros_a and pros_b: the pooled clone trained on even and on odd hands only)
 
 Caveat: the pros played 6-max at 100bb; at a heads-up 200bb table a clone plays as it would in a two-way pot.
 """
@@ -108,7 +109,9 @@ def train(data, outdir):
     os.makedirs(outdir, exist_ok=True)
     report = {}
     pros = np.array([n != "Pluribus" for n in names])[P]
-    groups = {"pros": pros}
+    # pros_a / pros_b: the pooled professionals on disjoint halves of the hands, so an opponent-adaptation method
+    # trained against one can be tested against the other (not against the opponent it was trained on)
+    groups = {"pros": pros, "pros_a": pros & (H % 2 == 0), "pros_b": pros & (H % 2 == 1)}
     for k, n in enumerate(names):
         if (P == k).sum() >= MIN_HANDS:
             groups[n] = P == k

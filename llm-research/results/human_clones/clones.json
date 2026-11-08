@@ -1,9 +1,21 @@
 {
  "pros": {
   "decisions": 76187,
-  "test_log_loss": 0.6069600582122803,
+  "test_log_loss": 0.6069599986076355,
   "test_accuracy": 0.7699784721769196,
   "prior_log_loss": 1.2320799958890825
+ },
+ "pros_a": {
+  "decisions": 38038,
+  "test_log_loss": 0.6285496354103088,
+  "test_accuracy": 0.7664401999743623,
+  "prior_log_loss": 1.2425872533774112
+ },
+ "pros_b": {
+  "decisions": 38149,
+  "test_log_loss": 0.6083755493164062,
+  "test_accuracy": 0.7692614240170031,
+  "prior_log_loss": 1.2213777207223548
  },
  "Bill": {
   "decisions": 10348,
@@ -19,7 +31,7 @@
  },
  "Eddie": {
   "decisions": 8582,
-  "test_log_loss": 0.5972955822944641,
+  "test_log_loss": 0.5972954630851746,
   "test_accuracy": 0.773013150371641,
   "prior_log_loss": 1.2599936214514746
  },
@@ -43,13 +55,13 @@
  },
  "MrBlue": {
   "decisions": 15015,
-  "test_log_loss": 0.5680933594703674,
+  "test_log_loss": 0.5680932998657227,
   "test_accuracy": 0.7723169508525577,
   "prior_log_loss": 1.215307919375444
  },
  "MrBrown": {
   "decisions": 2079,
-  "test_log_loss": 0.6624566316604614,
+  "test_log_loss": 0.6624565720558167,
   "test_accuracy": 0.7674418604651163,
   "prior_log_loss": 1.1668788194768085
  },
@@ -73,7 +85,7 @@
  },
  "Pluribus": {
   "decisions": 15169,
-  "test_log_loss": 0.7037935256958008,
+  "test_log_loss": 0.7037934064865112,
   "test_accuracy": 0.7313821138211382,
   "prior_log_loss": 1.315600080403504
  }

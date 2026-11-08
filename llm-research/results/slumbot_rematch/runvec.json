@@ -1,0 +1,39 @@
+{
+ "slumbot_runvec": {
+  "hands": 5000,
+  "allin_hands_adjusted": 3,
+  "raw": {
+   "bb100": 11.0,
+   "ci95": [
+    -36.2,
+    58.3
+   ],
+   "se": 24.1
+  },
+  "allin_adjusted": {
+   "bb100": 10.3,
+   "ci95": [
+    -35.8,
+    56.4
+   ],
+   "se": 23.5
+  },
+  "allin_and_preflop_card_luck_adjusted": {
+   "bb100": 10.6,
+   "ci95": [
+    -35.3,
+    56.5
+   ],
+   "se": 23.4
+  },
+  "plus_flop_turn_river_card_luck": {
+   "bb100": 18.4,
+   "ci95": [
+    -17.1,
+    54.0
+   ],
+   "se": 18.1
+  },
+  "variance_reduction_factor": 1.77
+ }
+}
