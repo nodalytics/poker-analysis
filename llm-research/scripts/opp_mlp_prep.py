@@ -75,7 +75,8 @@ def hand_examples(rows, players=None, payoffs=None):
     """rows: the decision rows of one hand, in order. Returns [(model, features, class, seat's payoff in chips)]."""
     players = PLAYERS if players is None else players
     out = []
-    pre_pot, street, raises, prev = 3, None, 0, None
+    # blinds in the pot before the first action: 1/2 in our logs; other sources (human_clone.py) say so per row
+    pre_pot, street, raises, prev = rows[0].get("start_pot", 3), None, 0, None
     folded = set()
     nseat = len(rows[0]["seats"])
     for r in rows:

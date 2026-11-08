@@ -146,6 +146,7 @@ def is_bot(entrant):
         in ("tinaplus", "solverbot", "adaptbot", "adaptbot_recent", "rlbot", "rlavg", "rlsnap", "rlx")
         or is_style(entrant)
         or entrant.startswith("shift_")
+        or entrant.startswith("clone#")
     )
 
 
@@ -448,6 +449,10 @@ def main(outdir, hands, models, notes=None, short_stack=None):
                 )
             elif m.split("#")[0] == "solverbot":
                 text = pa.solver_play(state, i, ctx) or pa.monte_reply(state, i)
+            elif m.startswith("clone#"):
+                import mlp_agent  # an MLP clone of a human professional (human_clone.py)
+
+                text = mlp_agent.reply(state, i, ctx, m)
             elif m in PERSONAS:
                 text = bot_reply(m, state, i)
             elif m in pa.ALGOS:

@@ -180,3 +180,48 @@ Log-loss per decision; lower is better. "Own − pooled" has a 95% interval from
   - an exported average over ten times as many hands.
 
   It started at 12:28 lab time and is judged on the same two curves.
+
+## Playing human professionals, through clones (2026-11-08)
+
+A recorded hand cannot be replayed against a new strategy: nobody knows how the human would have answered a
+different bet. So the humans are **cloned**:
+
+- **Data:** the PHH dataset's 10,000 hands of Pluribus against professionals, where every player's cards are known:
+  91,356 labelled decisions.
+- **Clones:** one MLP per professional with at least 2,000 decisions, and one for all the professionals pooled
+  (`clone#pros`). Same features and network as the per-player study.
+- **Code:** `scripts/human_clone.py` (extract and train) and `scripts/mlp_agent.py`, which plays a clone at the bot
+  table as `clone#<name>`.
+
+**Clone quality** (held-out hands): the clones predict 77–82% of a professional's actions, at log-loss 0.52–0.69
+against 1.12–1.26 for an action-frequency prior. The Pluribus clone is the hardest to predict (73%), as an
+equilibrium strategy should be.
+
+**Caveat:** the professionals played 6-max at 100bb. At a heads-up 200bb table the clone plays as it would in a
+two-way pot, so it folds more pre-flop than a real heads-up player.
+
+**Results, heads-up at 200bb against the pooled professional clone** (bot_sim, 24-hand sessions; bb/100 for our
+bot):
+
+| Our bot | Hands | Result (bb/100) [95%] | Its LBR's edge |
+|---|---|---|---|
+| **Blueprint run 2** (200 buckets, purification + floor) | 9,600 | **+63.7 [+40, +89]** | +104 |
+| Blueprint run 6 (PCFR+, 3 h checkpoint) | 9,600 | +43.4 [+18, +68] | about +30 |
+| Blueprint runvec (vector CFR, 3 h checkpoint) | 9,600 | +42.9 [+19, +68] | about +35 |
+| MLP from scratch (`runmlp` at 2.7 billion hands) | 9,600 | +33.9 [+1, +65] | about +600 |
+| Solver bot | 4,800 | +29.0 [−5, +64] | +79 |
+| Monte (equity bot) | 9,600 | +2.5 [−30, +38] | — |
+| Pluribus clone | 9,600 | +8.6 [−13, +29] | — |
+
+**What this shows:**
+
+1. **Every blueprint beats the professional clone clearly** (+43 to +64), and so does the MLP learned from
+   scratch (+34). Monte, which plays by equity alone, only breaks even.
+2. **Less exploitable is not more profitable.** Runs 6 and runvec are much harder for LBR to beat (about +30
+   against run 2's +104), yet they won *less* from the clone. The intervals overlap, so this is not a measured
+   difference. Still, it is what theory says: an unexploitable strategy guarantees not to lose, but it does not
+   chase mistakes. Taking more from weaker players is phase B's job (opponent adaptation), not the blueprint's.
+3. **The Pluribus clone does not beat the professionals' clone** (+8.6, not significant). A 77%-accurate copy of
+   an equilibrium player loses most of what made the original strong: the mixing.
+4. Runs 6 and runvec are 3-hour checkpoints; repeat at 24 hours, with the distilled MLP (`runmlp3`) once it has
+   fine-tuned.

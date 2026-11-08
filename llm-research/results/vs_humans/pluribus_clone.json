@@ -1,0 +1,32 @@
+{
+ "short": false,
+ "hands_per_session": 24,
+ "entrants": {
+  "clone#Pluribus": {
+   "sessions": 400,
+   "bb_per_100": 8.6,
+   "ci95": [
+    -13.1,
+    28.6
+   ]
+  },
+  "clone#pros": {
+   "sessions": 400,
+   "bb_per_100": -8.6,
+   "ci95": [
+    -29.9,
+    13.6
+   ]
+  }
+ },
+ "solver_calls": {
+  "solver_used": 0,
+  "solver_failed": 0,
+  "solver_seconds": 0.0,
+  "toolkit_calls": 0,
+  "flop_model_used": 0,
+  "push_fold_used": 0,
+  "preflop_deep_used": 0,
+  "ranges_narrowed": 0
+ }
+}
