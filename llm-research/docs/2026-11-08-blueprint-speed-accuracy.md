@@ -265,3 +265,10 @@ a second (each about 1.2 million hand pairs).
 **A mirror-match check:** the blueprint against itself (1,500 sessions, data for distillation) read +19.9
 [+0.7, +38.8] for one copy. Two identical bots must be level, so this is a 1-in-20 fluke at the 95% level, or a
 seat asymmetry in bot_sim worth checking before trusting a small head-to-head edge.
+
+**Checked:** in a rerun with the names in the opposite order (1,500 more sessions), the first-listed copy read
++3.0 [−16, +22]. The code gives both names the same path: one shared Blueprint object, the same table and the same
+random generator. The cards are independent across sessions; no deal sequence repeats. The first run was chance.
+Over both runs, the first-listed copy averages +11.5 and the copy named `blueprintbot` +8.5, both inside the
+noise. One spot differed, the big blind facing a limp (check 56% vs 51%, z 2.55), but it was the most extreme of
+8 spots compared. The lesson stands: **head-to-head edges under about 20 bb/100 from 1,500 sessions are noise.**
