@@ -170,6 +170,9 @@ static void deal(std::mt19937_64& rng, Deal& d) {
 }
 
 // ---------- CFR ----------
+// pruning (Pluribus): after a warm-up, 95% of the time skip the traverser's actions whose regret is below -PRUNE_C
+static std::atomic<bool> PRUNE_ON(false);
+static float PRUNE_C = 1e6f;
 static float* R;  // regrets
 static float* A;  // average strategy sums
 
@@ -197,11 +200,20 @@ static float traverse(int id, int trav, const Deal& d, std::mt19937_64& rng) {
   strategy(R + base, na, s);
   if (n.player == trav) {
     float v[10], ev = 0;
+    bool skip[10] = {false};
+    bool prune = PRUNE_ON.load(std::memory_order_relaxed) && n.street < 3 && (rng() % 100) < 95;
     for (int a = 0; a < na; ++a) {
+      // a pruned action has negative regret, so regret matching gives it probability 0: skipping it leaves ev exact
+      if (prune && R[base + a] < -PRUNE_C) {
+        skip[a] = true;
+        v[a] = 0;
+        continue;
+      }
       v[a] = traverse(n.children[a], trav, d, rng);
       ev += s[a] * v[a];
     }
-    for (int a = 0; a < na; ++a) R[base + a] += v[a] - ev;
+    for (int a = 0; a < na; ++a)
+      if (!skip[a]) R[base + a] += v[a] - ev;
     return ev;
   }
   for (int a = 0; a < na; ++a) A[base + a] += s[a];
@@ -243,6 +255,9 @@ int main(int argc, char** argv) {
   bool dry = false;
   int threads = 48;
   double minutes = 60, ckpt = 30, discount_minutes = 400;
+  bool dcfr = false;            // discounted CFR (Brown & Sandholm 2019): alpha 1.5, beta 0, gamma 2 per period
+  double dcfr_seconds = 60;     // one discounting period
+  double prune_after = -1;      // minutes before pruning starts (-1: never)
   for (int i = 3; i < argc; ++i) {
     std::string a = argv[i];
     if (a == "--dry-run") dry = true;
@@ -250,6 +265,10 @@ int main(int argc, char** argv) {
     else if (a == "--minutes") minutes = atof(argv[++i]);
     else if (a == "--checkpoint-minutes") ckpt = atof(argv[++i]);
     else if (a == "--discount-minutes") discount_minutes = atof(argv[++i]);
+    else if (a == "--dcfr") dcfr = true;
+    else if (a == "--dcfr-seconds") dcfr_seconds = atof(argv[++i]);
+    else if (a == "--prune-after-minutes") prune_after = atof(argv[++i]);
+    else if (a == "--prune-threshold") PRUNE_C = (float)atof(argv[++i]);
   }
   BUCKETS[1] = BUCKETS[2] = BUCKETS[3] = bucket_count(abs);
   T.reserve(1 << 20);
@@ -319,8 +338,25 @@ int main(int argc, char** argv) {
       {
         double now = omp_get_wtime();
         if ((now - t0) / 60 >= minutes) stop.store(true);
+        if (prune_after >= 0 && (now - t0) / 60 >= prune_after && !PRUNE_ON.load()) {
+          PRUNE_ON.store(true);
+          fprintf(log, "%.1f min pruning on\n", (now - t0) / 60);
+        }
+        if (dcfr && now - last_disc >= dcfr_seconds) {
+          // DCFR, one period = dcfr_seconds of sampling: positive regrets x t^1.5/(t^1.5+1), negative x 1/2,
+          // average strategy x (t/(t+1))^2
+          ++disc_round;
+          double t = disc_round, pa = std::pow(t, 1.5);
+          float fp = (float)(pa / (pa + 1)), fn = 0.5f, fa = (float)std::pow(t / (t + 1), 2.0);
+#pragma omp parallel for num_threads(8) schedule(static)
+          for (uint64_t i = 0; i < total; ++i) {
+            R[i] *= R[i] > 0 ? fp : fn;
+            A[i] *= fa;
+          }
+          last_disc = now;
+        }
         // linear-CFR style discounting (Pluribus: every 10 minutes for the first 400) - approximate, done in place
-        if ((now - t0) / 60 < discount_minutes && now - last_disc >= 600) {
+        if (!dcfr && (now - t0) / 60 < discount_minutes && now - last_disc >= 600) {
           ++disc_round;
           float f = (float)disc_round / (disc_round + 1);
           for (uint64_t i = 0; i < total; ++i) R[i] *= f, A[i] *= f;

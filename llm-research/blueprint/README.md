@@ -42,6 +42,14 @@ The aim is to make **LBR's edge go down** and **results against strong opponents
 | LBR across run 2's training | levels off at about +140 from 5 billion iterations on |
 | Live re-solving against the plain blueprint (10,000 hands) | +2.6 [−28, +33]: no measurable gain yet |
 
+Latest results, run comparisons and the speed/accuracy work: `../docs/2026-11-08-blueprint-speed-accuracy.md`.
+Summary as of 2026-11-08:
+
+- **Slumbot:** +1.0 / +12.4 / +30.9 across three 5,000-hand runs (the last with the defence floor).
+- **Our engines and LLMs:** it beats every one tested.
+- **LBR:** +104 at best.
+- **Re-solving:** unsafe re-solving is exploitable (LBR +996) and stays off.
+
 ## The pieces
 
 | File | What it does |
@@ -50,6 +58,7 @@ The aim is to make **LBR's edge go down** and **results against strong opponents
 | `mccfr.cpp` | The trainer: builds the betting tree and runs external-sampling MCCFR with lock-free threads, linear-CFR discounting, checkpoints and resume. |
 | `bp.cpp` → `libbp.so` | Bucket lookup for Python (`libbp2.so` for the 1,000-bucket tables). |
 | `check.cpp`, `preclass.cpp`, `inspect_blueprint.py` | Correctness check against eval7; pre-flop class names; reading a strategy. |
+| `abstraction_pa.cpp` | Distribution-aware abstraction: k-means on the CDF of next-street strength (flop, turn) and on strength against 8 opponent groups (OCHS, river); 500 buckets → `out_pa/` |
 | `lbr_trend.sh` | Runs LBR on every new checkpoint, giving the convergence curve in `RUN/lbr_trend.tsv`. |
 | `../scripts/blueprint_bot.py` | Plays the blueprint. It walks the real hand down the tree with pseudo-harmonic bet mapping, plays the average strategy with 5% purification, applies the minimum-defence floor, and can re-solve turns and rivers live (`BLUEPRINT_RESOLVE=1`). |
 
@@ -66,6 +75,8 @@ The aim is to make **LBR's edge go down** and **results against strong opponents
 |---|---|---|---|
 | `run2` | 200 | 0.44 GB | 21.5 billion in 12 h, about 500k per second |
 | `run3` | 1,000 | 2.2 GB | 24 h |
+| `run4` | 500, distribution-aware | 1.1 GB | 24 h, MCCFR (the A/B baseline) |
+| `run5` | 500, distribution-aware | 1.1 GB | 24 h, **DCFR + pruning** (`mccfr3 --dcfr --prune-after-minutes 30`) |
 
 ## Building and running (on the lab)
 
