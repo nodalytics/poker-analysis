@@ -238,6 +238,41 @@ class Blueprint:
             return None
         return dict(zip(nd["actions"], probs))
 
+    def resolve_all(self, state, i, scale):
+        """One re-solve of this spot for every holding in player i's blueprint range (LBR needs the whole range):
+        {combo: {action name: prob}} or None. Same solve as resolve(), without forcing a particular hand in."""
+        import poker_agents as pa
+
+        if not os.path.exists(pa.SOLVER):
+            return None
+        board = [repr(c) for c in state.get_board_cards(0)] if state.board_count else []
+        if len(board) < 4 or len(state.statuses) != 2:
+            return None
+        w = self.walk(state, scale, full=True)
+        if w is None:
+            return None
+        node, bets, pot, history, street_acts = w
+        me = 1 - i
+        before = [h for h in history if h[3] < len(board)]
+        r_me = self.reach(before, me, board, set(board))
+        r_op = self.reach(before, 1 - me, board, set(board))
+        s_me, s_op = self.solver_range(r_me), self.solver_range(r_op)
+        if not s_me or not s_op:
+            return None
+        ranges = (s_me, s_op) if i == 0 else (s_op, s_me)
+        eff = min(state.stacks[j] + state.bets[j] for j in (0, 1))
+        key = ("bp-resolve-all", tuple((h[0], h[1]) for h in before), tuple(board), i)
+        tree, _ = pa._solve(key, int(round(pot / scale)), eff, board, 0, None, ranges)
+        nd = pa._walk(tree, street_acts) if tree else None
+        strat = (nd or {}).get("strategy", {}).get("strategy", {}) if nd else {}
+        if not strat:
+            return None
+        out = {}
+        for c, probs in strat.items():
+            key2 = c if c in r_me else c[2:] + c[:2]
+            out[key2] = dict(zip(nd["actions"], probs))
+        return out
+
     # ---- minimum defence frequency ----
     MDF_FROM = float(os.environ.get("BLUEPRINT_MDF_FROM", 0.9))  # bet / pot at which the floor applies; 0 disables
 

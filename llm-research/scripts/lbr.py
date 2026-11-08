@@ -83,6 +83,32 @@ class Hand:
         walked = bp.walk(state, scale)
         board = [repr(c) for c in state.get_board_cards(0)] if state.board_count else []
         out = {}
+        if os.environ.get("BLUEPRINT_RESOLVE") == "1" and len(board) >= 4 and walked is not None:
+            res = None
+            try:
+                res = bp.resolve_all(state, self.bot, scale)
+            except Exception:  # a failed solve falls back to the blueprint below
+                res = None
+            if res:
+                to_call = state.checking_or_calling_amount
+                can_raise = state.can_complete_bet_or_raise_to()
+                lo = state.min_completion_betting_or_raising_to_amount if can_raise else None
+                hi = state.max_completion_betting_or_raising_to_amount if can_raise else None
+                for h, w in self.reach.items():
+                    if w <= 1e-9 or {h[:2], h[2:]} & set(board) or h not in res:
+                        continue
+                    d = []
+                    for name, p in res[h].items():
+                        k = name.split()[0]
+                        if k == "FOLD":
+                            d.append((FOLD if to_call else CALL, None, p))
+                        elif k in ("CHECK", "CALL") or not can_raise:
+                            d.append((CALL, None, p))
+                        else:
+                            d.append(("raise", max(lo, min(hi, state.bets[self.bot] + int(float(name.split()[1])))), p))
+                    out[h] = d
+                if out:
+                    return out
         if walked is None:
             return self.strength_rule(state, [h for h, w in self.reach.items() if w > 1e-9], board) if board else {}
         for h, w in self.reach.items():
