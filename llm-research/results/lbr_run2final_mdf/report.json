@@ -1,0 +1,102 @@
+{
+ "hands": 4000,
+ "where_lbr_wins": {
+  "flop 1.0x pot, bot call": {
+   "hands": 783,
+   "lbr_bb_per_100_hands_overall": 42.2
+  },
+  "flop 1.0x pot, bot fold": {
+   "hands": 559,
+   "lbr_bb_per_100_hands_overall": 34.7
+  },
+  "turn 1.0x pot, bot call": {
+   "hands": 151,
+   "lbr_bb_per_100_hands_overall": 34.5
+  },
+  "river 1.0x pot, bot call": {
+   "hands": 103,
+   "lbr_bb_per_100_hands_overall": 20.0
+  },
+  "river 1.0x pot, bot fold": {
+   "hands": 100,
+   "lbr_bb_per_100_hands_overall": 12.7
+  },
+  "turn 1.0x pot, bot fold": {
+   "hands": 117,
+   "lbr_bb_per_100_hands_overall": 11.1
+  },
+  "flop all-in, bot fold": {
+   "hands": 145,
+   "lbr_bb_per_100_hands_overall": 10.9
+  },
+  "river all-in, bot fold": {
+   "hands": 75,
+   "lbr_bb_per_100_hands_overall": 10.3
+  },
+  "turn all-in, bot fold": {
+   "hands": 55,
+   "lbr_bb_per_100_hands_overall": 6.1
+  },
+  "river all-in, bot call": {
+   "hands": 3,
+   "lbr_bb_per_100_hands_overall": 5.0
+  },
+  "flop 1.0x pot, bot raise": {
+   "hands": 11,
+   "lbr_bb_per_100_hands_overall": 4.8
+  },
+  "turn 1.0x pot, bot raise": {
+   "hands": 6,
+   "lbr_bb_per_100_hands_overall": 4.3
+  },
+  "flop all-in, bot call": {
+   "hands": 6,
+   "lbr_bb_per_100_hands_overall": 0.0
+  },
+  "river 1.0x pot, bot raise": {
+   "hands": 20,
+   "lbr_bb_per_100_hands_overall": -2.3
+  },
+  "turn all-in, bot call": {
+   "hands": 3,
+   "lbr_bb_per_100_hands_overall": -15.0
+  },
+  "LBR never bets": {
+   "hands": 1863,
+   "lbr_bb_per_100_hands_overall": -97.2
+  }
+ },
+ "errors": 0,
+ "stack_bb": 200,
+ "lbr_wins_bb100": 82.1,
+ "ci95": [
+  13.0,
+  151.3
+ ],
+ "luck_adjusted_bb100": 104.1,
+ "luck_adjusted_ci95": [
+  44.2,
+  164.0
+ ],
+ "variance_reduction": 1.33,
+ "by_lbr_position": {
+  "big blind": 62.0,
+  "button": 102.3
+ },
+ "bot_fold_rate_facing_bets": {
+  "flop": {
+   "faced": 1509,
+   "fold_rate": 0.468
+  },
+  "turn": {
+   "faced": 726,
+   "fold_rate": 0.53
+  },
+  "river": {
+   "faced": 550,
+   "fold_rate": 0.551
+  }
+ },
+ "sample_errors": [],
+ "note": "positive = the bot is beatable by at least this much (lower bound on exploitability)"
+}
