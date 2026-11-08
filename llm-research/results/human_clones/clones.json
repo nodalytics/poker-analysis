@@ -1,0 +1,80 @@
+{
+ "pros": {
+  "decisions": 76187,
+  "test_log_loss": 0.6069600582122803,
+  "test_accuracy": 0.7699784721769196,
+  "prior_log_loss": 1.2320799958890825
+ },
+ "Bill": {
+  "decisions": 10348,
+  "test_log_loss": 0.5991772413253784,
+  "test_accuracy": 0.7627821280515892,
+  "prior_log_loss": 1.243374297714874
+ },
+ "Budd": {
+  "decisions": 3653,
+  "test_log_loss": 0.615571141242981,
+  "test_accuracy": 0.7866847826086957,
+  "prior_log_loss": 1.2388035010406602
+ },
+ "Eddie": {
+  "decisions": 8582,
+  "test_log_loss": 0.5972955822944641,
+  "test_accuracy": 0.773013150371641,
+  "prior_log_loss": 1.2599936214514746
+ },
+ "Hattori": {
+  "decisions": 2090,
+  "test_log_loss": 0.6861933469772339,
+  "test_accuracy": 0.7780612244897959,
+  "prior_log_loss": 1.2093858518879785
+ },
+ "Joe": {
+  "decisions": 2203,
+  "test_log_loss": 0.5765259265899658,
+  "test_accuracy": 0.7945205479452054,
+  "prior_log_loss": 1.1779052068202807
+ },
+ "MrBlonde": {
+  "decisions": 3555,
+  "test_log_loss": 0.5463037490844727,
+  "test_accuracy": 0.8170347003154574,
+  "prior_log_loss": 1.1179889009958253
+ },
+ "MrBlue": {
+  "decisions": 15015,
+  "test_log_loss": 0.5680933594703674,
+  "test_accuracy": 0.7723169508525577,
+  "prior_log_loss": 1.215307919375444
+ },
+ "MrBrown": {
+  "decisions": 2079,
+  "test_log_loss": 0.6624566316604614,
+  "test_accuracy": 0.7674418604651163,
+  "prior_log_loss": 1.1668788194768085
+ },
+ "MrOrange": {
+  "decisions": 10765,
+  "test_log_loss": 0.5788267254829407,
+  "test_accuracy": 0.7960467205750225,
+  "prior_log_loss": 1.1911375394467172
+ },
+ "MrPink": {
+  "decisions": 9134,
+  "test_log_loss": 0.5829759836196899,
+  "test_accuracy": 0.7699504678040726,
+  "prior_log_loss": 1.234355284677752
+ },
+ "MrWhite": {
+  "decisions": 6799,
+  "test_log_loss": 0.5244001746177673,
+  "test_accuracy": 0.7917933130699089,
+  "prior_log_loss": 1.116097037139566
+ },
+ "Pluribus": {
+  "decisions": 15169,
+  "test_log_loss": 0.7037935256958008,
+  "test_accuracy": 0.7313821138211382,
+  "prior_log_loss": 1.315600080403504
+ }
+}

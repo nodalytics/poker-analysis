@@ -18,6 +18,10 @@ the fair game's gradient and the strategy learned is for the real deal distribut
 Every EVAL_MINUTES it also plays the current policy against a blueprint table (--vs RUN, both seats, fair deals) in
 the same simplified game: an exact head-to-head with no bet mapping, in bb/100 with a 95% interval.
 
+--distill RUN: first copy RUN's table for --distill-minutes (the MLP + blueprint start), then fine-tune by
+self-play with the KL reference set to that copy; with --magnet-tau 0 the reference stays the blueprint copy for
+good, as RLHF keeps its reference model.
+
 Usage (lab, GPU venv): .venv-gpu/bin/python scripts/mlp_selfplay.py OUT [--tree blueprint/run2] [--abs blueprint/out]
     [--lib blueprint/libbp3.so] [--batch 65536] [--minutes 1440] [--vs blueprint/run2] [--eval-minutes 30]
 """
@@ -286,6 +290,39 @@ def h2h(tree, dealer, net, table, hands, batch):
     return m, m - 1.96 * se, m + 1.96 * se, len(x) * 2
 
 
+def distill(net, opt, tree, dealer, teacher, args, table):
+    """Phase 1: the teacher table plays itself; the net learns its probabilities at every spot reached (cross-entropy
+    to the table's distribution) and its value head learns the hands' results."""
+    log = open(os.path.join(args.out, "progress.log"), "a", buffering=1)
+    t0, last, n = time.time(), time.time(), 0
+    while time.time() - t0 < args.distill_minutes * 60:
+        bk, rk, _ = dealer.deal(args.batch, mixed=False)
+        rec, u0 = play(tree, dealer, [teacher, teacher], bk, rk)
+        games, nd = torch.cat([r[0] for r in rec]), torch.cat([r[1] for r in rec])
+        f, s, b, st = (torch.cat([r[k] for r in rec]) for k in (2, 3, 4, 5))
+        labs = torch.cat([r[6] for r in rec])
+        target = teacher.probs(nd, b)
+        G = torch.where(tree.player[nd] == 0, u0[games], -u0[games]) / 100
+        lg, v = net(f, s, b, st)
+        logp = F.log_softmax(masked_logits(lg, labs), 1)
+        ce = -(target * logp).sum(1).mean()
+        loss = ce + 0.5 * ((v - G) ** 2).mean() / 25
+        opt.zero_grad()
+        loss.backward()
+        nn.utils.clip_grad_norm_(net.parameters(), 1.0)
+        opt.step()
+        n += args.batch
+        if time.time() - last > 600 or time.time() - t0 >= args.distill_minutes * 60:
+            ent = -(target * target.clamp(min=1e-12).log()).sum(1).mean().item()
+            line = f"distill {(time.time() - t0) / 60:.1f} min {n} hands cross-entropy {ce.item():.4f} (teacher entropy {ent:.4f})"
+            if table is not None:
+                m, lo, hi, k = h2h(tree, dealer, net, table, 2_000_000, args.batch)
+                line += f"  vs {os.path.basename(args.vs)}: {m:+.1f} bb/100 [{lo:+.1f}, {hi:+.1f}] over {k} hands"
+            log.write(line + "\n")
+            print(line, flush=True)
+            last = time.time()
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("out")
@@ -301,6 +338,8 @@ def main():
     ap.add_argument("--magnet-tau", type=float, default=0.002)
     ap.add_argument("--avg-tau", type=float, default=0.001)
     ap.add_argument("--entropy", type=float, default=0.003)
+    ap.add_argument("--distill", default=None, help="start by copying this blueprint run's table (e.g. blueprint/run2)")
+    ap.add_argument("--distill-minutes", type=float, default=60)
     args = ap.parse_args()
     dev = "cuda"
     os.makedirs(args.out, exist_ok=True)
@@ -324,6 +363,10 @@ def main():
     for m in (magnet, avg):
         m.requires_grad_(False)
     table = Table(args.vs, tree, dev) if args.vs else None
+    if args.distill and hands == 0:
+        distill(net, opt, tree, dealer, Table(args.distill, tree, dev), args, table)
+        magnet.load_state_dict(net.state_dict())  # the KL reference is now the blueprint copy
+        avg.load_state_dict(net.state_dict())
     log = open(os.path.join(args.out, "progress.log"), "a", buffering=1)
     meta = {k: v for k, v in vars(args).items()}
     meta.update({"p_fair_cells": dealer.p_fair.tolist(), "vocab": tree.vocab})

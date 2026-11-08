@@ -1,0 +1,32 @@
+{
+ "short": false,
+ "hands_per_session": 24,
+ "entrants": {
+  "monte": {
+   "sessions": 400,
+   "bb_per_100": 2.5,
+   "ci95": [
+    -30.4,
+    37.7
+   ]
+  },
+  "clone#pros": {
+   "sessions": 400,
+   "bb_per_100": -2.5,
+   "ci95": [
+    -38.2,
+    32.1
+   ]
+  }
+ },
+ "solver_calls": {
+  "solver_used": 0,
+  "solver_failed": 0,
+  "solver_seconds": 0.0,
+  "toolkit_calls": 0,
+  "flop_model_used": 0,
+  "push_fold_used": 0,
+  "preflop_deep_used": 0,
+  "ranges_narrowed": 0
+ }
+}
