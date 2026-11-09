@@ -21,10 +21,16 @@ So the model has to improve before trillions of hands can pay off.
 |---|---|
 | Runs 2, 4, 5, 6 (external-sampling CFR) | 12–23 billion iterations, each a full tree pass for one dealt hand per player |
 | runvec (vector CFR, 8 threads) | 311,000 sampled boards × about a million hand pairs each ≈ **0.3 trillion hand pairs** |
-| Run 7 (vector CFR, 40 threads, 1.6× faster per core) | ≈ **2–3 trillion hand pairs** by 2026-11-10 10:35 lab time |
+| Run 7 (vector CFR, 40 threads, 1.6× faster per core) | ≈ **2.7 trillion holding-pair evaluations** by 2026-11-10 10:35 lab time |
 
-The units aren't the same as self-play hands: a CFR hand pair is evaluated against every line of the betting tree
-at once, not played down one line.
+**What the trillions count.** One vector iteration samples a full board. On it each player can hold C(47,2) = 1,081
+hands, which makes 1,081 × 990 ≈ 1.07 million non-overlapping holding pairs. Run 7 does 28.9 boards a second, so
+28.9 × 86,400 × 1.07 M ≈ 2.7 trillion in 24 hours. These are **evaluations, not hands played**: every pair's values
+are computed in one sweep of the betting tree, and pairs the strategy never reaches are skipped. "Plays trillions of
+hands" overstated it; the MLP's 27 billion are hands actually played, a different unit.
+
+**These experiments are heads-up.** The product target is 9-max (`2026-11-09-nine-max-plan.md`). Which network and
+which learning rule work best carries over to a 9-max neural trainer; the table-based runs (run 7) do not.
 
 **Is there a better model than the MLP?** Probably: the current one is small. It has 3 layers of 256 units and
 177,000 weights, standing in for a table of 55 million probabilities. Copying the table, it stalls at a

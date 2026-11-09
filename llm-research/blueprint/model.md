@@ -1,6 +1,11 @@
 # A Blueprint Strategy for Heads-Up No-Limit Texas Hold'em: Abstraction, Regret Minimisation, Neural Self-Play and Measurement
 
-*poker-analysis / llm-research, November 2026. This document describes the model in this folder. Section
+> **Target: 9-max (decided 2026-11-09).** The product is a **9-max no-limit hold'em** blueprint: 100bb cash games
+> and tournaments (with ICM). Everything in this folder so far is the **heads-up prototype**: it proves the methods
+> (abstraction, CFR variants, neural self-play, re-solving, measurement) but plays only two-handed. What carries
+> over, what is rebuilt and the build order are in [`../docs/2026-11-09-nine-max-plan.md`](../docs/2026-11-09-nine-max-plan.md).
+
+*poker-analysis / llm-research, November 2026. This document describes the heads-up prototype in this folder. Section
 8 gives the measured results; `README.md` and `../docs/2026-11-0{7,8}-*.md` hold the logs and history.*
 
 ## Abstract
@@ -30,7 +35,7 @@ We measure the strategy four ways:
 - luck-adjusted play against Slumbot;
 - head-to-head play against engines, language models and MLP clones of human professionals.
 
-The best blueprints reduce LBR's edge from about +140 to about +30 bb/100. They beat every engine and language model
+The best blueprints reduce LBR's edge from about +140 to about +50–60 bb/100 (24-hour runs). They beat every engine and language model
 we have, and the clones of the professionals by +43 to +64 bb/100. They are level with or slightly ahead of
 Slumbot.
 
