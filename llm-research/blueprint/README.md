@@ -1,5 +1,10 @@
 # Blueprint: a heads-up no-limit hold'em strategy learned by self-play
 
+> **Target: 9-max (decided 2026-11-09).** The product is a **9-max no-limit hold'em** blueprint: 100bb cash games
+> and tournaments (with ICM). Everything in this folder so far is the **heads-up prototype**: it proves the methods
+> (abstraction, CFR variants, neural self-play, re-solving, measurement) but plays only two-handed. What carries
+> over, what is rebuilt and the build order are in [`../docs/2026-11-09-nine-max-plan.md`](../docs/2026-11-09-nine-max-plan.md).
+
 ## The goal
 
 Build a heads-up no-limit Texas hold'em bot that is **as hard as possible to beat**, using the recipe behind
