@@ -5,6 +5,8 @@
 //   void bp_deal(int n, uint64_t seed, int32_t* buckets, int32_t* ranks)
 // Deals n heads-up hands for GPU self-play (mlp_selfplay.py): buckets[n][2][4] (pre-flop class, flop, turn,
 // river bucket per player) and ranks[n][2] (7-card rank, lower is stronger). Multithreaded with OpenMP.
+//   void bp_deal_n(int n, int players, uint64_t seed, int32_t* buckets, int32_t* ranks, int32_t* cards)
+// The same for N players (9-max), optionally returning the cards.
 #ifdef _OPENMP  // bp_deal's threads; the Windows build for the advisor goes without
 #include <omp.h>
 #endif
@@ -83,6 +85,35 @@ static inline uint64_t splitmix(uint64_t& x) {
   z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9ULL;
   z = (z ^ (z >> 27)) * 0x94D049BB133111EBULL;
   return z ^ (z >> 31);
+}
+
+// N-player deal for the 9-max trainer (ninemax_selfplay.py): buckets[n][P][4], ranks[n][P], and, when cards is not
+// null, the cards[n][2P + 5] (each player's two hole cards in seat order, then the five board cards).
+extern "C" void bp_deal_n(int n, int players, uint64_t seed, int32_t* bk, int32_t* rk, int32_t* cards) {
+  if (!IX) return;
+  const int need = 2 * players + 5;
+#pragma omp parallel for schedule(static)
+  for (int g = 0; g < n; ++g) {
+    uint64_t st = seed * 0x100000001B3ULL + (uint64_t)g;
+    uint8_t deck[52];
+    for (int k = 0; k < 52; ++k) deck[k] = (uint8_t)k;
+    for (int k = 0; k < need; ++k) {  // partial Fisher-Yates
+      int j = k + (int)(splitmix(st) % (uint64_t)(52 - k));
+      std::swap(deck[k], deck[j]);
+    }
+    const uint8_t* board = deck + 2 * players;
+    for (int p = 0; p < players; ++p) {
+      uint8_t c[7] = {deck[2 * p], deck[2 * p + 1], board[0], board[1], board[2], board[3], board[4]};
+      int32_t* b = bk + ((size_t)g * players + p) * 4;
+      b[0] = (int32_t)hand_index_last(&IX->pre, c);
+      b[1] = FB[hand_index_last(&IX->flop, c)];
+      b[2] = TB[hand_index_last(&IX->turn, c)];
+      b[3] = RB.empty() ? river_bucket_from_hs(c) : RB[hand_index_last(&IX->river, c)];
+      rk[(size_t)g * players + p] = evaluate_7cards(c[0], c[1], c[2], c[3], c[4], c[5], c[6]);
+    }
+    if (cards)
+      for (int k = 0; k < need; ++k) cards[(size_t)g * need + k] = deck[k];
+  }
 }
 
 extern "C" void bp_deal(int n, uint64_t seed, int32_t* bk, int32_t* rk) {
