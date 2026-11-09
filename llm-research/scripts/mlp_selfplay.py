@@ -99,7 +99,21 @@ class Tree:
         feat[:, 9] = np.minimum((STACK - c.max(1)) / np.maximum(pot, 1), 50) / 50
         feat[:, 10] = np.minimum(raises, 4) / 4
         feat[np.arange(n), 11 + into] = 1
+        # the betting history of each node as tokens (street * vocab + action label), for the transformer; pad 4*vocab
+        nv = len(self.vocab)
+        hist = [[] for _ in range(n)]
+        for i in range(n):
+            for k in range(MAXA):
+                j = child[i, k]
+                if j >= 0:
+                    hist[j] = hist[i] + [street[i] * nv + lab[i, k]]
+        L = max(map(len, hist))
+        htok = np.full((n, max(L, 1)), 4 * nv, np.int64)
+        for i, h in enumerate(hist):
+            htok[i, : len(h)] = h
+        featx = np.concatenate([feat, np.arange(n, dtype=np.float32)[:, None]], 1)  # last column: the node id
         t = lambda a: torch.tensor(a, device=dev)  # noqa: E731
+        self.hist, self.featx = t(htok), t(featx)
         self.n, self.kind, self.player, self.street, self.c = n, t(kind), t(player), t(street), t(c)
         self.child, self.lab, self.folder, self.feat, self.offset = t(child), t(lab), t(folder), t(feat), offset
         self.na = (child >= 0).sum(1)
@@ -107,6 +121,9 @@ class Tree:
 
 
 class Net(nn.Module):
+    """The default network: card-bucket embedding per street + node features -> 3 GELU layers -> policy and value.
+    The input row's last column is the node id (Tree.featx); this network does not use it."""
+
     def __init__(self, nfeat, nvocab, buckets, hidden=256, emb=32):
         super().__init__()
         self.emb = nn.ModuleList([nn.Embedding(169, emb)] + [nn.Embedding(buckets, emb) for _ in range(3)])
@@ -117,14 +134,296 @@ class Net(nn.Module):
         self.pi = nn.Linear(hidden, nvocab)
         self.v = nn.Linear(hidden, 1)
 
-    def forward(self, feat, street, bucket, strength):
-        e = torch.zeros(len(street), self.emb[0].embedding_dim, device=feat.device)
+    def cards(self, street, bucket):
+        e = torch.zeros(len(street), self.emb[0].embedding_dim, device=bucket.device)
         for s in range(4):
             m = street == s
             if m.any():
                 e[m] = self.emb[s](bucket[m])
-        h = self.body(torch.cat([feat, e, strength.unsqueeze(1)], 1))
+        return e
+
+    def forward(self, feat, street, bucket, strength):
+        h = self.body(torch.cat([feat[:, :-1], self.cards(street, bucket), strength.unsqueeze(1)], 1))
         return self.pi(h), self.v(h).squeeze(1)
+
+
+class ResNet(Net):
+    """Deeper and wider: an input layer, BLOCKS pre-norm residual blocks of width HIDDEN, then the heads."""
+
+    def __init__(self, nfeat, nvocab, buckets, hidden=512, blocks=6, emb=64, extra=0):
+        nn.Module.__init__(self)
+        self.emb = nn.ModuleList([nn.Embedding(169, emb)] + [nn.Embedding(buckets, emb) for _ in range(3)])
+        self.inp = nn.Linear(nfeat + emb + 1 + extra, hidden)
+        self.blocks = nn.ModuleList(
+            nn.Sequential(nn.LayerNorm(hidden), nn.Linear(hidden, hidden), nn.GELU(), nn.Linear(hidden, hidden))
+            for _ in range(blocks)
+        )
+        self.norm = nn.LayerNorm(hidden)
+        self.pi = nn.Linear(hidden, nvocab)
+        self.v = nn.Linear(hidden, 1)
+
+    def trunk(self, x):
+        h = self.inp(x)
+        for blk in self.blocks:
+            h = h + blk(h)
+        return self.norm(h)
+
+    def node_extra(self, feat):
+        return feat[:, :0]
+
+    def forward(self, feat, street, bucket, strength):
+        x = torch.cat([feat[:, :-1], self.cards(street, bucket), strength.unsqueeze(1), self.node_extra(feat)], 1)
+        h = self.trunk(x)
+        return self.pi(h), self.v(h).squeeze(1)
+
+
+class NodeEmbNet(ResNet):
+    """The residual network plus a learned vector per betting node: the table's memory with the network's sharing
+    across card buckets."""
+
+    def __init__(self, nfeat, nvocab, buckets, nodes, node_emb=64, **kw):
+        super().__init__(nfeat, nvocab, buckets, extra=node_emb, **kw)
+        self.node = nn.Embedding(nodes, node_emb)
+
+    def node_extra(self, feat):
+        return self.node(feat[:, -1].long())
+
+
+class HistoryNet(ResNet):
+    """A transformer reads each node's betting history (one token per action, tagged with its street); its summary
+    joins the residual network's input. The history depends on the node alone, so it is encoded once per distinct
+    node in the batch."""
+
+    def __init__(self, nfeat, nvocab, buckets, hist, d=128, layers=3, heads=4, **kw):
+        super().__init__(nfeat, nvocab, buckets, extra=d, **kw)
+        self.register_buffer("hist", hist, persistent=False)
+        self.tok = nn.Embedding(4 * nvocab + 1, d, padding_idx=4 * nvocab)
+        self.pos = nn.Embedding(hist.shape[1] + 1, d)
+        self.cls = nn.Parameter(torch.zeros(1, 1, d))
+        enc = nn.TransformerEncoderLayer(d, heads, 4 * d, dropout=0.0, batch_first=True, norm_first=True)
+        self.enc = nn.TransformerEncoder(enc, layers, enable_nested_tensor=False)
+        self.pad = 4 * nvocab
+
+    def node_extra(self, feat):
+        nodes, inv = torch.unique(feat[:, -1].long(), return_inverse=True)
+        tok = self.hist[nodes]
+        x = torch.cat([self.cls.expand(len(nodes), 1, -1), self.tok(tok)], 1)
+        x = x + self.pos(torch.arange(x.shape[1], device=x.device))
+        mask = torch.cat([torch.zeros(len(nodes), 1, dtype=torch.bool, device=x.device), tok == self.pad], 1)
+        return self.enc(x, src_key_padding_mask=mask)[:, 0][inv]
+
+
+class RecurrentNet(ResNet):
+    """Like HistoryNet, with a recurrent reader instead of the transformer: KIND is rnn (Elman), lstm or gru. The
+    reader's last hidden state, after the node's final action, joins the residual network's input."""
+
+    def __init__(self, nfeat, nvocab, buckets, hist, kind="gru", d=128, layers=2, **kw):
+        super().__init__(nfeat, nvocab, buckets, extra=d, **kw)
+        self.register_buffer("hist", hist, persistent=False)
+        self.tok = nn.Embedding(4 * nvocab + 1, d, padding_idx=4 * nvocab)
+        self.rnn = {"rnn": nn.RNN, "lstm": nn.LSTM, "gru": nn.GRU}[kind](d, d, layers, batch_first=True)
+        self.pad = 4 * nvocab
+
+    def node_extra(self, feat):
+        nodes, inv = torch.unique(feat[:, -1].long(), return_inverse=True)
+        tok = self.hist[nodes]
+        n = (tok != self.pad).sum(1).clamp(min=1).cpu()  # the root has no history: one padding token (zeros)
+        packed = nn.utils.rnn.pack_padded_sequence(self.tok(tok), n, batch_first=True, enforce_sorted=False)
+        out = self.rnn(packed)[1]
+        h = out[0] if isinstance(out, tuple) else out  # LSTM returns (h, c)
+        return h[-1][inv]
+
+
+class SwiGLU(nn.Module):
+    def __init__(self, d, mult=2):
+        super().__init__()
+        self.norm, self.w1, self.w3 = nn.LayerNorm(d), nn.Linear(d, mult * d), nn.Linear(d, mult * d)
+        self.w2 = nn.Linear(mult * d, d)
+
+    def forward(self, x):
+        h = self.norm(x)
+        return self.w2(F.silu(self.w1(h)) * self.w3(h))
+
+
+class SwiGLUNet(ResNet):
+    """The residual network with the gated feed-forward blocks of current LLMs (SwiGLU) instead of GELU MLPs."""
+
+    def __init__(self, nfeat, nvocab, buckets, hidden=384, blocks=6, **kw):
+        super().__init__(nfeat, nvocab, buckets, hidden=hidden, blocks=0, **kw)
+        self.blocks = nn.ModuleList(SwiGLU(hidden) for _ in range(blocks))
+
+
+class SoftMoE(nn.Module):
+    """A block of E expert MLPs mixed by a learned softmax gate per input (dense: every expert runs)."""
+
+    def __init__(self, d, experts=4):
+        super().__init__()
+        self.norm, self.gate = nn.LayerNorm(d), nn.Linear(d, experts)
+        self.experts = nn.ModuleList(nn.Sequential(nn.Linear(d, d), nn.GELU(), nn.Linear(d, d)) for _ in range(experts))
+
+    def forward(self, x):
+        h = self.norm(x)
+        g = F.softmax(self.gate(h), 1)
+        return sum(g[:, k : k + 1] * e(h) for k, e in enumerate(self.experts))
+
+
+class MoENet(ResNet):
+    """The residual network with mixture-of-experts blocks (4 experts of width 256, 4 blocks)."""
+
+    def __init__(self, nfeat, nvocab, buckets, hidden=256, blocks=4, **kw):
+        super().__init__(nfeat, nvocab, buckets, hidden=hidden, blocks=0, **kw)
+        self.blocks = nn.ModuleList(SoftMoE(hidden) for _ in range(blocks))
+
+
+class KANLayer(nn.Module):
+    """A Kolmogorov-Arnold layer in the FastKAN form: each input passes through G Gaussian bumps on a grid (a learned
+    curve per input-output pair), plus a SiLU-linear base path."""
+
+    def __init__(self, i, o, grid=8):
+        super().__init__()
+        self.norm = nn.LayerNorm(i)
+        self.register_buffer("centres", torch.linspace(-2, 2, grid))
+        self.spline = nn.Linear(i * grid, o)
+        self.base = nn.Linear(i, o)
+
+    def forward(self, x):
+        h = self.norm(x)
+        phi = torch.exp(-(((h.unsqueeze(-1) - self.centres) / 0.5) ** 2)).flatten(1)
+        return self.spline(phi) + self.base(F.silu(h))
+
+
+class KANNet(Net):
+    def __init__(self, nfeat, nvocab, buckets, hidden=256, emb=32):
+        nn.Module.__init__(self)
+        self.emb = nn.ModuleList([nn.Embedding(169, emb)] + [nn.Embedding(buckets, emb) for _ in range(3)])
+        self.body = nn.Sequential(KANLayer(nfeat + emb + 1, hidden), KANLayer(hidden, hidden))
+        self.pi = nn.Linear(hidden, nvocab)
+        self.v = nn.Linear(hidden, 1)
+
+
+class TCNNet(ResNet):
+    """A temporal convolution network reads the betting history: dilated 1-D convolutions (kernel 3, dilation 1, 2,
+    4), causal, read out at the node's last action."""
+
+    def __init__(self, nfeat, nvocab, buckets, hist, d=128, **kw):
+        super().__init__(nfeat, nvocab, buckets, extra=d, **kw)
+        self.register_buffer("hist", hist, persistent=False)
+        self.tok = nn.Embedding(4 * nvocab + 1, d, padding_idx=4 * nvocab)
+        self.convs = nn.ModuleList(nn.Conv1d(d, d, 3, dilation=r) for r in (1, 2, 4))
+        self.pad = 4 * nvocab
+
+    def node_extra(self, feat):
+        nodes, inv = torch.unique(feat[:, -1].long(), return_inverse=True)
+        tok = self.hist[nodes]
+        x = self.tok(tok).transpose(1, 2)
+        for conv in self.convs:
+            x = x + F.gelu(conv(F.pad(x, (2 * conv.dilation[0], 0))))
+        last = ((tok != self.pad).sum(1) - 1).clamp(min=0)
+        return x[torch.arange(len(nodes), device=x.device), :, last][inv]
+
+
+class TextCNNNet(ResNet):
+    """A convolutional network over the betting history in the text-CNN form (Kim 2014): parallel convolutions of
+    width 2, 3 and 4 over the action tokens, max-pooled over the history, then into the residual network."""
+
+    def __init__(self, nfeat, nvocab, buckets, hist, d=128, maps=64, **kw):
+        super().__init__(nfeat, nvocab, buckets, extra=3 * maps, **kw)
+        self.register_buffer("hist", hist, persistent=False)
+        self.tok = nn.Embedding(4 * nvocab + 1, d, padding_idx=4 * nvocab)
+        self.convs = nn.ModuleList(nn.Conv1d(d, maps, k, padding=k - 1) for k in (2, 3, 4))
+        self.pad = 4 * nvocab
+
+    def node_extra(self, feat):
+        nodes, inv = torch.unique(feat[:, -1].long(), return_inverse=True)
+        x = self.tok(self.hist[nodes]).transpose(1, 2)
+        return torch.cat([F.gelu(c(x)).amax(2) for c in self.convs], 1)[inv]
+
+
+class FeatureTokenNet(Net):
+    """Attention across the inputs (the FT-Transformer for tables): each node feature, the card embedding and the
+    strength become tokens, a transformer attends among them, and the policy and value read a CLS token."""
+
+    def __init__(self, nfeat, nvocab, buckets, d=64, layers=3, heads=4, emb=32):
+        nn.Module.__init__(self)
+        self.emb = nn.ModuleList([nn.Embedding(169, emb)] + [nn.Embedding(buckets, emb) for _ in range(3)])
+        self.fw = nn.Parameter(torch.randn(nfeat + 1, d) * 0.1)  # one token per scalar input: value * w + b
+        self.fb = nn.Parameter(torch.zeros(nfeat + 1, d))
+        self.card = nn.Linear(emb, d)
+        self.cls = nn.Parameter(torch.zeros(1, 1, d))
+        enc = nn.TransformerEncoderLayer(d, heads, 4 * d, dropout=0.0, batch_first=True, norm_first=True)
+        self.enc = nn.TransformerEncoder(enc, layers, enable_nested_tensor=False)
+        self.norm = nn.LayerNorm(d)
+        self.pi = nn.Linear(d, nvocab)
+        self.v = nn.Linear(d, 1)
+
+    def forward(self, feat, street, bucket, strength):
+        x = torch.cat([feat[:, :-1], strength.unsqueeze(1)], 1)
+        tok = x.unsqueeze(-1) * self.fw + self.fb
+        tok = torch.cat([self.cls.expand(len(x), 1, -1), self.card(self.cards(street, bucket)).unsqueeze(1), tok], 1)
+        h = self.norm(self.enc(tok)[:, 0])
+        return self.pi(h), self.v(h).squeeze(1)
+
+
+class JointNet(FeatureTokenNet):
+    """One attention sequence per decision: CLS, the card token, a token of the node features, then the betting
+    history. Unlike HistoryNet, the cards and the history attend to each other directly."""
+
+    def __init__(self, nfeat, nvocab, buckets, hist, d=64, layers=3, heads=4, emb=32):
+        super().__init__(nfeat, nvocab, buckets, d, layers, heads, emb)
+        self.register_buffer("hist", hist, persistent=False)
+        self.tok = nn.Embedding(4 * nvocab + 1, d, padding_idx=4 * nvocab)
+        self.pos = nn.Embedding(hist.shape[1] + 3, d)
+        self.feat_tok = nn.Linear(nfeat + 1, d)
+        self.pad = 4 * nvocab
+
+    def forward(self, feat, street, bucket, strength):
+        hist = self.hist[feat[:, -1].long()]
+        head = torch.stack(
+            [self.cls[0, 0].expand(len(feat), -1), self.card(self.cards(street, bucket)),
+             self.feat_tok(torch.cat([feat[:, :-1], strength.unsqueeze(1)], 1))], 1,
+        )  # fmt: skip
+        x = torch.cat([head, self.tok(hist)], 1)
+        x = x + self.pos(torch.arange(x.shape[1], device=x.device))
+        mask = torch.cat([torch.zeros(len(feat), 3, dtype=torch.bool, device=x.device), hist == self.pad], 1)
+        h = self.norm(self.enc(x, src_key_padding_mask=mask)[:, 0])
+        return self.pi(h), self.v(h).squeeze(1)
+
+
+ARCHS = (
+    "mlp", "wide", "res", "nodeemb", "history", "rnn", "lstm", "gru", "swiglu", "moe", "kan", "tcn", "cnn", "ftt",
+    "joint",
+)  # fmt: skip
+
+
+def make_net(arch, tree, buckets):
+    nf, nv = tree.feat.shape[1], len(tree.vocab)
+    if arch == "mlp":
+        return Net(nf, nv, buckets)
+    if arch == "wide":
+        return Net(nf, nv, buckets, hidden=1024, emb=64)
+    if arch == "res":
+        return ResNet(nf, nv, buckets)
+    if arch == "nodeemb":
+        return NodeEmbNet(nf, nv, buckets, tree.n)
+    if arch == "history":
+        return HistoryNet(nf, nv, buckets, tree.hist)
+    if arch in ("rnn", "lstm", "gru"):
+        return RecurrentNet(nf, nv, buckets, tree.hist, kind=arch)
+    if arch == "swiglu":
+        return SwiGLUNet(nf, nv, buckets)
+    if arch == "moe":
+        return MoENet(nf, nv, buckets)
+    if arch == "kan":
+        return KANNet(nf, nv, buckets)
+    if arch == "tcn":
+        return TCNNet(nf, nv, buckets, tree.hist)
+    if arch == "cnn":
+        return TextCNNNet(nf, nv, buckets, tree.hist)
+    if arch == "ftt":
+        return FeatureTokenNet(nf, nv, buckets)
+    if arch == "joint":
+        return JointNet(nf, nv, buckets, tree.hist)
+    raise ValueError(arch)
 
 
 def masked_logits(logits, labs):
@@ -190,13 +489,14 @@ def obs(tree, dealer, nodes, games, bk):
     p, s = tree.player[nodes], tree.street[nodes]
     b = bk[games, p, s]
     strength = torch.where(s == 0, dealer.pre_strength[b.clamp(max=168)], b.float() / (dealer.B - 1))
-    return tree.feat[nodes], s, b, strength
+    return tree.featx[nodes], s, b, strength
 
 
-def play(tree, dealer, policies, bk, rk, record=True):
-    """Play one batch to the end. policies[seat] is a net or a table; returns decisions and payoff to seat 0 (chips)."""
+def play(tree, dealer, policies, bk, rk, record=True, start=None, eps=0.0):
+    """Play one batch to the end. policies[seat] is a net or a table; returns decisions and payoff to seat 0 (chips).
+    start: each game's first node (default the root). eps: mix that share of uniform play into every decision."""
     B = len(bk)
-    node = torch.zeros(B, dtype=torch.long, device=bk.device)
+    node = torch.zeros(B, dtype=torch.long, device=bk.device) if start is None else start.clone()
     rec = []
     while True:
         dec = tree.kind[node] == 0
@@ -218,6 +518,9 @@ def play(tree, dealer, policies, bk, rk, record=True):
                 probs = F.softmax(masked_logits(lg, labs[m]), 1)
             else:  # a blueprint table: average strategy at offset + bucket * na
                 probs = pol.probs(nd[m], b[m])
+            if eps:
+                legal = (labs[m] >= 0).float()
+                probs = (1 - eps) * probs + eps * legal / legal.sum(1, keepdim=True)
             a[m] = torch.multinomial(probs, 1).squeeze(1)
         if record:
             rec.append((games, nd, f, s, b, st, labs, a))
@@ -258,7 +561,7 @@ def export(net, tree, dealer, out, hands):
     table = np.zeros(total, np.float32)
     dec = np.where(tree.kind.cpu().numpy() == 0)[0]
     dev = tree.feat.device
-    for chunk in np.array_split(dec, max(1, len(dec) // 1500)):
+    for chunk in np.array_split(dec, max(1, len(dec) // 250)):
         nd = torch.tensor(chunk, device=dev)
         st = tree.street[nd]
         nb = torch.where(st == 0, 169, dealer.B)
@@ -270,7 +573,7 @@ def export(net, tree, dealer, out, hands):
         s = tree.street[ndr]
         strength = torch.where(s == 0, dealer.pre_strength[b.clamp(max=168)], b.float() / (dealer.B - 1))
         with torch.no_grad():
-            lg, _ = net(tree.feat[ndr], s, b, strength)
+            lg, _ = net(tree.featx[ndr], s, b, strength)
             p = F.softmax(masked_logits(lg, tree.lab[ndr]), 1).cpu().numpy()
         ndn, bn = ndr.cpu().numpy(), b.cpu().numpy()
         na = tree.na[ndn]
@@ -309,12 +612,16 @@ def distill(net, opt, tree, dealer, teacher, args, table):
         labs = torch.cat([r[6] for r in rec])
         target = teacher.probs(nd, b)
         G = torch.where(tree.player[nd] == 0, u0[games], -u0[games]) / 100
-        lg, v = net(f, s, b, st)
-        logp = F.log_softmax(masked_logits(lg, labs), 1)
-        ce = -(target * logp).sum(1).mean()
-        loss = ce + 0.5 * ((v - G) ** 2).mean() / 25
         opt.zero_grad()
-        loss.backward()
+        ce_sum = 0.0
+        for part in torch.arange(len(f), device=f.device).chunk(args.micro):  # gradient accumulation: same batch
+            lg, v = net(f[part], s[part], b[part], st[part])
+            logp = F.log_softmax(masked_logits(lg, labs[part]), 1)
+            ce_part = -(target[part] * logp).sum(1).sum()
+            loss = (ce_part + 0.5 * ((v - G[part]) ** 2).sum() / 25) / len(f)
+            loss.backward()
+            ce_sum += ce_part.item()
+        ce = torch.tensor(ce_sum / len(f))
         nn.utils.clip_grad_norm_(net.parameters(), 1.0)
         opt.step()
         n += args.batch
@@ -340,6 +647,43 @@ def main():
     ap.add_argument("--vs", default="blueprint/run2")
     ap.add_argument("--eval-minutes", type=float, default=30)
     ap.add_argument("--lr", type=float, default=3e-4)
+    ap.add_argument(
+        "--arch",
+        default="mlp",
+        choices=ARCHS,
+        help="network: mlp (default), wide, res (residual), nodeemb (+ a vector per node), history (+ a "
+        "transformer over the betting history), rnn / lstm / gru (+ a recurrent reader of it), swiglu (gated "
+        "LLM-style blocks), moe (mixture of experts), kan (Kolmogorov-Arnold), tcn (+ a convolutional history "
+        "reader), cnn (text-CNN over the history), ftt (attention across the inputs), joint (one attention sequence of cards, features and history)",
+    )
+    ap.add_argument(
+        "--micro",
+        type=int,
+        default=1,
+        help="split each distillation batch into this many chunks "
+        "(gradient accumulation, for networks that do not fit the GPU at the full batch)",
+    )
+    ap.add_argument(
+        "--pg",
+        default="a2c",
+        choices=("a2c", "ppo", "neurd", "qpg", "qlearn", "qmc"),
+        help="policy update: a2c "
+        "(REINFORCE + value baseline, default), ppo (clipped ratio), neurd (logit-space replicator "
+        "dynamics), qpg (all-actions gradient with a learned Q critic), qlearn (Q-learning, bootstrapped "
+        "from the next decision's best action, Boltzmann play), qmc (Monte Carlo Q)",
+    )
+    ap.add_argument("--q-temp", type=float, default=1.0, help="Boltzmann temperature in big blinds (qlearn, qmc)")
+    ap.add_argument("--ppo-epochs", type=int, default=4)
+    ap.add_argument("--ppo-clip", type=float, default=0.2)
+    ap.add_argument("--neurd-beta", type=float, default=2.0)
+    ap.add_argument(
+        "--reward",
+        default="chips",
+        choices=("chips", "duplicate", "tanh"),
+        help="chips (default); duplicate (minus the mirrored deal's result: card luck removed); tanh (bounded utility)",
+    )
+    ap.add_argument("--league", type=float, default=0.0, help="share of each batch played against past snapshots")
+    ap.add_argument("--league-every", type=float, default=3.0, help="minutes between snapshots")
     ap.add_argument("--kl", type=float, default=0.05)
     ap.add_argument("--magnet-tau", type=float, default=0.002)
     ap.add_argument("--avg-tau", type=float, default=0.001)
@@ -350,6 +694,8 @@ def main():
     ap.add_argument("--opponent-share", type=float, default=0.5, help="share of each batch played against --opponent")
     ap.add_argument("--eval-opponent", default=None, help="a second table to report the head-to-head against")
     args = ap.parse_args()
+    if args.reward == "duplicate" and (args.opponent or args.league):
+        ap.error("--reward duplicate pairs every deal with its mirror inside self-play; not with --opponent/--league")
     dev = "cuda"
     os.makedirs(args.out, exist_ok=True)
     torch.manual_seed(0)
@@ -357,7 +703,7 @@ def main():
     buckets = int(open(os.path.join(args.abs, "meta.txt")).read().split()[1])
     dealer = Dealer(args.lib, args.abs, buckets, dev)
     shutil.copy(os.path.join(args.tree, "tree.tsv"), os.path.join(args.out, "tree.tsv"))
-    net = Net(tree.feat.shape[1], len(tree.vocab), buckets).to(dev)
+    net = make_net(args.arch, tree, buckets).to(dev)
     ck = os.path.join(args.out, "checkpoint.pt")
     hands = 0
     magnet, avg = copy.deepcopy(net), copy.deepcopy(net)
@@ -378,48 +724,132 @@ def main():
         distill(net, opt, tree, dealer, Table(args.distill, tree, dev), args, table)
         magnet.load_state_dict(net.state_dict())  # the KL reference is now the blueprint copy
         avg.load_state_dict(net.state_dict())
+    if args.distill and args.minutes == 0:  # distillation only (the architecture bake-off): export and stop
+        export(net, tree, dealer, args.out, hands)
+        with open(os.path.join(args.out, "train.log"), "a") as f:
+            f.write("stopped\n")
+        return
     log = open(os.path.join(args.out, "progress.log"), "a", buffering=1)
     meta = {k: v for k, v in vars(args).items()}
     meta.update({"p_fair_cells": dealer.p_fair.tolist(), "vocab": tree.vocab})
     json.dump(meta, open(os.path.join(args.out, "config.json"), "w"), indent=1)
     t0 = last_eval = time.time()
     h_start, adv_scale = hands, 1.0
+    qnet = qopt = None
+    if args.pg == "qpg":  # a separate critic with one value per action (its "policy" outputs are read as Q values)
+        qnet = make_net("mlp", tree, buckets).to(dev)
+        qopt = torch.optim.Adam(qnet.parameters(), lr=args.lr)
+    snapshots, last_snap = [], time.time()
     while time.time() - t0 < args.minutes * 60:
-        bk, rk, w = dealer.deal(args.batch)
-        # self-play, plus (with --opponent) games against the fixed table in either seat; the net learns only from
-        # its own seats' decisions
-        k = int(args.batch * args.opponent_share) // 2 if opponent is not None else 0
+        if args.reward == "duplicate":  # every deal twice, the second with the players' cards swapped
+            bk, rk, w = dealer.deal(args.batch // 2)
+            bk, rk, w = torch.cat([bk, bk[:, [1, 0]]]), torch.cat([rk, rk[:, [1, 0]]]), torch.cat([w, w])
+        else:
+            bk, rk, w = dealer.deal(args.batch)
+        # self-play, plus (with --opponent) games against the fixed table in either seat, or (with --league) against a
+        # past snapshot of the net; the net learns only from its own seats' decisions
+        opp, share = opponent, args.opponent_share
+        if opp is None and args.league and snapshots:
+            opp, share = snapshots[int(torch.randint(len(snapshots), ()).item())], args.league
+        k = int(args.batch * share) // 2 if opp is not None else 0
         parts = [(slice(2 * k, None), [net, net], (0, 1))]
         if k:
-            parts += [(slice(0, k), [net, opponent], (0,)), (slice(k, 2 * k), [opponent, net], (1,))]
-        cols = [[] for _ in range(8)]
+            parts += [(slice(0, k), [net, opp], (0,)), (slice(k, 2 * k), [opp, net], (1,))]
+        cols = [[] for _ in range(9)]
         for sl, pols, mine in parts:
             rec, u0 = play(tree, dealer, pols, bk[sl], rk[sl])
             games = torch.cat([r[0] for r in rec])
             seat = tree.player[torch.cat([r[1] for r in rec])]
             keep = (seat == mine[0]) if len(mine) == 1 else torch.ones_like(seat, dtype=torch.bool)
             G = torch.where(seat == 0, u0[games], -u0[games]) / 100  # big blinds won by the player who acted
-            for j, x in enumerate([G, w[sl][games]] + [torch.cat([r[q] for r in rec]) for q in (2, 3, 4, 5, 6, 7)]):
+            if args.reward == "duplicate":
+                # baseline: what the other seat won with these same cards against the same cards in the mirrored deal;
+                # it does not depend on this game's actions, so the gradient stays unbiased
+                half = len(u0) // 2
+                mirror = (games + half) % len(u0)
+                G = G - torch.where(seat == 1, u0[mirror], -u0[mirror]) / 100
+            elif args.reward == "tanh":  # bounded, risk-averse utility: no longer the zero-sum chip objective
+                G = 10 * torch.tanh(G / 10)
+            gid = games + (sl.start or 0)  # game id within the whole batch
+            for j, x in enumerate(
+                [G, w[sl][games]] + [torch.cat([r[q] for r in rec]) for q in (2, 3, 4, 5, 6, 7)] + [gid * 2 + seat]
+            ):
                 cols[j].append(x[keep])
-        G, wg, f, s, b, st, labs, a = (torch.cat(c) for c in cols)
-        lg, v = net(f, s, b, st)
-        logp = F.log_softmax(masked_logits(lg, labs), 1)
+        G, wg, f, s, b, st, labs, a, key = (torch.cat(c) for c in cols)
+        valid = labs >= 0
         with torch.no_grad():
             lm, _ = magnet(f, s, b, st)
             logm = F.log_softmax(masked_logits(lm, labs), 1)
-        p = logp.exp()
-        valid = labs >= 0
-        kl = (p * (logp - logm)).masked_fill(~valid, 0).sum(1)
-        ent = -(p * logp).masked_fill(~valid, 0).sum(1)
-        adv = G - v.detach()
-        adv_scale = 0.99 * adv_scale + 0.01 * adv.abs().mean().item()
-        adv = adv / max(adv_scale, 1e-3)
-        lp_a = logp.gather(1, a.unsqueeze(1)).squeeze(1)
-        loss = (wg * (-adv * lp_a + 0.5 * (v - G) ** 2 / 25 + args.kl * kl - args.entropy * ent)).sum() / wg.sum()
-        opt.zero_grad()
-        loss.backward()
-        nn.utils.clip_grad_norm_(net.parameters(), 1.0)
-        opt.step()
+        if qnet is not None:
+            qv = masked_logits(qnet(f, s, b, st)[0], labs).masked_fill(~valid, 0)
+            qloss = (wg * (qv.gather(1, a.unsqueeze(1)).squeeze(1) - G) ** 2).sum() / wg.sum()
+            qopt.zero_grad()
+            qloss.backward()
+            nn.utils.clip_grad_norm_(qnet.parameters(), 1.0)
+            qopt.step()
+            qv = qv.detach()
+        if args.pg in ("qlearn", "qmc"):
+            # value-based: the policy head's outputs are action values in units of the temperature (Q = tau * logit),
+            # and the net plays the softmax over them (Boltzmann exploration)
+            lg, v = net(f, s, b, st)
+            q = args.q_temp * masked_logits(lg, labs)
+            q_a = q.gather(1, a.unsqueeze(1)).squeeze(1)
+            target = G
+            if args.pg == "qlearn":  # Q-learning: bootstrap from the best action at this player's next decision
+                idx = torch.arange(len(key), device=key.device)
+                order = torch.argsort(key * len(key) + idx)  # decisions grouped by (game, seat), in play order
+                nxt = torch.full_like(idx, -1)
+                same = key[order[1:]] == key[order[:-1]]
+                nxt[order[:-1][same]] = order[1:][same]
+                with torch.no_grad():
+                    qmax = q.masked_fill(~valid, -1e9).max(1).values
+                target = torch.where(nxt >= 0, qmax[nxt.clamp(min=0)], G)
+            loss = (wg * ((q_a - target) ** 2 / 25 + 0.5 * (v - G) ** 2 / 25)).sum() / wg.sum()
+            opt.zero_grad()
+            loss.backward()
+            nn.utils.clip_grad_norm_(net.parameters(), 1.0)
+            opt.step()
+            p = F.softmax(masked_logits(lg.detach(), labs), 1)
+            kl = (p * (p.clamp(min=1e-12).log() - logm)).masked_fill(~valid, 0).sum(1)
+            ent = -(p * p.clamp(min=1e-12).log()).masked_fill(~valid, 0).sum(1)
+        logp_old = None
+        for epoch in range(0 if args.pg in ("qlearn", "qmc") else args.ppo_epochs if args.pg == "ppo" else 1):
+            lg, v = net(f, s, b, st)
+            logp = F.log_softmax(masked_logits(lg, labs), 1)
+            p = logp.exp()
+            kl = (p * (logp - logm)).masked_fill(~valid, 0).sum(1)
+            ent = -(p * logp).masked_fill(~valid, 0).sum(1)
+            lp_a = logp.gather(1, a.unsqueeze(1)).squeeze(1)
+            if epoch == 0:
+                adv = G - v.detach()
+                adv_scale = 0.99 * adv_scale + 0.01 * adv.abs().mean().item()
+                adv = adv / max(adv_scale, 1e-3)
+                logp_old = lp_a.detach()
+            if args.pg == "a2c":  # REINFORCE with the value baseline (the default)
+                pg = -adv * lp_a
+            elif args.pg == "ppo":  # clipped probability ratio, several passes over the batch (Schulman et al. 2017)
+                ratio = (lp_a - logp_old).exp()
+                pg = -torch.minimum(ratio * adv, ratio.clamp(1 - args.ppo_clip, 1 + args.ppo_clip) * adv)
+            elif args.pg == "neurd":
+                # Neural Replicator Dynamics (Hennes et al. 2020; R-NaD): the update acts on the centred logits, with
+                # the sampled action's value estimate adv / pi(a); logits stop moving outward beyond +-beta
+                y = masked_logits(lg, labs)
+                y = y - (y.masked_fill(~valid, 0).sum(1, keepdim=True) / valid.sum(1, keepdim=True))
+                y_a = y.gather(1, a.unsqueeze(1)).squeeze(1)
+                q_a = adv / lp_a.detach().exp().clamp(min=0.05)
+                live = ((q_a > 0) & (y_a < args.neurd_beta)) | ((q_a < 0) & (y_a > -args.neurd_beta))
+                pg = -(q_a * y_a) * live
+            else:  # qpg: the all-actions policy gradient with the learned Q (Srinivasan et al. 2018)
+                base = (p * qv).sum(1, keepdim=True)
+                pg = -(p * (qv - base) / max(adv_scale, 1e-3)).masked_fill(~valid, 0).sum(1)
+            loss = (wg * (pg + 0.5 * (v - G) ** 2 / 25 + args.kl * kl - args.entropy * ent)).sum() / wg.sum()
+            opt.zero_grad()
+            loss.backward()
+            nn.utils.clip_grad_norm_(net.parameters(), 1.0)
+            opt.step()
+        if args.league and time.time() - last_snap >= args.league_every * 60:  # keep the 10 latest snapshots
+            snapshots = (snapshots + [copy.deepcopy(net).requires_grad_(False)])[-10:]
+            last_snap = time.time()
         with torch.no_grad():
             for pm, pa, pn in zip(magnet.parameters(), avg.parameters(), net.parameters()):
                 pm.lerp_(pn, args.magnet_tau)
