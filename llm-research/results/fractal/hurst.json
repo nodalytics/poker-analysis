@@ -1,0 +1,142 @@
+{
+ "slumbot_adaptbot_v3_no_hand_ranking": {
+  "hands": 3000,
+  "dfa": 0.521,
+  "dfa_shuffled": 0.502,
+  "variance_ratio": {
+   "10": 1.095,
+   "50": 1.295,
+   "200": 2.403
+  }
+ },
+ "slumbot_adaptbot_v4": {
+  "hands": 3000,
+  "dfa": 0.511,
+  "dfa_shuffled": 0.504,
+  "variance_ratio": {
+   "10": 0.915,
+   "50": 0.917,
+   "200": 0.53
+  }
+ },
+ "slumbot_adaptbot_v5": {
+  "hands": 3000,
+  "dfa": 0.462,
+  "dfa_shuffled": 0.488,
+  "variance_ratio": {
+   "10": 0.854,
+   "50": 0.835,
+   "200": 0.494
+  }
+ },
+ "slumbot_blueprint": {
+  "hands": 5000,
+  "dfa": 0.51,
+  "dfa_shuffled": 0.5,
+  "variance_ratio": {
+   "10": 0.977,
+   "50": 1.099,
+   "200": 1.004
+  }
+ },
+ "slumbot_blueprint_final": {
+  "hands": 5000,
+  "dfa": 0.482,
+  "dfa_shuffled": 0.502,
+  "variance_ratio": {
+   "10": 1.085,
+   "50": 1.122,
+   "200": 1.032
+  }
+ },
+ "slumbot_blueprint_mdf": {
+  "hands": 5000,
+  "dfa": 0.493,
+  "dfa_shuffled": 0.504,
+  "variance_ratio": {
+   "10": 0.968,
+   "50": 0.832,
+   "200": 0.679
+  }
+ },
+ "slumbot_monte": {
+  "hands": 3000,
+  "dfa": 0.479,
+  "dfa_shuffled": 0.51,
+  "variance_ratio": {
+   "10": 0.967,
+   "50": 0.859,
+   "200": 0.494
+  }
+ },
+ "slumbot_run6": {
+  "hands": 5000,
+  "dfa": 0.487,
+  "dfa_shuffled": 0.497,
+  "variance_ratio": {
+   "10": 1.003,
+   "50": 0.91,
+   "200": 1.082
+  }
+ },
+ "slumbot_runmlp2": {
+  "hands": 5000,
+  "dfa": 0.507,
+  "dfa_shuffled": 0.502,
+  "variance_ratio": {
+   "10": 1.008,
+   "50": 0.876,
+   "200": 1.125
+  }
+ },
+ "slumbot_runvec": {
+  "hands": 5000,
+  "dfa": 0.516,
+  "dfa_shuffled": 0.507,
+  "variance_ratio": {
+   "10": 0.975,
+   "50": 0.831,
+   "200": 0.656
+  }
+ },
+ "slumbot_solverbot_v3_no_hand_ranking": {
+  "hands": 3000,
+  "dfa": 0.472,
+  "dfa_shuffled": 0.506,
+  "variance_ratio": {
+   "10": 0.953,
+   "50": 0.87,
+   "200": 0.472
+  }
+ },
+ "slumbot_solverbot_v4": {
+  "hands": 3000,
+  "dfa": 0.496,
+  "dfa_shuffled": 0.498,
+  "variance_ratio": {
+   "10": 0.835,
+   "50": 0.646,
+   "200": 0.804
+  }
+ },
+ "slumbot_solverbot_v5": {
+  "hands": 3000,
+  "dfa": 0.517,
+  "dfa_shuffled": 0.51,
+  "variance_ratio": {
+   "10": 0.946,
+   "50": 0.951,
+   "200": 0.804
+  }
+ },
+ "slumbot_solverbot_v5_confirm": {
+  "hands": 5000,
+  "dfa": 0.497,
+  "dfa_shuffled": 0.503,
+  "variance_ratio": {
+   "10": 1.007,
+   "50": 1.053,
+   "200": 0.976
+  }
+ }
+}
