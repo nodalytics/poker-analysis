@@ -298,6 +298,18 @@ $p$ and an adversary otherwise. The KL anchor additionally keeps the result near
 
 The opponent tables are clones of human professionals (Section 8.4), mapped into $\hat G$ by `../scripts/clone_table.py`.
 
+**Result** ($p = 0.5$, $\alpha = 0.1$, 60 minutes of distillation from run 2, then 7 hours against the `pros_a`
+clone; evaluated against `pros_b`, a clone of the *other* half of the hands; 2 million hands per reading):
+
+| Opponent | Run 2's table | Adapted |
+|---|---|---|
+| `pros_a` (trained against) | +42.2 | +57 to +60 |
+| `pros_b` (held out) | +40.2 [+38.9, +41.4] | +47.5 to +48.9 |
+| Run 2 | — | −2.4 to −4.2 |
+
+The gain arrived within 30 minutes and then held. Its LBR exceeds that of the same MLP copy trained without the
+opponent by about 15 bb/100 (Section 8.1), which is within the noise.
+
 ## 5. Playing the real game (`../scripts/blueprint_bot.py`)
 
 ### 5.1 Translation
@@ -353,6 +365,18 @@ with zero weight the re-solve would ignore them. Without it, the worst single-ha
 
 The subgame must start **before** the opponent's choices on the street. The first live version re-solved from the
 node after the opponent's bet, which trusts the blueprint's betting range; LBR measured it at +176 [+98, +254].
+
+**Live, against LBR** (run 2, 3,000 hands):
+
+| Version | LBR's edge |
+|---|---|
+| Blueprint, no floor | +135 |
+| Blueprint with the minimum-defence floor (Section 5.3) | +104 |
+| Safe re-solve from the river's start, no floor | +146 [+76, +215] |
+| **Safe re-solve with the floor** | **+105 [+42, +168]** |
+
+The re-solve halved LBR's river all-ins that were answered by folds (328 hands to 159), but LBR's largest wins
+moved to pot-size bets on the flop and turn, which a river subgame cannot reach. Turn re-solving is the next step.
 
 ## 6. Hand-reading models (`../scripts/opp_mlp_*.py`, `../scripts/human_clone.py`)
 
@@ -413,7 +437,7 @@ The table's value against itself in each seat is reported as a control: the two 
 rerun with the seat order reversed read $+3.0\ [-16, +22]$. Edges under about 20 bb/100 from that sample size are
 noise.
 
-## 8. Results (2026-11-08)
+## 8. Results (2026-11-09)
 
 ### 8.1 LBR (real game, purification and floor on)
 
@@ -421,14 +445,20 @@ noise.
 |---|---|
 | Run 2: 200 buckets, external sampling, 21.5 billion iterations | +104 [+44, +164] (+141 without the floor) |
 | Run 3: 1,000 percentile buckets | +173 [+89, +258] |
-| Run 4: 500 distribution-aware buckets (5 h) | about +110 |
-| Run 5: + DCFR + pruning (5 h) | about +60 |
-| **Run 6: + predictive CFR+ (5 h)** | **about +35** |
-| **runvec: vector CFR + DCFR (5 h, 8 threads)** | **about +30** |
+| Run 4: 500 distribution-aware buckets (24 h) | +92 ± 5 |
+| **Run 5: + DCFR + pruning (24 h)** | **+53 ± 7** |
+| Run 6: + predictive CFR+ (24 h; +32 ± 5 over its first 6 h) | +60 ± 8 |
+| **runvec: vector CFR + DCFR (24 h, 8 threads)** | **+59 ± 5** |
+| Safe river re-solving on run 2 (Section 5.4), with the floor | +105 [+42, +168] |
+| Phase B: run 2's MLP copy adapted to a clone (Section 4.5) | +182 ± 7 |
+| Run 2's MLP copy without the opponent (`runmlp3`) | +167 ± 10 |
 | MLP from scratch, weak magnet ($\alpha = 0.05$, $\tau = 0.002$) | stalled near +600 |
 | **MLP from scratch, strong magnet ($\alpha = 0.3$, $\tau = 3\times 10^{-4}$), 2 h** | **+104** |
 
-Each LBR point is about ±65; 24-hour figures will replace the 5-hour ones.
+A single LBR point is about ±65. The 24-hour rows are the mean of the last 12 half-hourly checkpoints ± their
+standard error. Those checkpoints share LBR's deals, so the error understates the uncertainty. After six hours
+no run improved measurably. Run 6's early lead reversed (6-hour means 32, 54, 71, 60), while the DCFR runs stayed
+level or improved slowly.
 
 ### 8.2 Speed
 

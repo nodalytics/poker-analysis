@@ -121,7 +121,7 @@ The user approved all eight.
 | 3 | **Done.** Luck-adjusted against Slumbot, 5,000 hands each: runvec **+18.4 [−17, +54]**, run 6 **+6.0 [−36, +48]**, `runmlp2` (MLP from scratch, 2 h) **−31.8 [−79, +16]**. Run 2 with the floor read +30.9 [−10, +72]. None is distinguishable from the others or from zero at this sample size |
 | 4 | **Built; measuring.** `resolve.cpp`: exact-card CFR+ on the river subgame, with the re-solve gadget. 200 sampled river spots (re-solved from the street's start, 1,000 iterations): the opponent's best response falls by **161 ± 17 chips per hand pair (about 36%)**, and no opponent hand gains more than +1.4 over the blueprint. The unsafe re-solve cuts 573 but leaves one hand +1,179 better off. **The first live version re-solved from the current node**, after the opponent's bet, so it trusted the blueprint's betting range. LBR exploited that: **+176 [+98, +254]**, worse than the blueprint. Re-solving now starts at the beginning of the river; LBR, a head-to-head against the plain blueprint and the held-out clone are rerunning |
 | 5 | **Done.** Data pack (80 MB: 8-bit table, flop/turn buckets, river cut points) and `bp.dll` cross-compiled with MinGW. The Windows exe was rebuilt in the lab VM: 108 MB, self-test passed in Windows with the blueprint answering a 200bb heads-up spot. Shipped as the 8-bit table rather than the copied MLP, which LBR rated worse (+190 against the table's +104) |
-| 6 | After the 24-hour A/B (runs 4–6 and runvec end about 09:00 lab time on 2026-11-09) |
+| 6 | **Running** since 2026-11-09 10:35 lab time: run 7, vector CFR + DCFR + per-bucket updates, 40 threads, 24 h (see the 2026-11-09 update) |
 | 7 | **Done at 1.6×.** Strategies and regret writes per distinct bucket: 1.6× on one core. **Pruning does not carry over to vector updates.** In runvec's checkpoint a third of individual regrets are below −10⁵, but an action can only be skipped when it is dead in *every* bucket on the board, which is rare across a few hundred buckets; the benchmark showed no clear gain. The flag stays, off by default |
 | 8 | **Done.** Clips 19–21 (blueprint vs everyone, the LBR curves, the Slumbot rematch) and partner page version 8 |
 
@@ -147,3 +147,33 @@ The user approved all eight.
 
   No measurable gain yet. LBR still wins with river bets into folds. Next: v2 with the defence floor on top
   (running).
+
+### Update, 2026-11-09 10:40 lab time
+
+- **The 24-hour A/B is finished.** LBR (3,000 hands per checkpoint, every 30 minutes; mean of each 6-hour quarter's
+  12 checkpoints, ± its standard error):
+
+  | Run | 0–6 h | 6–12 h | 12–18 h | 18–24 h |
+  |---|---|---|---|---|
+  | Run 4: distribution-aware buckets | 105 ± 5 | 88 ± 8 | 94 ± 7 | 92 ± 5 |
+  | Run 5: + DCFR + pruning | 68 ± 7 | 72 ± 4 | 59 ± 6 | **53 ± 7** |
+  | Run 6: + predictive CFR+ | **32 ± 5** | 54 ± 6 | 71 ± 6 | 60 ± 8 |
+  | runvec: vector CFR + DCFR (8 threads) | 50 ± 9 | 49 ± 5 | 51 ± 6 | 59 ± 5 |
+
+  Run 6's early lead did not hold: its average strategy got *more* exploitable after six hours. The DCFR runs are
+  the steady ones, and runvec matched run 5 on half the threads. After six hours, more training no longer shows
+  up in LBR for any run. Either the runs have reached what this abstraction allows, or LBR can't resolve the
+  differences that remain. The checkpoints within a quarter share LBR's deals, so the errors above understate
+  the true uncertainty.
+- **Item 6 started: run 7**, the vector trainer with per-bucket updates (`mccfr_vec2`, 1.6× faster) and DCFR on
+  the distribution-aware buckets, 40 threads, 24 hours, with its LBR curve.
+- **Safe re-solving with the defence floor on top: LBR +105.2 [+42, +168],** level with the plain blueprint with
+  the floor (+104). The river leak shrank (LBR's all-ins that the bot folded to fell from 328 hands to 159). LBR's
+  biggest wins are now pot-size bets on the flop and turn, which a river re-solve doesn't reach. Safe re-solving
+  no longer hurts, but doesn't measurably help yet. The next step is re-solving the turn.
+- **Phase B, 8 hours:** the gain came in the first 30 minutes and then held. Against the held-out `pros_b`
+  clone it scored +47.5 to +48.9 at every reading (run 2's table: +40.2), against `pros_a` +57 to +60, and
+  against run 2 −2.4 to −4.2. Mean LBR over its last 12 checkpoints: **+182 ± 7**, against **+167 ± 10** for
+  `runmlp3`, the same copy of run 2 trained without the opponent. Exploiting the clone cost about 15 bb/100 of
+  exploitability, which is within the noise. Copying the table into the MLP is what costs the most: the table
+  reads +104.
