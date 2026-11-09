@@ -12,6 +12,31 @@ what Pluribus did, says what changes at nine players, and sets out the build ord
 - Ideas from the Pluribus summary the user sent are folded in below: search at play time, the pre-flop-only
   average, and coarse-blueprint/fine-search.
 
+## The route: neural on the lab (chosen), a table on a 512 GB machine (documented)
+
+**Chosen: the neural route on the lab** (the user, 2026-11-09). The strategy is a network trained by self-play on
+the GPUs, not a table per betting node. Memory then grows with the network (a few million weights), not with the
+tree, and the bet menu can be wider than any table could afford. Built so far:
+
+| Piece | File | State |
+|---|---|---|
+| N-player dealing with buckets, showdown ranks and cards (about 3 million 9-player deals a second) | `blueprint/bp.cpp` `bp_deal_n`, `libbp5.so` | Done |
+| A vectorised N-player no-limit engine on the GPU: positions, a menu by raise level and pot size, min-raise rules, incomplete all-ins that do not reopen the betting, side pots | `scripts/ninemax_engine.py` | Done |
+| A check of the engine against PokerKit: random legal games replayed card for card, actor, legality and payoffs compared | `scripts/ninemax_check.py` | **0 mismatches in 11,000 tables** at 3, 4, 6 and 9 players and all three menus, almost all ending in multiway all-in showdowns with side pots (odd chips of split pots allowed) |
+| The 9-max trainer: one residual network for all seats, regularised actor-critic with a magnet; evaluated by 1-vs-8 duplicate matches (the network in each of the nine seats in turn, same deals) against a rule-based tight-aggressive player and against its own previous checkpoint | `scripts/ninemax_selfplay.py` | **Running**: `blueprint/nm1`, 24 hours from 2026-11-09 13:50 lab time, on the RTX PRO 6000 |
+
+Smoke test (2 minutes, shared GPU): about 18,000 nine-handed hands a second; against eight rule-based players
+−1,234 then −988 bb/100, and +275 and +356 against its own previous checkpoint, so it learns. Next: the real-game
+adapter (PokerKit state → the network's inputs), so the 9-max network can sit at `bot_sim` tables against the
+clones and the personas, and in the advisor.
+
+**Documented alternative: a table on a 512 GB machine.** The Pluribus recipe as published: external-sampling MCCFR
+for N players with linear CFR and pruning, a lean bet menu, 100–200 buckets, the average strategy kept pre-flop only,
+and search at play time. Training needs about 512 GB of RAM (Pluribus: under 512 GB, 64 cores, 8 days) and up to
+1 TB for a richer menu. Playing needs about 32 GB. The memory table below sizes it. If a 512 GB machine
+(the Threadripper 9975WX in the summary the user shared) becomes available, steps 2–4 of the build order become
+this route, and the neural network can then serve as its search's leaf values.
+
 ## What Pluribus did, and where we stand
 
 | Pluribus (6-max, 100bb) | Ours today (heads-up, 200bb) | For 9-max |
