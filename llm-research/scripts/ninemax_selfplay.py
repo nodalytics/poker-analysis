@@ -15,6 +15,12 @@ Learning: the regularised actor-critic of mlp_selfplay.py (REINFORCE with a valu
 moving magnet copy, entropy bonus), one network for all seats, every decision of every seat learned from. The
 exported policy is a slow moving average of the weights.
 
+--pool-share S: population training ("learn wider"). Pure self-play learns only to play against itself: after 30
+minutes the first run beat the rule-based player but barely profited from eight random players who shove 30% of the
+time. With S > 0, a share S of every batch is played at tables where the net holds 1-8 random seats and one opponent
+from the population holds the others: rule players (tag, maniac, station, random) and the last few checkpoints. The
+net learns from its own seats only.
+
 Yardstick (every EVAL_MINUTES): 1-vs-8 duplicate matches. The same deals are replayed with the network in each of
 the nine seats and eight copies of an opponent in the others, so seat and card luck cancel; bb/100 with a 95%
 interval. Opponents: "tag", a rule-based tight-aggressive player on card strength and pot odds, and the network's
@@ -121,13 +127,35 @@ def tag_probs(T, g, i, legal, s, dealer):
     return F.one_hot(a, legal.shape[1]).float()
 
 
-def play(dealer, menu, policies, bk, rk, record=False, dev="cuda"):
-    """Play len(bk) hands; policies[seat] is a NineNet or "tag". Returns payoffs [G, P] (chips) and the records."""
+def rule_probs(name, T, g, i, legal, s, dealer):
+    """Rule-based opponents: tag (tight-aggressive), maniac (raises and shoves most of the time), station (always
+    calls or checks), random (uniform over the legal actions)."""
+    if name == "tag":
+        return tag_probs(T, g, i, legal, s, dealer)
+    lf = legal.float()
+    if name == "station":
+        return F.one_hot(torch.ones(len(g), dtype=torch.long, device=g.device), legal.shape[1]).float()
+    if name == "random":
+        return lf / lf.sum(1, keepdim=True)
+    if name == "maniac":  # 70% spread over the raises and all-in when there are any, else call
+        w = lf.clone()
+        w[:, 0] = 0
+        aggr = w[:, 2:].sum(1, keepdim=True)
+        w[:, 2:] = torch.where(aggr > 0, 0.7 * w[:, 2:] / aggr.clamp(min=1), w[:, 2:])
+        w[:, 1] = torch.where(aggr[:, 0] > 0, 0.3, 1.0)
+        return w / w.sum(1, keepdim=True)
+    raise ValueError(name)
+
+
+def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None):
+    """Play len(bk) hands; policies[seat] is a NineNet or a rule name (rule_probs). Returns payoffs [G, P] (chips)
+    and, with record, the decisions (only those of the policy `learner` when it is given)."""
     G, P = bk.shape[0], bk.shape[1]
     T = Tables(G, P, menu, dev)
     rec = []
     uniq = list({id(p): p for p in policies}.values())  # each distinct policy once; seat -> its index
     seat_pol = torch.tensor([next(k for k, q in enumerate(uniq) if q is p) for p in policies], device=dev)
+    lid = next((k for k, q in enumerate(uniq) if q is learner), -1)
     while not bool(T.done.all()):
         g = (~T.done).nonzero().squeeze(1)
         i = T.actor[g]
@@ -141,14 +169,15 @@ def play(dealer, menu, policies, bk, rk, record=False, dev="cuda"):
             if not m.any():
                 continue
             if isinstance(pol, str):
-                probs = tag_probs(T, g[m], i[m], legal[m], s[m], dealer)
+                probs = rule_probs(pol, T, g[m], i[m], legal[m], s[m], dealer)
             else:
                 with torch.no_grad():
                     lg, _ = pol(feat[m], mybk[m], T.street[g][m], s[m])
                 probs = F.softmax(masked(lg, legal[m]), 1)
             a[m] = torch.multinomial(probs, 1).squeeze(1)
         if record:
-            rec.append((g, i, feat, legal, mybk, T.street[g].clone(), s, a))
+            keep = torch.ones_like(i, dtype=torch.bool) if learner is None else seat_pol[i] == lid
+            rec.append(tuple(x[keep] for x in (g, i, feat, legal, mybk, T.street[g].clone(), s, a)))
         T.step(g, a)
     return T.payoffs(rk), rec
 
@@ -184,6 +213,10 @@ def main():
     ap.add_argument("--magnet-tau", type=float, default=3e-4)
     ap.add_argument("--avg-tau", type=float, default=1e-3)
     ap.add_argument("--entropy", type=float, default=0.01)
+    ap.add_argument("--pool-share", type=float, default=0.0, help="share of each batch played against the population")
+    ap.add_argument("--pool", default="tag,maniac,station,random", help="rule opponents in the population")
+    ap.add_argument("--pool-snapshots", type=int, default=5, help="past checkpoints kept in the population")
+    ap.add_argument("--chunks", type=int, default=4, help="population chunks per batch (one opponent each)")
     args = ap.parse_args()
     dev = "cuda"
     torch.manual_seed(0)
@@ -211,6 +244,9 @@ def main():
         opt.load_state_dict(st["opt"])
         hands = st["hands"]
     prev = copy.deepcopy(avg)
+    rules = [x for x in args.pool.split(",") if x] if args.pool else []
+    snaps = []
+    pool = (rules or None) if args.pool_share > 0 else None
     json.dump({**vars(args), "nfeat": nfeat, "actions": menu.A}, open(os.path.join(args.out, "config.json"), "w"),
               indent=1)  # fmt: skip
     log = open(os.path.join(args.out, "progress.log"), "a", buffering=1)
@@ -218,9 +254,25 @@ def main():
     h_start, adv_scale = hands, 1.0
     while time.time() - t0 < args.minutes * 60:
         bk, rk, _ = dealer.deal(args.batch)
-        u, rec = play(dealer, menu, [net] * args.players, bk, rk, record=True, dev=dev)
-        g, i, f, legal, mybk, street, s, a = (torch.cat([r[k] for r in rec]) for k in range(8))
-        G = u[g, i] / BB  # big blinds won by the player who acted
+        # self-play on part of the batch; on the rest, chunks of tables where the net holds some seats and one
+        # opponent from the population (rule players, past checkpoints) holds the others. The net learns from its
+        # own seats only.
+        n_pop = int(args.batch * args.pool_share) // args.chunks * args.chunks if pool else 0
+        recs, Gs = [], []
+        u, rec = play(dealer, menu, [net] * args.players, bk[n_pop:], rk[n_pop:], record=True, dev=dev)
+        recs += rec
+        Gs += [u[r[0], r[1]] / BB for r in rec]
+        for c in range(args.chunks if n_pop else 0):
+            sl = slice(c * n_pop // args.chunks, (c + 1) * n_pop // args.chunks)
+            opp = pool[int(torch.randint(len(pool), ()).item())]
+            k = int(torch.randint(1, args.players, ()).item())  # the net holds k seats, chosen at random
+            mine = set(torch.randperm(args.players)[:k].tolist())
+            pols = [net if seat in mine else opp for seat in range(args.players)]
+            u, rec = play(dealer, menu, pols, bk[sl], rk[sl], record=True, dev=dev, learner=net)
+            recs += rec
+            Gs += [u[r[0], r[1]] / BB for r in rec]
+        g, i, f, legal, mybk, street, s, a = (torch.cat([r[k] for r in recs]) for k in range(8))
+        G = torch.cat(Gs)  # big blinds won by the player who acted
         lg, v = net(f, mybk, street, s)
         logp = F.log_softmax(masked(lg, legal), 1)
         with torch.no_grad():
@@ -256,9 +308,15 @@ def main():
                 f"kl {kl.mean().item():.4f} entropy {ent.mean().item():.3f}  1-vs-8 vs tag: {m1:+.1f} bb/100 "
                 f"[{lo1:+.1f}, {hi1:+.1f}]  vs previous checkpoint: {m2:+.1f} [{lo2:+.1f}, {hi2:+.1f}]"
             )
+            for opp in ("maniac", "station", "random"):
+                m3, lo3, hi3 = duplicate(dealer, menu, avg, opp, args.eval_hands // 4, dev)
+                line += f"  vs {opp}: {m3:+.1f} [{lo3:+.1f}, {hi3:+.1f}]"
             log.write(line + "\n")
             print(line, flush=True)
             prev = copy.deepcopy(avg)
+            if pool is not None and args.pool_snapshots:
+                snaps = (snaps + [copy.deepcopy(avg).requires_grad_(False)])[-args.pool_snapshots :]
+                pool = rules + snaps
             last_eval = time.time()
     with open(os.path.join(args.out, "train.log"), "a") as f:
         f.write("stopped\n")

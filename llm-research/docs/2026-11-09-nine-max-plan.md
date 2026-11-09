@@ -30,6 +30,27 @@ Smoke test (2 minutes, shared GPU): about 18,000 nine-handed hands a second; aga
 adapter (PokerKit state → the network's inputs), so the 9-max network can sit at `bot_sim` tables against the
 clones and the personas, and in the advisor.
 
+**First result, and the self-play blind spot** (`nm1`, pure self-play, 30 minutes, 85 million hands at 47,000 a
+second; 1-vs-8 duplicate matches, 5,000 deals × 9 seatings):
+
+| Hero (1 seat) vs 8 copies of | bb/100 [95% interval] |
+|---|---|
+| Trained network vs the rule-based tight-aggressive player | **+47** [+26, +68] (+52 [+41, +63] in the run's own log) |
+| Rule-based player vs the trained network | −73 [−92, −53] |
+| Rule-based player vs an untrained (random) network | +1,210 [+1,099, +1,322] |
+| **Trained network vs an untrained network** | **+8 [−5, +22]** |
+
+The network beats a sensible player but hardly profits from eight random players who shove 30% of the time. It
+learned only against itself: it folds 72% under the gun and almost never shoves, so it never met wild play. That
+is what pure self-play by policy gradient gives (CFR avoids it by exploring every action). **Fix: population
+training** (`--pool-share`): half of each batch at tables where the network holds 1–8 random seats against one
+opponent from a population of rule players (tight-aggressive, maniac, calling station, random) and its own last
+five checkpoints, learning from its own seats only. `nm2` runs that from 2026-11-09 14:35 lab time alongside `nm1`
+(the pure self-play control), and both now report results against the maniac, the station and random players too.
+
+The 9-player count of the lean menu (`blueprint/tree_size.py`) did not finish within 40 GB and an hour: the
+betting states alone exceed what the 6-player count needed (about 10 GB), before any table is built.
+
 **Documented alternative: a table on a 512 GB machine.** The Pluribus recipe as published: external-sampling MCCFR
 for N players with linear CFR and pruning, a lean bet menu, 100–200 buckets, the average strategy kept pre-flop only,
 and search at play time. Training needs about 512 GB of RAM (Pluribus: under 512 GB, 64 cores, 8 days) and up to
