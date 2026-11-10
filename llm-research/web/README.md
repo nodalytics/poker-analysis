@@ -56,7 +56,7 @@ ssh -t -i lab.pem labuser@LAB_HOST 'cd ~/llm-research && sudo sh web/deploy/inst
 The vhost was syntax-checked with the lab's nginx 1.24 (`nginx -t` against a throwaway certificate) before the
 first install.
 
-**Who can see it:** without a password or Cloudflare Access, anyone with the address. The page shows training
-curves and sample hands, nothing secret, but it does show how the bot plays. To restrict it, either add a
-Cloudflare Access application for poker.stbfarm.org (Zero Trust, email one-time code), or enable the nginx
-password in the vhost.
+**Who can see it: everyone.** The page is public by decision (2026-11-10): no password and no Cloudflare Access. It
+shows training curves and sample hands; it is read-only, reachable only through Cloudflare, and the live-hands
+endpoint is rate-limited per visitor. Should that change, either add a Cloudflare Access application for
+poker.stbfarm.org or enable the nginx password in the vhost.
