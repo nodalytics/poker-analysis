@@ -414,8 +414,8 @@ bubble situations and final tables?
 - One table is the whole world: at the bubble, the other tables' players are not modelled. The ladder at this
   table (who busts first gets nothing) stands in for the field.
 - Short-handed final tables (fewer than nine left) and antes are not yet in the scenarios.
-- No push/fold Nash solver yet: the network covers short stacks through its all-in action. A Nash push/fold chart
-  for nine players under ICM is the planned check of its short-stack play.
+- The network covers short stacks through its all-in action. The push/fold equilibrium under ICM
+  (`scripts/icm_pushfold.py`, below) is the check of its short-stack play.
 - The real-table adapter plays mixed-stack networks at any depth from 2bb, but declines tournament networks
   (bot_sim tables have no payouts) and lets Monte play those hands.
 
@@ -439,3 +439,50 @@ bubble situations and final tables?
 |---|---|---|---|
 | `nm6` | 3090 | cash, stacks 5–200bb (`--stacks 5,200`) | ramped 0.03 → 0.3 over 3 hours |
 | `nm7` | RTX PRO 6000 | tournament (`--tourney`) | ramped **0.1** → 0.3, entropy bonus 0.02 (against the collapse seen in the smoke test) |
+
+### Push/fold under ICM, nine players (`scripts/icm_pushfold.py`, 2026-11-10)
+
+**The model:**
+- Each player, folded to, shoves all in or folds; each player behind a shove calls or folds. As in
+  `poker_math.solve_push_fold_multiway`, there is at most one caller and card removal is ignored.
+- The difference is that **any stacks and any payouts** are allowed. Every result is valued by ICM (the stacks
+  after the hand → each player's share of the prizes), and folding is worth what happens next given everyone
+  else's strategy.
+- Solved by fictitious play over the 169 hand classes.
+
+**Checks:**
+- ICM matches brute force for 3, 5 and 7 players.
+- With one winner-take-all prize, the shove ranges are **identical** to the chip-EV multi-way solver (4 × 10bb
+  and 6 × 8bb).
+- After 4,000 iterations, no single decision gains more than **0.012 bb** by deviating.
+
+Charts (`results/ninemax/icm_pushfold.json`): blinds 0.5/1, shares of all hands:
+
+| Table (9 players, 10bb each unless noted) | Shove, first to act → button → small blind | Big blind calls the small blind |
+|---|---|---|
+| Chips only (one prize) | 8%, 9%, 11%, 15%, 18%, 23%, 32% → 59% | 38% |
+| Final table (30/20/14/10/8/6.5/5/4/3.5) | 16%, 18%, 28%, 30%, 43%, 63%, 98% → 100% | 4% |
+| Bubble, 1 out, **flat prizes** (satellite) | 100% everywhere | 0% |
+| Bubble, 1 out, **top-heavy above it** | 12%, 16%, 20%, 24%, 34%, 48%, 73% → 100% | 8% |
+| Bubble, flat prizes, 30bb on the button | 100% everywhere | 0% |
+| Bubble, flat prizes, 3bb big blind | about 40% everywhere → 100% | 43% |
+| Final table, mixed stacks 6–30bb, ante 0.125 | 8–38% by stack and seat → 100% | 3% |
+
+**What it shows:**
+- ICM moves calling far more than shoving. Calling the small blind drops from 38% (chips) to 4–8% at a final
+  table or a real bubble, and shoving widens to match, because shoves are called less.
+- **The flat-prize bubble is a satellite, and its equilibrium is degenerate.** When everyone above the bust spot
+  gets the same prize, survival is everything: nobody calls, not even with aces (85% equity still loses 15% of
+  the whole prize, and winning adds almost nothing), so everyone shoves any two cards.
+  - The tournament scenarios in `icm.scenarios` (kind 1: a nearly flat ladder, steps of up to 15%) are close to
+    this.
+  - So about 40% of `nm7`'s tables teach satellite play.
+  - A real tournament bubble has a top-heavy ladder above the min-cash, because of the deep run: the 4th row
+    above. The planned change is the bubble kind, with zero for the next 1–3 to bust and a final-table ladder
+    above them.
+- The short-stack big blind (3bb) is the exception that calls 43%: it is nearly all in anyway, and the others
+  shove wide into it.
+
+**Next:** play the tournament network on these exact tables and compare its shove and call frequencies by seat
+with the charts. The places it differs most are where it is weakest.
+
