@@ -198,6 +198,66 @@ against strong opponents.
    is roughly **3 million hands with 7+ players and 1 million nine-handed**. That is enough for full-ring opponent
    models and clones of human play.
 
+## Nine players before the flop, few after it (2026-11-10)
+
+The user was told that at 9-max, even in tournaments, more than six players in a hand is extremely rare, and was
+sent advice to design the solver around "at most six players after the flop". Measured on the 96,000 nine-handed
+hands of the 2,000-session tables above (`results/ninemax/table2k_*`, bots at 100bb, no maniac):
+
+| Players acting after the flop | Share of all hands | Share of hands that see a flop |
+|---|---|---|
+| none (won pre-flop) | 44.4% | |
+| 2 | 40.1% | 72.2% |
+| 3 | 12.0% | 21.6% |
+| 4 | 2.2% | 4.0% |
+| 5 | 0.9% | 1.6% |
+| 6 | 0.33% | 0.6% |
+| 7 | 0.02% | 0.04% |
+| 8 or 9 | never | never |
+
+Players calling or raising pre-flop: 1 in 31%, 2 in 39%, 3 in 17%, 4 in 3.3%, 6 or more in 0.4% of hands.
+
+**The claim holds:** 9-way pots do not happen, and 6 or more after the flop is about 1 hand in 300. Real
+tournament tables are similar or tighter (short stacks late on push or fold); only very soft games, where many
+players limp, see 5–7 players in a pot now and then.
+
+**Design consequences:**
+
+- **Before the flop the game is truly 9-handed.** Positions, the folds so far and who is left to act all matter;
+  the network plays it with all nine seats and the full action history.
+- **After the flop the folded players are gone.** A pot reached by k players is a k-player game; the folded seats
+  matter only through the dead money and what their folds say. No 9-player post-flop solution is ever needed.
+- **"At most six" is a rarity, not a rule.** Seven or more see a flop about 1 time in 5,000, so the bot must
+  still act; the network plays any number of players, so no special case is built for them.
+- **The real line is lower than six.** Solving cost climbs steeply with each player: heads-up and 3-way pots can be
+  searched during a hand in seconds, 5–6-way pots cannot (Pluribus had the same limit). So:
+
+| Players after the flop | Share of flops | Handled by |
+|---|---|---|
+| 2 | 72% | the network, plus search during the hand (planned) |
+| 3 | 22% | the network, plus search during the hand (planned) |
+| 4–6 | 6% | the network alone (search maybe later) |
+| 7+ | under 0.1% | the network alone |
+
+  Search therefore covers 94% of flops, and the expensive quality (search, finer bet sizes) goes into heads-up
+  and 3-way pots, where nearly all the money is played.
+
+**On the rest of that advice** (pre-flop for the full table, post-flop up to six, ICM over all remaining players,
+individual opponent ranges, precomputed plus real-time strategy, a Threadripper 9975WX with 256 GB, an RTX PRO
+6000 and two 4090s):
+
+- Pre-flop for nine, precomputed plus real-time, and opponent ranges match this plan (the 9-max network, search
+  during the hand, the opponent models and clones).
+- **ICM over all remaining players** is not done in practice: exact ICM costs grow exponentially with the player
+  count, and early in a large field ICM is close to chip value anyway. ICM matters near the bubble and at the
+  final table, computed over the players left there. This plan does that: chip value early, ICM push/fold near the
+  bubble and at the final table (section below).
+- **256 GB would not hold a 9-max table blueprint** at useful detail. A 6-player table needs 154 GB with the
+  lean menu (77 GB with the average kept pre-flop only) and 508 GB with the medium one; 9-max pre-flop feeding
+  post-flop pots of up to six is larger again, since each way of reaching the flop has its own post-flop game.
+  Pluribus trained in about 512 GB. The neural route needs GPU time, not RAM; the lab's RTX PRO 6000, 4090 and
+  3090 with 125 GB already cover it. A 512 GB machine matters only for the documented table route.
+
 ## Build order
 
 | # | Step | Done means |
