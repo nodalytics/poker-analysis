@@ -34,3 +34,28 @@ chart or table library, TypeScript, or a design system.
 5. Keep `node_modules/` and `dist/` out of git; commit `package.json` and `package-lock.json`.
 
 The lab then needs Node only to build, not to serve: the built files are static.
+
+## Public address: https://poker.stbfarm.org (`deploy/`)
+
+| File | What it is |
+|---|---|
+| `deploy/nginx/poker.stbfarm.org.conf` | Host nginx vhost: HTTPS on 443 with the lab's origin certificate (Cloudflare SSL mode Full, as for the other stbfarm.org sites), HTTP redirected to HTTPS, proxied to the app on 127.0.0.1:8790; GET only; `/api/live` limited to 20 requests a minute per visitor; an optional password (commented) |
+| `deploy/poker-watch.service` | systemd service running `scripts/ninemax_watch.py` as labuser, restarted on failure and started at boot |
+| `deploy/install.sh` | Installs both (run once with sudo); `--remove` takes them out again |
+
+The app stays bound to 127.0.0.1; only nginx faces the network. DNS: `poker.stbfarm.org` is a Cloudflare-proxied
+record pointing at the lab.
+
+Install (needs the sudo password, so run it yourself in a terminal):
+
+```
+ssh -t -i lab.pem labuser@LAB_HOST 'cd ~/llm-research && sudo sh web/deploy/install.sh'
+```
+
+The vhost was syntax-checked with the lab's nginx 1.24 (`nginx -t` against a throwaway certificate) before the
+first install.
+
+**Who can see it:** without a password or Cloudflare Access, anyone with the address. The page shows training
+curves and sample hands, nothing secret, but it does show how the bot plays. To restrict it, either add a
+Cloudflare Access application for poker.stbfarm.org (Zero Trust, email one-time code), or enable the nginx
+password in the vhost.
