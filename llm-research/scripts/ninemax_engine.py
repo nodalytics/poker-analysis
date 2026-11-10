@@ -9,6 +9,7 @@ each), for mixed stack depths and tournaments.
 Rules implemented:
 - fold, check/call, raises to the sizes of a menu (below), all-in; a raise must be at least the last raise;
 - an all-in below a full raise does not reopen the betting: players who already acted may then only call or fold;
+- no raise when no other player could answer it (all others folded, all in, or unable to cover the bet);
 - a round ends when every live player who is not all in has acted since the last full raise and matched the bet;
   if at most one player can still act, the board runs out;
 - showdown with side pots: each contribution level forms a pot shared by the best live hands that paid into it.
@@ -165,6 +166,12 @@ class Tables:
         t = self.targets(g, i)
         cap = torch.where(self.street[g] == 0, m.max_pre, m.max_post)
         reopened = ~self.acted[g, i]  # False after an incomplete all-in raise: call or fold only
+        # no raise when no other player could answer it: every other player has folded, is all in, or has no more
+        # chips than the current bet (calling is all they can do). Only possible with unequal stacks.
+        can_answer = ~self.folded[g] & ~self.allin[g] & (self.stack[g] > bet[:, None])
+        can_answer[torch.arange(len(g), device=self.dev), i] = False
+        others = can_answer.any(1)
+        reopened = reopened & others
         stk = self.stack[g, i]
         ok_size = (
             ~torch.isnan(t)

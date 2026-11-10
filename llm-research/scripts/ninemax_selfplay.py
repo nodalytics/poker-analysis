@@ -83,7 +83,7 @@ def features(T, g, i):
         f.append(x.gather(1, rel) if x.shape[1] == P else x)
     if FEAT["stacks"] or FEAT["tourney"]:  # stack depths: mine, everyone's chips behind, the effective stack
         behind = (stk - c).float()
-        f.append((torch.log(stk.gather(1, i[:, None]).float() / BB) / math.log(200))[:, None])
+        f.append(torch.log(stk.gather(1, i[:, None]).float() / BB) / math.log(200))
         f.append((behind.gather(1, rel) / STACK).clamp(0, 3))
         opp = torch.where(live & (F.one_hot(i, P) == 0), behind, torch.zeros_like(behind)).max(1).values
         f.append((torch.minimum(left.float(), opp) / STACK).clamp(0, 3)[:, None])
