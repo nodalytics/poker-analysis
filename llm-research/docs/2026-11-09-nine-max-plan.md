@@ -478,8 +478,13 @@ Charts (`results/ninemax/icm_pushfold.json`): blinds 0.5/1, shares of all hands:
     this.
   - So about 40% of `nm7`'s tables teach satellite play.
   - A real tournament bubble has a top-heavy ladder above the min-cash, because of the deep run: the 4th row
-    above. The planned change is the bubble kind, with zero for the next 1–3 to bust and a final-table ladder
-    above them.
+    above.
+  - **Changed (2026-11-10):** the bubble kind in `icm.scenarios` now pays zero to the next 1–3 to bust and a
+    final-table ladder above them. On these tables the chip leader's equity is on average 0.74 of its chip
+    share (0.56 with the flat ladder).
+  - **`nm7` was stopped at 212 minutes and continues as `nm8`** from its checkpoint, with the new bubble
+    tables, on the same GPU and with the same settings. The pull is held at 0.3, because the ramp restarts on
+    a resume. It runs for 20 hours, to end with the other runs.
 - The short-stack big blind (3bb) is the exception that calls 43%: it is nearly all in anyway, and the others
   shove wide into it.
 

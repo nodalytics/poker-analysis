@@ -9,8 +9,9 @@ every set of players taking the top places is carried place by place (2^P sets),
 Tournament situations (scenarios): one 9-handed table with every seat's stack in big blinds and the prizes for the
 table's finishing places 1..P (in units of the prize money at stake at this table, summing to 1):
   final table  places 1-9 all paid, top-heavy (prize ~ place^-alpha);
-  bubble       the next 1-3 players to bust get nothing, the rest get a nearly flat ladder (the min-cash and the
-               first steps): a table near the money, where busting costs everything;
+  bubble       the next 1-3 players to bust get nothing, the rest a top-heavy ladder (as at a final table; the
+               chips above the min-cash carry the deep run). Until 2026-11-10 the ladder above was nearly flat,
+               which is a satellite (nm7 trained on that);
   in the money all places paid, a gentle ladder: deep in the money, between pay jumps.
 A hand's reward is the change in the player's ICM equity, in big-blind equivalents: equity change x the table's chips
 / BB. With prizes proportional to chips this is the chip result, so cash play and tournament play share a scale.
@@ -74,8 +75,10 @@ def scenarios(G, P, dev, kinds=(0.4, 0.4, 0.2), avg_bb=(10, 60), spread=0.7, gen
     alpha = 0.6 + 0.8 * r(G, 1)
     final = place ** (-alpha)
     busts = torch.randint(1, 4, (G, 1), device=dev, generator=gen)  # the next 1-3 to bust get nothing
-    ladder = 1 + 0.15 * (P - place) / P * r(G, 1)  # min-cash plus small steps
-    bubble = torch.where(place > P - busts, torch.zeros_like(ladder), ladder)
+    # above the bust spots a top-heavy ladder, as at a final table: the chips still carry the deep run. (A nearly
+    # flat ladder here, used by nm7, is a satellite bubble, whose equilibrium is to shove any two cards and never
+    # call: see icm_pushfold.py.)
+    bubble = torch.where(place > P - busts, torch.zeros_like(final), final)
     money = 1 + (0.3 + 0.7 * r(G, 1)) * (P - place) / P
     pay = torch.where((kind == 0)[:, None], final, torch.where((kind == 1)[:, None], bubble, money))
     pay = pay / pay.sum(1, keepdim=True)
