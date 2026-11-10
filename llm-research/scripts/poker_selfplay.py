@@ -146,7 +146,7 @@ def is_bot(entrant):
         in ("tinaplus", "solverbot", "adaptbot", "adaptbot_recent", "rlbot", "rlavg", "rlsnap", "rlx")
         or is_style(entrant)
         or entrant.startswith("shift_")
-        or entrant.startswith("clone#")
+        or entrant.startswith(("clone#", "nine#"))
     )
 
 
@@ -451,6 +451,10 @@ def main(outdir, hands, models, notes=None, short_stack=None):
                 )
             elif m.split("#")[0] == "solverbot":
                 text = pa.solver_play(state, i, ctx) or pa.monte_reply(state, i)
+            elif m.startswith("nine#"):
+                import ninemax_agent  # a 9-max network (ninemax_selfplay.py); 9 players at 100bb, else Monte plays
+
+                text = ninemax_agent.reply(state, i, ctx, m) or pa.monte_reply(state, i)
             elif m.startswith("clone#"):
                 import mlp_agent  # an MLP clone of a human professional (human_clone.py)
 
