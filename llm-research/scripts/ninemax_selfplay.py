@@ -147,14 +147,22 @@ def rule_probs(name, T, g, i, legal, s, dealer):
     raise ValueError(name)
 
 
-def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None):
+def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None, assign=None):
     """Play len(bk) hands; policies[seat] is a NineNet or a rule name (rule_probs). Returns payoffs [G, P] (chips)
-    and, with record, the decisions (only those of the policy `learner` when it is given)."""
+    and, with record, the decisions (only those of the policy `learner` when it is given).
+
+    assign [G, P]: per-table seating instead; policies is then the list of distinct policies and assign[g, seat]
+    indexes it. All tables are played in one loop, whatever their seating: the loop's length, not the number of
+    tables, sets the time, so one loop over a mixed batch is several times faster than one loop per seating."""
     G, P = bk.shape[0], bk.shape[1]
     T = Tables(G, P, menu, dev)
     rec = []
-    uniq = list({id(p): p for p in policies}.values())  # each distinct policy once; seat -> its index
-    seat_pol = torch.tensor([next(k for k, q in enumerate(uniq) if q is p) for p in policies], device=dev)
+    if assign is None:
+        uniq = list({id(p): p for p in policies}.values())  # each distinct policy once; seat -> its index
+        seat_pol = torch.tensor([next(k for k, q in enumerate(uniq) if q is p) for p in policies], device=dev)
+        assign = seat_pol[None, :].expand(G, P)
+    else:
+        uniq = list(policies)
     lid = next((k for k, q in enumerate(uniq) if q is learner), -1)
     while not bool(T.done.all()):
         g = (~T.done).nonzero().squeeze(1)
@@ -164,8 +172,9 @@ def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None)
         feat, legal = features(T, g, i)
         mybk = bk[g, i]
         a = torch.zeros(len(g), dtype=torch.long, device=dev)
+        pol_of = assign[g, i]
         for k, pol in enumerate(uniq):
-            m = seat_pol[i] == k
+            m = pol_of == k
             if not m.any():
                 continue
             if isinstance(pol, str):
@@ -176,7 +185,7 @@ def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None)
                 probs = F.softmax(masked(lg, legal[m]), 1)
             a[m] = torch.multinomial(probs, 1).squeeze(1)
         if record:
-            keep = torch.ones_like(i, dtype=torch.bool) if learner is None else seat_pol[i] == lid
+            keep = torch.ones_like(i, dtype=torch.bool) if learner is None else pol_of == lid
             rec.append(tuple(x[keep] for x in (g, i, feat, legal, mybk, T.street[g].clone(), s, a)))
         T.step(g, a)
     return T.payoffs(rk), rec
@@ -265,21 +274,18 @@ def main():
         # opponent from the population (rule players, past checkpoints) holds the others. The net learns from its
         # own seats only.
         n_pop = int(args.batch * args.pool_share) // args.chunks * args.chunks if pool else 0
-        recs, Gs = [], []
-        u, rec = play(dealer, menu, [net] * args.players, bk[n_pop:], rk[n_pop:], record=True, dev=dev)
-        recs += rec
-        Gs += [u[r[0], r[1]] / BB for r in rec]
+        # one seating table for the whole batch (policy 0 = the net), played in a single loop
+        assign = torch.zeros(args.batch, args.players, dtype=torch.long, device=dev)
+        pols = [net] + (pool or [])
         for c in range(args.chunks if n_pop else 0):
-            sl = slice(c * n_pop // args.chunks, (c + 1) * n_pop // args.chunks)
-            opp = pool[int(torch.randint(len(pool), ()).item())]
+            rows = slice(c * n_pop // args.chunks, (c + 1) * n_pop // args.chunks)
+            opp = 1 + int(torch.randint(len(pool), ()).item())
             k = int(torch.randint(1, args.players, ()).item())  # the net holds k seats, chosen at random
-            mine = set(torch.randperm(args.players)[:k].tolist())
-            pols = [net if seat in mine else opp for seat in range(args.players)]
-            u, rec = play(dealer, menu, pols, bk[sl], rk[sl], record=True, dev=dev, learner=net)
-            recs += rec
-            Gs += [u[r[0], r[1]] / BB for r in rec]
-        g, i, f, legal, mybk, street, s, a = (torch.cat([r[k] for r in recs]) for k in range(8))
-        G = torch.cat(Gs)  # big blinds won by the player who acted
+            theirs = torch.randperm(args.players, device=dev)[k:]
+            assign[rows, theirs] = opp
+        u, rec = play(dealer, menu, pols, bk, rk, record=True, dev=dev, learner=net, assign=assign)
+        g, i, f, legal, mybk, street, s, a = (torch.cat([r[k] for r in rec]) for k in range(8))
+        G = u[g, i] / BB  # big blinds won by the player who acted
         lg, v = net(f, mybk, street, s)
         logp = F.log_softmax(masked(lg, legal), 1)
         with torch.no_grad():
