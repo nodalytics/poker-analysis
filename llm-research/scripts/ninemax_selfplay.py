@@ -210,6 +210,10 @@ def main():
     ap.add_argument("--eval-hands", type=int, default=20000, help="deals per duplicate match (x players seatings)")
     ap.add_argument("--lr", type=float, default=3e-4)
     ap.add_argument("--kl", type=float, default=0.3)
+    # trainability map (docs/2026-11-09-neural-models-and-scale.md): a weak pull learns fastest early, a strong one
+    # keeps long runs stable; ramp linearly from --kl-start to --kl over --kl-ramp minutes (0 = constant --kl)
+    ap.add_argument("--kl-start", type=float, default=None)
+    ap.add_argument("--kl-ramp", type=float, default=0.0, help="minutes to ramp the KL pull from --kl-start to --kl")
     ap.add_argument("--magnet-tau", type=float, default=3e-4)
     ap.add_argument("--avg-tau", type=float, default=1e-3)
     ap.add_argument("--entropy", type=float, default=0.01)
@@ -285,7 +289,11 @@ def main():
         adv_scale = 0.99 * adv_scale + 0.01 * adv.abs().mean().item()
         adv = adv / max(adv_scale, 1e-3)
         lp_a = logp.gather(1, a[:, None]).squeeze(1)
-        loss = (-adv * lp_a + 0.5 * (v - G) ** 2 / 25 + args.kl * kl - args.entropy * ent).mean()
+        kl_w = args.kl
+        if args.kl_start is not None and args.kl_ramp > 0:
+            f = min((time.time() - t0) / (args.kl_ramp * 60), 1.0)
+            kl_w = args.kl_start + f * (args.kl - args.kl_start)
+        loss = (-adv * lp_a + 0.5 * (v - G) ** 2 / 25 + kl_w * kl - args.entropy * ent).mean()
         opt.zero_grad()
         loss.backward()
         nn.utils.clip_grad_norm_(net.parameters(), 1.0)
@@ -304,7 +312,7 @@ def main():
             m1, lo1, hi1 = duplicate(dealer, menu, avg, "tag", args.eval_hands, dev)
             m2, lo2, hi2 = duplicate(dealer, menu, avg, prev, args.eval_hands, dev)
             line = (
-                f"{(now - t0) / 60:.1f} min {hands} hands {rate:.0f} hands/s loss {loss.item():.4f} "
+                f"{(now - t0) / 60:.1f} min {hands} hands {rate:.0f} hands/s pull {kl_w:.3f} loss {loss.item():.4f} "
                 f"kl {kl.mean().item():.4f} entropy {ent.mean().item():.3f}  1-vs-8 vs tag: {m1:+.1f} bb/100 "
                 f"[{lo1:+.1f}, {hi1:+.1f}]  vs previous checkpoint: {m2:+.1f} [{lo2:+.1f}, {hi2:+.1f}]"
             )
