@@ -344,7 +344,7 @@ than in chips, which makes calling all-ins tighter near the money and at the fin
   single precomputed table cannot cover.
 - A push/fold solver with ICM for short stacks (≤ 15bb) is small and exact, and comes first.
 
-## Watching it learn and play (`scripts/ninemax_watch.py`, 2026-11-10)
+## Watching it learn and play (`web/`, served by `scripts/ninemax_watch.py`, 2026-11-10)
 
 A web page served on the lab (127.0.0.1:8790 only), reached with
 `ssh -N -L 8790:127.0.0.1:8790 labuser@LAB_HOST` and http://localhost:8790. The training runs need no change.
