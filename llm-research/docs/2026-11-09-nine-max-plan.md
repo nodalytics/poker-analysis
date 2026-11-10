@@ -521,6 +521,36 @@ Charts (`results/ninemax/icm_pushfold.json`): blinds 0.5/1, shares of all hands:
 - The short-stack big blind (3bb) is the exception that calls 43%: it is nearly all in anyway, and the others
   shove wide into it.
 
-**Next:** play the tournament network on these exact tables and compare its shove and call frequencies by seat
-with the charts. The places it differs most are where it is weakest.
+**The tournament network against the charts** (`scripts/ninemax_pushfold_check.py`, 2026-11-10; 20,000 hands per
+seat; the ante table skipped, since the engine has no ante):
+- The network is dealt random hands at the chart's stacks and payouts, and everyone before it folds.
+- "in" is how often it enters at all (all in, limp or a smaller raise), against the chart's shove share.
+- "agree" is the share of hands on which it does what the chart does, in or out.
+
+| Table (10bb each) | Net | First to act → button → small blind, net / chart | BB calls SB, net / chart | Agree |
+|---|---|---|---|---|
+| Chips only | `nm8` | 10/8, 10/9, 14/11, 16/15, 19/18, 24/23, 29/32 → 86/59 | 33/38 | **90%** |
+| Final table | `nm8` | 8/16, 9/18, 12/28, 13/30, 17/43, 20/63, 30/98 → 87/100 | **23/4** | 74% |
+| Bubble, top-heavy | `nm8` | 8/12, 9/16, 11/20, 12/24, 15/34, 18/48, 26/73 → 85/100 | **15/8** | 81% |
+| Bubble, flat (satellite) | `nm8` | 4–15/100 → 54/100 | 1/0 | 23% |
+| Bubble, 3bb big blind | `nm8` | 4–12/≈42 → 63/100 | **6/43** | 62% |
+
+`nm7` (trained on the flat bubbles) is within a few points of `nm8` everywhere. The two exceptions: it calls less
+in the big blind with 3bb (14% vs 6%), and it enters the flat-bubble small blind at 97%. The full table is in
+`results/ninemax/pushfold_check.json`.
+
+**What it shows:**
+- **At chip value the network plays push/fold almost exactly** (90% agreement, every seat within 3 points except
+  the small blind, which also limps).
+- **It has barely learned ICM.** At a final table and at a real bubble, it keeps roughly its chip ranges:
+  - it shoves at about half the chart's width from the late seats;
+  - **it calls 3–6× too often** (23% vs 4% at a final table). Calling too much is the costliest ICM error.
+  - At the satellite bubble it never found "shove any two cards", even after 3.5 hours on those tables.
+  - With a 3bb big blind it calls 6% instead of 43%: it ignores that the short stack is nearly all in anyway.
+- So the ICM inputs and reward are not yet doing their job. Likely causes:
+  - the ICM effect per hand is small next to the card noise;
+  - short-stack tables are a minority (average stacks 10–60bb);
+  - its opponents in training (itself, the pool) do not punish chip-style play the way equilibrium play would.
+- **Next:** a push/fold-heavy curriculum, with more tables at 5–15bb where ICM decides the hand. This check runs
+  after every tournament run as its yardstick.
 

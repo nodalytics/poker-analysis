@@ -1,0 +1,890 @@
+{
+ "nm8 | chip EV, 9 x 10bb": {
+  "pos0": {
+   "chart": 0.08,
+   "in": 0.097,
+   "shove": 0.008,
+   "agree": 0.963,
+   "in_when_chart_in": 0.869,
+   "in_when_chart_out": 0.029
+  },
+  "pos1": {
+   "chart": 0.094,
+   "in": 0.097,
+   "shove": 0.033,
+   "agree": 0.946,
+   "in_when_chart_in": 0.734,
+   "in_when_chart_out": 0.033
+  },
+  "pos2": {
+   "chart": 0.113,
+   "in": 0.137,
+   "shove": 0.055,
+   "agree": 0.923,
+   "in_when_chart_in": 0.761,
+   "in_when_chart_out": 0.057
+  },
+  "pos3": {
+   "chart": 0.146,
+   "in": 0.162,
+   "shove": 0.082,
+   "agree": 0.9,
+   "in_when_chart_in": 0.699,
+   "in_when_chart_out": 0.063
+  },
+  "pos4": {
+   "chart": 0.179,
+   "in": 0.189,
+   "shove": 0.111,
+   "agree": 0.899,
+   "in_when_chart_in": 0.746,
+   "in_when_chart_out": 0.067
+  },
+  "pos5": {
+   "chart": 0.228,
+   "in": 0.243,
+   "shove": 0.112,
+   "agree": 0.909,
+   "in_when_chart_in": 0.826,
+   "in_when_chart_out": 0.066
+  },
+  "button": {
+   "chart": 0.321,
+   "in": 0.294,
+   "shove": 0.132,
+   "agree": 0.918,
+   "in_when_chart_in": 0.83,
+   "in_when_chart_out": 0.04
+  },
+  "small blind": {
+   "chart": 0.587,
+   "in": 0.861,
+   "shove": 0.222,
+   "agree": 0.716,
+   "in_when_chart_in": 0.988,
+   "in_when_chart_out": 0.677
+  },
+  "bb_vs_sb": {
+   "chart": 0.376,
+   "in": 0.33,
+   "shove": 0.33,
+   "agree": 0.917,
+   "in_when_chart_in": 0.828,
+   "in_when_chart_out": 0.029
+  }
+ },
+ "nm8 | final table, 9 x 10bb": {
+  "pos0": {
+   "chart": 0.161,
+   "in": 0.077,
+   "shove": 0.005,
+   "agree": 0.876,
+   "in_when_chart_in": 0.355,
+   "in_when_chart_out": 0.024
+  },
+  "pos1": {
+   "chart": 0.179,
+   "in": 0.089,
+   "shove": 0.014,
+   "agree": 0.863,
+   "in_when_chart_in": 0.367,
+   "in_when_chart_out": 0.029
+  },
+  "pos2": {
+   "chart": 0.275,
+   "in": 0.115,
+   "shove": 0.016,
+   "agree": 0.813,
+   "in_when_chart_in": 0.37,
+   "in_when_chart_out": 0.018
+  },
+  "pos3": {
+   "chart": 0.3,
+   "in": 0.13,
+   "shove": 0.028,
+   "agree": 0.798,
+   "in_when_chart_in": 0.379,
+   "in_when_chart_out": 0.025
+  },
+  "pos4": {
+   "chart": 0.433,
+   "in": 0.17,
+   "shove": 0.082,
+   "agree": 0.725,
+   "in_when_chart_in": 0.379,
+   "in_when_chart_out": 0.009
+  },
+  "pos5": {
+   "chart": 0.626,
+   "in": 0.204,
+   "shove": 0.106,
+   "agree": 0.572,
+   "in_when_chart_in": 0.322,
+   "in_when_chart_out": 0.006
+  },
+  "button": {
+   "chart": 0.982,
+   "in": 0.3,
+   "shove": 0.247,
+   "agree": 0.317,
+   "in_when_chart_in": 0.305,
+   "in_when_chart_out": 0.002
+  },
+  "small blind": {
+   "chart": 1.0,
+   "in": 0.866,
+   "shove": 0.804,
+   "agree": 0.866,
+   "in_when_chart_in": 0.866,
+   "in_when_chart_out": 0.0
+  },
+  "bb_vs_sb": {
+   "chart": 0.042,
+   "in": 0.232,
+   "shove": 0.232,
+   "agree": 0.81,
+   "in_when_chart_in": 1.0,
+   "in_when_chart_out": 0.198
+  }
+ },
+ "nm8 | bubble (1 out), 9 x 10bb": {
+  "pos0": {
+   "chart": 1.0,
+   "in": 0.038,
+   "shove": 0.001,
+   "agree": 0.038,
+   "in_when_chart_in": 0.038,
+   "in_when_chart_out": 0.0
+  },
+  "pos1": {
+   "chart": 1.0,
+   "in": 0.046,
+   "shove": 0.003,
+   "agree": 0.046,
+   "in_when_chart_in": 0.046,
+   "in_when_chart_out": 0.0
+  },
+  "pos2": {
+   "chart": 1.0,
+   "in": 0.071,
+   "shove": 0.005,
+   "agree": 0.071,
+   "in_when_chart_in": 0.071,
+   "in_when_chart_out": 0.0
+  },
+  "pos3": {
+   "chart": 1.0,
+   "in": 0.079,
+   "shove": 0.009,
+   "agree": 0.079,
+   "in_when_chart_in": 0.079,
+   "in_when_chart_out": 0.0
+  },
+  "pos4": {
+   "chart": 1.0,
+   "in": 0.086,
+   "shove": 0.018,
+   "agree": 0.086,
+   "in_when_chart_in": 0.086,
+   "in_when_chart_out": 0.0
+  },
+  "pos5": {
+   "chart": 1.0,
+   "in": 0.105,
+   "shove": 0.026,
+   "agree": 0.105,
+   "in_when_chart_in": 0.105,
+   "in_when_chart_out": 0.0
+  },
+  "button": {
+   "chart": 1.0,
+   "in": 0.147,
+   "shove": 0.08,
+   "agree": 0.147,
+   "in_when_chart_in": 0.147,
+   "in_when_chart_out": 0.0
+  },
+  "small blind": {
+   "chart": 1.0,
+   "in": 0.54,
+   "shove": 0.386,
+   "agree": 0.54,
+   "in_when_chart_in": 0.54,
+   "in_when_chart_out": 0.0
+  },
+  "bb_vs_sb": {
+   "chart": 0.0,
+   "in": 0.012,
+   "shove": 0.012,
+   "agree": 0.988,
+   "in_when_chart_in": 0.0,
+   "in_when_chart_out": 0.012
+  }
+ },
+ "nm8 | bubble (1 out), top-heavy above it": {
+  "pos0": {
+   "chart": 0.116,
+   "in": 0.077,
+   "shove": 0.003,
+   "agree": 0.903,
+   "in_when_chart_in": 0.417,
+   "in_when_chart_out": 0.031
+  },
+  "pos1": {
+   "chart": 0.157,
+   "in": 0.086,
+   "shove": 0.011,
+   "agree": 0.893,
+   "in_when_chart_in": 0.433,
+   "in_when_chart_out": 0.022
+  },
+  "pos2": {
+   "chart": 0.195,
+   "in": 0.111,
+   "shove": 0.012,
+   "agree": 0.868,
+   "in_when_chart_in": 0.447,
+   "in_when_chart_out": 0.031
+  },
+  "pos3": {
+   "chart": 0.238,
+   "in": 0.124,
+   "shove": 0.022,
+   "agree": 0.857,
+   "in_when_chart_in": 0.46,
+   "in_when_chart_out": 0.021
+  },
+  "pos4": {
+   "chart": 0.336,
+   "in": 0.15,
+   "shove": 0.058,
+   "agree": 0.801,
+   "in_when_chart_in": 0.427,
+   "in_when_chart_out": 0.009
+  },
+  "pos5": {
+   "chart": 0.481,
+   "in": 0.183,
+   "shove": 0.077,
+   "agree": 0.699,
+   "in_when_chart_in": 0.376,
+   "in_when_chart_out": 0.008
+  },
+  "button": {
+   "chart": 0.732,
+   "in": 0.265,
+   "shove": 0.211,
+   "agree": 0.532,
+   "in_when_chart_in": 0.361,
+   "in_when_chart_out": 0.003
+  },
+  "small blind": {
+   "chart": 1.0,
+   "in": 0.848,
+   "shove": 0.757,
+   "agree": 0.848,
+   "in_when_chart_in": 0.848,
+   "in_when_chart_out": 0.0
+  },
+  "bb_vs_sb": {
+   "chart": 0.083,
+   "in": 0.148,
+   "shove": 0.148,
+   "agree": 0.933,
+   "in_when_chart_in": 0.992,
+   "in_when_chart_out": 0.073
+  }
+ },
+ "nm8 | bubble (1 out), big stack on the button": {
+  "pos0": {
+   "chart": 1.0,
+   "in": 0.032,
+   "shove": 0.001,
+   "agree": 0.032,
+   "in_when_chart_in": 0.032,
+   "in_when_chart_out": 0.0
+  },
+  "pos1": {
+   "chart": 1.0,
+   "in": 0.038,
+   "shove": 0.003,
+   "agree": 0.038,
+   "in_when_chart_in": 0.038,
+   "in_when_chart_out": 0.0
+  },
+  "pos2": {
+   "chart": 1.0,
+   "in": 0.06,
+   "shove": 0.005,
+   "agree": 0.06,
+   "in_when_chart_in": 0.06,
+   "in_when_chart_out": 0.0
+  },
+  "pos3": {
+   "chart": 1.0,
+   "in": 0.073,
+   "shove": 0.012,
+   "agree": 0.073,
+   "in_when_chart_in": 0.073,
+   "in_when_chart_out": 0.0
+  },
+  "pos4": {
+   "chart": 1.0,
+   "in": 0.08,
+   "shove": 0.022,
+   "agree": 0.08,
+   "in_when_chart_in": 0.08,
+   "in_when_chart_out": 0.0
+  },
+  "pos5": {
+   "chart": 1.0,
+   "in": 0.094,
+   "shove": 0.028,
+   "agree": 0.094,
+   "in_when_chart_in": 0.094,
+   "in_when_chart_out": 0.0
+  },
+  "button": {
+   "chart": 1.0,
+   "in": 0.311,
+   "shove": 0.096,
+   "agree": 0.311,
+   "in_when_chart_in": 0.311,
+   "in_when_chart_out": 0.0
+  },
+  "small blind": {
+   "chart": 1.0,
+   "in": 0.625,
+   "shove": 0.547,
+   "agree": 0.625,
+   "in_when_chart_in": 0.625,
+   "in_when_chart_out": 0.0
+  },
+  "bb_vs_sb": {
+   "chart": 0.005,
+   "in": 0.015,
+   "shove": 0.015,
+   "agree": 0.989,
+   "in_when_chart_in": 0.999,
+   "in_when_chart_out": 0.011
+  }
+ },
+ "nm8 | bubble (1 out), short stack in the big blind": {
+  "pos0": {
+   "chart": 0.391,
+   "in": 0.037,
+   "shove": 0.001,
+   "agree": 0.629,
+   "in_when_chart_in": 0.075,
+   "in_when_chart_out": 0.013
+  },
+  "pos1": {
+   "chart": 0.403,
+   "in": 0.044,
+   "shove": 0.002,
+   "agree": 0.625,
+   "in_when_chart_in": 0.088,
+   "in_when_chart_out": 0.014
+  },
+  "pos2": {
+   "chart": 0.424,
+   "in": 0.068,
+   "shove": 0.005,
+   "agree": 0.611,
+   "in_when_chart_in": 0.129,
+   "in_when_chart_out": 0.022
+  },
+  "pos3": {
+   "chart": 0.445,
+   "in": 0.076,
+   "shove": 0.008,
+   "agree": 0.606,
+   "in_when_chart_in": 0.141,
+   "in_when_chart_out": 0.025
+  },
+  "pos4": {
+   "chart": 0.448,
+   "in": 0.083,
+   "shove": 0.016,
+   "agree": 0.606,
+   "in_when_chart_in": 0.153,
+   "in_when_chart_out": 0.025
+  },
+  "pos5": {
+   "chart": 0.433,
+   "in": 0.092,
+   "shove": 0.022,
+   "agree": 0.628,
+   "in_when_chart_in": 0.178,
+   "in_when_chart_out": 0.027
+  },
+  "button": {
+   "chart": 0.433,
+   "in": 0.121,
+   "shove": 0.062,
+   "agree": 0.644,
+   "in_when_chart_in": 0.232,
+   "in_when_chart_out": 0.034
+  },
+  "small blind": {
+   "chart": 1.0,
+   "in": 0.628,
+   "shove": 0.568,
+   "agree": 0.628,
+   "in_when_chart_in": 0.628,
+   "in_when_chart_out": 0.0
+  },
+  "bb_vs_sb": {
+   "chart": 0.428,
+   "in": 0.056,
+   "shove": 0.056,
+   "agree": 0.632,
+   "in_when_chart_in": 0.133,
+   "in_when_chart_out": 0.0
+  }
+ },
+ "nm7 | chip EV, 9 x 10bb": {
+  "pos0": {
+   "chart": 0.08,
+   "in": 0.096,
+   "shove": 0.013,
+   "agree": 0.958,
+   "in_when_chart_in": 0.833,
+   "in_when_chart_out": 0.031
+  },
+  "pos1": {
+   "chart": 0.094,
+   "in": 0.098,
+   "shove": 0.029,
+   "agree": 0.942,
+   "in_when_chart_in": 0.716,
+   "in_when_chart_out": 0.035
+  },
+  "pos2": {
+   "chart": 0.113,
+   "in": 0.132,
+   "shove": 0.045,
+   "agree": 0.925,
+   "in_when_chart_in": 0.745,
+   "in_when_chart_out": 0.052
+  },
+  "pos3": {
+   "chart": 0.146,
+   "in": 0.158,
+   "shove": 0.063,
+   "agree": 0.896,
+   "in_when_chart_in": 0.673,
+   "in_when_chart_out": 0.063
+  },
+  "pos4": {
+   "chart": 0.179,
+   "in": 0.197,
+   "shove": 0.097,
+   "agree": 0.885,
+   "in_when_chart_in": 0.727,
+   "in_when_chart_out": 0.08
+  },
+  "pos5": {
+   "chart": 0.228,
+   "in": 0.251,
+   "shove": 0.085,
+   "agree": 0.88,
+   "in_when_chart_in": 0.78,
+   "in_when_chart_out": 0.09
+  },
+  "button": {
+   "chart": 0.321,
+   "in": 0.303,
+   "shove": 0.118,
+   "agree": 0.873,
+   "in_when_chart_in": 0.773,
+   "in_when_chart_out": 0.08
+  },
+  "small blind": {
+   "chart": 0.587,
+   "in": 0.781,
+   "shove": 0.307,
+   "agree": 0.735,
+   "in_when_chart_in": 0.935,
+   "in_when_chart_out": 0.556
+  },
+  "bb_vs_sb": {
+   "chart": 0.376,
+   "in": 0.243,
+   "shove": 0.243,
+   "agree": 0.858,
+   "in_when_chart_in": 0.634,
+   "in_when_chart_out": 0.006
+  }
+ },
+ "nm7 | final table, 9 x 10bb": {
+  "pos0": {
+   "chart": 0.161,
+   "in": 0.067,
+   "shove": 0.007,
+   "agree": 0.876,
+   "in_when_chart_in": 0.324,
+   "in_when_chart_out": 0.018
+  },
+  "pos1": {
+   "chart": 0.179,
+   "in": 0.074,
+   "shove": 0.017,
+   "agree": 0.861,
+   "in_when_chart_in": 0.316,
+   "in_when_chart_out": 0.021
+  },
+  "pos2": {
+   "chart": 0.275,
+   "in": 0.097,
+   "shove": 0.022,
+   "agree": 0.805,
+   "in_when_chart_in": 0.322,
+   "in_when_chart_out": 0.011
+  },
+  "pos3": {
+   "chart": 0.3,
+   "in": 0.115,
+   "shove": 0.034,
+   "agree": 0.788,
+   "in_when_chart_in": 0.337,
+   "in_when_chart_out": 0.021
+  },
+  "pos4": {
+   "chart": 0.433,
+   "in": 0.167,
+   "shove": 0.102,
+   "agree": 0.721,
+   "in_when_chart_in": 0.371,
+   "in_when_chart_out": 0.011
+  },
+  "pos5": {
+   "chart": 0.626,
+   "in": 0.197,
+   "shove": 0.12,
+   "agree": 0.563,
+   "in_when_chart_in": 0.309,
+   "in_when_chart_out": 0.008
+  },
+  "button": {
+   "chart": 0.982,
+   "in": 0.308,
+   "shove": 0.267,
+   "agree": 0.325,
+   "in_when_chart_in": 0.313,
+   "in_when_chart_out": 0.004
+  },
+  "small blind": {
+   "chart": 1.0,
+   "in": 0.901,
+   "shove": 0.864,
+   "agree": 0.901,
+   "in_when_chart_in": 0.901,
+   "in_when_chart_out": 0.0
+  },
+  "bb_vs_sb": {
+   "chart": 0.042,
+   "in": 0.187,
+   "shove": 0.187,
+   "agree": 0.855,
+   "in_when_chart_in": 1.0,
+   "in_when_chart_out": 0.151
+  }
+ },
+ "nm7 | bubble (1 out), 9 x 10bb": {
+  "pos0": {
+   "chart": 1.0,
+   "in": 0.028,
+   "shove": 0.001,
+   "agree": 0.028,
+   "in_when_chart_in": 0.028,
+   "in_when_chart_out": 0.0
+  },
+  "pos1": {
+   "chart": 1.0,
+   "in": 0.04,
+   "shove": 0.002,
+   "agree": 0.04,
+   "in_when_chart_in": 0.04,
+   "in_when_chart_out": 0.0
+  },
+  "pos2": {
+   "chart": 1.0,
+   "in": 0.061,
+   "shove": 0.005,
+   "agree": 0.061,
+   "in_when_chart_in": 0.061,
+   "in_when_chart_out": 0.0
+  },
+  "pos3": {
+   "chart": 1.0,
+   "in": 0.072,
+   "shove": 0.015,
+   "agree": 0.072,
+   "in_when_chart_in": 0.072,
+   "in_when_chart_out": 0.0
+  },
+  "pos4": {
+   "chart": 1.0,
+   "in": 0.1,
+   "shove": 0.051,
+   "agree": 0.1,
+   "in_when_chart_in": 0.1,
+   "in_when_chart_out": 0.0
+  },
+  "pos5": {
+   "chart": 1.0,
+   "in": 0.158,
+   "shove": 0.094,
+   "agree": 0.158,
+   "in_when_chart_in": 0.158,
+   "in_when_chart_out": 0.0
+  },
+  "button": {
+   "chart": 1.0,
+   "in": 0.383,
+   "shove": 0.357,
+   "agree": 0.383,
+   "in_when_chart_in": 0.383,
+   "in_when_chart_out": 0.0
+  },
+  "small blind": {
+   "chart": 1.0,
+   "in": 0.968,
+   "shove": 0.954,
+   "agree": 0.968,
+   "in_when_chart_in": 0.968,
+   "in_when_chart_out": 0.0
+  },
+  "bb_vs_sb": {
+   "chart": 0.0,
+   "in": 0.013,
+   "shove": 0.013,
+   "agree": 0.987,
+   "in_when_chart_in": 0.0,
+   "in_when_chart_out": 0.013
+  }
+ },
+ "nm7 | bubble (1 out), top-heavy above it": {
+  "pos0": {
+   "chart": 0.116,
+   "in": 0.068,
+   "shove": 0.004,
+   "agree": 0.903,
+   "in_when_chart_in": 0.382,
+   "in_when_chart_out": 0.025
+  },
+  "pos1": {
+   "chart": 0.157,
+   "in": 0.071,
+   "shove": 0.014,
+   "agree": 0.893,
+   "in_when_chart_in": 0.385,
+   "in_when_chart_out": 0.014
+  },
+  "pos2": {
+   "chart": 0.195,
+   "in": 0.094,
+   "shove": 0.019,
+   "agree": 0.869,
+   "in_when_chart_in": 0.406,
+   "in_when_chart_out": 0.019
+  },
+  "pos3": {
+   "chart": 0.238,
+   "in": 0.11,
+   "shove": 0.036,
+   "agree": 0.856,
+   "in_when_chart_in": 0.428,
+   "in_when_chart_out": 0.013
+  },
+  "pos4": {
+   "chart": 0.336,
+   "in": 0.157,
+   "shove": 0.104,
+   "agree": 0.81,
+   "in_when_chart_in": 0.451,
+   "in_when_chart_out": 0.008
+  },
+  "pos5": {
+   "chart": 0.481,
+   "in": 0.185,
+   "shove": 0.12,
+   "agree": 0.7,
+   "in_when_chart_in": 0.379,
+   "in_when_chart_out": 0.008
+  },
+  "button": {
+   "chart": 0.732,
+   "in": 0.297,
+   "shove": 0.265,
+   "agree": 0.562,
+   "in_when_chart_in": 0.404,
+   "in_when_chart_out": 0.005
+  },
+  "small blind": {
+   "chart": 1.0,
+   "in": 0.916,
+   "shove": 0.884,
+   "agree": 0.916,
+   "in_when_chart_in": 0.916,
+   "in_when_chart_out": 0.0
+  },
+  "bb_vs_sb": {
+   "chart": 0.083,
+   "in": 0.141,
+   "shove": 0.141,
+   "agree": 0.939,
+   "in_when_chart_in": 0.991,
+   "in_when_chart_out": 0.065
+  }
+ },
+ "nm7 | bubble (1 out), big stack on the button": {
+  "pos0": {
+   "chart": 1.0,
+   "in": 0.026,
+   "shove": 0.001,
+   "agree": 0.026,
+   "in_when_chart_in": 0.026,
+   "in_when_chart_out": 0.0
+  },
+  "pos1": {
+   "chart": 1.0,
+   "in": 0.04,
+   "shove": 0.004,
+   "agree": 0.04,
+   "in_when_chart_in": 0.04,
+   "in_when_chart_out": 0.0
+  },
+  "pos2": {
+   "chart": 1.0,
+   "in": 0.062,
+   "shove": 0.01,
+   "agree": 0.062,
+   "in_when_chart_in": 0.062,
+   "in_when_chart_out": 0.0
+  },
+  "pos3": {
+   "chart": 1.0,
+   "in": 0.083,
+   "shove": 0.031,
+   "agree": 0.083,
+   "in_when_chart_in": 0.083,
+   "in_when_chart_out": 0.0
+  },
+  "pos4": {
+   "chart": 1.0,
+   "in": 0.136,
+   "shove": 0.101,
+   "agree": 0.136,
+   "in_when_chart_in": 0.136,
+   "in_when_chart_out": 0.0
+  },
+  "pos5": {
+   "chart": 1.0,
+   "in": 0.21,
+   "shove": 0.159,
+   "agree": 0.21,
+   "in_when_chart_in": 0.21,
+   "in_when_chart_out": 0.0
+  },
+  "button": {
+   "chart": 1.0,
+   "in": 0.24,
+   "shove": 0.095,
+   "agree": 0.24,
+   "in_when_chart_in": 0.24,
+   "in_when_chart_out": 0.0
+  },
+  "small blind": {
+   "chart": 1.0,
+   "in": 0.995,
+   "shove": 0.991,
+   "agree": 0.995,
+   "in_when_chart_in": 0.995,
+   "in_when_chart_out": 0.0
+  },
+  "bb_vs_sb": {
+   "chart": 0.005,
+   "in": 0.017,
+   "shove": 0.017,
+   "agree": 0.988,
+   "in_when_chart_in": 1.0,
+   "in_when_chart_out": 0.012
+  }
+ },
+ "nm7 | bubble (1 out), short stack in the big blind": {
+  "pos0": {
+   "chart": 0.391,
+   "in": 0.027,
+   "shove": 0.0,
+   "agree": 0.626,
+   "in_when_chart_in": 0.057,
+   "in_when_chart_out": 0.007
+  },
+  "pos1": {
+   "chart": 0.403,
+   "in": 0.035,
+   "shove": 0.001,
+   "agree": 0.623,
+   "in_when_chart_in": 0.076,
+   "in_when_chart_out": 0.008
+  },
+  "pos2": {
+   "chart": 0.424,
+   "in": 0.056,
+   "shove": 0.004,
+   "agree": 0.609,
+   "in_when_chart_in": 0.113,
+   "in_when_chart_out": 0.013
+  },
+  "pos3": {
+   "chart": 0.445,
+   "in": 0.064,
+   "shove": 0.012,
+   "agree": 0.606,
+   "in_when_chart_in": 0.127,
+   "in_when_chart_out": 0.014
+  },
+  "pos4": {
+   "chart": 0.448,
+   "in": 0.085,
+   "shove": 0.038,
+   "agree": 0.62,
+   "in_when_chart_in": 0.171,
+   "in_when_chart_out": 0.016
+  },
+  "pos5": {
+   "chart": 0.433,
+   "in": 0.127,
+   "shove": 0.071,
+   "agree": 0.663,
+   "in_when_chart_in": 0.257,
+   "in_when_chart_out": 0.027
+  },
+  "button": {
+   "chart": 0.433,
+   "in": 0.268,
+   "shove": 0.245,
+   "agree": 0.732,
+   "in_when_chart_in": 0.5,
+   "in_when_chart_out": 0.086
+  },
+  "small blind": {
+   "chart": 1.0,
+   "in": 0.981,
+   "shove": 0.977,
+   "agree": 0.981,
+   "in_when_chart_in": 0.981,
+   "in_when_chart_out": 0.0
+  },
+  "bb_vs_sb": {
+   "chart": 0.428,
+   "in": 0.136,
+   "shove": 0.136,
+   "agree": 0.711,
+   "in_when_chart_in": 0.32,
+   "in_when_chart_out": 0.0
+  }
+ }
+}
