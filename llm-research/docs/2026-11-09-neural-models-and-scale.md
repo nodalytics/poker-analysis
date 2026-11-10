@@ -91,7 +91,36 @@ Results: `blueprint/bakeoff/<arch>/` on the lab.
 
 ### Results
 
-Pending.
+11 of 15 networks, 30 minutes of copying each. Head-to-head: 2 million hands in the simplified game. LBR: 3,000
+real-game hands, luck-adjusted (higher means **more** exploitable; run 2's own table reads about +104).
+
+| Network | Cross-entropy (table: 0.368) | vs the table, bb/100 | LBR, bb/100 [95%] |
+|---|---|---|---|
+| `mlp` (current) | 0.437 | −8.1 | **+111** [+38, +185] |
+| `wide` | 0.430 | −6.1 | **+102** [+22, +182] |
+| `swiglu` | 0.430 | −7.2 | **+105** [+37, +173] |
+| `moe` | 0.433 | −7.2 | +141 [+64, +217] |
+| `kan` | 0.437 | −9.1 | +147 [+70, +224] |
+| `lstm` | **0.383** | −2.0 | +224 [+122, +327] |
+| `nodeemb` | **0.383** | −3.4 | +254 [+159, +348] |
+| `res` | 0.437 | −7.2 | +257 [+164, +351] |
+| `gru` | 0.388 | −2.7 | +355 [+243, +468] |
+| `history` (transformer) | 0.388 | −2.1 | +410 [+288, +531] |
+| `rnn` | 0.389 | **−0.4** | +437 [+303, +571] |
+
+**The two measures disagree, and that is the finding.** Networks that see the betting history or the node's
+identity copy the table about four times more closely on its own path (cross-entropy gap 0.015–0.02 against
+0.06–0.07, head-to-head −0.4 to −3.4 against −6 to −9). But LBR plays lines the table rarely reaches, and there
+they are two to four times more exploitable than the plain networks. The plain networks match the table's own
+LBR. A likely reading: with the history, a network can memorise each well-visited line and has nothing to go on
+in rarely visited ones; without it, it must share what it learns between similar spots, which generalises.
+
+Consequence for the 9-max network: **do not swap in a history reader on the strength of copying accuracy.** Opponents
+at a full ring leave the trained lines constantly. A history reader must be judged by an exploitation test (LBR,
+or the population and real-table evaluations), and regularised (dropout on the history, or history as an
+auxiliary input the network can be trained without) before it replaces the feature-only network.
+
+Still to run, restarted after the lab reset of 2026-11-09 16:09: `cnn`, `ftt` (3090) and `tcn`, `joint` (4090).
 
 ## Experiment 2: learning rules (`scripts/learner_variants.sh`, `scripts/deep_cfr.py`)
 
@@ -126,7 +155,8 @@ Results: `blueprint/learners/<name>/` on the lab.
 
 ### Results
 
-Pending.
+Pending. The queue never started before the lab reset of 2026-11-09 16:09; it was relaunched on 2026-11-10 at
+01:37 lab time, on the 4090 after its bake-off half, with Deep CFR on the 3090 after its half.
 
 ## Experiment 3: the trainability map (`scripts/trainability_map.sh`)
 
@@ -140,4 +170,29 @@ million hands.
 
 ### Results
 
-Pending.
+All 36 cells, bb/100 against run 2's table after 8 minutes (`blueprint/tmap/`; 95% intervals are about ±3–7):
+
+| Learning rate ↓ / KL pull → | 0 | 0.03 | 0.1 | 0.3 | 1 | 3 |
+|---|---|---|---|---|---|---|
+| 1e-4 | **−33** | −72 | −134 | −204 | −247 | −255 |
+| 3e-4 | −50 | −59 | −128 | −189 | −237 | −252 |
+| 1e-3 | −191 (collapsed) | −99 | −144 | −145 | −234 | −246 |
+| 3e-3 | −343 (collapsed) | −247 (collapsed) | −167 | −239 | −217 | −226 |
+| 1e-2 | −224 (collapsed) | −531 (collapsed) | −141 | −183 | −277 | −246 |
+| 3e-2 | −121 (collapsed) | −463 (collapsed) | −110 | −238 | −289 | −279 |
+
+"Collapsed": the policy's entropy reached about 0, a deterministic strategy.
+
+- **The KL pull slows early learning a lot.** At the two low learning rates every step up in pull costs 25–70
+  bb/100 at 8 minutes. The setting all long runs use (KL 0.3, including `runmlp2` and the 9-max `nm2`) reads −189
+  here against −33 with no pull. The pull is what kept `runmlp2` stable over 22 hours, so this is a short-run cost,
+  not a verdict.
+- **Without a pull, a learning rate of 1e-3 or more collapses** to a deterministic strategy. A small pull (0.1)
+  prevents the collapse at every learning rate up to 3e-2.
+- **The edge is ragged.** Above 1e-3 the results jump around without order (−110 at 3e-2 and KL 0.1, −531 at 1e-2
+  and KL 0.03): the boundary between trainable and collapsing settings is irregular, as the fractal note
+  predicted. Single 8-minute runs cannot say more about its shape.
+
+**What this suggests for learning faster:** start with a weak pull at a low learning rate (1e-4 to 3e-4, KL 0 to
+0.03) for speed, then raise the pull once progress against the previous checkpoint flattens, to stay stable. Not
+yet tested over a long run.
