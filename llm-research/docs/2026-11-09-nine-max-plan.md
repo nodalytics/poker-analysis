@@ -67,6 +67,20 @@ strength; strength is measured at real 9-handed tables once the adapter exists.
 at 120 minutes into `nm1` and 90 into `nm2`. `nm2` was resumed from its checkpoint at 01:37 on 2026-11-10 for the
 remaining 1,350 minutes; `nm1` was not restarted, since the comparison it was for is settled.
 
+**A ramped pull learns much faster** (`nm3`: `nm2`'s settings, but the KL pull rises from 0.03 to 0.3 over the first
+3 hours, from the trainability map). Against the tight-aggressive player, bb/100:
+
+| Minutes | 30 | 60 | 90 | 120–240 |
+|---|---|---|---|---|
+| `nm2`, constant pull 0.3 (fresh start, then after resuming) | −77 | +65 | +127 | +180 to +193 after resuming |
+| `nm3`, ramped pull | **+205** | +200 | +192 | +173 to +189 |
+
+`nm3` reached in 30 minutes what `nm2` needed about 3 hours of training for. Both then sit at the same level
+(about +185 against the tight-aggressive player, +1,150 maniac, +4,950 station, +900 random) and score about 0
+against their own checkpoint of 30 minutes earlier. These rule opponents no longer separate the runs: a stronger
+yardstick (the networks against each other, and real 9-handed tables) is needed next. `nm2` was stopped at 06:12 on
+2026-11-10 to make room for `nm4`: `nm3`'s settings with NeuRD, the least exploitable rule in the heads-up test.
+
 The 9-player count of the lean menu (`blueprint/tree_size.py`) did not finish within 40 GB and an hour: the
 betting states alone exceed what the 6-player count needed (about 10 GB), before any table is built.
 
