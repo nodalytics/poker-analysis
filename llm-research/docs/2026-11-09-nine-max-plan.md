@@ -23,7 +23,7 @@ tree, and the bet menu can be wider than any table could afford. Built so far:
 | N-player dealing with buckets, showdown ranks and cards (about 3 million 9-player deals a second) | `blueprint/bp.cpp` `bp_deal_n`, `libbp5.so` | Done |
 | A vectorised N-player no-limit engine on the GPU: positions, a menu by raise level and pot size, min-raise rules, incomplete all-ins that do not reopen the betting, side pots | `scripts/ninemax_engine.py` | Done |
 | A check of the engine against PokerKit: random legal games replayed card for card, actor, legality and payoffs compared | `scripts/ninemax_check.py` | **0 mismatches in 11,000 tables** at 3, 4, 6 and 9 players and all three menus, almost all ending in multiway all-in showdowns with side pots (odd chips of split pots allowed) |
-| The 9-max trainer: one residual network for all seats, regularised actor-critic with a magnet; evaluated by 1-vs-8 duplicate matches (the network in each of the nine seats in turn, same deals) against a rule-based tight-aggressive player and against its own previous checkpoint | `scripts/ninemax_selfplay.py` | **Running**: `blueprint/nm1`, 24 hours from 2026-11-09 13:50 lab time, on the RTX PRO 6000 |
+| The 9-max trainer: one residual network for all seats, regularised actor-critic with a magnet; evaluated by 1-vs-8 duplicate matches (the network in each of the nine seats in turn, same deals) against a rule-based tight-aggressive player and against its own previous checkpoint | `scripts/ninemax_selfplay.py` | **Running**: `blueprint/nm2` (population training) on the RTX PRO 6000, resumed 2026-11-10 01:37 lab time; `nm1` (self-play control) stopped at 120 minutes |
 
 Smoke test (2 minutes, shared GPU): about 18,000 nine-handed hands a second; against eight rule-based players
 −1,234 then −988 bb/100, and +275 and +356 against its own previous checkpoint, so it learns. Next: the real-game
@@ -47,6 +47,25 @@ training** (`--pool-share`): half of each batch at tables where the network hold
 opponent from a population of rule players (tight-aggressive, maniac, calling station, random) and its own last
 five checkpoints, learning from its own seats only. `nm2` runs that from 2026-11-09 14:35 lab time alongside `nm1`
 (the pure self-play control), and both now report results against the maniac, the station and random players too.
+
+**Population training works** (1-vs-8 duplicate matches, bb/100, from the runs' logs):
+
+| Hero vs 8 copies of | `nm1` self-play, 60 / 90 / 120 min | `nm2` population, 30 / 60 / 90 min |
+|---|---|---|
+| Tight-aggressive rule player | +50 / +51 / +36 | −77 / +65 / **+127** |
+| Its own checkpoint 30 minutes earlier | +38 / +20 / +9 | +691 / +95 / +34 |
+| Maniac | — | +868 / +1,120 / +1,127 |
+| Calling station | — | +1,543 / +3,293 / +4,102 |
+| Random network | +8 at 30 min (separate check) | +697 / +777 / +808 |
+
+`nm2` overtook the self-play control against the sensible player within an hour and exploits every wild type,
+while `nm1` stalled and then slipped. The cost is speed: 11,000 hands a second against 41,000, because the rule
+players run outside the network. The rule players are weak by design, so these numbers show robustness, not
+strength; strength is measured at real 9-handed tables once the adapter exists.
+
+**Lab reset, 2026-11-09 16:09 lab time.** The lab rebooted without a clean shutdown (the journal stops mid-stream)
+at 120 minutes into `nm1` and 90 into `nm2`. `nm2` was resumed from its checkpoint at 01:37 on 2026-11-10 for the
+remaining 1,350 minutes; `nm1` was not restarted, since the comparison it was for is settled.
 
 The 9-player count of the lean menu (`blueprint/tree_size.py`) did not finish within 40 GB and an hour: the
 betting states alone exceed what the 6-player count needed (about 10 GB), before any table is built.
