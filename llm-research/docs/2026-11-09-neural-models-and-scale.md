@@ -107,6 +107,9 @@ real-game hands, luck-adjusted (higher means **more** exploitable; run 2's own t
 | `gru` | 0.388 | −2.7 | +355 [+243, +468] |
 | `history` (transformer) | 0.388 | −2.1 | +410 [+288, +531] |
 | `rnn` | 0.389 | **−0.4** | +437 [+303, +571] |
+| `tcn` | **0.381** | −1.4 | +474 [+345, +603] |
+| `cnn` (text-CNN) | 0.386 | −1.4 | +625 [+477, +772] |
+| `ftt` (attention across inputs; only 27 M hands in 30 min) | 0.603 | −34.3 | +400 [+267, +533] |
 
 **The two measures disagree, and that is the finding.** Networks that see the betting history or the node's
 identity copy the table about four times more closely on its own path (cross-entropy gap 0.015–0.02 against
@@ -120,7 +123,8 @@ at a full ring leave the trained lines constantly. A history reader must be judg
 or the population and real-table evaluations), and regularised (dropout on the history, or history as an
 auxiliary input the network can be trained without) before it replaces the feature-only network.
 
-Still to run, restarted after the lab reset of 2026-11-09 16:09: `cnn`, `ftt` (3090) and `tcn`, `joint` (4090).
+The three later history readers (`tcn`, `cnn`) repeat the pattern most sharply: the closest copies, the most
+exploitable. `joint` ran out of memory on the 4090 at 4 chunks and was restarted on the 3090 at 16 on 2026-11-10.
 
 ## Experiment 2: learning rules (`scripts/learner_variants.sh`, `scripts/deep_cfr.py`)
 
@@ -155,8 +159,31 @@ Results: `blueprint/learners/<name>/` on the lab.
 
 ### Results
 
-Pending. The queue never started before the lab reset of 2026-11-09 16:09; it was relaunched on 2026-11-10 at
-01:37 lab time, on the 4090 after its bake-off half, with Deep CFR on the 3090 after its half.
+Run on 2026-11-10 after the lab reset (4090; Deep CFR on the 3090). Head-to-head against run 2's table at 10 / 20
+/ 30 minutes, then LBR on the final strategy (3,000 hands, luck-adjusted; run 2's table reads about +104):
+
+| Rule | vs run 2 at 10 / 20 / 30 min | LBR, bb/100 [95%] |
+|---|---|---|
+| `a2c` (current) | −170 / −87 / −56 | +147 [+37, +257] |
+| `ppo` | −163 / −102 / −71 | +97 [−17, +211] |
+| **`neurd`** | −89 / −56 / −48 | **+0.4** [−101, +102] |
+| `qpg` | −252 / −247 / −249 | +1,062 [+818, +1,307] (did not learn) |
+| `qlearn` | −84 / −41 / −44 | +279 [+172, +385] |
+| `qmc` | −59 / −47 / **−38** | +276 [+171, +381] |
+| `duplicate` reward | −124 / −62 / −43 | +108 [+7, +210] |
+| `tanh` reward | −329 at 10 min | (running) |
+| `league` | (queued) | |
+| **`deepcfr`** (120 min) | −53 at 10 min, −47 at 120 min | **+32** [−78, +141] |
+
+- **NeuRD is the best policy rule:** faster than A2C at every point and the least exploitable of all, at the
+  table's level or better (the interval is wide).
+- **Deep CFR** is about as unexploitable, but it reached −47 within 10 minutes and then stopped improving for 110.
+- **Q-learning** wins head-to-head (`qmc` is closest to the table at 30 minutes) but is twice as exploitable as the
+  policy methods, as expected: a best-response target produces near-deterministic, readable play.
+- **The duplicate reward** helps A2C a little on both measures (−43 vs −56; +108 vs +147).
+- **QPG** did not learn at all with these settings; PPO is slower than A2C and somewhat less exploitable.
+
+Consequence for 9-max: NeuRD replaces A2C in the next 9-max run (`nm4`, `--pg neurd`).
 
 ## Experiment 3: the trainability map (`scripts/trainability_map.sh`)
 

@@ -213,6 +213,9 @@ def main():
     # trainability map (docs/2026-11-09-neural-models-and-scale.md): a weak pull learns fastest early, a strong one
     # keeps long runs stable; ramp linearly from --kl-start to --kl over --kl-ramp minutes (0 = constant --kl)
     ap.add_argument("--kl-start", type=float, default=None)
+    # heads-up learning-rule test (docs/2026-11-09-neural-models-and-scale.md): NeuRD was the least exploitable
+    ap.add_argument("--pg", choices=("a2c", "neurd"), default="a2c", help="policy update: a2c (REINFORCE) or neurd")
+    ap.add_argument("--neurd-beta", type=float, default=2.0, help="NeuRD: logits stop moving outward beyond +-beta")
     ap.add_argument("--kl-ramp", type=float, default=0.0, help="minutes to ramp the KL pull from --kl-start to --kl")
     ap.add_argument("--magnet-tau", type=float, default=3e-4)
     ap.add_argument("--avg-tau", type=float, default=1e-3)
@@ -289,11 +292,22 @@ def main():
         adv_scale = 0.99 * adv_scale + 0.01 * adv.abs().mean().item()
         adv = adv / max(adv_scale, 1e-3)
         lp_a = logp.gather(1, a[:, None]).squeeze(1)
+        if args.pg == "neurd":
+            # Neural Replicator Dynamics (Hennes et al. 2020; R-NaD): the update acts on the logits centred over the
+            # legal actions, with the sampled action's value estimate adv / pi(a); logits stop moving beyond +-beta
+            y = lg.masked_fill(~legal, 0)
+            y = y - y.sum(1, keepdim=True) / legal.sum(1, keepdim=True)
+            y_a = y.gather(1, a[:, None]).squeeze(1)
+            q_a = adv / lp_a.detach().exp().clamp(min=0.05)
+            live = ((q_a > 0) & (y_a < args.neurd_beta)) | ((q_a < 0) & (y_a > -args.neurd_beta))
+            pg = -(q_a * y_a) * live
+        else:
+            pg = -adv * lp_a
         kl_w = args.kl
         if args.kl_start is not None and args.kl_ramp > 0:
-            f = min((time.time() - t0) / (args.kl_ramp * 60), 1.0)
-            kl_w = args.kl_start + f * (args.kl - args.kl_start)
-        loss = (-adv * lp_a + 0.5 * (v - G) ** 2 / 25 + kl_w * kl - args.entropy * ent).mean()
+            frac = min((time.time() - t0) / (args.kl_ramp * 60), 1.0)
+            kl_w = args.kl_start + frac * (args.kl - args.kl_start)
+        loss = (pg + 0.5 * (v - G) ** 2 / 25 + kl_w * kl - args.entropy * ent).mean()
         opt.zero_grad()
         loss.backward()
         nn.utils.clip_grad_norm_(net.parameters(), 1.0)
