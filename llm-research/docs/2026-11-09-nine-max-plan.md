@@ -148,7 +148,7 @@ against 8 frozen copies of the run's checkpoint at the time.
 
 | Run (training time at the test) | What it adds | Exploiter after 15 min | after 30 min |
 |---|---|---|---|
-| `nm3` (10 h) | ramped pull | +191 | +219 (+239 after 2 h) |
+| `nm3` (tested 2026-11-09) | ramped pull | +191 | +219 (+239 after 2 h) |
 | `nm4` (6.5 h) | NeuRD | +47 | **+44** |
 | `nm5` (6 h) | exploiters in training (25% of tables) | +25 | +125 |
 | `nm6` (3.5 h) | stacks 5–200bb, exploiters | +9 | **+8** |
