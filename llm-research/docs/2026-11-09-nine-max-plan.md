@@ -357,3 +357,68 @@ A web page served on the lab (127.0.0.1:8790 only), reached with
 | 4. Live | from the page | Fresh hands from the newest checkpoint, dealt continuously, against itself or eight rule players |
 
 Started 2026-11-10 07:50 lab time: `PYTHONPATH=scripts .venv-gpu/bin/python scripts/ninemax_watch.py` (CPU, 2 threads).
+
+## Stacks, bubbles and final tables (2026-11-10)
+
+**The question** (from the user's partner): will it understand the number of big blinds, its position, the payouts,
+bubble situations and final tables?
+
+**What the 9-max network understands as of `nm1`–`nm5`:**
+
+| Concept | Understood? | Why |
+|---|---|---|
+| Position | Yes | Its seat (one-hot, SB to button), who has folded and who is still to act are inputs; the real-table results come mostly from pre-flop |
+| Big blinds (stack depth) | Only 100bb | Every training hand started with nine 100bb stacks |
+| Payouts, bubble, final table | No | It maximises chips; it does not know that busting on the bubble costs more than doubling up gains |
+
+**The terms, made precise:**
+
+- **Bubble:** with 500 entrants and 200 paid, the bubble is the moment 201 are left: one more bust and everyone left
+  is paid. The pressure starts earlier, from roughly 220–230 left. Busting then wins nothing, so short and medium
+  stacks tighten.
+- **Final table:** the last nine. Each place pays clearly more than the one below, so the same pressure is on every
+  hand.
+- **"Worse hands are way more valuable" there** is true for the player **betting** and false for the player
+  **calling**. A big stack can shove much weaker hands, because medium stacks cannot afford to call off before the
+  next pay jump. A player facing an all-in needs a much stronger hand to call than in a cash game. A tournament bot
+  needs both: wider shoves when others are under pressure, tighter calls when it is under pressure.
+
+**The design (built 2026-11-10; to be tested on the lab):**
+
+1. **Any stack depth** (`ninemax_engine.Tables(..., stacks=[G, P])`). Every seat has its own stack, at least 2bb;
+   calls and all-ins are capped by it, shoves below a full raise do not reopen the betting, side pots follow the
+   contribution levels as before. `ninemax_check.py ... mix` checks it against PokerKit with every seat on its own
+   2–200bb stack. The trainer's `--stacks LO,HI` draws each stack log-uniform in that range, and the network also
+   sees its stack, every player's chips behind and its effective stack.
+2. **ICM** (`scripts/icm.py`). Malmuth-Harville: a player finishes first with probability stack / total chips, the
+   next places likewise among those left; equity = the sum of P(place) × prize. Exact for nine players: the
+   probability of every set of players taking the top places is carried place by place (2^9 = 512 sets), batched
+   over whole training batches. Checked against brute force over all finishing orders (3, 5, 7 players); equities
+   sum to the prize pool; winner-take-all gives the chip share. Players busted in the same hand are placed by
+   their starting stacks, the usual rule.
+3. **The tournament network** (`--tourney`). Every training table is a tournament situation (`icm.scenarios`):
+   - stacks: an average of 10–60bb (log-uniform), each seat spread around it, at least 2bb;
+   - **final table** (40%): places 1–9 paid, top-heavy (prize ∝ place^−α, α 0.6–1.4);
+   - **bubble** (40%): the next 1–3 players to bust get nothing, the rest a nearly flat ladder (the min-cash and the
+     first steps): a table near the money;
+   - **in the money** (20%): every place paid, a gentle ladder.
+
+   The network sees the payout ladder, every player's ICM equity at the start of the hand and its own equity per
+   chip, on top of the stack inputs. **Its reward is the change in its ICM equity**, in big-blind equivalents (the
+   equity change × the table's chips / BB): with prizes proportional to chips this is exactly the chip result, so
+   cash and tournament play share one scale. It is expected to learn the bubble and final-table adjustments by
+   itself: shoving wider as the big stack, calling tighter as a medium stack.
+
+**Limits of this first version:**
+
+- One table is the whole world: at the bubble, the other tables' players are not modelled. The ladder at this
+  table (who busts first gets nothing) stands in for the field.
+- Short-handed final tables (fewer than nine left) and antes are not yet in the scenarios.
+- No push/fold Nash solver yet: the network covers short stacks through its all-in action. A Nash push/fold chart
+  for nine players under ICM is the planned check of its short-stack play.
+- The real-table adapter plays mixed-stack networks at any depth from 2bb, but declines tournament networks
+  (bot_sim tables have no payouts) and lets Monte play those hands.
+
+**Runs to start when the lab is reachable:** `nm6`, cash with mixed stacks (`--stacks 5,200`), and `nm7`, the
+tournament network (`--tourney`), both with population and exploiter training and the ramped pull. First the
+engine check with mixed stacks and the ICM self-test.

@@ -30,7 +30,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from ninemax_engine import BB, Dealer, Menu
-from ninemax_selfplay import NineNet, duplicate, masked, play
+from ninemax_selfplay import NineNet, duplicate, masked, play, set_mode
 
 
 def setup(args, dev):
@@ -44,6 +44,7 @@ def setup(args, dev):
 
 def load(run, B, dev, part="avg"):
     cfg = json.load(open(os.path.join(run, "config.json")))
+    set_mode(cfg.get("stacks", "100"), cfg.get("tourney", False))  # the runs compared must share a mode
     net = NineNet(cfg["nfeat"], cfg["actions"], B).to(dev)
     st = torch.load(os.path.join(run, "checkpoint.pt"), map_location=dev, weights_only=True)
     net.load_state_dict(st[part])

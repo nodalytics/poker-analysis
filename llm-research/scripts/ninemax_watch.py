@@ -30,7 +30,8 @@ import torch
 import torch.nn.functional as F
 
 from ninemax_engine import BB, Dealer, Menu, Tables, strength
-from ninemax_selfplay import NineNet, masked, rule_probs
+from icm import icm
+from ninemax_selfplay import NineNet, context, masked, rule_probs, set_mode
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -96,6 +97,7 @@ class Lab:
 
     def load(self, run):
         cfg = json.load(open(os.path.join(run, "config.json")))
+        set_mode(cfg.get("stacks", "100"), cfg.get("tourney", False))  # under LOCK, until the hands are played
         menu = self.menus.setdefault(cfg.get("menu", "medium"), Menu(cfg.get("menu", "medium"), "cpu"))
         net = NineNet(cfg["nfeat"], cfg["actions"], self.B)
         st = torch.load(os.path.join(run, "checkpoint.pt"), map_location="cpu", weights_only=True)
@@ -108,7 +110,10 @@ class Lab:
 
         P = 9
         bk, rk, cd = self.dealer.deal(n, cards=True)
-        T = Tables(n, P, menu, "cpu")
+        stacks, pay = context(n, P, "cpu")  # the run's mode: 100bb, mixed stacks, or tournament tables
+        T = Tables(n, P, menu, "cpu", stacks=stacks)
+        if pay is not None:
+            T.pay, T.eq0 = pay.float(), icm(T.stack.float(), pay).float()
         hero = torch.randint(P, (n,))  # with a rule opponent: the network's seat at each table
         steps = [[] for _ in range(n)]
         while not bool(T.done.all()):
@@ -147,8 +152,10 @@ class Lab:
         out = []
         for t in range(n):
             out.append({
-                "seats": [{"name": nm, "pos": POS[s], "hole": [card(cd[t][2 * s]), card(cd[t][2 * s + 1])]}
-                          for s, nm in enumerate(names(t))],
+                "seats": [{"name": nm, "pos": POS[s], "hole": [card(cd[t][2 * s]), card(cd[t][2 * s + 1])],
+                           "stack": int(T.stack[t, s]) / BB} for s, nm in enumerate(names(t))],
+                "pay": [round(x, 3) for x in pay[t].tolist()] if pay is not None else None,
+                "equity": [round(x, 3) for x in T.eq0[t].tolist()] if pay is not None else None,
                 "board": [card(c) for c in cd[t][2 * P :]],
                 "steps": steps[t],
                 "result": [round(x, 2) for x in u[t].tolist()],

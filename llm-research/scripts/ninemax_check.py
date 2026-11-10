@@ -7,7 +7,10 @@ For every table: the same hole and board cards are dealt in PokerKit, every acti
   - every seat's payoff agrees within P chips (PokerKit gives a split pot's odd chips to particular players).
 Random play leans towards calls and small raises so that hands reach later streets, all-ins and side pots.
 
-Usage (lab, GPU venv on the CPU): .venv-gpu/bin/python scripts/ninemax_check.py [TABLES] [PLAYERS] [MENU]
+With STACKS "mix", every seat starts with its own stack, 2-200bb (log-uniform), so short all-ins, incomplete raises
+and side pots between unequal stacks are exercised too.
+
+Usage (lab, GPU venv on the CPU): .venv-gpu/bin/python scripts/ninemax_check.py [TABLES] [PLAYERS] [MENU] [STACKS]
 """
 
 import sys
@@ -30,12 +33,14 @@ def main():
     n = int(sys.argv[1]) if len(sys.argv) > 1 else 2000
     P = int(sys.argv[2]) if len(sys.argv) > 2 else 9
     menu_name = sys.argv[3] if len(sys.argv) > 3 else "medium"
+    mix = len(sys.argv) > 4 and sys.argv[4] == "mix"
     dev = "cpu"
     torch.manual_seed(0)
     dealer = Dealer("blueprint/libbp5.so", "blueprint/out", P, 200, dev)
     bk, rk, cards = dealer.deal(n, cards=True)
     menu = Menu(menu_name, dev)
-    T = Tables(n, P, menu, dev)
+    stacks = (2 * (100 ** torch.rand(n, P)) * BB).round().long() if mix else torch.full((n, P), STACK, dtype=torch.long)
+    T = Tables(n, P, menu, dev, stacks=stacks)
     log = [[] for _ in range(n)]
     weights = torch.tensor([1.0, 4.0] + [1.5] * menu.S + [0.4])
     while not bool(T.done.all()):
@@ -59,7 +64,7 @@ def main():
                 Automation.CARD_BURNING, Automation.HOLE_CARDS_SHOWING_OR_MUCKING, Automation.HAND_KILLING,
                 Automation.CHIPS_PUSHING, Automation.CHIPS_PULLING,
             ),  # fmt: skip
-            True, 0, (SB, BB), BB, (STACK,) * P, P,
+            True, 0, (SB, BB), BB, tuple(stacks[k].tolist()), P,
         )  # fmt: skip
         cd = cards[k]
         board = [card(c) for c in cd[2 * P :]]
@@ -84,7 +89,7 @@ def main():
                 elif a == 1:
                     st.check_or_call()
                 else:  # PokerKit raises to an amount for this street; the engine records totals for the hand
-                    before = STACK - st.stacks[seat] - st.bets[seat]
+                    before = int(stacks[k, seat]) - st.stacks[seat] - st.bets[seat]
                     st.complete_bet_or_raise_to(total - before)
             deal()
             assert not st.status, "PokerKit hand not over"

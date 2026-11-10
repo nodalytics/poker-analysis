@@ -41,7 +41,15 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from icm import end_stacks, icm, scenarios
 from ninemax_engine import BB, STACK, Dealer, Menu, Tables, strength
+
+# What the network sees and plays for, set once per run (main, or from a run's config.json by the tools that load it):
+#   stacks   None: every hand 100bb (cash). (lo, hi): each seat's stack log-uniform in lo..hi big blinds, and the
+#            inputs gain every stack and the effective stack.
+#   tourney  False: chips. True: tournament tables (icm.scenarios: stacks, payout ladder); the inputs gain the
+#            payouts and every player's ICM equity, and the reward is the change in ICM equity (bb equivalents).
+FEAT = {"stacks": None, "tourney": False}
 
 
 def features(T, g, i):
@@ -52,7 +60,8 @@ def features(T, g, i):
     mine = c.gather(1, i[:, None]).squeeze(1)
     bet = T.bet[g].float()
     to_call = bet - mine
-    left = STACK - mine
+    stk = T.stack[g]
+    left = stk.gather(1, i[:, None]).squeeze(1) - mine
     live, allin, acted = ~T.folded[g], T.allin[g], T.acted[g]
     f = [
         F.one_hot(i, P).float(),
@@ -72,6 +81,19 @@ def features(T, g, i):
     agg = T.aggressor[g]
     for x in (live.float(), allin.float(), c / STACK, acted.float(), (rel == agg[:, None]).float()):
         f.append(x.gather(1, rel) if x.shape[1] == P else x)
+    if FEAT["stacks"] or FEAT["tourney"]:  # stack depths: mine, everyone's chips behind, the effective stack
+        behind = (stk - c).float()
+        f.append((torch.log(stk.gather(1, i[:, None]).float() / BB) / math.log(200))[:, None])
+        f.append((behind.gather(1, rel) / STACK).clamp(0, 3))
+        opp = torch.where(live & (F.one_hot(i, P) == 0), behind, torch.zeros_like(behind)).max(1).values
+        f.append((torch.minimum(left.float(), opp) / STACK).clamp(0, 3)[:, None])
+    if FEAT["tourney"]:  # the payout ladder (places 1..P) and every player's ICM equity at the start of the hand
+        f.append(T.pay[g] * P)
+        eq = T.eq0[g] * P
+        f.append(eq.gather(1, i[:, None]))
+        f.append(eq.gather(1, rel))
+        share = stk.float() / stk.sum(1, keepdim=True)
+        f.append((T.eq0[g] / share.clamp(min=1e-6)).gather(1, i[:, None]).clamp(0, 5))  # equity per chip
     legal, t = T.legal(g, i)
     f.append(legal.float())
     S = T.menu.S
@@ -147,16 +169,43 @@ def rule_probs(name, T, g, i, legal, s, dealer):
     raise ValueError(name)
 
 
-def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None, assign=None):
+def n_features(P, menu, dev):
+    """The input size in the run's mode, from a one-table probe."""
+    st, pay = context(1, P, dev)
+    T = Tables(1, P, menu, dev, stacks=st)
+    if pay is not None:
+        T.pay, T.eq0 = pay.float(), icm(T.stack.float(), pay).float()
+    return features(T, torch.zeros(1, dtype=torch.long, device=dev), T.actor[:1])[0].shape[1]
+
+
+def context(G, P, dev):
+    """Starting stacks [G, P] and payouts (or None) for G tables in the run's mode (FEAT); None, None = 100bb cash."""
+    if FEAT["tourney"]:
+        st, pay, _ = scenarios(G, P, dev)
+        return st, pay
+    if FEAT["stacks"]:
+        lo, hi = FEAT["stacks"]
+        bb = lo * (hi / lo) ** torch.rand(G, P, device=dev)
+        return (bb * BB).round().long().clamp(min=2 * BB), None
+    return None, None
+
+
+def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None, assign=None, ctx=None):
     """Play len(bk) hands; policies[seat] is a NineNet or a rule name (rule_probs). Returns payoffs [G, P] (chips)
     and, with record, the decisions (only those of the policy `learner`, or of a list of policies, when given), each
     with the index of the policy that took it (last field).
 
     assign [G, P]: per-table seating instead; policies is then the list of distinct policies and assign[g, seat]
     indexes it. All tables are played in one loop, whatever their seating: the loop's length, not the number of
-    tables, sets the time, so one loop over a mixed batch is several times faster than one loop per seating."""
+    tables, sets the time, so one loop over a mixed batch is several times faster than one loop per seating.
+
+    ctx (stacks, payouts): the tables' starting stacks and tournament payouts; drawn for the run's mode if None. In
+    tournament mode the returned results are ICM equity changes in chip equivalents, not chips."""
     G, P = bk.shape[0], bk.shape[1]
-    T = Tables(G, P, menu, dev)
+    stacks, pay = ctx if ctx is not None else context(G, P, dev)
+    T = Tables(G, P, menu, dev, stacks=stacks)
+    if pay is not None:
+        T.pay, T.eq0 = pay.float(), icm(T.stack.float(), pay).float()
     rec = []
     if assign is None:
         uniq = list({id(p): p for p in policies}.values())  # each distinct policy once; seat -> its index
@@ -190,22 +239,33 @@ def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None,
             keep = torch.ones_like(i, dtype=torch.bool) if learner is None else torch.isin(pol_of, lids)
             rec.append(tuple(x[keep] for x in (g, i, feat, legal, mybk, T.street[g].clone(), s, a, pol_of)))
         T.step(g, a)
-    return T.payoffs(rk), rec
+    u = T.payoffs(rk)
+    if pay is not None:  # tournament: the change in prize equity, in chips at the table's average chip value
+        eq1 = icm(end_stacks(T.stack, u), pay).float()
+        u = (eq1 - T.eq0) * T.stack.sum(1, keepdim=True).float()
+    return u, rec
 
 
 def duplicate(dealer, menu, hero, villain, n, dev):
     """Hero in each seat in turn against P-1 copies of villain, on the same n deals: hero's bb/100 and 95% CI."""
     P = dealer.P
     bk, rk, _ = dealer.deal(n)
+    ctx = context(n, P, dev)  # the same stacks (and payouts) for every seating
     per = torch.zeros(n, device=dev)
     for seat in range(P):
         pols = [villain] * P
         pols[seat] = hero
-        u, _ = play(dealer, menu, pols, bk, rk, dev=dev)
+        u, _ = play(dealer, menu, pols, bk, rk, dev=dev, ctx=ctx)
         per += u[:, seat] / BB
     x = (per / P).cpu().numpy()  # hero's average over the seats, per deal
     m, se = x.mean() * 100, x.std() / math.sqrt(len(x)) * 100
     return m, m - 1.96 * se, m + 1.96 * se
+
+
+def set_mode(stacks="100", tourney=False):
+    """Set FEAT from a run's options (also used by the tools that load a run, from its config.json)."""
+    FEAT["stacks"] = None if str(stacks) == "100" else tuple(float(x) for x in str(stacks).split(","))
+    FEAT["tourney"] = bool(tourney)
 
 
 def main():
@@ -242,7 +302,11 @@ def main():
     # won +191 bb/100 in 15 minutes (ninemax_eval.py exploit).
     ap.add_argument("--exploit-share", type=float, default=0.0, help="share of each batch at exploiter tables")
     ap.add_argument("--exploit-reset", type=float, default=60, help="minutes between exploiter restarts")
+    # stack depths and tournaments (docs/2026-11-09-nine-max-plan.md, "Stacks, bubbles and final tables")
+    ap.add_argument("--stacks", default="100", help='"100" (every hand 100bb) or "LO,HI": each stack log-uniform')
+    ap.add_argument("--tourney", action="store_true", help="tournament tables: ICM payouts, reward = ICM equity")
     args = ap.parse_args()
+    set_mode(args.stacks, args.tourney)
     dev = "cuda"
     torch.manual_seed(0)
     os.makedirs(args.out, exist_ok=True)
@@ -253,8 +317,7 @@ def main():
     pre_s = dealer.pre_strength[torch.tensor(bk0[:, :, 0].ravel(), device=dev)]
     dealer.pre_q = (torch.quantile(pre_s, 0.88).item(), torch.quantile(pre_s, 0.65).item())
     menu = Menu(args.menu, dev)
-    T0 = Tables(1, args.players, menu, dev)
-    nfeat = features(T0, torch.zeros(1, dtype=torch.long, device=dev), T0.actor[:1])[0].shape[1]
+    nfeat = n_features(args.players, menu, dev)
     net = NineNet(nfeat, menu.A, B).to(dev)
     magnet, avg = copy.deepcopy(net), copy.deepcopy(net)
     for m in (magnet, avg):

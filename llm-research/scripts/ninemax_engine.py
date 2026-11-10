@@ -2,8 +2,9 @@
 
 G tables are played at once as tensors. Cards come from libbp5's bp_deal_n (buckets per street, showdown ranks and,
 optionally, the cards). Seats are fixed: 0 = small blind, 1 = big blind, 2 = UTG ... P-1 = button (P >= 3).
-Pre-flop UTG acts first; after the flop the first live player from the small blind. Blinds 50/100 chips (1 bb = 100),
-every player starts with STACK chips.
+Pre-flop UTG acts first; after the flop the first live player from the small blind. Blinds 50/100 chips (1 bb = 100).
+Every player starts with STACK chips (100bb), or with their own stack: Tables(..., stacks=[G, P] chips, at least 2bb
+each), for mixed stack depths and tournaments.
 
 Rules implemented:
 - fold, check/call, raises to the sizes of a menu (below), all-in; a raise must be at least the last raise;
@@ -89,9 +90,12 @@ class Menu:
 class Tables:
     """The state of G tables. step() applies one action per table at the tables still in play."""
 
-    def __init__(self, G, P, menu, dev):
+    def __init__(self, G, P, menu, dev, stacks=None):
         self.G, self.P, self.menu, self.dev = G, P, menu, dev
         z = lambda dt=torch.long: torch.zeros(G, P, dtype=dt, device=dev)  # noqa: E731
+        # chips each player starts the hand with (contributions can never exceed them)
+        self.stack = torch.full((G, P), STACK, dtype=torch.long, device=dev) if stacks is None else stacks.long()
+        assert bool((self.stack >= 2 * BB).all()), "every stack must be at least 2bb"
         self.contrib = z()
         self.contrib[:, 0], self.contrib[:, 1] = SB, BB
         self.folded, self.allin, self.acted = z(torch.bool), z(torch.bool), z(torch.bool)
@@ -161,16 +165,17 @@ class Tables:
         t = self.targets(g, i)
         cap = torch.where(self.street[g] == 0, m.max_pre, m.max_post)
         reopened = ~self.acted[g, i]  # False after an incomplete all-in raise: call or fold only
+        stk = self.stack[g, i]
         ok_size = (
             ~torch.isnan(t)
             & (t - bet[:, None] >= self.last_raise[g][:, None])
-            & (t < STACK)
+            & (t < stk[:, None])
             & (self.raises[g] < cap)[:, None]
             & reopened[:, None]
         )
         fold = to_call > 0
         call = torch.ones_like(fold)
-        allin = (bet < STACK) & reopened
+        allin = (stk > bet) & reopened  # shoving more than the bet (with less, calling is the all-in)
         return torch.cat([fold[:, None], call[:, None], ok_size, allin[:, None]], 1), torch.nan_to_num(t, nan=0)
 
     def step(self, g, a):
@@ -183,16 +188,15 @@ class Tables:
         fold = a == 0
         call = a == 1
         size = (a >= 2) & (a < 2 + S)
-        total = torch.where(
-            size, t.gather(1, (a - 2).clamp(0, S - 1)[:, None]).squeeze(1).long(), torch.full_like(bet, STACK)
-        )
-        total = torch.where(call, torch.minimum(bet, torch.full_like(bet, STACK)), total)
+        stk = self.stack[g, i]
+        total = torch.where(size, t.gather(1, (a - 2).clamp(0, S - 1)[:, None]).squeeze(1).long(), stk)
+        total = torch.where(call, torch.minimum(bet, stk), total)
         total = torch.where(fold, self.contrib[g, i], total)
         inc = total - bet
         full = ~fold & ~call & (inc >= self.last_raise[g])
         self.folded[g, i] |= fold
         self.contrib[g, i] = total
-        self.allin[g, i] |= total >= STACK
+        self.allin[g, i] |= total >= stk
         # a full raise reopens the betting: everyone else must act again
         reset = full[:, None] & (self.ar[None, :] != i[:, None])
         self.acted[g] = torch.where(reset, False, self.acted[g])

@@ -229,13 +229,16 @@ function Replayer(el, opts = {}) {
       const st = H.seats[k], res = H.result[k];
       const showCards = all || end && H.showdown && !folded[k];
       d.className = "seat" + (S && !end && S.seat === k ? " act" : "") + (folded[k] ? " out" : "");
-      d.innerHTML = `<div class="nm" title="${st.name}">${st.name}</div><div class="pos">${st.pos} · in ${(+contrib[k]).toFixed(1)} bb</div>
+      const stk = st.stack !== undefined ? ` · ${(+st.stack).toFixed(0)} bb` : "";
+      const eqt = H.equity ? ` · ICM ${(100 * H.equity[k]).toFixed(1)}%` : "";
+      d.innerHTML = `<div class="nm" title="${st.name}">${st.name}</div><div class="pos">${st.pos}${stk}${eqt}</div><div class="pos">in ${(+contrib[k]).toFixed(1)} bb</div>
         <div class="cards">${showCards && st.hole ? st.hole.map(cardHtml).join("") : cardHtml(null) + cardHtml(null)}</div>
         <div class="say">${end ? `<span class="res ${res > 0 ? "w" : res < 0 ? "l" : ""}">${res > 0 ? "+" : ""}${(+res).toFixed(1)} bb</span>` : said[k] || ""}</div>`;
     });
     el.querySelector(".board").innerHTML = H.board.slice(0, showN).map(cardHtml).join("") || `<span class="muted">no board yet</span>`;
     el.querySelector(".pot").textContent = "Pot " + contrib.reduce((a, b) => a + +b, 0).toFixed(1) + " bb";
-    el.querySelector(".street").textContent = end ? (H.showdown ? "showdown" : "hand over") : STREETS[street];
+    el.querySelector(".street").textContent = (end ? (H.showdown ? "showdown" : "hand over") : STREETS[street]) +
+      (H.pay ? ` · tournament, payouts ${H.pay.map((x) => (100 * x).toFixed(0) + "%").join(" / ")}` : "");
     el.querySelector(".log").innerHTML = H.steps.map((x, k) =>
       `<div class="${k === step - 1 ? "cur" : ""}">[${STREETS[x.street]}] ${H.seats[x.seat].pos} ${H.seats[x.seat].name} ${x.text}</div>`).join("") +
       (end ? `<div class="cur">result: ${H.seats.map((s, k) => H.result[k] ? `${s.pos} ${H.result[k] > 0 ? "+" : ""}${H.result[k]}` : "").filter(Boolean).join(", ")}</div>` : "");
