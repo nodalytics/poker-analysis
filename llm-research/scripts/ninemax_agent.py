@@ -24,7 +24,7 @@ import torch
 from pokerkit import BlindOrStraddlePosting, BoardDealing, CheckingOrCalling, CompletionBettingOrRaisingTo, Folding
 
 from ninemax_engine import BB, STACK, Dealer, Menu, Tables
-from ninemax_selfplay import NineNet, features, masked
+from ninemax_selfplay import FEAT, NineNet, features, masked, set_mode
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LIB = os.environ.get("NINEMAX_LIB", os.path.join(ROOT, "blueprint", "libbp5.so"))
@@ -46,6 +46,7 @@ class Seat:
         self.dealer = Dealer(LIB, ABS, PLAYERS, self.B, "cpu")
         d = run if os.path.isabs(run) else os.path.join(RUNS, run)
         cfg = json.load(open(os.path.join(d, "config.json")))
+        self.mode = (cfg.get("stacks", "100"), cfg.get("tourney", False))
         self.menu = Menu(cfg.get("menu", "medium"), "cpu")
         self.net = NineNet(cfg["nfeat"], cfg["actions"], self.B)
         st = torch.load(os.path.join(d, "checkpoint.pt"), map_location="cpu", weights_only=True)
@@ -71,8 +72,12 @@ class Seat:
         """The engine's view of PokerKit's hand (one table), or None if it is not a 9-handed 100bb game."""
         P = state.player_count
         k = BB / max(state.blinds_or_straddles)
-        if P != PLAYERS or any(round(s * k) != STACK for s in state.starting_stacks):
+        set_mode(*self.mode)
+        starts = [round(s * k) for s in state.starting_stacks]
+        if P != PLAYERS or FEAT["tourney"]:  # a tournament network needs the payouts, which a cash table has not
             return None
+        if any(s != STACK for s in starts) if FEAT["stacks"] is None else min(starts) < 2 * BB:
+            return None  # a 100bb network at other depths, or a stack under 2bb
         contrib, base = [0] * P, [0] * P  # chips in this hand, and before this street (engine units)
         folded, acted = [False] * P, [False] * P
         bet, last_raise, raises, pre_raises, aggressor, street, n_board = 0, BB, 0, 0, -1, 0, 0
@@ -103,10 +108,10 @@ class Seat:
                 aggressor = p if inc > 0 else aggressor
                 contrib[p], bet = total, max(bet, total)
                 acted[p] = True
-        T = Tables(1, P, self.menu, "cpu")
+        T = Tables(1, P, self.menu, "cpu", stacks=torch.tensor([starts]))
         T.contrib[0] = torch.tensor(contrib)
         T.folded[0] = torch.tensor(folded)
-        T.allin[0] = torch.tensor([c >= STACK and not f for c, f in zip(contrib, folded)])
+        T.allin[0] = torch.tensor([c >= s and not f for c, f, s in zip(contrib, folded, starts)])
         T.acted[0] = torch.tensor(acted)
         for name, v in (("bet", bet), ("last_raise", last_raise), ("raises", raises), ("pre_raises", pre_raises),
                         ("aggressor", aggressor), ("street", street), ("to_act", (i - 1) % P), ("actor", i)):  # fmt: skip
