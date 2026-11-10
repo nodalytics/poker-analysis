@@ -149,7 +149,8 @@ def rule_probs(name, T, g, i, legal, s, dealer):
 
 def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None, assign=None):
     """Play len(bk) hands; policies[seat] is a NineNet or a rule name (rule_probs). Returns payoffs [G, P] (chips)
-    and, with record, the decisions (only those of the policy `learner` when it is given).
+    and, with record, the decisions (only those of the policy `learner`, or of a list of policies, when given), each
+    with the index of the policy that took it (last field).
 
     assign [G, P]: per-table seating instead; policies is then the list of distinct policies and assign[g, seat]
     indexes it. All tables are played in one loop, whatever their seating: the loop's length, not the number of
@@ -163,7 +164,8 @@ def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None,
         assign = seat_pol[None, :].expand(G, P)
     else:
         uniq = list(policies)
-    lid = next((k for k, q in enumerate(uniq) if q is learner), -1)
+    learners = learner if isinstance(learner, (list, tuple)) else [learner]
+    lids = torch.tensor([k for k, q in enumerate(uniq) if any(q is x for x in learners)] or [-1], device=dev)
     while not bool(T.done.all()):
         g = (~T.done).nonzero().squeeze(1)
         i = T.actor[g]
@@ -185,8 +187,8 @@ def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None,
                 probs = F.softmax(masked(lg, legal[m]), 1)
             a[m] = torch.multinomial(probs, 1).squeeze(1)
         if record:
-            keep = torch.ones_like(i, dtype=torch.bool) if learner is None else pol_of == lid
-            rec.append(tuple(x[keep] for x in (g, i, feat, legal, mybk, T.street[g].clone(), s, a)))
+            keep = torch.ones_like(i, dtype=torch.bool) if learner is None else torch.isin(pol_of, lids)
+            rec.append(tuple(x[keep] for x in (g, i, feat, legal, mybk, T.street[g].clone(), s, a, pol_of)))
         T.step(g, a)
     return T.payoffs(rk), rec
 
@@ -233,6 +235,13 @@ def main():
     ap.add_argument("--pool", default="tag,maniac,station,random", help="rule opponents in the population")
     ap.add_argument("--pool-snapshots", type=int, default=5, help="past checkpoints kept in the population")
     ap.add_argument("--chunks", type=int, default=4, help="population chunks per batch (one opponent each)")
+    # exploiters (AlphaStar's league, PSRO): a second network trains only to beat the main one. A share of each batch
+    # seats it once against eight copies of the main network; both learn from those tables, so the main network has
+    # to close the holes the exploiter finds. Every EXPLOIT_RESET minutes the exploiter joins the population as a
+    # frozen snapshot and restarts as a copy of the main network, to hunt fresh holes. A standalone exploiter of nm3
+    # won +191 bb/100 in 15 minutes (ninemax_eval.py exploit).
+    ap.add_argument("--exploit-share", type=float, default=0.0, help="share of each batch at exploiter tables")
+    ap.add_argument("--exploit-reset", type=float, default=60, help="minutes between exploiter restarts")
     args = ap.parse_args()
     dev = "cuda"
     torch.manual_seed(0)
@@ -260,6 +269,9 @@ def main():
         opt.load_state_dict(st["opt"])
         hands = st["hands"]
     prev = copy.deepcopy(avg)
+    expl = copy.deepcopy(avg).requires_grad_(True) if args.exploit_share > 0 else None
+    opt_x = torch.optim.Adam(expl.parameters(), lr=args.lr) if expl is not None else None
+    adv_scale_x, last_reset = 1.0, time.time()
     rules = [x for x in args.pool.split(",") if x] if args.pool else []
     snaps = []
     pool = (rules or None) if args.pool_share > 0 else None
@@ -274,17 +286,39 @@ def main():
         # opponent from the population (rule players, past checkpoints) holds the others. The net learns from its
         # own seats only.
         n_pop = int(args.batch * args.pool_share) // args.chunks * args.chunks if pool else 0
-        # one seating table for the whole batch (policy 0 = the net), played in a single loop
+        n_x = int(args.batch * args.exploit_share) if expl is not None else 0
+        # one seating table for the whole batch (policy 0 = the net, 1 = the exploiter), played in a single loop:
+        # rows [0, n_x) exploiter tables, then n_pop population tables, then self-play
         assign = torch.zeros(args.batch, args.players, dtype=torch.long, device=dev)
-        pols = [net] + (pool or [])
+        pols = [net] + ([expl] if expl is not None else []) + (pool or [])
+        first = len(pols) - len(pool or [])
+        if n_x:
+            assign[torch.arange(n_x, device=dev), torch.randint(args.players, (n_x,), device=dev)] = 1
         for c in range(args.chunks if n_pop else 0):
-            rows = slice(c * n_pop // args.chunks, (c + 1) * n_pop // args.chunks)
-            opp = 1 + int(torch.randint(len(pool), ()).item())
+            rows = slice(n_x + c * n_pop // args.chunks, n_x + (c + 1) * n_pop // args.chunks)
+            opp = first + int(torch.randint(len(pool), ()).item())
             k = int(torch.randint(1, args.players, ()).item())  # the net holds k seats, chosen at random
             theirs = torch.randperm(args.players, device=dev)[k:]
             assign[rows, theirs] = opp
-        u, rec = play(dealer, menu, pols, bk, rk, record=True, dev=dev, learner=net, assign=assign)
-        g, i, f, legal, mybk, street, s, a = (torch.cat([r[k] for r in rec]) for k in range(8))
+        learner = [net, expl] if expl is not None else net
+        u, rec = play(dealer, menu, pols, bk, rk, record=True, dev=dev, learner=learner, assign=assign)
+        g, i, f, legal, mybk, street, s, a, who = (torch.cat([r[k] for r in rec]) for k in range(9))
+        if expl is not None:  # the exploiter: plain policy gradient against the main network, no pull
+            xm = who == 1
+            lgx, vx = expl(f[xm], mybk[xm], street[xm], s[xm])
+            Gx = u[g[xm], i[xm]] / BB
+            logpx = F.log_softmax(masked(lgx, legal[xm]), 1)
+            entx = -(logpx.exp() * logpx).masked_fill(~legal[xm], 0).sum(1)
+            advx = Gx - vx.detach()
+            adv_scale_x = 0.99 * adv_scale_x + 0.01 * advx.abs().mean().item()
+            lpx = logpx.gather(1, a[xm][:, None]).squeeze(1)
+            loss_x = (-advx / max(adv_scale_x, 1e-3) * lpx + 0.5 * (vx - Gx) ** 2 / 25 - 0.003 * entx).mean()
+            opt_x.zero_grad()
+            loss_x.backward()
+            nn.utils.clip_grad_norm_(expl.parameters(), 1.0)
+            opt_x.step()
+            nm = who == 0
+            g, i, f, legal, mybk, street, s, a = (x[nm] for x in (g, i, f, legal, mybk, street, s, a))
         G = u[g, i] / BB  # big blinds won by the player who acted
         lg, v = net(f, mybk, street, s)
         logp = F.log_softmax(masked(lg, legal), 1)
@@ -339,12 +373,22 @@ def main():
             for opp in ("maniac", "station", "random"):
                 m3, lo3, hi3 = duplicate(dealer, menu, avg, opp, args.eval_hands // 4, dev)
                 line += f"  vs {opp}: {m3:+.1f} [{lo3:+.1f}, {hi3:+.1f}]"
+            if expl is not None:  # how much the current exploiter wins: a running exploitability reading
+                m4, lo4, hi4 = duplicate(dealer, menu, expl, avg, args.eval_hands // 4, dev)
+                line += f"  exploiter vs 8 x net: {m4:+.1f} [{lo4:+.1f}, {hi4:+.1f}]"
             log.write(line + "\n")
             print(line, flush=True)
             prev = copy.deepcopy(avg)
             if pool is not None and args.pool_snapshots:
                 snaps = (snaps + [copy.deepcopy(avg).requires_grad_(False)])[-args.pool_snapshots :]
                 pool = rules + snaps
+            if expl is not None and time.time() - last_reset >= args.exploit_reset * 60:
+                if pool is not None:  # the old exploiter stays in the population, frozen
+                    rules.append(copy.deepcopy(expl).requires_grad_(False))
+                    pool = rules + snaps
+                expl.load_state_dict(avg.state_dict())
+                opt_x = torch.optim.Adam(expl.parameters(), lr=args.lr)
+                adv_scale_x, last_reset = 1.0, time.time()
             last_eval = time.time()
     with open(os.path.join(args.out, "train.log"), "a") as f:
         f.write("stopped\n")

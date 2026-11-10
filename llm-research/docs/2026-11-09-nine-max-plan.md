@@ -108,7 +108,29 @@ replaced by the network; `nine#RUN` seats via `scripts/ninemax_agent.py`):
 | Personas bob, tina, nora | −53, −14, +13 | −33, −8, −1 |
 
 The first time the network played real hands: it wins at both tables, and the population network (`nm3`) topped
-its table, ahead of the current bot, though the intervals overlap. 2,000-session runs are under way to narrow them.
+its table, ahead of the current bot, though the intervals overlap.
+
+**2,000 sessions** (48,000 hands per seat), same line-ups:
+
+| Seat | with `nine#nm3` | with `nine#nm1` |
+|---|---|---|
+| **9-max network** | **+36.6** [+24.1, +49.8] | **+34.4** [+25.8, +43.4] |
+| Solver bot | +26.2 [+13.5, +39.3] | +16.8 [+5.1, +28.2] |
+| Current bot (`blueprintbot`) | +21.8 [+9.2, +34.8] | +21.4 [+10.4, +33.1] |
+| Monte | +8.9 | +5.5 |
+| Nora | +0.6 | +10.1 |
+| Professional clones | −13.1, −7.8 | −9.9, −10.3 |
+| Bob, Tina | −34.3, −39.0 | −26.1, −41.8 |
+
+Both networks top their tables, about 13–15 bb/100 ahead of the current bot. Self-play only and population
+training are level here: this field has no maniac, which is where population training paid off in the engine.
+
+**Exploiters in training (`nm5`, from 2026-11-10 07:05 lab time, 4090):** `--exploit-share 0.25`: a quarter of
+every batch seats an exploiter network once against eight copies of the main network; both learn from those
+tables. Each hour the exploiter joins the population frozen and restarts as a copy of the main network. Each
+evaluation also reports how much the current exploiter wins. Otherwise `nm3`'s settings, population share 0.4.
+The single-loop trainer runs it at 43,000 hands a second on the 3090 alone (smoke test), against 10,000–16,000
+for population training before.
 
 The adapter rebuilds the engine's inputs from PokerKit's operations; `scripts/ninemax_agent_check.py` replays
 random engine games in PokerKit and found **0 differences** in features or legal actions over 6,116 decisions.
