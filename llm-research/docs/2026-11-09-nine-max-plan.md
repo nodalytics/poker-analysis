@@ -81,6 +81,51 @@ against their own checkpoint of 30 minutes earlier. These rule opponents no long
 yardstick (the networks against each other, and real 9-handed tables) is needed next. `nm2` was stopped at 06:12 on
 2026-11-10 to make room for `nm4`: `nm3`'s settings with NeuRD, the least exploitable rule in the heads-up test.
 
+### Stronger yardsticks (2026-11-10)
+
+**Networks against each other** (`scripts/ninemax_eval.py cross`, 20,000 deals × 9 seatings, bb/100):
+
+| Hero vs 8 copies of | `nm1` (self-play, 297 M hands) | `nm2` (population, 295 M) | `nm3` (ramped pull, 234 M) |
+|---|---|---|---|
+| `nm1` | | −5.2 [−9.1, −1.4] | −1.4 [−5.9, +3.1] |
+| `nm2` | +7.3 [+3.4, +11.2] | | −8.3 [−13.1, −3.6] |
+| `nm3` | +3.2 [−0.9, +7.3] | −2.8 [−7.4, +1.9] | |
+| tight-aggressive rule player | +47 | +183 | +177 |
+
+Against each other they are within a few bb/100. The self-play network is slightly better at a table of its peers;
+the population networks are far better against weak players.
+
+**Real 9-handed tables** (`bot_sim`, 400 sessions × 24 hands, 100bb dealt fresh every hand, the maniac `max`
+replaced by the network; `nine#RUN` seats via `scripts/ninemax_agent.py`):
+
+| Seat | with `nine#nm3` | with `nine#nm1` |
+|---|---|---|
+| **9-max network** | **+44** [+11, +76] | +27 [+7, +48] |
+| Current bot (`blueprintbot`, fallback logic) | +32 [+5, +62] | +36 [+11, +63] |
+| Solver bot | +14 | −17 |
+| Monte | −8 | +23 |
+| Professional clones (`pros`, `pros_b`) | −18, −12 | −16, −12 |
+| Personas bob, tina, nora | −53, −14, +13 | −33, −8, −1 |
+
+The first time the network played real hands: it wins at both tables, and the population network (`nm3`) topped
+its table, ahead of the current bot, though the intervals overlap. 2,000-session runs are under way to narrow them.
+
+The adapter rebuilds the engine's inputs from PokerKit's operations; `scripts/ninemax_agent_check.py` replays
+random engine games in PokerKit and found **0 differences** in features or legal actions over 6,116 decisions.
+
+**Exploitability** (`scripts/ninemax_eval.py exploit`): a copy of `nm3` trains against eight frozen copies of `nm3`
+(plain policy gradient, no pull) and plays it 1-vs-8 by duplicate every 15 minutes. It started at −1.8, as it
+should by symmetry, and **won +191 bb/100 [+180, +202] after 15 minutes**, with its entropy near 0: a near-
+deterministic counter-strategy. `nm3` is highly exploitable by a player who adapts to it, even though it beats every
+fixed opponent tried. This is the 9-max counterpart of the heads-up LBR finding and the main weakness to fix:
+the population needs **exploiters** (networks trained to beat the current one, as in AlphaStar's league and PSRO),
+so the main network learns to close the holes they find.
+
+**Speed:** the trainer now plays a whole batch (self-play and population tables together) in one loop with a
+per-table seating (`play(..., assign=...)`). Before, it ran one loop per seating; the time a loop takes is set by
+its length, not its table count. 3,800 → 6,700 hands a second on the same shared 3090 (1.75×). Running runs keep
+the old code; new runs get it.
+
 The 9-player count of the lean menu (`blueprint/tree_size.py`) did not finish within 40 GB and an hour: the
 betting states alone exceed what the 6-player count needed (about 10 GB), before any table is built.
 
