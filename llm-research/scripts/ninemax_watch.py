@@ -269,7 +269,7 @@ def main():
 
     lab = Lab(args.abs, args.lib)
     Recorder(lab, runs, args.out).start()
-    page = open(os.path.join(ROOT, "web", "index.html"), "rb").read()
+    page = os.path.join(ROOT, "web", "index.html")  # read on every request: edits show on reload
 
     class H(BaseHTTPRequestHandler):
         def log_message(self, *a):
@@ -288,7 +288,7 @@ def main():
             q = {k: v[0] for k, v in parse_qs(u.query).items()}
             try:
                 if u.path == "/":
-                    return self.send(page, "text/html; charset=utf-8")
+                    return self.send(open(page, "rb").read(), "text/html; charset=utf-8")
                 if u.path == "/api/runs":
                     return self.send({os.path.basename(r): curves(r) for r in runs()})
                 if u.path == "/api/snapshots":  # the recorded checkpoints of a run
