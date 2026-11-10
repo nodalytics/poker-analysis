@@ -343,3 +343,17 @@ than in chips, which makes calling all-ins tighter near the money and at the fin
   Search is where ICM fits, because the payoff depends on every player's stack and the payout structure, which a
   single precomputed table cannot cover.
 - A push/fold solver with ICM for short stacks (≤ 15bb) is small and exact, and comes first.
+
+## Watching it learn and play (`scripts/ninemax_watch.py`, 2026-11-10)
+
+A web page served on the lab (127.0.0.1:8790 only), reached with
+`ssh -N -L 8790:127.0.0.1:8790 labuser@LAB_HOST` and http://localhost:8790. The training runs need no change.
+
+| View | Default | What it shows |
+|---|---|---|
+| 1. Training | on | Every run's evaluations charted against hands trained: vs the tight-aggressive player, the exploiter's winnings (exploitability), vs its previous checkpoint, vs maniacs, stations and random players, speed, entropy |
+| 2. Hands | on | For every new checkpoint, the watcher plays 48 deals with it (nine seats, all cards) and keeps the 8 busiest plus a quiet one (`results/ninemax/watch/<run>/<hands>.json`); a table replayer steps through them, so its play can be compared across checkpoints |
+| 3. Real tables | from the page | bot_sim sessions (`results/ninemax/table*/`): the network against the solver bot, the current bot, the clones and personas |
+| 4. Live | from the page | Fresh hands from the newest checkpoint, dealt continuously, against itself or eight rule players |
+
+Started 2026-11-10 07:50 lab time: `PYTHONPATH=scripts .venv-gpu/bin/python scripts/ninemax_watch.py` (CPU, 2 threads).
