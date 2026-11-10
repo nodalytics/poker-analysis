@@ -39,11 +39,12 @@ The lab then needs Node only to build, not to serve: the built files are static.
 
 | File | What it is |
 |---|---|
-| `deploy/nginx/poker.stbfarm.org.conf` | Host nginx vhost: HTTPS on 443 with the lab's origin certificate (Cloudflare SSL mode Full, as for the other stbfarm.org sites), HTTP redirected to HTTPS, proxied to the app on 127.0.0.1:8790; GET only; `/api/live` limited to 20 requests a minute per visitor; an optional password (commented) |
+| `deploy/nginx/poker.stbfarm.org.conf` | Host nginx vhost: HTTPS on 443 with the lab's origin certificate (Cloudflare SSL mode Full, as for the other stbfarm.org sites), HTTP redirected to HTTPS, proxied to the app on 127.0.0.1:8790; GET only; **only Cloudflare's ranges (and the lab itself) may connect**, others get 403; the visitor's real address is taken from `CF-Connecting-IP`, trusted only from those ranges, so `/api/live` is limited to 20 requests a minute **per visitor**, not per Cloudflare server; an optional password (commented) |
 | `deploy/poker-watch.service` | systemd service running `scripts/ninemax_watch.py` as labuser, restarted on failure and started at boot |
 | `deploy/install.sh` | Installs both (run once with sudo); `--remove` takes them out again |
 
-The app stays bound to 127.0.0.1; only nginx faces the network. DNS: `poker.stbfarm.org` is a Cloudflare-proxied
+The app stays bound to 127.0.0.1; only nginx faces the network. Cloudflare's ranges are listed in the vhost (fetched
+2026-11-10 from https://www.cloudflare.com/ips-v4 and ips-v6); refresh them if Cloudflare adds ranges. DNS: `poker.stbfarm.org` is a Cloudflare-proxied
 record pointing at the lab.
 
 Install (needs the sudo password, so run it yourself in a terminal):
