@@ -1,5 +1,6 @@
 """Watch the 9-max networks learn and play: a small web page served on the lab (127.0.0.1 only; reach it through an
-SSH tunnel). The training runs need no change: everything is read from their run directories.
+SSH tunnel). The page is web/index.html; this is its server. The training runs need no change: everything is
+read from their run directories.
 
   1 Training (on by default)  charts of every run's progress.log: 1-vs-8 results against the rule players, against
                               its previous checkpoint, the exploiter's winnings (exploitability), speed, entropy.
@@ -268,7 +269,7 @@ def main():
 
     lab = Lab(args.abs, args.lib)
     Recorder(lab, runs, args.out).start()
-    page = open(os.path.join(HERE, "ninemax_watch.html"), "rb").read()
+    page = open(os.path.join(ROOT, "web", "index.html"), "rb").read()
 
     class H(BaseHTTPRequestHandler):
         def log_message(self, *a):
