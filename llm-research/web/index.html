@@ -120,6 +120,7 @@ document.querySelectorAll(".tabs button").forEach((b) => b.onclick = () => {
   document.querySelectorAll("section").forEach((s) => s.classList.toggle("on", s.id === b.dataset.tab));
   if (b.dataset.tab === "real") loadTables();
   if (b.dataset.tab !== "live") liveStop();
+  else if (!liveOn) liveStart();  // live deals as soon as its tab opens
 });
 
 // ---------------- 1: charts
@@ -162,7 +163,7 @@ async function refreshCharts() {
     for (const sel of [$("snapRun"), $("liveRun")]) {
       const cur = sel.value;
       sel.innerHTML = series.map((s) => `<option>${s.name}</option>`).join("");
-      if (cur) sel.value = cur;
+      sel.value = cur || (series.length ? series[series.length - 1].name : "");  // default: the newest run
     }
     $("status").textContent = "updated " + new Date().toLocaleTimeString();
   } catch (e) { $("status").textContent = "server not reachable"; }
@@ -291,7 +292,7 @@ $("realDir").onchange = loadReal;
 
 // ---------------- 4: live (from the GUI)
 const C = Replayer($("replayC"));
-let liveOn = false;
+var liveOn = false;
 async function liveNext() {
   if (!liveOn) return;
   $("liveInfo").textContent = "dealing…";
@@ -303,7 +304,9 @@ async function liveNext() {
 }
 C.onEnd = () => liveOn && setTimeout(liveNext, 600);
 function liveStop() { liveOn = false; C.stop(); $("liveGo").textContent = "Start"; }
-$("liveGo").onclick = () => { if (liveOn) return liveStop(); liveOn = true; $("liveGo").textContent = "Stop"; liveNext(); };
+function liveStart() { if (!$("liveRun").value) return; liveOn = true; $("liveGo").textContent = "Stop"; liveNext(); }
+$("liveGo").onclick = () => liveOn ? liveStop() : liveStart();
+$("liveRun").onchange = $("liveOpp").onchange = () => { if (liveOn) { C.stop(); liveNext(); } };
 
 // ---------------- start: 1 and 2 on by default
 (async () => {
