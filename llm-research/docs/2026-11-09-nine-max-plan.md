@@ -143,6 +143,39 @@ fixed opponent tried. This is the 9-max counterpart of the heads-up LBR finding 
 the population needs **exploiters** (networks trained to beat the current one, as in AlphaStar's league and PSRO),
 so the main network learns to close the holes they find.
 
+**Exploitability of the newer runs (2026-11-10).** Same test: 30 minutes, a fresh exploiter on the RTX PRO 6000
+against 8 frozen copies of the run's checkpoint at the time.
+
+| Run (training time at the test) | What it adds | Exploiter after 15 min | after 30 min |
+|---|---|---|---|
+| `nm3` (10 h) | ramped pull | +191 | +219 (+239 after 2 h) |
+| `nm4` (6.5 h) | NeuRD | +47 | **+44** |
+| `nm5` (6 h) | exploiters in training (25% of tables) | +25 | +125 |
+| `nm6` (3.5 h) | stacks 5–200bb, exploiters | +9 | **+8** |
+
+- **NeuRD (`nm4`) is 5× less exploitable than `nm3` and still flat at 30 minutes.** It matches the heads-up
+  result (NeuRD LBR ≈ 0).
+- **`nm5`'s own exploiters understate its holes.** Its in-training readings were +8 to +22, but a fresh 30-minute
+  exploiter wins +125. They are reset every hour and share the pool with rule players, so they never get as far
+  as a dedicated one. The fresh test is the number to trust.
+- `nm6` reads lowest, but it is not comparable as it stands: the exploiter plays at the run's mixed stacks, and
+  short stacks leave fewer decisions to exploit.
+- **Next:** NeuRD with exploiters (`nm4`'s learner in `nm5`'s league) for the next cash run.
+
+**Real tables for the newer runs** (`bot_sim`, 2,000 sessions × 24 hands, the same seats as `table2k_nm3`):
+
+| Seat | `nine#nm3` | `nine#nm1` | `nine#nm4` | `nine#nm5` |
+|---|---|---|---|---|
+| **9-max network** | +36.6 [+24, +50] | +34.4 [+26, +43] | +30.1 [+17, +44] | **+37.6** [+26, +49] |
+| Current bot (`blueprintbot`) | +21.8 | +21.4 | +15.4 | +23.5 |
+| Solver bot | +26.2 | +16.8 | +18.5 | +17.2 |
+| Monte | +8.9 | +5.5 | +23.8 | +16.4 |
+| Clones `pros`, `pros_b` | −13.1, −7.8 | −9.9, −10.3 | −19.0, −23.4 | −11.3, −12.0 |
+| Personas bob, tina, nora | −34, −39, +1 | −26, −42, +10 | −12, −35, +1 | −34, −48, +10 |
+
+Every network tops its table, and the four overlap. Against these opponents the real tables cannot tell the runs
+apart; exploitability can.
+
 **Speed:** the trainer now plays a whole batch (self-play and population tables together) in one loop with a
 per-table seating (`play(..., assign=...)`). Before, it ran one loop per seating; the time a loop takes is set by
 its length, not its table count. 3,800 → 6,700 hands a second on the same shared 3090 (1.75×). Running runs keep
