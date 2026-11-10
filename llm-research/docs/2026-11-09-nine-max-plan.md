@@ -419,6 +419,23 @@ bubble situations and final tables?
 - The real-table adapter plays mixed-stack networks at any depth from 2bb, but declines tournament networks
   (bot_sim tables have no payouts) and lets Monte play those hands.
 
-**Runs to start when the lab is reachable:** `nm6`, cash with mixed stacks (`--stacks 5,200`), and `nm7`, the
-tournament network (`--tourney`), both with population and exploiter training and the ramped pull. First the
-engine check with mixed stacks and the ICM self-test.
+**Checks (2026-11-10, lab):**
+
+- ICM self-test (`python scripts/icm.py`): matches brute force for 3, 5 and 7 players; nine-player equities sum
+  to the pool; winner-take-all equals the chip share. On bubble tables the chip leader's equity is on average 0.56
+  of its chip share. Example (3 left, 2 equal prizes, stacks 60/30/10): equity per chip 0.77 / 1.31 / 1.46.
+- **The mixed-stack PokerKit check found an engine bug:** the engine let a player raise when no other player could
+  answer: everyone else folded, all in, or with no more chips than the current bet. PokerKit forbids it ("no
+  reason to complete, bet, or raise"). It cannot happen with equal stacks, which is why the 100bb checks were
+  clean; `nm1`–`nm5` are unaffected. Fixed in `Tables.legal`. After the fix: **0 mismatches in 14,000 tables**
+  (3, 4, 6 and 9 players, all three menus, mixed 2–200bb stacks and 100bb).
+- Smoke tests (2 minutes, 3090): both modes train at 33,000–37,000 hands a second; the inputs grow from 72 to 82
+  (stacks) and 101 (tournament). The tournament run's strategy became deterministic within 2 minutes (entropy
+  0.000) and its exploiter won +87 to +102: short-stack play is close to all-or-nothing, but this was too fast.
+
+**Runs started 2026-11-10 09:25 lab time** (population 0.4, exploiters 0.25, 24 hours):
+
+| Run | GPU | Mode | Pull |
+|---|---|---|---|
+| `nm6` | 3090 | cash, stacks 5–200bb (`--stacks 5,200`) | ramped 0.03 → 0.3 over 3 hours |
+| `nm7` | RTX PRO 6000 | tournament (`--tourney`) | ramped **0.1** → 0.3, entropy bonus 0.02 (against the collapse seen in the smoke test) |
