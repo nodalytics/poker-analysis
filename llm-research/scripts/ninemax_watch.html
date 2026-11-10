@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>9-max Watch</title>
+<style>
+  :root {
+    --bg: #0f1412; --panel: #18201c; --ink: #e6ece8; --muted: #8fa198; --line: #2a352f;
+    --felt: #1d5a3c; --felt-edge: #123826; --accent: #e3b341; --win: #4cc38a; --loss: #e5534b;
+    --card: #fbfbf7; --red: #c8312b; --black: #1b1b1b;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.4 system-ui, sans-serif; }
+  header { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 12px 16px;
+           border-bottom: 1px solid var(--line); }
+  header h1 { font-size: 17px; margin: 0 12px 0 0; }
+  .tabs button, .btn { background: var(--panel); color: var(--ink); border: 1px solid var(--line);
+           border-radius: 6px; padding: 6px 12px; cursor: pointer; font: inherit; }
+  .tabs button.on { border-color: var(--accent); color: var(--accent); }
+  .btn:hover, .tabs button:hover { border-color: var(--muted); }
+  main { padding: 16px; max-width: 1280px; margin: 0 auto; }
+  section { display: none; } section.on { display: block; }
+  h2 { font-size: 15px; margin: 18px 0 8px; color: var(--muted); font-weight: 600; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 8px 0; }
+  select, input { background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 6px;
+           padding: 5px 8px; font: inherit; }
+  .charts { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 12px; }
+  .chart { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px; }
+  .chart h3 { margin: 0 0 4px; font-size: 13px; } .chart p { margin: 0 0 6px; color: var(--muted); font-size: 12px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--muted); }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; }
+  svg text { fill: var(--muted); font-size: 10px; }
+  .table-wrap { position: relative; width: 100%; max-width: 940px; aspect-ratio: 16 / 9; margin: 8px auto; }
+  .felt { position: absolute; inset: 9% 7%; border-radius: 50%; background: radial-gradient(var(--felt), var(--felt-edge));
+          border: 10px solid #3b2a1a; box-shadow: inset 0 0 40px #0008; }
+  .center { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); text-align: center; }
+  .pot { margin-top: 6px; color: var(--accent); font-weight: 600; }
+  .seat { position: absolute; transform: translate(-50%, -50%); width: 128px; background: #0d1210e6;
+          border: 1px solid var(--line); border-radius: 8px; padding: 5px 6px; text-align: center; font-size: 12px; }
+  .seat.act { border-color: var(--accent); box-shadow: 0 0 0 2px #e3b34155; }
+  .seat.out { opacity: .38; }
+  .seat .nm { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .seat .pos { color: var(--muted); font-size: 11px; }
+  .seat .say { min-height: 16px; color: var(--accent); }
+  .seat .res.w { color: var(--win); font-weight: 700; } .seat .res.l { color: var(--loss); }
+  .cards { display: inline-flex; gap: 3px; margin: 3px 0; }
+  .c { display: inline-block; width: 26px; height: 36px; border-radius: 4px; background: var(--card); color: var(--black);
+       font-weight: 700; font-size: 13px; line-height: 36px; text-align: center; }
+  .c.r { color: var(--red); } .c.back { background: repeating-linear-gradient(45deg, #2f4e8f, #2f4e8f 4px, #24407a 4px, #24407a 8px); }
+  .board .c { width: 34px; height: 48px; line-height: 48px; font-size: 16px; }
+  .log { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; max-height: 220px;
+         overflow: auto; font: 12px/1.5 ui-monospace, monospace; }
+  .log .cur { color: var(--accent); }
+  .hands button { min-width: 34px; }
+  .hands button.on { border-color: var(--accent); color: var(--accent); }
+  .muted { color: var(--muted); }
+  @media (max-width: 700px) { .seat { width: 92px; font-size: 10px; } .c { width: 20px; height: 28px; line-height: 28px; font-size: 11px; }
+    .board .c { width: 26px; height: 36px; line-height: 36px; font-size: 13px; } .charts { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>9-max Watch</h1>
+  <nav class="tabs">
+    <button data-tab="train" class="on">Training &amp; hands</button>
+    <button data-tab="real">Real tables</button>
+    <button data-tab="live">Live</button>
+  </nav>
+  <span class="muted" id="status"></span>
+</header>
+<main>
+  <!-- 1 + 2: on by default -->
+  <section id="train" class="on">
+    <h2>How it is learning <span class="muted">(1-vs-8 duplicate results, bb/100; x = hands trained)</span></h2>
+    <div class="legend" id="legend"></div>
+    <div class="charts" id="charts"></div>
+    <h2>How it plays <span class="muted">(sample hands recorded at each checkpoint)</span></h2>
+    <div class="row">
+      <label>Run <select id="snapRun"></select></label>
+      <label>Checkpoint <select id="snapId"></select></label>
+      <span class="muted" id="snapInfo"></span>
+    </div>
+    <div id="replayA"></div>
+  </section>
+  <!-- 3 -->
+  <section id="real">
+    <h2>Real 9-handed tables <span class="muted">(bot_sim: the network against the solver bot, the current bot, clones and personas)</span></h2>
+    <div class="row">
+      <label>Run <select id="realDir"></select></label>
+      <label>Session <input id="realSession" type="number" min="1" value="1" style="width:90px"></label>
+      <button class="btn" id="realLoad">Load</button>
+    </div>
+    <div id="replayB"></div>
+  </section>
+  <!-- 4 -->
+  <section id="live">
+    <h2>Live <span class="muted">(fresh hands from the newest checkpoint, dealt continuously)</span></h2>
+    <div class="row">
+      <label>Run <select id="liveRun"></select></label>
+      <label>Opponents <select id="liveOpp">
+        <option value="self">8 copies of itself</option><option value="tag">8 tight-aggressive</option>
+        <option value="maniac">8 maniacs</option><option value="station">8 calling stations</option>
+        <option value="random">8 random</option></select></label>
+      <button class="btn" id="liveGo">Start</button>
+      <span class="muted" id="liveInfo"></span>
+    </div>
+    <div id="replayC"></div>
+  </section>
+</main>
+<script>
+const COLORS = ["#e3b341", "#4cc38a", "#58a6ff", "#e5534b", "#c297ff", "#3fb9c6", "#f0883e", "#a5d6a7"];
+const $ = (id) => document.getElementById(id);
+const get = (u) => fetch(u).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
+
+// ---------------- tabs
+document.querySelectorAll(".tabs button").forEach((b) => b.onclick = () => {
+  document.querySelectorAll(".tabs button").forEach((x) => x.classList.toggle("on", x === b));
+  document.querySelectorAll("section").forEach((s) => s.classList.toggle("on", s.id === b.dataset.tab));
+  if (b.dataset.tab === "real") loadTables();
+  if (b.dataset.tab !== "live") liveStop();
+});
+
+// ---------------- 1: charts
+const METRICS = [
+  ["tag", "vs tight-aggressive rule player", "higher is better"],
+  ["exploiter", "Exploiter's winnings against it", "lower is better: how exploitable it is"],
+  ["previous", "vs its checkpoint 30 minutes earlier", "near 0 = no longer improving against itself"],
+  ["maniac", "vs maniacs", "higher is better"],
+  ["station", "vs calling stations", "higher is better"],
+  ["random", "vs random players", "higher is better"],
+  ["rate", "Training speed", "hands per second"],
+  ["entropy", "Entropy of its play", "how mixed its strategy is"],
+];
+function chart(series, key, title, note) {
+  const W = 380, H = 190, L = 44, R = 8, T = 8, B = 24;
+  const pts = series.flatMap((s) => s.pts.filter((p) => p[key] !== undefined));
+  if (!pts.length) return "";
+  const xs = pts.map((p) => p.hands / 1e6), ys = pts.map((p) => p[key]);
+  let x0 = 0, x1 = Math.max(...xs) || 1, y0 = Math.min(0, ...ys), y1 = Math.max(0, ...ys);
+  if (y1 === y0) y1 = y0 + 1;
+  const X = (v) => L + (v - x0) / (x1 - x0) * (W - L - R), Y = (v) => T + (y1 - v) / (y1 - y0) * (H - T - B);
+  let g = `<line x1="${L}" x2="${W - R}" y1="${Y(0)}" y2="${Y(0)}" stroke="#2a352f"/>`;
+  for (const v of [y0, (y0 + y1) / 2, y1]) g += `<text x="${L - 4}" y="${Y(v) + 3}" text-anchor="end">${fmt(v)}</text>`;
+  g += `<text x="${W - R}" y="${H - 6}" text-anchor="end">${fmt(x1)} M hands</text>`;
+  series.forEach((s) => {
+    const p = s.pts.filter((q) => q[key] !== undefined);
+    if (!p.length) return;
+    g += `<polyline fill="none" stroke="${s.color}" stroke-width="2" points="${p.map((q) => X(q.hands / 1e6) + "," + Y(q[key])).join(" ")}"/>`;
+    g += p.map((q) => `<circle cx="${X(q.hands / 1e6)}" cy="${Y(q[key])}" r="2.5" fill="${s.color}"><title>${s.name}: ${q[key]} at ${(q.hands / 1e6).toFixed(0)} M hands (${q.minutes} min)</title></circle>`).join("");
+  });
+  return `<div class="chart"><h3>${title}</h3><p>${note}</p><svg viewBox="0 0 ${W} ${H}" width="100%">${g}</svg></div>`;
+}
+const fmt = (v) => Math.abs(v) >= 1000 ? (v / 1000).toFixed(1) + "k" : Math.abs(v) >= 10 ? v.toFixed(0) : v.toFixed(2);
+async function refreshCharts() {
+  try {
+    const runs = await get("/api/runs");
+    const series = Object.entries(runs).map(([name, pts], k) => ({ name, pts, color: COLORS[k % COLORS.length] }));
+    $("legend").innerHTML = series.map((s) => `<span><i style="background:${s.color}"></i>${s.name} (${s.pts.length} evaluations)</span>`).join("");
+    $("charts").innerHTML = METRICS.map(([k, t, n]) => chart(series, k, t, n)).join("");
+    for (const sel of [$("snapRun"), $("liveRun")]) {
+      const cur = sel.value;
+      sel.innerHTML = series.map((s) => `<option>${s.name}</option>`).join("");
+      if (cur) sel.value = cur;
+    }
+    $("status").textContent = "updated " + new Date().toLocaleTimeString();
+  } catch (e) { $("status").textContent = "server not reachable"; }
+}
+
+// ---------------- the table replayer (2, 3 and 4 share it)
+const SEAT_XY = [[50, 92], [24, 88], [6, 62], [8, 30], [26, 7], [50, 4], [74, 7], [92, 30], [94, 62]];
+const STREETS = ["preflop", "flop", "turn", "river"];
+const cardHtml = (c) => c ? `<span class="c ${"hd".includes(c[1]) ? "r" : ""}">${c[0].replace("T", "10")}${{ c: "♣", d: "♦", h: "♥", s: "♠" }[c[1]]}</span>` : `<span class="c back"></span>`;
+function Replayer(el, opts = {}) {
+  el.innerHTML = `<div class="row hands"></div><div class="table-wrap"><div class="felt"></div><div class="center"><div class="cards board"></div><div class="pot"></div><div class="muted street"></div></div></div>
+    <div class="row"><button class="btn" data-k="first">|&lt;</button><button class="btn" data-k="prev">&lt;</button>
+    <button class="btn" data-k="play">Play</button><button class="btn" data-k="next">&gt;</button><button class="btn" data-k="last">&gt;|</button>
+    <label class="muted">Speed <input type="range" min="150" max="2000" value="800" class="speed" style="direction:rtl"></label>
+    <label class="muted"><input type="checkbox" class="showall" checked> show every player's cards</label></div><div class="log"></div>`;
+  const wrap = el.querySelector(".table-wrap");
+  const seats = SEAT_XY.map(([x, y]) => { const d = document.createElement("div"); d.className = "seat"; d.style.left = x + "%"; d.style.top = y + "%"; wrap.appendChild(d); return d; });
+  let hands = [], h = 0, step = 0, timer = null;
+  const self = {
+    onEnd: null,
+    load(list, start = 0) { hands = list || []; h = start; step = 0; drawList(); draw(); },
+    play() { if (timer) return; el.querySelector('[data-k="play"]').textContent = "Pause"; tick(); },
+    stop() { clearTimeout(timer); timer = null; el.querySelector('[data-k="play"]').textContent = "Play"; },
+  };
+  function tick() {
+    const H = hands[h];
+    if (!H) return self.stop();
+    if (step < H.steps.length + 1) { step++; draw(); }
+    else if (h < hands.length - 1) { h++; step = 0; drawList(); draw(); }
+    else { self.stop(); if (self.onEnd) self.onEnd(); return; }
+    timer = setTimeout(tick, +el.querySelector(".speed").value);
+  }
+  function drawList() {
+    el.querySelector(".hands").innerHTML = hands.map((H, k) =>
+      `<button class="btn ${k === h ? "on" : ""}" data-h="${k}" title="${H.steps.length} actions${H.showdown ? ", showdown" : ""}">${k + 1}${H.showdown ? "*" : ""}</button>`).join("") +
+      (hands.length ? `<span class="muted">* went to showdown</span>` : `<span class="muted">no hands yet</span>`);
+    el.querySelectorAll("[data-h]").forEach((b) => b.onclick = () => { self.stop(); h = +b.dataset.h; step = 0; drawList(); draw(); });
+  }
+  function draw() {
+    const H = hands[h];
+    if (!H) { seats.forEach((d) => d.innerHTML = ""); return; }
+    const n = H.seats.length, end = step > H.steps.length;
+    const S = step === 0 ? null : H.steps[Math.min(step, H.steps.length) - 1];
+    const blinds = Array.from({ length: n }, (_, k) => k === 0 ? 0.5 : k === 1 ? 1 : 0);
+    const contrib = S ? S.contrib : blinds, folded = S ? S.folded : Array(n).fill(false);
+    const street = end ? 3 : (S ? S.street : 0);
+    const showN = end ? (H.showdown ? 5 : H.board.length && H.steps.some((x) => x.street > 0) ? [0, 3, 4, 5][Math.max(...H.steps.map((x) => x.street))] : 0) : [0, 3, 4, 5][street];
+    const said = {};
+    H.steps.slice(0, Math.min(step, H.steps.length)).forEach((x) => said[x.seat] = x.text);
+    const all = el.querySelector(".showall").checked;
+    seats.forEach((d, k) => {
+      if (k >= n) { d.style.display = "none"; return; }
+      d.style.display = "";
+      const st = H.seats[k], res = H.result[k];
+      const showCards = all || end && H.showdown && !folded[k];
+      d.className = "seat" + (S && !end && S.seat === k ? " act" : "") + (folded[k] ? " out" : "");
+      d.innerHTML = `<div class="nm" title="${st.name}">${st.name}</div><div class="pos">${st.pos} · in ${(+contrib[k]).toFixed(1)} bb</div>
+        <div class="cards">${showCards && st.hole ? st.hole.map(cardHtml).join("") : cardHtml(null) + cardHtml(null)}</div>
+        <div class="say">${end ? `<span class="res ${res > 0 ? "w" : res < 0 ? "l" : ""}">${res > 0 ? "+" : ""}${(+res).toFixed(1)} bb</span>` : said[k] || ""}</div>`;
+    });
+    el.querySelector(".board").innerHTML = H.board.slice(0, showN).map(cardHtml).join("") || `<span class="muted">no board yet</span>`;
+    el.querySelector(".pot").textContent = "Pot " + contrib.reduce((a, b) => a + +b, 0).toFixed(1) + " bb";
+    el.querySelector(".street").textContent = end ? (H.showdown ? "showdown" : "hand over") : STREETS[street];
+    el.querySelector(".log").innerHTML = H.steps.map((x, k) =>
+      `<div class="${k === step - 1 ? "cur" : ""}">[${STREETS[x.street]}] ${H.seats[x.seat].pos} ${H.seats[x.seat].name} ${x.text}</div>`).join("") +
+      (end ? `<div class="cur">result: ${H.seats.map((s, k) => H.result[k] ? `${s.pos} ${H.result[k] > 0 ? "+" : ""}${H.result[k]}` : "").filter(Boolean).join(", ")}</div>` : "");
+  }
+  el.querySelector(".showall").onchange = draw;
+  el.querySelectorAll("[data-k]").forEach((b) => b.onclick = () => {
+    const H = hands[h]; if (!H) return;
+    const k = b.dataset.k;
+    if (k === "play") return timer ? self.stop() : self.play();
+    self.stop();
+    step = k === "first" ? 0 : k === "last" ? H.steps.length + 1 : k === "prev" ? Math.max(0, step - 1) : Math.min(H.steps.length + 1, step + 1);
+    draw();
+  });
+  return self;
+}
+
+// ---------------- 2: recorded checkpoints (default view)
+const A = Replayer($("replayA"));
+async function loadSnapshots(keep) {
+  const run = $("snapRun").value; if (!run) return;
+  const ids = await get("/api/snapshots?run=" + run);
+  const cur = $("snapId").value;
+  $("snapId").innerHTML = ids.map((id) => `<option value="${id}">${(+id / 1e6).toFixed(0)} M hands trained</option>`).reverse().join("");
+  if (keep && ids.includes(cur)) $("snapId").value = cur; else if (ids.length) loadSnap();
+  if (!ids.length) { $("snapInfo").textContent = "no checkpoint recorded yet (one per new checkpoint, every 30 minutes)"; A.load([]); }
+}
+async function loadSnap() {
+  const s = await get(`/api/snapshot?run=${$("snapRun").value}&id=${$("snapId").value}`);
+  $("snapInfo").textContent = `recorded ${s.time}, all nine seats played by the network`;
+  A.load(s.hands);
+}
+$("snapRun").onchange = () => loadSnapshots(false);
+$("snapId").onchange = loadSnap;
+
+// ---------------- 3: real tables (from the GUI)
+const Bp = Replayer($("replayB"));
+let tablesLoaded = false;
+async function loadTables() {
+  if (tablesLoaded) return;
+  const t = await get("/api/tables");
+  $("realDir").innerHTML = Object.entries(t).map(([d, n]) => `<option value="${d}">${d} (${n} sessions)</option>`).join("");
+  tablesLoaded = true;
+  loadReal();
+}
+async function loadReal() {
+  const r = await get(`/api/table?dir=${$("realDir").value}&session=${$("realSession").value}`);
+  Bp.load(r.hands);
+}
+$("realLoad").onclick = loadReal;
+$("realDir").onchange = loadReal;
+
+// ---------------- 4: live (from the GUI)
+const C = Replayer($("replayC"));
+let liveOn = false;
+async function liveNext() {
+  if (!liveOn) return;
+  $("liveInfo").textContent = "dealing…";
+  try {
+    const r = await get(`/api/live?run=${$("liveRun").value}&opp=${$("liveOpp").value}`);
+    $("liveInfo").textContent = `${r.run}, ${(r.hands_trained / 1e6).toFixed(0)} M hands trained`;
+    C.load(r.hands); C.play();
+  } catch (e) { $("liveInfo").textContent = "could not deal: " + e.message; liveStop(); }
+}
+C.onEnd = () => liveOn && setTimeout(liveNext, 600);
+function liveStop() { liveOn = false; C.stop(); $("liveGo").textContent = "Start"; }
+$("liveGo").onclick = () => { if (liveOn) return liveStop(); liveOn = true; $("liveGo").textContent = "Stop"; liveNext(); };
+
+// ---------------- start: 1 and 2 on by default
+(async () => {
+  await refreshCharts();
+  await loadSnapshots(false);
+  setInterval(async () => { await refreshCharts(); await loadSnapshots(true); }, 60000);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,332 @@
+"""Watch the 9-max networks learn and play: a small web page served on the lab (127.0.0.1 only; reach it through an
+SSH tunnel). The training runs need no change: everything is read from their run directories.
+
+  1 Training (on by default)  charts of every run's progress.log: 1-vs-8 results against the rule players, against
+                              its previous checkpoint, the exploiter's winnings (exploitability), speed, entropy.
+  2 Replayer (on by default)  a background thread notices each new checkpoint.pt, plays sample 9-handed hands with
+                              it (all cards dealt, every action, the showdown) and keeps them, so the hands of
+                              every checkpoint since the watcher started can be replayed and compared.
+  3 Real tables (from the page) hands from bot_sim tables (results/ninemax/table*/session*/table.log): the network
+                              against the solver bot, the current bot, the professional clones and the personas.
+  4 Live (from the page)      fresh hands from the newest checkpoint, dealt continuously at watching speed.
+
+Usage (lab, from llm-research):
+  PYTHONPATH=scripts .venv-gpu/bin/python scripts/ninemax_watch.py [--port 8790] [--runs blueprint/nm3,...]
+then on your machine: ssh -N -L 8790:127.0.0.1:8790 labuser@LAB_HOST and open http://localhost:8790
+"""
+
+import argparse
+import glob
+import json
+import os
+import re
+import threading
+import time
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import parse_qs, urlparse
+
+import torch
+import torch.nn.functional as F
+
+from ninemax_engine import BB, Dealer, Menu, Tables, strength
+from ninemax_selfplay import NineNet, masked, rule_probs
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(HERE)
+POS = ["SB", "BB", "UTG", "UTG+1", "MP", "LJ", "HJ", "CO", "BTN"]
+RANKS, SUITS = "23456789TJQKA", "cdhs"
+LOCK = threading.Lock()
+
+
+def card(c):
+    return RANKS[c // 4] + SUITS[c % 4]
+
+
+# ---------------------------------------------------------------- 1: training curves
+
+
+NUM = r"([-+]?\d+(?:\.\d+)?)"
+FIELDS = {
+    "tag": r"vs tag: " + NUM,
+    "previous": r"vs previous checkpoint: " + NUM,
+    "maniac": r"vs maniac: " + NUM,
+    "station": r"vs station: " + NUM,
+    "random": r"vs random: " + NUM,
+    "exploiter": r"exploiter vs 8 x net: " + NUM,
+    "rate": NUM + r" hands/s",
+    "entropy": r"entropy " + NUM,
+    "pull": r"pull " + NUM,
+}
+
+
+def curves(run):
+    """Every evaluation line of RUN/progress.log as points keyed by the hands played (monotonic across resumes)."""
+    pts = []
+    path = os.path.join(run, "progress.log")
+    if not os.path.exists(path):
+        return pts
+    for line in open(path):
+        m = re.match(r"\s*" + NUM + r" min (\d+) hands", line)
+        if not m:
+            continue
+        p = {"minutes": float(m.group(1)), "hands": int(m.group(2))}
+        for k, rx in FIELDS.items():
+            f = re.search(rx, line)
+            if f:
+                p[k] = float(f.group(1))
+        pts.append(p)
+    return pts
+
+
+# ---------------------------------------------------------------- 2 and 4: sample hands from a checkpoint
+
+
+class Lab:
+    """The engine, the dealer and the networks on the CPU, for sample hands."""
+
+    def __init__(self, absdir, lib):
+        torch.set_num_threads(2)
+        self.B = int(open(os.path.join(absdir, "meta.txt")).read().split()[1])
+        self.dealer = Dealer(lib, absdir, 9, self.B, "cpu", seed=int(time.time()) % 100000)
+        bk0, _, _ = self.dealer.raw(1 << 16)
+        pre_s = self.dealer.pre_strength[torch.tensor(bk0[:, :, 0].ravel())]
+        self.dealer.pre_q = (torch.quantile(pre_s, 0.88).item(), torch.quantile(pre_s, 0.65).item())
+        self.menus = {}
+
+    def load(self, run):
+        cfg = json.load(open(os.path.join(run, "config.json")))
+        menu = self.menus.setdefault(cfg.get("menu", "medium"), Menu(cfg.get("menu", "medium"), "cpu"))
+        net = NineNet(cfg["nfeat"], cfg["actions"], self.B)
+        st = torch.load(os.path.join(run, "checkpoint.pt"), map_location="cpu", weights_only=True)
+        net.load_state_dict(st["avg"])
+        return net.eval(), menu, int(st["hands"])
+
+    def hands(self, net, menu, n=48, keep=8, opp="self"):
+        """Play n deals; keep the `keep` most eventful ones (plus one quiet one) as replayable hands."""
+        from ninemax_selfplay import features
+
+        P = 9
+        bk, rk, cd = self.dealer.deal(n, cards=True)
+        T = Tables(n, P, menu, "cpu")
+        hero = torch.randint(P, (n,))  # with a rule opponent: the network's seat at each table
+        steps = [[] for _ in range(n)]
+        while not bool(T.done.all()):
+            g = (~T.done).nonzero().squeeze(1)
+            i = T.actor[g]
+            s = strength(self.dealer, bk[g], T.street[g]).gather(1, i[:, None]).squeeze(1)
+            feat, legal = features(T, g, i)
+            with torch.no_grad():
+                lg, _ = net(feat, bk[g, i], T.street[g], s)
+            probs = F.softmax(masked(lg, legal), 1)
+            if opp != "self":
+                rule = rule_probs(opp, T, g, i, legal, s, self.dealer)
+                probs = torch.where((i == hero[g])[:, None], probs, rule)
+            a = torch.multinomial(probs, 1).squeeze(1)
+            to_call = T.bet[g] - T.contrib[g, i]
+            street = T.street[g].clone()
+            T.step(g, a)
+            for k in range(len(g)):
+                t, seat, act = int(g[k]), int(i[k]), int(a[k])
+                total = int(T.contrib[t, seat])
+                if act == 0:
+                    text = "folds"
+                elif act == 1:
+                    text = f"calls {int(to_call[k]) / BB:g}" if int(to_call[k]) else "checks"
+                elif act == menu.A - 1:
+                    text = f"all-in {total / BB:g}"
+                else:
+                    text = f"raises to {total / BB:g}"
+                steps[t].append({
+                    "street": int(street[k]), "seat": seat, "text": text,
+                    "contrib": [round(x / BB, 2) for x in T.contrib[t].tolist()],
+                    "folded": T.folded[t].tolist(),
+                })  # fmt: skip
+        u = T.payoffs(rk) / BB
+        names = lambda t: [("net" if opp == "self" or s == int(hero[t]) else opp) for s in range(P)]  # noqa: E731
+        out = []
+        for t in range(n):
+            out.append({
+                "seats": [{"name": nm, "pos": POS[s], "hole": [card(cd[t][2 * s]), card(cd[t][2 * s + 1])]}
+                          for s, nm in enumerate(names(t))],
+                "board": [card(c) for c in cd[t][2 * P :]],
+                "steps": steps[t],
+                "result": [round(x, 2) for x in u[t].tolist()],
+                "showdown": bool(T.showdown[t]),
+                "flop": any(st["street"] > 0 for st in steps[t]) or bool(T.showdown[t]),
+            })  # fmt: skip
+        busy = sorted(range(n), key=lambda t: -len(out[t]["steps"]))
+        quiet = [t for t in range(n) if not out[t]["flop"]][:1]
+        return [out[t] for t in sorted(set(busy[:keep] + quiet))]
+
+
+class Recorder(threading.Thread):
+    """2: on every new checkpoint of every run, play sample hands and store them under OUT/<run>/<hands>.json."""
+
+    def __init__(self, lab, runs, out, every=60):
+        super().__init__(daemon=True)
+        self.lab, self.runs, self.out, self.every = lab, runs, out, every
+        self.seen = {}
+
+    def run(self):
+        while True:
+            for run in self.runs():
+                ck = os.path.join(run, "checkpoint.pt")
+                if not os.path.exists(ck):
+                    continue
+                mt = os.path.getmtime(ck)
+                if self.seen.get(run) == mt:
+                    continue
+                try:
+                    with LOCK:
+                        net, menu, hands = self.lab.load(run)
+                        sample = self.lab.hands(net, menu)
+                    d = os.path.join(self.out, os.path.basename(run))
+                    os.makedirs(d, exist_ok=True)
+                    json.dump({"run": run, "hands_trained": hands, "time": time.strftime("%Y-%m-%d %H:%M"),
+                               "hands": sample}, open(os.path.join(d, f"{hands:012d}.json"), "w"))  # fmt: skip
+                    self.seen[run] = mt
+                except Exception as e:  # noqa: BLE001  (a checkpoint being written; try again next round)
+                    print(f"recorder {run}: {e}", flush=True)
+            time.sleep(self.every)
+
+
+# ---------------------------------------------------------------- 3: real tables (bot_sim logs)
+
+
+ACT = re.compile(r"\s*\[(\w+)\s*\]\s+(\S+)\s+(\S\S \S\S)\s+(.+?)\s+\([\d.]+s\)$")
+SBC, BBC = 1, 2  # bot_sim blinds in chips
+
+
+def real_hands(path):
+    """Hands of one bot_sim session (table.log) in the replayer's format; chips become big blinds."""
+    hands, cur = [], None
+    for line in open(path):
+        if line.startswith("--- Hand"):
+            names = re.findall(r"(\S+) \d+ \(net [-+]\d+\)", line)
+            cur = {"seats": [{"name": nm, "pos": POS[k] if len(names) == 9 else str(k), "hole": None}
+                             for k, nm in enumerate(names)],
+                   "board": [], "steps": [], "result": [0] * len(names), "showdown": False}  # fmt: skip
+            contrib = [0.0] * len(names)
+            contrib[0], contrib[1] = SBC, BBC
+            street_in = list(contrib)
+            folded = [False] * len(names)
+            street = 0
+            hands.append(cur)
+            continue
+        if cur is None:
+            continue
+        m = ACT.match(line)
+        if m:
+            st = ["preflop", "flop", "turn", "river"].index(m.group(1))
+            if st != street:
+                street, street_in = st, list(contrib)
+            seat = [s["name"] for s in cur["seats"]].index(m.group(2))
+            cur["seats"][seat]["hole"] = m.group(3).split()
+            text = m.group(4)
+            if text.startswith("folds"):
+                folded[seat] = True
+            elif text.startswith("calls"):
+                contrib[seat] += float(text.split()[1])
+            elif text.startswith("raises to"):
+                contrib[seat] = street_in[seat] + float(text.split()[2])
+            shown = re.sub(r"(\d+(?:\.\d+)?)", lambda x: f"{float(x.group(1)) / BBC:g}", text)
+            cur["steps"].append({"street": st, "seat": seat, "text": shown,
+                                 "contrib": [c / BBC for c in contrib], "folded": list(folded)})  # fmt: skip
+        elif line.strip().startswith("board"):
+            parts = [p.strip() for p in line.strip()[6:].split("|")]
+            cur["board"] = [] if parts[0] == "-" else parts[0].split()
+            for chunk in re.findall(r"(\S+) (\S\S \S\S)", parts[1] if len(parts) > 1 else ""):
+                names = [s["name"] for s in cur["seats"]]
+                if chunk[0] in names:
+                    cur["seats"][names.index(chunk[0])]["hole"] = chunk[1].split()
+            for nm, v in re.findall(r"(\S+) ([-+]\d+)", parts[2] if len(parts) > 2 else ""):
+                names = [s["name"] for s in cur["seats"]]
+                if nm in names:
+                    cur["result"][names.index(nm)] = int(v) / BBC
+            cur["showdown"] = len(cur["board"]) == 5
+    return hands
+
+
+# ---------------------------------------------------------------- the server
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--port", type=int, default=8790)
+    ap.add_argument("--runs", default="", help="comma-separated run dirs (default: every blueprint/nm*)")
+    ap.add_argument("--out", default="results/ninemax/watch")
+    ap.add_argument("--abs", default="blueprint/out")
+    ap.add_argument("--lib", default="blueprint/libbp5.so")
+    args = ap.parse_args()
+    if args.port == 8000:
+        raise SystemExit("port 8000 is the another service tunnel")
+
+    def runs():
+        if args.runs:
+            return [r for r in args.runs.split(",") if r]
+        return sorted(d for d in glob.glob("blueprint/nm*") if os.path.exists(os.path.join(d, "progress.log")))
+
+    lab = Lab(args.abs, args.lib)
+    Recorder(lab, runs, args.out).start()
+    page = open(os.path.join(HERE, "ninemax_watch.html"), "rb").read()
+
+    class H(BaseHTTPRequestHandler):
+        def log_message(self, *a):
+            pass
+
+        def send(self, obj, ctype="application/json"):
+            body = obj if isinstance(obj, bytes) else json.dumps(obj).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", ctype)
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(body)
+
+        def do_GET(self):
+            u = urlparse(self.path)
+            q = {k: v[0] for k, v in parse_qs(u.query).items()}
+            try:
+                if u.path == "/":
+                    return self.send(page, "text/html; charset=utf-8")
+                if u.path == "/api/runs":
+                    return self.send({os.path.basename(r): curves(r) for r in runs()})
+                if u.path == "/api/snapshots":  # the recorded checkpoints of a run
+                    d = os.path.join(args.out, os.path.basename(q["run"]))
+                    return self.send(sorted(os.path.basename(f)[:-5] for f in glob.glob(os.path.join(d, "*.json"))))
+                if u.path == "/api/snapshot":
+                    d = os.path.join(args.out, os.path.basename(q["run"]), os.path.basename(q["id"]) + ".json")
+                    return self.send(json.load(open(d)))
+                if u.path == "/api/live":  # 4: fresh hands from the newest checkpoint
+                    run = [r for r in runs() if os.path.basename(r) == q["run"]][0]
+                    opp = q.get("opp", "self")
+                    if opp not in ("self", "tag", "maniac", "station", "random"):
+                        opp = "self"
+                    with LOCK:
+                        net, menu, hands = lab.load(run)
+                        sample = lab.hands(net, menu, n=24, keep=4, opp=opp)
+                    return self.send({"run": run, "hands_trained": hands, "hands": sample})
+                if u.path == "/api/tables":  # 3: bot_sim result directories and their sessions
+                    out = {}
+                    for d in sorted(glob.glob("results/ninemax/table*/")):
+                        n = len(glob.glob(os.path.join(d, "session*/table.log")))
+                        if n:
+                            out[os.path.basename(d.rstrip("/"))] = n
+                    return self.send(out)
+                if u.path == "/api/table":
+                    d = os.path.basename(q["dir"])
+                    k = int(q.get("session", 1))
+                    return self.send({"hands": real_hands(f"results/ninemax/{d}/session{k:04d}/table.log")})
+            except (KeyError, IndexError, FileNotFoundError, ValueError) as e:
+                self.send_response(404)
+                self.end_headers()
+                self.wfile.write(str(e).encode())
+                return
+            self.send_response(404)
+            self.end_headers()
+
+    print(f"watching on http://127.0.0.1:{args.port}", flush=True)
+    ThreadingHTTPServer(("127.0.0.1", args.port), H).serve_forever()
+
+
+if __name__ == "__main__":
+    main()
