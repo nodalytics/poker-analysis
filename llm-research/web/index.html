@@ -59,6 +59,8 @@
   @media (max-width: 700px) { .seat { width: 92px; font-size: 10px; } .c { width: 20px; height: 28px; line-height: 28px; font-size: 11px; }
     .board .c { width: 26px; height: 36px; line-height: 36px; font-size: 13px; } .charts { grid-template-columns: 1fr; } }
   .runs-wrap { overflow-x: auto; margin-bottom: 18px; }
+  .sense-intro { margin-bottom: 18px; } .sense-intro p { max-width: 980px; line-height: 1.5; }
+  .sense-intro td { white-space: normal !important; vertical-align: top; }
   table.runs { border-collapse: collapse; width: 100%; font-size: 13px; }
   table.runs th, table.runs td { text-align: left; padding: 6px 10px; border-bottom: 1px solid rgba(127,127,127,.25); white-space: nowrap; }
   table.runs td.wrap { white-space: normal; min-width: 180px; }
@@ -72,6 +74,7 @@
   <h1>9-max Watch</h1>
   <nav class="tabs">
     <button data-tab="train" class="on">Training &amp; hands</button>
+    <button data-tab="results">Results</button>
     <button data-tab="real">Real tables</button>
     <button data-tab="live">Live</button>
   </nav>
@@ -93,6 +96,31 @@
       <span class="muted" id="snapInfo"></span>
     </div>
     <div id="replayA"></div>
+  </section>
+  <!-- results: search, poker sense, ICM -->
+  <section id="results">
+    <h2>Search at play time <span class="muted">(the thinking bot vs 8 copies of the same network playing on instinct; bb/100 over 10,000 deals, all 9 seats)</span></h2>
+    <p class="muted">Before each decision after the flop (pots of up to 3 players), the bot imagines thousands of possible opponent hands consistent with how they played, tries every action and plays each out. "Effective" = how many of the imagined hands really count.</p>
+    <div class="runs-wrap"><table class="runs" id="searchTable"></table></div>
+    <h2>Poker sense <span class="muted">(what strong tournament players do, and why; docs/2026-11-11-mtt-strategy.md)</span></h2>
+    <div class="sense-intro">
+      <p>A network learns whatever wins against the opponents it practises against. If those opponents play strangely, it learns strange habits. Our early practice pool had made-up maniacs who raise everything and stations who call everything; against them, limping AA to trap them paid, so the networks learned it. Real players punish it. So we write down what good tournament players do, measure the network against it hand by hand, and build the rules no good player breaks into the game itself.</p>
+      <table class="runs">
+        <tr><th>Principle</th><th>Why</th><th>How we check it</th></tr>
+        <tr><td><b>Raise strong hands, never limp them</b></td><td>A raise builds the pot when you are ahead and makes weak hands fold or pay to see the flop. Limp AK and Q9 or KT see a cheap flop, sometimes hit, and take the pot (the partner's example: AK limped, Q9 made three nines).</td><td>AA, KK, QQ, AK first in: raised 95–100%. Since 2026-11-11 open-limping is not allowed at all (UTG to the button).</td></tr>
+        <tr><td><b>Fold trash early</b></td><td>Eight players still to act behind you; one of them usually has something.</td><td>72o, 83o, 94o… at UTG: folded 97–100%.</td></tr>
+        <tr><td><b>Open wider in later position</b></td><td>Fewer players left who can wake up with a hand; the blinds are worth stealing.</td><td>Hands played first in at 20bb: UTG about 10–20% … button 35–58%.</td></tr>
+        <tr><td><b>Shove, don't min-raise, when short</b></td><td>At 8bb a raise commits you anyway. The shove wins the blinds from hands that would beat you after the flop, and nobody can reshove you cheaply.</td><td>At 8bb, the share of played hands that go all in: 75–100%.</td></tr>
+        <tr><td><b>Defend the big blind against small opens</b></td><td>You already have 1bb in, and a 2× open gives you about 3.5 to 1. Folding too much lets every button steal from you.</td><td>Big blind vs the button's 2× open: defended 50–80%.</td></tr>
+        <tr><td><b>Chips are not money (ICM)</b></td><td>Busting costs more prize money than doubling up wins, most of all near the money and at the final table. Call all-ins tighter, and shove wider at players who must fold to survive.</td><td>Agreement with the ICM push/fold equilibrium (table below).</td></tr>
+        <tr><td><b>Open size can vary</b></td><td>At 10–25bb many players open 2–2.2×; 3× is used too. The size need not be 2.5×.</td><td>The tournament menu offers 2×, 2.5× and 3× opens, and the network learns which to use where.</td></tr>
+      </table>
+      <p class="muted">The bands are approximate, from common tournament charts (chip value, 9-handed). An "off" is a spot to look at, not proof of a leak. Checks after the flop (c-bets, folding to small bets, thin value bets, committing short stacks) come next.</p>
+    </div>
+    <h3>How the networks score</h3>
+    <div id="senseBox"></div>
+    <h2>ICM push/fold agreement <span class="muted">(share of hands where the network does what the ICM equilibrium chart does, 10bb stacks)</span></h2>
+    <div class="runs-wrap"><table class="runs" id="pfTable"></table></div>
   </section>
   <!-- 3 -->
   <section id="real">
@@ -180,8 +208,33 @@ async function refreshInfo() {
       <th class="num" title="2,000 bot_sim sessions against bots, clones and personas">Real tables</th><th>Snapshots</th></tr>` + rows;
   } catch (e) { /* the charts report the connection */ }
 }
+const pct = (v) => v === null || v === undefined ? "–" : (100 * v).toFixed(0) + "%";
+async function refreshResults() {
+  try {
+    const r = await get("/api/results");
+    $("searchTable").innerHTML = `<tr><th>Network</th><th class="num">Hands imagined</th><th>Policy</th>
+      <th class="num">Effective (median)</th><th class="num">Gain, bb/100</th><th class="num">95% range</th><th class="num">Decisions</th><th class="num">Time</th></tr>` +
+      r.search.map((s) => `<tr><td>${(s.run || "").replace("blueprint/", "")}</td><td class="num">${s.samples}</td>
+      <td>${s.samples ? s.mode + (s.mode === "mix" ? " τ=" + s.tau : "") : "no search (check)"}</td>
+      <td class="num">${s.ess_median ?? "–"}</td><td class="num"><b>${sgn(s.bb100, 1)}</b></td>
+      <td class="num">${s.ci95 ? sgn(s.ci95[0], 1) + " to " + sgn(s.ci95[1], 1) : "–"}</td>
+      <td class="num">${s.searched_decisions ?? "–"}</td><td class="num">${s.seconds ? Math.round(s.seconds / 60) + " min" : "–"}</td></tr>`).join("");
+    $("senseBox").innerHTML = Object.entries(r.sense).reverse().map(([run, v]) => {
+      const ok = v.checks.filter((c) => c.ok).length;
+      return `<h3>${run} <span class="muted">(${(v.hands_trained / 1e6).toFixed(0)} M hands): ${ok} of ${v.checks.length} within the reference band</span></h3>
+      <div class="runs-wrap"><table class="runs"><tr><th></th><th>Check</th><th class="num">Network</th><th class="num">Band</th><th>Detail</th></tr>` +
+      v.checks.map((c) => `<tr><td>${c.ok ? '<span class="dot training"></span>ok' : '<span class="dot" style="background:#e5534b"></span>off'}</td>
+      <td>${c.check}</td><td class="num"><b>${pct(c.value)}</b></td><td class="num">${pct(c.band[0])}–${pct(c.band[1])}</td>
+      <td class="wrap muted">${c.detail}</td></tr>`).join("") + `</table></div>`;
+    }).join("") || '<p class="muted">none yet</p>';
+    $("pfTable").innerHTML = `<tr><th>Network</th><th>Table</th><th class="num">Agreement</th><th class="num">BB calls SB shove</th><th class="num">Chart</th></tr>` +
+      r.pushfold.map((p) => `<tr><td>${p.run}</td><td>${p.table}</td><td class="num"><b>${pct(p.agree)}</b></td>
+      <td class="num">${pct(p.bb_calls)}</td><td class="num">${pct(p.bb_chart)}</td></tr>`).join("");
+  } catch (e) { /* the charts report the connection */ }
+}
 async function refreshCharts() {
   refreshInfo();
+  refreshResults();
   try {
     const runs = await get("/api/runs");
     const series = Object.entries(runs).map(([name, pts], k) => ({ name, pts, color: COLORS[k % COLORS.length] }));

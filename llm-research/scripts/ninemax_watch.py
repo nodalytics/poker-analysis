@@ -92,6 +92,38 @@ def _last(path, rx):
     return found
 
 
+def results():
+    """The evaluation results kept in results/ninemax: search at play time (search*_*.json), the poker-sense
+    checks (sense_*.json) and the ICM push/fold agreement (pushfold_check*.json)."""
+    res = os.path.join(ROOT, "results", "ninemax")
+    out = {"search": [], "sense": {}, "pushfold": []}
+    for f in sorted(glob.glob(os.path.join(res, "search*_*.json"))):
+        try:
+            r = json.load(open(f))
+        except (OSError, ValueError):
+            continue
+        out["search"].append({k: r.get(k) for k in ("run", "samples", "mode", "tau", "bb100", "ci95", "ess_median",
+                                                     "searched_decisions", "seconds", "hands")})  # fmt: skip
+    for f in sorted(glob.glob(os.path.join(res, "sense_*.json")), key=os.path.getmtime):
+        try:
+            out["sense"].update(json.load(open(f)))  # later files replace earlier readings of the same run
+        except (OSError, ValueError):
+            continue
+    for f in sorted(glob.glob(os.path.join(res, "pushfold_check*.json")), key=os.path.getmtime):
+        try:
+            d = json.load(open(f))
+        except (OSError, ValueError):
+            continue
+        for key, seats in d.items():
+            run, table = key.split(" | ", 1)
+            agree = sum(v["agree"] for v in seats.values()) / len(seats)
+            bb = seats.get("bb_vs_sb", {})
+            out["pushfold"].append({"run": run, "table": table, "agree": round(agree, 3),
+                                    "bb_calls": bb.get("in"), "bb_chart": bb.get("chart")})  # fmt: skip
+    out["search"].sort(key=lambda r: (r["run"] or "", r["samples"] or 0, r["mode"] or "", r["tau"] or 0))
+    return out
+
+
 def info(run):
     """What a run is and how it stands: its recipe (config.json), whether it is still training, its latest
     evaluation, the fresh exploiter test and the real-table result when they exist, and the kept snapshots."""
@@ -361,6 +393,8 @@ def main():
             try:
                 if u.path == "/":
                     return self.send(open(page, "rb").read(), "text/html; charset=utf-8")
+                if u.path == "/api/results":  # search, poker-sense and push/fold results
+                    return self.send(results())
                 if u.path == "/api/info":  # what each run is and where it stands
                     return self.send({os.path.basename(r): info(r) for r in runs()})
                 if u.path == "/api/runs":
