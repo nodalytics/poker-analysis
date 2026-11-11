@@ -116,6 +116,51 @@ extern "C" void bp_deal_n(int n, int players, uint64_t seed, int32_t* bk, int32_
   }
 }
 
+// As bp_deal_n, but cards known at a decision stay put: fixed[2P + 5] in the same layout (each player's two hole
+// cards in seat order, then the five board cards), -1 where a card is to be dealt. Every table deals the unknown
+// cards afresh from the deck without the fixed ones (search at play time: the hero's hand and the board so far are
+// known; opponents' hands and the rest of the board are sampled).
+extern "C" void bp_deal_fixed(int n, int players, uint64_t seed, const int32_t* fixed, int32_t* bk, int32_t* rk,
+                              int32_t* cards) {
+  if (!IX) return;
+  const int need = 2 * players + 5;
+  bool used[52] = {false};
+  for (int k = 0; k < need; ++k)
+    if (fixed[k] >= 0) used[fixed[k]] = true;
+  uint8_t pool[52];
+  int np = 0;
+  for (int k = 0; k < 52; ++k)
+    if (!used[k]) pool[np++] = (uint8_t)k;
+#pragma omp parallel for schedule(static)
+  for (int g = 0; g < n; ++g) {
+    uint64_t st = seed * 0x100000001B3ULL + (uint64_t)g;
+    uint8_t deck[52], hand[2 * 9 + 5];
+    for (int k = 0; k < np; ++k) deck[k] = pool[k];
+    int next = 0;
+    for (int k = 0; k < need; ++k) {
+      if (fixed[k] >= 0) {
+        hand[k] = (uint8_t)fixed[k];
+      } else {  // partial Fisher-Yates over the free cards
+        int j = next + (int)(splitmix(st) % (uint64_t)(np - next));
+        std::swap(deck[next], deck[j]);
+        hand[k] = deck[next++];
+      }
+    }
+    const uint8_t* board = hand + 2 * players;
+    for (int p = 0; p < players; ++p) {
+      uint8_t c[7] = {hand[2 * p], hand[2 * p + 1], board[0], board[1], board[2], board[3], board[4]};
+      int32_t* b = bk + ((size_t)g * players + p) * 4;
+      b[0] = (int32_t)hand_index_last(&IX->pre, c);
+      b[1] = FB[hand_index_last(&IX->flop, c)];
+      b[2] = TB[hand_index_last(&IX->turn, c)];
+      b[3] = RB.empty() ? river_bucket_from_hs(c) : RB[hand_index_last(&IX->river, c)];
+      rk[(size_t)g * players + p] = evaluate_7cards(c[0], c[1], c[2], c[3], c[4], c[5], c[6]);
+    }
+    if (cards)
+      for (int k = 0; k < need; ++k) cards[(size_t)g * need + k] = hand[k];
+  }
+}
+
 extern "C" void bp_deal(int n, uint64_t seed, int32_t* bk, int32_t* rk) {
   if (!IX) return;
 #pragma omp parallel for schedule(static)

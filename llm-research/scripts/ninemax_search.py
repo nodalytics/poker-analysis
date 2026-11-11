@@ -1,0 +1,219 @@
+"""Search at play time for the 9-max networks (phase B, version 1: rollout search at the root).
+
+At a decision after the flop in a pot of at most three players, the network's own choice is replaced by a search:
+
+1. Ranges. N deals are sampled with the hero's two cards and the board so far fixed (bp_deal_fixed in libbp6.so);
+   the opponents' cards and the rest of the board are random. Each sample is weighted by the probability that the
+   network would have taken every action the opponents actually took in this hand with those cards (the hand is
+   replayed from the start), so the samples follow the opponents' ranges as the network sees them.
+2. Values. For each legal action, every sample is played to the end with the network for all players (one rollout
+   each, the same samples for every action), and the hero's result is averaged with the weights: Q(action).
+3. Policy. "greedy": the action with the highest Q. "mix": the network's own probabilities times exp(Q / tau), a
+   one-step policy improvement that keeps the network's mixing when the values are close (tau in big blinds).
+
+This is a one-step improvement against opponents who play the network's strategy, not a re-solve of the subgame
+(Pluribus's search also lets the opponents' strategies respond, with four continuation strategies at the leaves).
+It is the first measurable step: does looking ahead beat the network's instinct?
+
+Evaluation (match): the searching hero in each of the nine seats in turn against eight copies of the plain network,
+on the same deals. Without search the hero is the network itself and wins 0 by symmetry, so the result is the gain
+from search (bb/100, 95% interval over deals). --samples 0 runs that check.
+
+Cash tables only (100bb or a --stacks run); tournament networks are declined. Needs libbp6.so (make libbp6.so).
+
+Usage (lab, GPU venv, from llm-research):
+  PYTHONPATH=scripts .venv-gpu/bin/python scripts/ninemax_search.py blueprint/nm4 --hands 2000 --samples 256 \\
+      [--mode greedy|mix] [--tau 1.0] [--out results/ninemax/search_nm4.json]
+"""
+
+import argparse
+import json
+import math
+import os
+import time
+
+import numpy as np
+import torch
+import torch.nn.functional as F
+
+from ninemax_engine import BB, Dealer, Menu, Tables, strength
+from ninemax_eval import load
+from ninemax_selfplay import FEAT, context, features, masked
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+FIELDS = ("stack", "contrib", "folded", "allin", "acted", "bet", "last_raise", "raises", "street", "pre_raises",
+          "aggressor", "to_act", "done", "showdown", "actor")  # fmt: skip
+NBOARD = {1: 3, 2: 4, 3: 5}
+
+
+def take(T, idx):
+    """A new Tables holding copies of rows idx of T."""
+    U = Tables(len(idx), T.P, T.menu, T.dev, stacks=T.stack[idx])
+    for f in FIELDS:
+        setattr(U, f, getattr(T, f)[idx].clone())
+    return U
+
+
+def net_probs(net, dealer, T, g, bk):
+    """The network's action probabilities for the player to act at tables g (bk: buckets of every table of T)."""
+    i = T.actor[g]
+    s = strength(dealer, bk[g], T.street[g]).gather(1, i[:, None]).squeeze(1)
+    feat, legal = features(T, g, i)
+    lg, _ = net(feat, bk[g, i], T.street[g], s)
+    return F.softmax(masked(lg, legal), 1), legal
+
+
+def deal_fixed(dealer, n, fixed):
+    """n deals keeping the cards of fixed (np.int32 [2P + 5], -1 = deal): buckets [n, P, 4] and ranks [n, P]."""
+    P = dealer.P
+    bk = np.zeros((n, P, 4), np.int32)
+    rk = np.zeros((n, P), np.int32)
+    dealer.seed += 1
+    fx = np.ascontiguousarray(fixed, dtype=np.int32)
+    dealer.lib.bp_deal_fixed(n, P, dealer.seed, fx.ctypes.data, bk.ctypes.data, rk.ctypes.data, None)
+    t = lambda a: torch.tensor(a, device=dealer.dev, dtype=torch.long)  # noqa: E731
+    return t(bk), t(rk)
+
+
+class Search:
+    def __init__(self, net, dealer, menu, samples=256, mode="greedy", tau=1.0, chunk=16):
+        self.net, self.dealer, self.menu = net, dealer, menu
+        self.N, self.mode, self.tau, self.chunk = samples, mode, tau, chunk
+        import ctypes
+
+        dealer.lib.bp_deal_fixed.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_uint64] + [ctypes.c_void_p] * 4
+
+    @torch.no_grad()
+    def decide(self, stacks, hists, hero, fixed):
+        """Search policies [M, A] for M decisions: stacks [M, P] (chips) or None, hists[j] = [(seat, action), ...]
+        from the start of the hand, hero seat, fixed [M, 2P + 5] known cards (-1 unknown)."""
+        out = []
+        for c in range(0, len(hists), self.chunk):
+            sl = slice(c, c + self.chunk)
+            out.append(self._decide(None if stacks is None else stacks[sl], hists[sl], hero, fixed[sl]))
+        return torch.cat(out)
+
+    def _decide(self, stacks, hists, hero, fixed):
+        M, N, P, dev = len(hists), self.N, self.dealer.P, self.dealer.dev
+        deals = [deal_fixed(self.dealer, N, fixed[j]) for j in range(M)]
+        BK = torch.cat([d[0] for d in deals])  # [M*N, P, 4], rows j*N .. j*N+N-1 belong to decision j
+        RK = torch.cat([d[1] for d in deals])
+        st = None if stacks is None else stacks.repeat_interleave(N, 0)
+        R = Tables(M * N, P, self.menu, dev, stacks=st)
+        # 1. replay the hand, weighting each sample by the opponents' actions
+        L = max(len(h) for h in hists)
+        seat = torch.full((M, L), -1, dtype=torch.long, device=dev)
+        act = torch.zeros((M, L), dtype=torch.long, device=dev)
+        for j, h in enumerate(hists):
+            if h:
+                seat[j, : len(h)] = torch.tensor([x[0] for x in h], device=dev)
+                act[j, : len(h)] = torch.tensor([x[1] for x in h], device=dev)
+        logw = torch.zeros(M * N, device=dev)
+        for t in range(L):
+            js = (seat[:, t] >= 0).nonzero().squeeze(1)
+            r = (js[:, None] * N + torch.arange(N, device=dev)).reshape(-1)
+            s_t, a_t = seat[js, t].repeat_interleave(N), act[js, t].repeat_interleave(N)
+            assert bool((R.actor[r] == s_t).all()), "replay diverged from the recorded hand"
+            opp = s_t != hero
+            if opp.any():
+                ro = r[opp]
+                pr, _ = net_probs(self.net, self.dealer, R, ro, BK)
+                logw[ro] += torch.log(pr.gather(1, a_t[opp][:, None]).squeeze(1).clamp(min=1e-12))
+            R.step(r, a_t)
+        assert bool((R.actor == hero).all()), "not the hero's turn after the replay"
+        w = torch.softmax(logw.view(M, N), 1)  # [M, N]
+        root = torch.arange(M, device=dev) * N
+        pnet, legal = net_probs(self.net, self.dealer, R, root, BK)  # hero's own bucket is the same in every sample
+        # 2. every legal action on every sample, then rollouts with the network
+        pairs = legal.nonzero()  # [K, 2]: (decision, action)
+        idx = (pairs[:, 0:1] * N + torch.arange(N, device=dev)).reshape(-1)
+        U = take(R, idx)
+        BU, RU = BK[idx], RK[idx]
+        U.step(torch.arange(len(idx), device=dev), pairs[:, 1].repeat_interleave(N))
+        while not bool(U.done.all()):
+            g = (~U.done).nonzero().squeeze(1)
+            pr, _ = net_probs(self.net, self.dealer, U, g, BU)
+            U.step(g, torch.multinomial(pr, 1).squeeze(1))
+        u = U.payoffs(RU)[:, hero].view(-1, N) / BB  # [K, N] in big blinds
+        q = (u * w[pairs[:, 0]]).sum(1)
+        Q = torch.full(legal.shape, -1e9, device=dev)
+        Q[pairs[:, 0], pairs[:, 1]] = q
+        if self.mode == "greedy":
+            return F.one_hot(Q.argmax(1), legal.shape[1]).float()
+        z = torch.log(pnet.clamp(min=1e-12)) + (Q - Q.max(1, keepdim=True).values) / self.tau
+        return torch.softmax(masked(z, legal), 1)
+
+
+def match(net, search, dealer, menu, n, dev, max_live=3):
+    """Hero (search, or the network when search is None) in each seat against P-1 copies of the network, same deals.
+    Returns hero's bb/100 per deal (mean over seats), and the number of searched decisions."""
+    P = dealer.P
+    bk, rk, cd = dealer.deal(n, cards=True)
+    stacks, _ = context(n, P, dev)
+    total = torch.zeros(n, device=dev)
+    searched = 0
+    for h in range(P):
+        T = Tables(n, P, menu, dev, stacks=stacks)
+        hist = [[] for _ in range(n)]
+        while not bool(T.done.all()):
+            g = (~T.done).nonzero().squeeze(1)
+            i = T.actor[g]
+            with torch.no_grad():
+                probs, _ = net_probs(net, dealer, T, g, bk)
+            if search is not None:
+                el = (i == h) & (T.street[g] >= 1) & ((~T.folded[g]).sum(1) <= max_live)
+                if el.any():
+                    gj = g[el].tolist()
+                    fx = np.full((len(gj), 2 * P + 5), -1, np.int32)
+                    for k, t in enumerate(gj):
+                        fx[k, 2 * h : 2 * h + 2] = cd[t, 2 * h : 2 * h + 2]
+                        nb = NBOARD[int(T.street[t])]
+                        fx[k, 2 * P : 2 * P + nb] = cd[t, 2 * P : 2 * P + nb]
+                    probs[el] = search.decide(None if stacks is None else stacks[g[el]], [hist[t] for t in gj], h, fx)
+                    searched += len(gj)
+            a = torch.multinomial(probs, 1).squeeze(1)
+            for t, s, x in zip(g.tolist(), i.tolist(), a.tolist()):
+                hist[t].append((s, x))
+            T.step(g, a)
+        total += T.payoffs(rk)[:, h].float() / BB
+    per = total / P * 100  # bb/100 per deal, averaged over the hero's seats
+    return per, searched
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("run")
+    ap.add_argument("--hands", type=int, default=2000)
+    ap.add_argument("--samples", type=int, default=256, help="0: no search (the symmetry check, expect 0)")
+    ap.add_argument("--mode", choices=("greedy", "mix"), default="greedy")
+    ap.add_argument("--tau", type=float, default=1.0, help="mix: temperature in big blinds")
+    ap.add_argument("--max-live", type=int, default=3, help="search pots with at most this many players")
+    ap.add_argument("--chunk", type=int, default=16, help="decisions searched at once")
+    ap.add_argument("--seed", type=int, default=4242)
+    ap.add_argument("--out")
+    ap.add_argument("--lib", default=os.path.join(ROOT, "blueprint", "libbp6.so"))
+    ap.add_argument("--abs", default=os.path.join(ROOT, "blueprint", "out"))
+    a = ap.parse_args()
+    dev = "cuda" if torch.cuda.is_available() else "cpu"
+    B = int(open(os.path.join(a.abs, "meta.txt")).read().split()[1])
+    net, hands = load(a.run, B, dev)
+    if FEAT["tourney"]:
+        raise SystemExit("tournament networks are not searched yet (ICM payoffs)")
+    d = os.path.dirname(a.run) if a.run.endswith(".pt") else a.run
+    menu = Menu(json.load(open(os.path.join(d, "config.json"))).get("menu", "medium"), dev)
+    dealer = Dealer(a.lib, a.abs, 9, B, dev, seed=a.seed)
+    search = Search(net, dealer, menu, a.samples, a.mode, a.tau, a.chunk) if a.samples else None
+    t0 = time.time()
+    per, searched = match(net, search, dealer, menu, a.hands, dev, a.max_live)
+    m, sd = float(per.mean()), float(per.std())
+    lo, hi = m - 1.96 * sd / math.sqrt(len(per)), m + 1.96 * sd / math.sqrt(len(per))
+    res = {"run": a.run, "hands_trained": hands, "hands": a.hands, "samples": a.samples, "mode": a.mode,
+           "tau": a.tau, "max_live": a.max_live, "searched_decisions": searched, "bb100": round(m, 1),
+           "ci95": [round(lo, 1), round(hi, 1)], "seconds": round(time.time() - t0)}  # fmt: skip
+    print(json.dumps(res), flush=True)
+    if a.out:
+        json.dump(res, open(a.out, "w"), indent=1)
+
+
+if __name__ == "__main__":
+    main()

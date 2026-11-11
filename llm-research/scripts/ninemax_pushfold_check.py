@@ -113,10 +113,11 @@ def main():
     res = {}
     for run in a.runs:
         net, hands = load(run, B, dev)
-        cfg = json.load(open(os.path.join(run, "config.json")))
+        d = os.path.dirname(run) if run.endswith(".pt") else run  # a run, or a kept snapshot RUN/avg_<h>h.pt
+        cfg = json.load(open(os.path.join(d, "config.json")))
         menu = Menu(cfg.get("menu", "medium"), dev)
         dealer = Dealer(a.lib, a.abs, 9, B, dev, seed=a.seed)
-        tag = os.path.basename(run.rstrip("/"))
+        tag = run.rstrip("/").split("blueprint/")[-1].removesuffix(".pt")
         print(f"== {tag} ({hands / 1e6:.0f} M hands)", flush=True)
         for c in charts:
             r = check(net, c, dealer, menu, a.hands, dev)
