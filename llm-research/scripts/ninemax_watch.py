@@ -97,7 +97,9 @@ class Lab:
 
     def load(self, run):
         cfg = json.load(open(os.path.join(run, "config.json")))
-        set_mode(cfg.get("stacks", "100"), cfg.get("tourney", False))  # under LOCK, until the hands are played
+        set_mode(
+            cfg.get("stacks", "100"), cfg.get("tourney", False), cfg.get("depths")
+        )  # under LOCK, until the hands are played
         menu = self.menus.setdefault(cfg.get("menu", "medium"), Menu(cfg.get("menu", "medium"), "cpu"))
         net = NineNet(cfg["nfeat"], cfg["actions"], self.B)
         st = torch.load(os.path.join(run, "checkpoint.pt"), map_location="cpu", weights_only=True)

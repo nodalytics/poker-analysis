@@ -47,7 +47,9 @@ def load(run, B, dev, part="avg"):
     ck = run if run.endswith(".pt") else os.path.join(run, "checkpoint.pt")
     run = os.path.dirname(ck)
     cfg = json.load(open(os.path.join(run, "config.json")))
-    set_mode(cfg.get("stacks", "100"), cfg.get("tourney", False))  # the runs compared must share a mode
+    set_mode(
+        cfg.get("stacks", "100"), cfg.get("tourney", False), cfg.get("depths")
+    )  # the runs compared must share a mode
     net = NineNet(cfg["nfeat"], cfg["actions"], B).to(dev)
     st = torch.load(ck, map_location=dev, weights_only=True)
     net.load_state_dict(st[part])
