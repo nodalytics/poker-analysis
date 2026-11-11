@@ -43,10 +43,13 @@ def setup(args, dev):
 
 
 def load(run, B, dev, part="avg"):
+    """RUN is a run directory (its checkpoint.pt) or a kept snapshot RUN/avg_<hours>h.pt (--keep-hours)."""
+    ck = run if run.endswith(".pt") else os.path.join(run, "checkpoint.pt")
+    run = os.path.dirname(ck)
     cfg = json.load(open(os.path.join(run, "config.json")))
     set_mode(cfg.get("stacks", "100"), cfg.get("tourney", False))  # the runs compared must share a mode
     net = NineNet(cfg["nfeat"], cfg["actions"], B).to(dev)
-    st = torch.load(os.path.join(run, "checkpoint.pt"), map_location=dev, weights_only=True)
+    st = torch.load(ck, map_location=dev, weights_only=True)
     net.load_state_dict(st[part])
     return net.requires_grad_(False).eval(), st["hands"]
 
@@ -55,7 +58,7 @@ def cross(args, dev):
     dealer, menu, B = setup(args, dev)
     nets = {}
     for r in args.runs:
-        nets[os.path.basename(r.rstrip("/"))], hands = load(r, B, dev)
+        nets[r.rstrip("/").split("blueprint/")[-1].removesuffix(".pt")], hands = load(r, B, dev)  # nm9, nm9/avg_4h
         print(f"{r}: {hands / 1e6:.0f} M hands", flush=True)
     names = list(nets)
     res = {}

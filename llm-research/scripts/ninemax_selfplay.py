@@ -291,6 +291,13 @@ def main():
     ap.add_argument("--magnet-tau", type=float, default=3e-4)
     ap.add_argument("--avg-tau", type=float, default=1e-3)
     ap.add_argument("--entropy", type=float, default=0.01)
+    ap.add_argument(
+        "--keep-hours",
+        type=float,
+        default=0.0,
+        help="also keep the moving average every N hours "
+        "(avg_<hours>h.pt), so later checkpoints can be played against earlier ones",
+    )
     ap.add_argument("--pool-share", type=float, default=0.0, help="share of each batch played against the population")
     ap.add_argument("--pool", default="tag,maniac,station,random", help="rule opponents in the population")
     ap.add_argument("--pool-snapshots", type=int, default=5, help="past checkpoints kept in the population")
@@ -342,6 +349,7 @@ def main():
               indent=1)  # fmt: skip
     log = open(os.path.join(args.out, "progress.log"), "a", buffering=1)
     t0 = last_eval = time.time()
+    kept = 0.0  # hours of this session already kept as avg_<hours>h.pt
     h_start, adv_scale = hands, 1.0
     while time.time() - t0 < args.minutes * 60:
         bk, rk, _ = dealer.deal(args.batch)
@@ -425,6 +433,9 @@ def main():
             torch.save({"net": net.state_dict(), "magnet": magnet.state_dict(), "avg": avg.state_dict(),
                         "opt": opt.state_dict(), "hands": hands}, ck + ".tmp")  # fmt: skip
             os.replace(ck + ".tmp", ck)
+            if args.keep_hours and (now - t0) / 3600 >= kept + args.keep_hours:
+                kept += args.keep_hours
+                torch.save({"avg": avg.state_dict(), "hands": hands}, os.path.join(args.out, f"avg_{kept:g}h.pt"))
             rate = (hands - h_start) / (now - t0)
             m1, lo1, hi1 = duplicate(dealer, menu, avg, "tag", args.eval_hands, dev)
             m2, lo2, hi2 = duplicate(dealer, menu, avg, prev, args.eval_hands, dev)
