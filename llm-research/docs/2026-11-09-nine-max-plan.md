@@ -573,3 +573,46 @@ in the big blind with 3bb (14% vs 6%), and it enters the flat-bubble small blind
 - **Next:** a push/fold-heavy curriculum, with more tables at 5–15bb where ICM decides the hand. This check runs
   after every tournament run as its yardstick.
 
+## Search at play time, version 1 (`scripts/ninemax_search.py`, 2026-11-11)
+
+**What it does.** It searches the hero's decisions after the flop in pots of at most three players.
+1. It samples deals with the hero's two cards and the board so far fixed, using `bp_deal_fixed`, new in
+   `libbp6.so`.
+2. It replays the hand on every sample, weighting each by the probability that the network would have made every
+   action the opponents actually made with those cards. That gives their ranges as the network sees them.
+3. It tries every legal action, plays each sample to the end with the network (the same samples for every action),
+   and averages the hero's result with the weights.
+4. **Greedy** takes the best action. **Mix** takes the network's probabilities × exp(value / τ), with τ in big
+   blinds.
+
+It is a one-step improvement against opponents who keep playing the network's strategy. The opponents do not
+re-solve.
+
+**The test.** The searching hero sits in each of the nine seats in turn against eight copies of `nm4`, over 10,000
+deals. Without search the hero is `nm4` itself and wins 0 by symmetry, so the result is the gain from search.
+
+| Samples | Policy | Effective samples (median, 10th pct) | Gain over `nm4`, bb/100 | Time |
+|---|---|---|---|---|
+| 0 (check) | — | — | −3.2 [−12.5, +6.0] | 1 s |
+| 256 | greedy | 14.5, 2.9 | **−26.6** [−37.6, −15.6] (rerun: −23.4) | 3 min |
+| 256 | mix τ=1 | — | −12.0 [−22.6, −1.4] | 2 min |
+| 256 | mix τ=3 | — | −6.0 [−15.9, +4.0] | 2 min |
+| 2,048 | greedy | 117, 11.6 | **+14.4** [+4.6, +24.3] | 9 min |
+| 2,048 | mix τ=1 | 120, 13.1 | **+20.4** [+10.6, +30.3] | 10 min |
+
+(About 25,000–28,000 searched decisions per row; the raw lines are in `results/ninemax/search_v1_nm4.jsonl`.)
+
+**What it shows:**
+- **Search works once it has enough samples.**
+  - At 256 samples, the opponent-action weights leave a median of only 14 effective samples, and 3 at the 10th
+    percentile. Greedy then chases the noise and loses 27 bb/100.
+  - At 2,048 samples (about 120 effective), the same search **wins +14 (greedy) and +20 (mix) bb/100 against the
+    network it is built from**.
+- Mix beats greedy because it keeps the network's mixing where the values are close.
+- **Next:**
+  - 8,192 samples (running);
+  - spending samples where the weights are thin, by resampling them;
+  - an exploiter test against the searching bot, since search is meant to fix exploitability, not only add winnings
+    against the network;
+  - then a real re-solve, in which the opponents' strategies also respond.
+
