@@ -38,6 +38,9 @@ STACK = 100 * BB
 MENUS = {
     "lean": ((2.5,), ((3.0,), (2.3,)), 3, (0.5, 1.0), (1.0,), (0.66,), (), 2),
     "medium": ((2.5,), ((3.0,), (2.3,)), 4, (0.33, 0.75, 1.5), (1.0,), (0.5, 1.0), (1.0,), 3),
+    # tournaments (2026-11-11): the medium menu with the opens real players use at 10-25bb, 2x, 2.5x and 3x (the
+    # partner: the open need not be 2.5x); the same number of action slots as medium (3 sizes)
+    "mtt": ((2.0, 2.5, 3.0), ((3.0,), (2.3,)), 4, (0.33, 0.75, 1.5), (1.0,), (0.5, 1.0), (1.0,), 3),
     "wide": (
         (2.0, 2.5, 3.5),
         ((2.5, 3.5), (2.2, 3.0)),

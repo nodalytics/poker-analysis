@@ -46,8 +46,10 @@ The neural route has covered steps 1–5 of the original build order (blueprint 
        came from the training pool's rule players (maniacs, stations), against whom trapping pays.
      - The rule players follow it too: a call they would have made becomes the smallest open.
      - The PokerKit check still finds 0 mismatches.
-   - **Open sizes:** the medium menu opens 2.5× only (plus all-in). A tournament menu with 2×, 2.5× and 3× opens
-     is proposed.
+   - **Open sizes: the `mtt` menu** (`--menu mtt`, in `ninemax_engine.MENUS`). It opens 2×, 2.5× or 3×; 3-bets,
+     4-bets and the bets after the flop are as in `medium`, with the same number of action slots. The PokerKit
+     check finds 0 mismatches over 2,000 tables, at equal and at mixed stacks. Restarted with it 2026-11-11 15:10
+     lab time.
    - Recipe: NeuRD, exploiters on 25% of tables, a pull ramped from 0.1, entropy bonus 0.02, a snapshot every
      4 hours. Bubble tables are top-heavy above the bust spots.
    - The earlier versions are kept or dropped as follows:
@@ -119,11 +121,11 @@ The advisor (`advisor/`, Python and Tkinter today) is rewritten in **C++ with Qt
 | 2026-11-11 | **Scope: 9-max tournaments (MTT) only.** `nm11` (cash) stopped; the cash runs are reference |
 | 2026-11-11 | Tournament tables at 10–25bb (`nm10` also 5–10bb on 1 table in 4; `nm12` 10–25bb only) |
 | 2026-11-11 | No open-limping from UTG to the button: fold, open or shove (the partner's advice, confirmed by the measured leak) |
+| 2026-11-11 | Tournament menu `mtt`: opens of 2×, 2.5× and 3× |
 | 2026-11-11 | Advisor screenshots are capture-only and pause while a real-money client runs; no live table reading |
 
 | Pending | Decision |
 |---|---|
-| Tournament open sizes 2×, 2.5×, 3× | Proposed: the partner notes the open need not be 2.5×; at 10–25bb, 2–2.2× is common |
 | Antes and short-handed final tables | Next tournament run after `nm10` |
 
 ## Poker sense from the partner, and what it means for the models
