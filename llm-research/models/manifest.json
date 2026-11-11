@@ -1,0 +1,35 @@
+{
+ "headsup_pack": {
+  "archive_sha256": "736f292eae7e91bf18b12e899fdc0fedf58db00881d204a0fe866db610fc12e6",
+  "asset": "headsup-pack-run2.tar.zst",
+  "bytes": 29608249,
+  "files_sha256": {
+   "avg.u8": "6c4b247a52ad33f4fe9ec45a8e1e5a3d5b608e5d94a2887dae0d2351ee13fd82",
+   "bp.dll": "a34c301c5775479a6ca8277002527df50227ecab80224bd28a270ddf825af9a1",
+   "flop_buckets.u8": "e766b41c6a7cea365f7e7bd45d870298b0e5efba53472945d8d2187736b5644f",
+   "meta.txt": "c6e228ab31408fc11ba8aa8fb015ecd6e2b6a5896d150f8ad9e6e96404f82265",
+   "river_cuts.f32": "172e1d15ca9b525ca85c336c21f86893f7ed76bf3862f873de5524be5162b3d1",
+   "tree.tsv": "49512932c54aed4abdba936bfe97355415ba3d9d71d77ab50a54b0d343b8650e",
+   "turn_buckets.u8": "e20b6421fb2204a98893b243dbd91173ee508281057d37ab9b999105b2d0dcff"
+  },
+  "note": "LBR about +104 bb/100; run 7 read +104.5 [+84, +125] on 30,000 hands and did not beat it",
+  "release": "https://github.com/nodalytics/poker-analysis/releases/tag/headsup-pack-run2",
+  "source": "blueprint/run2 via blueprint/advisor_pack.py, 2026-11-08",
+  "unpack": "zstd -dc headsup-pack-run2.tar.zst | tar -x -C blueprint/   (from llm-research/; gives blueprint/pack/)"
+ },
+ "ninemax": {
+  "nm4": {
+   "bytes": 4487009,
+   "hands_trained": 1191608320,
+   "minutes_trained": 1440.0,
+   "note": "cash 100bb, NeuRD, 24 h; fresh 30-min exploiter +44 [+39, +50] (the least exploitable cash run); real tables +30.1 [+17, +44]",
+   "path": "ninemax/nm4/avg_fp16.pt",
+   "sha256": {
+    "avg_fp16.pt": "6b735220783eb9b6f019eb6f031d92a87466087daa9378446b0478814829ca9d",
+    "config.json": "81b11fcccd61a38dac1545101365256acb5be9dc87c7e55ddf1b3ec743199d05"
+   },
+   "source": "blueprint/nm4",
+   "vs_tag_bb100": 195.4
+  }
+ }
+}

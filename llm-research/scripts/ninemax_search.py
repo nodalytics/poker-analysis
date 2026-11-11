@@ -79,6 +79,7 @@ class Search:
     def __init__(self, net, dealer, menu, samples=256, mode="greedy", tau=1.0, chunk=16):
         self.net, self.dealer, self.menu = net, dealer, menu
         self.N, self.mode, self.tau, self.chunk = samples, mode, tau, chunk
+        self.ess = []
         import ctypes
 
         dealer.lib.bp_deal_fixed.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_uint64] + [ctypes.c_void_p] * 4
@@ -122,6 +123,7 @@ class Search:
             R.step(r, a_t)
         assert bool((R.actor == hero).all()), "not the hero's turn after the replay"
         w = torch.softmax(logw.view(M, N), 1)  # [M, N]
+        self.ess.extend((1 / (w**2).sum(1)).tolist())  # effective sample size of each decision's weighted samples
         root = torch.arange(M, device=dev) * N
         pnet, legal = net_probs(self.net, self.dealer, R, root, BK)  # hero's own bucket is the same in every sample
         # 2. every legal action on every sample, then rollouts with the network
@@ -210,6 +212,10 @@ def main():
     res = {"run": a.run, "hands_trained": hands, "hands": a.hands, "samples": a.samples, "mode": a.mode,
            "tau": a.tau, "max_live": a.max_live, "searched_decisions": searched, "bb100": round(m, 1),
            "ci95": [round(lo, 1), round(hi, 1)], "seconds": round(time.time() - t0)}  # fmt: skip
+    if search is not None and search.ess:
+        e = torch.tensor(search.ess)
+        res["ess_median"] = round(float(e.median()), 1)  # out of --samples
+        res["ess_p10"] = round(float(torch.quantile(e, 0.1)), 1)
     print(json.dumps(res), flush=True)
     if a.out:
         json.dump(res, open(a.out, "w"), indent=1)
