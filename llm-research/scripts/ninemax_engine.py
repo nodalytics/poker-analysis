@@ -26,6 +26,11 @@ import torch
 
 BB = 100
 SB = 50
+# Game rules a run can change (set by ninemax_selfplay.set_mode from the run's config, so every tool that loads the
+# run plays the same game). open_limp False: a player first in before the flop, from UTG to the button, cannot just
+# call the big blind: fold, open or shove (the small blind may still complete). Limping strong hands to trap was a
+# habit learned against the rule-based maniacs and stations in the training pool (2026-11-11).
+RULES = {"open_limp": True}
 STACK = 100 * BB
 
 # open sizes (bb), re-raise multiples by level, max pre-flop raises, heads-up bet / raise fractions,
@@ -183,6 +188,9 @@ class Tables:
         fold = to_call > 0
         call = torch.ones_like(fold)
         allin = (stk > bet) & reopened  # shoving more than the bet (with less, calling is the all-in)
+        if not RULES["open_limp"]:  # first in from UTG to the button: no limping, when there is a way in by raising
+            first_in = (self.street[g] == 0) & (self.pre_raises[g] == 0) & (bet == BB) & (i >= 2)
+            call = call & ~(first_in & (ok_size.any(1) | allin))
         return torch.cat([fold[:, None], call[:, None], ok_size, allin[:, None]], 1), torch.nan_to_num(t, nan=0)
 
     def step(self, g, a):

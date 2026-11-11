@@ -3,6 +3,11 @@
 Where the 9-max work stands, and the plan from here. The detailed results are in
 [`2026-11-09-nine-max-plan.md`](2026-11-09-nine-max-plan.md); this page is the roadmap.
 
+> **Scope (2026-11-11): 9-max tournaments (MTT) only.**
+> - The cash runs (`nm1`–`nm9`, `nm11`) are finished or stopped, and kept as reference. What they taught carries
+>   over: NeuRD is the hardest to exploit, about 8 hours of training is enough, and search needs about 2,000 samples.
+> - Everything from here targets tournament play: ICM, 10–25bb stacks and push/fold.
+
 ## Where we are
 
 The neural route has covered steps 1–5 of the original build order (blueprint plus evaluation):
@@ -26,29 +31,43 @@ The neural route has covered steps 1–5 of the original build order (blueprint 
      (`ninemax_eval.py cross blueprint/nm9/avg_4h.pt blueprint/nm9`). That answers whether extra hours help, which
      the tag yardstick cannot show.
    - **Done means:** a fresh 30-minute exploiter wins less than `nm4`'s +44.
-2. **`nm11`: cash at random 20–50bb stacks** (started 2026-11-11 13:36 lab time, 4090, 24 hours).
-   - Real cash tables rarely sit at exactly 100bb, so every seat's stack is drawn between 20 and 50bb
-     (log-uniform, `--stacks 20,50`).
-   - Otherwise it uses `nm9`'s recipe: NeuRD, exploiters on 25% of tables, and a snapshot every 4 hours.
-   - **Done means:** it is as hard to exploit as `nm9` at these depths, and it beats the bots at bot_sim tables
-     dealt 20–50bb.
-3. **`nm10`: a tournament curriculum** (restarted 2026-11-11 15:00 lab time at 10–25bb, RTX PRO 6000, 24 hours).
-   - Most mid- and late-tournament decisions are made at 10–25bb, so three tables in four average **10–25bb** and
-     one in four **5–10bb** (pure push/fold), via `--depths "10,25;10,25;10,25;5,10"`.
-   - Stacks spread around each table's average, as at a real table: the median table averages 12.9bb (5th to 95th
-     percentile 5.2–26.5bb). By seat, 49% are under 10bb, 38% are 10–25bb and 13% are over 25bb.
-   - The first version (1.5 hours at 5–15bb and 20–50bb tables) is kept as `nm10a`. It left a thin spot at
-     15–20bb.
-   - Recipe: NeuRD, exploiters on 25% of tables, a pull ramped from 0.1, entropy bonus 0.02, a snapshot every 4
-     hours. Bubble tables are top-heavy above the bust spots.
-   - Still to add: antes, and short-handed final tables (2–8 players). This needs the engine and `icm.scenarios`
-     extended.
+2. **`nm11`: cash at random 20–50bb stacks.** Stopped after 1.5 hours when the scope became tournaments only.
+3. **`nm10` and `nm12`: the tournament runs** (restarted 2026-11-11 15:05 lab time, 24 hours).
+   - **Depths:** most mid- and late-tournament decisions are made at 10–25bb.
+     - `nm10` (RTX PRO 6000): three tables in four average 10–25bb, and one in four 5–10bb (pure push/fold),
+       via `--depths "10,25;10,25;10,25;5,10"`. By seat, 49% are under 10bb, 38% are 10–25bb and 13% are over
+       25bb, because stacks spread around each table's average.
+     - `nm12` (4090): 10–25bb tables only, so the two runs show whether the 5–10bb share helps.
+   - **No open-limping** (`--no-open-limp`, a rule in `ninemax_engine.RULES`): first in before the flop, from
+     UTG to the button, a player folds, opens or shoves. The small blind may still complete.
+     - Measured before the change, first in at UTG: `nm8` limped AA 90%, KK 45% and AKo 38%; `nm4` limped
+       KK, QQ and AK about 47% and shoved the rest.
+     - Limping strong hands lets weak hands see a cheap flop (the partner's AK vs Q9/KT example). The habit
+       came from the training pool's rule players (maniacs, stations), against whom trapping pays.
+     - The rule players follow it too: a call they would have made becomes the smallest open.
+     - The PokerKit check still finds 0 mismatches.
+   - **Open sizes:** the medium menu opens 2.5× only (plus all-in). A tournament menu with 2×, 2.5× and 3× opens
+     is proposed.
+   - Recipe: NeuRD, exploiters on 25% of tables, a pull ramped from 0.1, entropy bonus 0.02, a snapshot every
+     4 hours. Bubble tables are top-heavy above the bust spots.
+   - The earlier versions are kept or dropped as follows:
+     - `nm10a`, 1.5 hours at 5–15bb and 20–50bb tables, is kept.
+     - The 10–25bb restart without the no-limp rule ran only minutes and was replaced.
    - **Done means:** at least 85% agreement with the ICM charts at final tables and real bubbles (`nm8`: 74–81%),
-     and the big blind's calling near the chart's.
-4. **Pick the champions:** one cash network and one tournament network, chosen by exploitability first and real
-   tables second. A 100bb-only exploit test for `nm6` makes the mixed-stack run comparable with the others.
+     the big blind's calling near the chart's, and no open-limping by construction.
+4. **Pick the tournament champion**, by exploitability first and the ICM charts second.
+5. **Tournament realism** (next):
+   - **antes:** a big-blind ante, as most MTTs now use;
+   - **short-handed final tables:** 2–8 players.
+
+   Both need the engine and `icm.scenarios` extended, and the PokerKit check rerun.
 
 ## Phase B: search at play time (step 7 of the build order, about a week, CPUs)
+
+**Status (2026-11-11):**
+- Version 1 (root rollouts with network-weighted ranges) beats `nm4` by **+20 bb/100** at 2,048 samples. At 256
+  samples it loses −27, because only about 14 of the samples count.
+- **Next: score tournament hands by ICM equity** instead of chips, and search the tournament networks.
 
 - When a hand reaches the flop heads-up or 3-way (94% of flops), the bot re-solves that spot during play instead
   of trusting the blueprint, as Pluribus did. The network supplies the ranges and the leaf values, and Pluribus's
@@ -97,9 +116,38 @@ The advisor (`advisor/`, Python and Tkinter today) is rewritten in **C++ with Qt
 | 2026-11-11 | The advisor is rewritten in C++ with Qt 6 |
 | 2026-11-11 | Cash training moves to random 20–50bb stacks (`nm11`); 100bb is not what real tables look like |
 | 2026-11-11 | `nm10`, the tournament curriculum, at 5–15bb and 20–50bb tables |
-| 2026-11-11 | `nm10` restarted at 10–25bb tables (3 in 4) and 5–10bb (1 in 4); tournament stacks are mostly 10–25bb. Cash stays at 20–50bb |
+| 2026-11-11 | **Scope: 9-max tournaments (MTT) only.** `nm11` (cash) stopped; the cash runs are reference |
+| 2026-11-11 | Tournament tables at 10–25bb (`nm10` also 5–10bb on 1 table in 4; `nm12` 10–25bb only) |
+| 2026-11-11 | No open-limping from UTG to the button: fold, open or shove (the partner's advice, confirmed by the measured leak) |
 | 2026-11-11 | Advisor screenshots are capture-only and pause while a real-money client runs; no live table reading |
 
 | Pending | Decision |
 |---|---|
+| Tournament open sizes 2×, 2.5×, 3× | Proposed: the partner notes the open need not be 2.5×; at 10–25bb, 2–2.2× is common |
 | Antes and short-handed final tables | Next tournament run after `nm10` |
+
+## Poker sense from the partner, and what it means for the models
+
+The advice (2026-11-11): with strong hands (AA, KK, QQ, AK, AQ, KJ), raise before the flop instead of calling.
+Weak hands such as Q9 or KT should not see a cheap flop: some of them hit, and they take the pot from AK. Raising
+makes them pay to see the flop or fold, and they rarely call a raise with nothing. The size need not be 2.5×.
+
+**Why the networks broke this rule, and the general lesson:**
+- A network learns whatever wins against the opponents it trains against. The training pool includes rule-based
+  maniacs (who raise most of the time) and calling stations. Against them, limping a big hand to trap pays, so
+  the networks learned to limp AA and AK.
+- Real tournament players are neither, and a fresh exploiter beats these networks by +44 to +219 bb/100 partly
+  for this reason. **A network is only as sound as the opponents it learns from.**
+
+**How this shapes the work:**
+1. **Rules that good players never break go into the game itself**, so no training time is spent learning them
+   and no pool can teach them away. No open-limping is the first. Candidates checked the same way (measure
+   first, then decide): no open-shoving deep stacks (over about 25bb) and no tiny raises facing a shove.
+2. **Measure behaviour by hand**, not only overall results. The premium-hand check (first-in action for AA, KK,
+   QQ, AK, AQ, KJ by position) found this leak in seconds. It joins the ICM push/fold check as a standing test
+   for every tournament run.
+3. **Train against realistic opponents** (phase C): clones of real full-ring tournament players in the pool,
+   instead of maniacs and stations, so the network learns what wins against people.
+4. **Sizes from practice:** a tournament menu with the opens real players use (2×, 2.5×, 3×), learned per
+   position and stack.
+
