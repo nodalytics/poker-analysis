@@ -130,6 +130,9 @@ The advisor (`advisor/`, Python and Tkinter today) is rewritten in **C++ with Qt
 
 ## Poker sense from the partner, and what it means for the models
 
+The principles of tournament play and the checks that hold the networks to them are in
+[`2026-11-11-mtt-strategy.md`](2026-11-11-mtt-strategy.md) (`scripts/ninemax_sense.py`).
+
 The advice (2026-11-11): with strong hands (AA, KK, QQ, AK, AQ, KJ), raise before the flop instead of calling.
 Weak hands such as Q9 or KT should not see a cheap flop: some of them hit, and they take the pot from AK. Raising
 makes them pay to see the flop or fold, and they rarely call a raise with nothing. The size need not be 2.5×.
