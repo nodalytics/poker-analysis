@@ -599,6 +599,7 @@ deals. Without search the hero is `nm4` itself and wins 0 by symmetry, so the re
 | 256 | mix τ=3 | — | −6.0 [−15.9, +4.0] | 2 min |
 | 2,048 | greedy | 117, 11.6 | **+14.4** [+4.6, +24.3] | 9 min |
 | 2,048 | mix τ=1 | 120, 13.1 | **+20.4** [+10.6, +30.3] | 10 min |
+| 8,192 | mix τ=1 | 480, 47 | **+31.2** [+21.7, +40.7] | 35 min (GPU shared) |
 
 (About 25,000–28,000 searched decisions per row; the raw lines are in `results/ninemax/search_v1_nm4.jsonl`.)
 
@@ -610,7 +611,8 @@ deals. Without search the hero is `nm4` itself and wins 0 by symmetry, so the re
     network it is built from**.
 - Mix beats greedy because it keeps the network's mixing where the values are close.
 - **Next:**
-  - 8,192 samples (running);
+  - 8,192 samples: **+31.2** with mix (480 effective samples). The gain still rises with the sample count, about
+    +10 for each 4× (−12 → +20 → +31), at about 70 ms a decision on a shared 3090;
   - spending samples where the weights are thin, by resampling them;
   - an exploiter test against the searching bot, since search is meant to fix exploitability, not only add winnings
     against the network;
