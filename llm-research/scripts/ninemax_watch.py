@@ -80,6 +80,63 @@ def curves(run):
     return pts
 
 
+def _last(path, rx):
+    """The last match of rx in a text file, or None."""
+    if not os.path.exists(path):
+        return None
+    found = None
+    for line in open(path, errors="ignore"):
+        m = re.search(rx, line)
+        if m:
+            found = m
+    return found
+
+
+def info(run):
+    """What a run is and how it stands: its recipe (config.json), whether it is still training, its latest
+    evaluation, the fresh exploiter test and the real-table result when they exist, and the kept snapshots."""
+    name = os.path.basename(run)
+    try:
+        cfg = json.load(open(os.path.join(run, "config.json")))
+    except (OSError, ValueError):
+        cfg = {}
+    if cfg.get("tourney"):
+        d = cfg.get("depths") or "10,60"
+        mode = "tournament (ICM), table averages " + " or ".join(r.replace(",", "-") + "bb" for r in d.split(";"))
+    elif str(cfg.get("stacks", "100")) != "100":
+        mode = "cash, stacks " + str(cfg["stacks"]).replace(",", "-") + "bb"
+    else:
+        mode = "cash, 100bb"
+    recipe = ["NeuRD" if cfg.get("pg") == "neurd" else "policy gradient"]
+    if cfg.get("pool_share"):
+        recipe.append(f"population {cfg['pool_share']:.0%}")
+    if cfg.get("exploit_share"):
+        recipe.append(f"exploiters {cfg['exploit_share']:.0%}")
+    if cfg.get("kl_start") is not None:
+        recipe.append("ramped pull")
+    pts = curves(run)
+    last = pts[-1] if pts else {}
+    # training while anything in the run is still being written (a new run has no checkpoint for its first 30 min)
+    files = [os.path.join(run, f) for f in ("checkpoint.pt", "progress.log", "stdout.log")]
+    training = any(os.path.exists(f) and time.time() - os.path.getmtime(f) < 45 * 60 for f in files)
+    res = os.path.join(ROOT, "results", "ninemax")
+    ex = _last(os.path.join(res, f"exploit_{name}.stdout"), NUM + r" min .*learner vs 8 x target: " + NUM + r" bb/100")
+    tb = _last(os.path.join(res, f"table2k_{name}.log"), r"nine#" + re.escape(name) + r"\s+" + NUM)
+    snaps = [os.path.basename(f)[4:-3] for f in glob.glob(os.path.join(run, "avg_*h.pt"))]  # avg_4h.pt -> 4h
+    return {
+        "mode": mode,
+        "recipe": ", ".join(recipe),
+        "status": "training" if training else "finished",
+        "hours": round(last.get("minutes", 0) / 60, 1),
+        "hands": last.get("hands", 0),
+        "tag": last.get("tag"),
+        "exploiter": last.get("exploiter"),
+        "fresh_exploit": {"minutes": float(ex.group(1)), "bb100": float(ex.group(2))} if ex else None,
+        "tables": float(tb.group(1)) if tb else None,
+        "snapshots": sorted(snaps, key=lambda s: float(s[:-1])),
+    }
+
+
 # ---------------------------------------------------------------- 2 and 4: sample hands from a checkpoint
 
 
@@ -274,7 +331,8 @@ def main():
     def runs():
         if args.runs:
             return [r for r in args.runs.split(",") if r]
-        return sorted(d for d in glob.glob("blueprint/nm*") if os.path.exists(os.path.join(d, "progress.log")))
+        found = [d for d in glob.glob("blueprint/nm*") if os.path.exists(os.path.join(d, "progress.log"))]
+        return sorted(found, key=lambda d: int(re.sub(r"\D", "", os.path.basename(d)) or 0))  # nm2 before nm10
 
     lab = Lab(args.abs, args.lib)
     Recorder(lab, runs, args.out).start()
@@ -298,6 +356,8 @@ def main():
             try:
                 if u.path == "/":
                     return self.send(open(page, "rb").read(), "text/html; charset=utf-8")
+                if u.path == "/api/info":  # what each run is and where it stands
+                    return self.send({os.path.basename(r): info(r) for r in runs()})
                 if u.path == "/api/runs":
                     return self.send({os.path.basename(r): curves(r) for r in runs()})
                 if u.path == "/api/snapshots":  # the recorded checkpoints of a run

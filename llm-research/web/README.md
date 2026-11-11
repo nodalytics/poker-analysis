@@ -41,6 +41,22 @@ The lab then needs Node only to build, not to serve: the built files are static.
 |---|---|
 | `deploy/nginx/poker.stbfarm.org.conf` | Host nginx vhost: HTTPS on 443 with the lab's origin certificate (Cloudflare SSL mode Full, as for the other stbfarm.org sites), HTTP redirected to HTTPS, proxied to the app on 127.0.0.1:8790; GET only; **only Cloudflare's ranges (and the lab itself) may connect**, others get 403; the visitor's real address is taken from `CF-Connecting-IP`, trusted only from those ranges, so `/api/live` is limited to 20 requests a minute **per visitor**, not per Cloudflare server; an optional password (commented) |
 | `deploy/poker-watch.service` | systemd service running `scripts/ninemax_watch.py` as labuser, restarted on failure and started at boot |
+
+**Picking up server changes without sudo.** `web/index.html` is re-read on every request, so page edits show on
+reload. Changes to `scripts/ninemax_watch.py` (or the modules it imports) need a restart. The service restarts
+itself after a crash (`Restart=on-failure`, 10 s), and labuser owns the process, so it can be restarted without
+sudo:
+
+```
+kill -9 $(systemctl show -p MainPID --value poker-watch)   # systemd starts it again within 10 s
+```
+
+(A plain `kill` is a clean stop and is not restarted; `sudo systemctl restart poker-watch` also works.)
+
+**The runs table** (`/api/info`, top of the Training tab) shows, for each run, what it tests (game and stack
+depths, from `config.json`), its recipe, whether it is still training, hours trained, the latest result against
+the tag player, its built-in exploiter, the fresh exploiter test (`results/ninemax/exploit_<run>.stdout`), the
+real-table result (`results/ninemax/table2k_<run>.log`) and its kept snapshots (`avg_<h>h.pt`).
 | `deploy/install.sh` | Installs both (run once with sudo); `--remove` takes them out again |
 
 The app stays bound to 127.0.0.1; only nginx faces the network. Cloudflare's ranges are listed in the vhost (fetched
