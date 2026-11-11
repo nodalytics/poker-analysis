@@ -58,6 +58,13 @@
   .muted { color: var(--muted); }
   @media (max-width: 700px) { .seat { width: 92px; font-size: 10px; } .c { width: 20px; height: 28px; line-height: 28px; font-size: 11px; }
     .board .c { width: 26px; height: 36px; line-height: 36px; font-size: 13px; } .charts { grid-template-columns: 1fr; } }
+  .runs-wrap { overflow-x: auto; margin-bottom: 18px; }
+  table.runs { border-collapse: collapse; width: 100%; font-size: 13px; }
+  table.runs th, table.runs td { text-align: left; padding: 6px 10px; border-bottom: 1px solid rgba(127,127,127,.25); white-space: nowrap; }
+  table.runs td.wrap { white-space: normal; min-width: 180px; }
+  table.runs .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+  .dot.training { background: #4cc38a; } .dot.finished { background: #8b949e; }
 </style>
 </head>
 <body>
@@ -73,6 +80,8 @@
 <main>
   <!-- 1 + 2: on by default -->
   <section id="train" class="on">
+    <h2>The runs <span class="muted">(what each one tests and where it stands; bb/100)</span></h2>
+    <div class="runs-wrap"><table class="runs" id="runsTable"></table></div>
     <h2>How it is learning <span class="muted">(1-vs-8 duplicate results, bb/100; x = hands trained)</span></h2>
     <div class="legend" id="legend"></div>
     <div class="charts" id="charts"></div>
@@ -154,7 +163,24 @@ function chart(series, key, title, note) {
   return `<div class="chart"><h3>${title}</h3><p>${note}</p><svg viewBox="0 0 ${W} ${H}" width="100%">${g}</svg></div>`;
 }
 const fmt = (v) => Math.abs(v) >= 1000 ? (v / 1000).toFixed(1) + "k" : Math.abs(v) >= 10 ? v.toFixed(0) : v.toFixed(2);
+const sgn = (v, d = 0) => v === null || v === undefined ? "–" : (v >= 0 ? "+" : "") + v.toFixed(d);
+async function refreshInfo() {
+  try {
+    const info = await get("/api/info");
+    const rows = Object.entries(info).reverse().map(([n, r]) => `<tr>
+      <td><span class="dot ${r.status}"></span><b>${n}</b></td><td class="wrap">${r.mode}</td><td class="wrap">${r.recipe}</td>
+      <td>${r.status}</td><td class="num">${r.hours} h</td><td class="num">${sgn(r.tag)}</td>
+      <td class="num">${sgn(r.exploiter)}</td>
+      <td class="num">${r.fresh_exploit ? sgn(r.fresh_exploit.bb100) + ` <span class="muted">(${r.fresh_exploit.minutes.toFixed(0)} min)</span>` : "–"}</td>
+      <td class="num">${sgn(r.tables, 1)}</td><td>${r.snapshots.join(", ") || "–"}</td></tr>`).join("");
+    $("runsTable").innerHTML = `<tr><th>Run</th><th>Game</th><th>Recipe</th><th>Status</th><th class="num">Trained</th>
+      <th class="num">vs tag</th><th class="num" title="its own built-in exploiters, reset hourly">Built-in exploiter</th>
+      <th class="num" title="a fresh exploiter trained against it for 30 minutes: lower = harder to exploit">Fresh exploiter</th>
+      <th class="num" title="2,000 bot_sim sessions against bots, clones and personas">Real tables</th><th>Snapshots</th></tr>` + rows;
+  } catch (e) { /* the charts report the connection */ }
+}
 async function refreshCharts() {
+  refreshInfo();
   try {
     const runs = await get("/api/runs");
     const series = Object.entries(runs).map(([name, pts], k) => ({ name, pts, color: COLORS[k % COLORS.length] }));
