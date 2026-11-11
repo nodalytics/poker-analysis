@@ -32,15 +32,18 @@ The neural route has covered steps 1–5 of the original build order (blueprint 
    - Otherwise it uses `nm9`'s recipe: NeuRD, exploiters on 25% of tables, and a snapshot every 4 hours.
    - **Done means:** it is as hard to exploit as `nm9` at these depths, and it beats the bots at bot_sim tables
      dealt 20–50bb.
-3. **`nm10`: a tournament curriculum** (started 2026-11-11 13:45 lab time, RTX PRO 6000, 24 hours).
-   - Each table's average stack is drawn from **5–15bb** (push/fold, where ICM decides the hand) or **20–50bb**
-     (realistic mid-stack depths), with equal odds (`--depths "5,15;20,50"`). Seats spread around the table
-     average, so about 55% of seats are under 15bb. `nm8` had 10–60bb.
+3. **`nm10`: a tournament curriculum** (restarted 2026-11-11 15:00 lab time at 10–25bb, RTX PRO 6000, 24 hours).
+   - Most mid- and late-tournament decisions are made at 10–25bb, so three tables in four average **10–25bb** and
+     one in four **5–10bb** (pure push/fold), via `--depths "10,25;10,25;10,25;5,10"`.
+   - Stacks spread around each table's average, as at a real table: the median table averages 12.9bb (5th to 95th
+     percentile 5.2–26.5bb). By seat, 49% are under 10bb, 38% are 10–25bb and 13% are over 25bb.
+   - The first version (1.5 hours at 5–15bb and 20–50bb tables) is kept as `nm10a`. It left a thin spot at
+     15–20bb.
    - Recipe: NeuRD, exploiters on 25% of tables, a pull ramped from 0.1, entropy bonus 0.02, a snapshot every 4
      hours. Bubble tables are top-heavy above the bust spots.
-   - Many more 5–15bb tables, where ICM decides the hand.
-   - Still to add: antes, and short-handed final tables (2–8 players). This needs the engine and `icm.scenarios` extended.
-   - **Done means:** at least 85% agreement with the ICM charts at final tables and real bubbles (now 74–81%),
+   - Still to add: antes, and short-handed final tables (2–8 players). This needs the engine and `icm.scenarios`
+     extended.
+   - **Done means:** at least 85% agreement with the ICM charts at final tables and real bubbles (`nm8`: 74–81%),
      and the big blind's calling near the chart's.
 4. **Pick the champions:** one cash network and one tournament network, chosen by exploitability first and real
    tables second. A 100bb-only exploit test for `nm6` makes the mixed-stack run comparable with the others.
@@ -94,6 +97,7 @@ The advisor (`advisor/`, Python and Tkinter today) is rewritten in **C++ with Qt
 | 2026-11-11 | The advisor is rewritten in C++ with Qt 6 |
 | 2026-11-11 | Cash training moves to random 20–50bb stacks (`nm11`); 100bb is not what real tables look like |
 | 2026-11-11 | `nm10`, the tournament curriculum, at 5–15bb and 20–50bb tables |
+| 2026-11-11 | `nm10` restarted at 10–25bb tables (3 in 4) and 5–10bb (1 in 4); tournament stacks are mostly 10–25bb. Cash stays at 20–50bb |
 | 2026-11-11 | Advisor screenshots are capture-only and pause while a real-money client runs; no live table reading |
 
 | Pending | Decision |
