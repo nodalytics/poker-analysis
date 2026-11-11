@@ -65,10 +65,15 @@ def end_stacks(start, payoff):
 
 def scenarios(G, P, dev, kinds=(0.4, 0.4, 0.2), avg_bb=(10, 60), spread=0.7, gen=None):
     """Random tournament tables: stacks [G, P] in chips (>= 2bb, rounded to the chip), payouts [G, P] summing to 1,
-    and the kind of each table (0 final table, 1 bubble, 2 in the money)."""
+    and the kind of each table (0 final table, 1 bubble, 2 in the money). avg_bb: the range (LO, HI) of a table's
+    average stack in big blinds, log-uniform, or a list of ranges, one picked per table with equal odds (nm10:
+    [(5, 15), (20, 50)], push/fold depths and realistic mid-stack depths)."""
     r = lambda *shape: torch.rand(*shape, device=dev, generator=gen)  # noqa: E731
     kind = torch.multinomial(torch.tensor(kinds, device=dev), G, replacement=True, generator=gen)
-    avg = avg_bb[0] * (avg_bb[1] / avg_bb[0]) ** r(G, 1)  # log-uniform average stack
+    ranges = torch.tensor(avg_bb if isinstance(avg_bb[0], (list, tuple)) else [avg_bb], device=dev, dtype=torch.float)
+    pick = torch.randint(len(ranges), (G,), device=dev, generator=gen)
+    lo, hi = ranges[pick, 0:1], ranges[pick, 1:2]
+    avg = lo * (hi / lo) ** r(G, 1)  # log-uniform average stack within the table's range
     z = torch.randn(G, P, device=dev, generator=gen)
     stacks = (avg * torch.exp(spread * z - spread**2 / 2) * BB).clamp(min=2 * BB).round().long()
     place = torch.arange(1, P + 1, device=dev, dtype=torch.float32)[None, :]

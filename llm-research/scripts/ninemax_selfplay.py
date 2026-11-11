@@ -49,7 +49,7 @@ from ninemax_engine import BB, STACK, Dealer, Menu, Tables, strength
 #            inputs gain every stack and the effective stack.
 #   tourney  False: chips. True: tournament tables (icm.scenarios: stacks, payout ladder); the inputs gain the
 #            payouts and every player's ICM equity, and the reward is the change in ICM equity (bb equivalents).
-FEAT = {"stacks": None, "tourney": False}
+FEAT = {"stacks": None, "tourney": False, "depths": None}
 
 
 def features(T, g, i):
@@ -181,7 +181,7 @@ def n_features(P, menu, dev):
 def context(G, P, dev):
     """Starting stacks [G, P] and payouts (or None) for G tables in the run's mode (FEAT); None, None = 100bb cash."""
     if FEAT["tourney"]:
-        st, pay, _ = scenarios(G, P, dev)
+        st, pay, _ = scenarios(G, P, dev, avg_bb=FEAT["depths"] or (10, 60))
         return st, pay
     if FEAT["stacks"]:
         lo, hi = FEAT["stacks"]
@@ -262,8 +262,10 @@ def duplicate(dealer, menu, hero, villain, n, dev):
     return m, m - 1.96 * se, m + 1.96 * se
 
 
-def set_mode(stacks="100", tourney=False):
-    """Set FEAT from a run's options (also used by the tools that load a run, from its config.json)."""
+def set_mode(stacks="100", tourney=False, depths=None):
+    """Set FEAT from a run's options (also used by the tools that load a run, from its config.json). depths: the
+    tournament tables' average-stack ranges, "LO,HI;LO,HI" (None: icm.scenarios' default, 10-60bb)."""
+    FEAT["depths"] = [tuple(float(x) for x in r.split(",")) for r in depths.split(";")] if depths else None
     FEAT["stacks"] = None if str(stacks) == "100" else tuple(float(x) for x in str(stacks).split(","))
     FEAT["tourney"] = bool(tourney)
 
@@ -312,8 +314,9 @@ def main():
     # stack depths and tournaments (docs/2026-11-09-nine-max-plan.md, "Stacks, bubbles and final tables")
     ap.add_argument("--stacks", default="100", help='"100" (every hand 100bb) or "LO,HI": each stack log-uniform')
     ap.add_argument("--tourney", action="store_true", help="tournament tables: ICM payouts, reward = ICM equity")
+    ap.add_argument("--depths", help='tournament average-stack ranges in bb, "LO,HI;LO,HI" (default 10,60)')
     args = ap.parse_args()
-    set_mode(args.stacks, args.tourney)
+    set_mode(args.stacks, args.tourney, args.depths)
     dev = "cuda"
     torch.manual_seed(0)
     os.makedirs(args.out, exist_ok=True)
