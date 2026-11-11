@@ -152,6 +152,7 @@ against 8 frozen copies of the run's checkpoint at the time.
 | `nm4` (6.5 h) | NeuRD | +47 | **+44** |
 | `nm5` (6 h) | exploiters in training (25% of tables) | +25 | +125 |
 | `nm6` (3.5 h) | stacks 5–200bb, exploiters | +9 | **+8** |
+| `nm9` (12 h) | NeuRD **and** exploiters | +47 | +60 [+50, +70] |
 
 - **NeuRD (`nm4`) is 5× less exploitable than `nm3` and still flat at 30 minutes.** It matches the heads-up
   result (NeuRD LBR ≈ 0).
@@ -160,7 +161,10 @@ against 8 frozen copies of the run's checkpoint at the time.
   as a dedicated one. The fresh test is the number to trust.
 - `nm6` reads lowest, but it is not comparable as it stands: the exploiter plays at the run's mixed stacks, and
   short stacks leave fewer decisions to exploit.
-- **Next:** NeuRD with exploiters (`nm4`'s learner in `nm5`'s league) for the next cash run.
+- **NeuRD with exploiters (`nm9`) is not better than NeuRD alone:** +60 [+50, +70] at 30 minutes against `nm4`'s
+  +44 [+39, +50], level at 15 minutes (+47 each). The exploiter league does not add to NeuRD; NeuRD is the change
+  that matters. Its built-in exploiter reads +29 to +32, the highest of any run, so the in-training exploiters
+  find holes the main network does not close.
 
 **Real tables for the newer runs** (`bot_sim`, 2,000 sessions × 24 hands, the same seats as `table2k_nm3`):
 
