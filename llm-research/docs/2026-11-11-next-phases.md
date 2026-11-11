@@ -26,12 +26,18 @@ The neural route has covered steps 1–5 of the original build order (blueprint 
      (`ninemax_eval.py cross blueprint/nm9/avg_4h.pt blueprint/nm9`). That answers whether extra hours help, which
      the tag yardstick cannot show.
    - **Done means:** a fresh 30-minute exploiter wins less than `nm4`'s +44.
-2. **`nm10`: a tournament curriculum** (awaiting the go-ahead).
+2. **`nm11`: cash at random 20–50bb stacks** (started 2026-11-11 13:36 lab time, 4090, 24 hours).
+   - Real cash tables rarely sit at exactly 100bb, so every seat's stack is drawn between 20 and 50bb
+     (log-uniform, `--stacks 20,50`).
+   - Otherwise it uses `nm9`'s recipe: NeuRD, exploiters on 25% of tables, and a snapshot every 4 hours.
+   - **Done means:** it is as hard to exploit as `nm9` at these depths, and it beats the bots at bot_sim tables
+     dealt 20–50bb.
+3. **`nm10`: a tournament curriculum** (awaiting the go-ahead).
    - Many more 5–15bb tables, where ICM decides the hand.
    - Antes, and short-handed final tables (2–8 players). This needs the engine and `icm.scenarios` extended.
    - **Done means:** at least 85% agreement with the ICM charts at final tables and real bubbles (now 74–81%),
      and the big blind's calling near the chart's.
-3. **Pick the champions:** one cash network and one tournament network, chosen by exploitability first and real
+4. **Pick the champions:** one cash network and one tournament network, chosen by exploitability first and real
    tables second. A 100bb-only exploit test for `nm6` makes the mixed-stack run comparable with the others.
 
 ## Phase B: search at play time (step 7 of the build order, about a week, CPUs)
@@ -81,6 +87,7 @@ The advisor (`advisor/`, Python and Tkinter today) is rewritten in **C++ with Qt
 | 2026-11-10 | poker.stbfarm.org is public; the backend stays bound to 127.0.0.1 |
 | 2026-11-10 | Bubble tables are top-heavy above the bust spots (satellites excluded) |
 | 2026-11-11 | The advisor is rewritten in C++ with Qt 6 |
+| 2026-11-11 | Cash training moves to random 20–50bb stacks (`nm11`); 100bb is not what real tables look like |
 | 2026-11-11 | Advisor screenshots are capture-only and pause while a real-money client runs; no live table reading |
 
 | Pending | Decision |
