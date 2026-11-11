@@ -173,3 +173,26 @@ committed models `mlflop/mlp.joblib`, `range_inference/action_model.joblib`, the
   reported to be as fast as or faster than TexasSolver (development appears to have paused). If live turn and river
   solves become the bottleneck, benchmark it against our build instead of rewriting the app.
 - **Distribution does not need a rewrite:** PyInstaller packages the app as one Windows `.exe`.
+
+## C++ rewrite (Qt 6, planned 2026-11-11)
+
+The advisor is being rewritten in C++ with Qt 6. The Python version above stays the reference until the C++ build
+matches it on the self-test spots. The roadmap is in
+[`docs/2026-11-11-next-phases.md`](../docs/2026-11-11-next-phases.md) (phase D).
+
+| Part | Plan |
+|---|---|
+| Build | CMake, Qt 6 Widgets and Charts, C++20. Windows (MSVC or MinGW, `windeployqt`), macOS and Linux |
+| Engine | `bp` (the blueprint library) linked directly. 9-max networks run through ONNX Runtime (exported from the `avg` weights). ICM and push/fold charts are ported from `scripts/icm.py` and `icm_pushfold.py`, checked against them |
+| Tabs | Session review, Trainer, Spot study and Hand Sync, as in the Python version. The hand-history parsers are ported with the same test files |
+| Self-test | `PokerAdvisor --selftest` answers the same spots as the Python build and must give the same actions |
+
+**Screenshots (capture only):**
+- A settings field sets the interval, from milliseconds to minutes; there is a start/stop button and an output
+  folder.
+- Each capture is a PNG of the screen (or one chosen window), named by time, kept in a size-capped folder.
+- Captures are **never analysed while capturing**: no OCR, no table reading and no advice from them. They are for
+  looking back at a session afterwards.
+- **Capture pauses itself while a real-money poker client is running** (a list of known client processes, ACR
+  among them) and resumes when it closes. The advisor's own Trainer table is always allowed. Real-money sites ban
+  real-time assistance; this keeps the advisor clear of it, as the line at the top of this README promises.
