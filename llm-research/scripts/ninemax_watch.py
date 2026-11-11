@@ -102,7 +102,10 @@ def info(run):
         cfg = {}
     if cfg.get("tourney"):
         d = cfg.get("depths") or "10,60"
-        mode = "tournament (ICM), table averages " + " or ".join(r.replace(",", "-") + "bb" for r in d.split(";"))
+        parts = d.split(";")
+        uniq = list(dict.fromkeys(parts))
+        share = lambda r: "" if len(uniq) == 1 else f" ({parts.count(r)} in {len(parts)} tables)"  # noqa: E731
+        mode = "tournament (ICM), table averages " + " or ".join(r.replace(",", "-") + "bb" + share(r) for r in uniq)
     elif str(cfg.get("stacks", "100")) != "100":
         mode = "cash, stacks " + str(cfg["stacks"]).replace(",", "-") + "bb"
     else:
@@ -114,6 +117,8 @@ def info(run):
         recipe.append(f"exploiters {cfg['exploit_share']:.0%}")
     if cfg.get("kl_start") is not None:
         recipe.append("ramped pull")
+    if cfg.get("no_open_limp"):
+        recipe.append("no open-limping")
     pts = curves(run)
     last = pts[-1] if pts else {}
     # training while anything in the run is still being written (a new run has no checkpoint for its first 30 min)
@@ -154,9 +159,9 @@ class Lab:
 
     def load(self, run):
         cfg = json.load(open(os.path.join(run, "config.json")))
-        set_mode(
-            cfg.get("stacks", "100"), cfg.get("tourney", False), cfg.get("depths")
-        )  # under LOCK, until the hands are played
+        set_mode(  # under LOCK, until the hands are played
+            cfg.get("stacks", "100"), cfg.get("tourney", False), cfg.get("depths"), not cfg.get("no_open_limp", False)
+        )
         menu = self.menus.setdefault(cfg.get("menu", "medium"), Menu(cfg.get("menu", "medium"), "cpu"))
         net = NineNet(cfg["nfeat"], cfg["actions"], self.B)
         st = torch.load(os.path.join(run, "checkpoint.pt"), map_location="cpu", weights_only=True)

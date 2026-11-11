@@ -176,6 +176,15 @@ committed models `mlflop/mlp.joblib`, `range_inference/action_model.joblib`, the
 
 ## C++ rewrite (Qt 6, planned 2026-11-11)
 
+**Tournament-first (2026-11-11):** the project now targets 9-max tournaments (MTT), so the C++ advisor leads with
+them:
+- a tournament set-up (players left, payouts, blinds and ante), with ICM equity shown for every decision;
+- the push/fold charts under ICM (`scripts/icm_pushfold.py`) for stacks of 15bb and under;
+- the tournament network (`models/ninemax/`) for spots between 10 and 25bb and deeper;
+- search for pots after the flop.
+
+The heads-up cash pack stays available as a second mode.
+
 The advisor is being rewritten in C++ with Qt 6. The Python version above stays the reference until the C++ build
 matches it on the self-test spots. The roadmap is in
 [`docs/2026-11-11-next-phases.md`](../docs/2026-11-11-next-phases.md) (phase D).

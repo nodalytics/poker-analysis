@@ -42,7 +42,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from icm import end_stacks, icm, scenarios
-from ninemax_engine import BB, STACK, Dealer, Menu, Tables, strength
+from ninemax_engine import BB, RULES, STACK, Dealer, Menu, Tables, strength
 
 # What the network sees and plays for, set once per run (main, or from a run's config.json by the tools that load it):
 #   stacks   None: every hand 100bb (cash). (lo, hi): each seat's stack log-uniform in lo..hi big blinds, and the
@@ -151,7 +151,19 @@ def tag_probs(T, g, i, legal, s, dealer):
 
 def rule_probs(name, T, g, i, legal, s, dealer):
     """Rule-based opponents: tag (tight-aggressive), maniac (raises and shoves most of the time), station (always
-    calls or checks), random (uniform over the legal actions)."""
+    calls or checks), random (uniform over the legal actions). Where a rule wants to call and calling is not legal
+    (first in, without open limping: RULES["open_limp"] False), it opens with the first legal size instead, or shoves."""
+    p = _rule_probs(name, T, g, i, legal, s, dealer)
+    lost = (p * ~legal).sum(1)
+    if bool((lost > 0).any()):
+        p = p * legal
+        sizes = legal[:, 2:]
+        to = torch.where(sizes.any(1), sizes.float().argmax(1) + 2, torch.zeros_like(lost, dtype=torch.long))
+        p[torch.arange(len(g), device=g.device), to] += lost
+    return p
+
+
+def _rule_probs(name, T, g, i, legal, s, dealer):
     if name == "tag":
         return tag_probs(T, g, i, legal, s, dealer)
     lf = legal.float()
@@ -262,9 +274,10 @@ def duplicate(dealer, menu, hero, villain, n, dev):
     return m, m - 1.96 * se, m + 1.96 * se
 
 
-def set_mode(stacks="100", tourney=False, depths=None):
+def set_mode(stacks="100", tourney=False, depths=None, open_limp=True):
     """Set FEAT from a run's options (also used by the tools that load a run, from its config.json). depths: the
     tournament tables' average-stack ranges, "LO,HI;LO,HI" (None: icm.scenarios' default, 10-60bb)."""
+    RULES["open_limp"] = bool(open_limp)
     FEAT["depths"] = [tuple(float(x) for x in r.split(",")) for r in depths.split(";")] if depths else None
     FEAT["stacks"] = None if str(stacks) == "100" else tuple(float(x) for x in str(stacks).split(","))
     FEAT["tourney"] = bool(tourney)
@@ -314,9 +327,10 @@ def main():
     # stack depths and tournaments (docs/2026-11-09-nine-max-plan.md, "Stacks, bubbles and final tables")
     ap.add_argument("--stacks", default="100", help='"100" (every hand 100bb) or "LO,HI": each stack log-uniform')
     ap.add_argument("--tourney", action="store_true", help="tournament tables: ICM payouts, reward = ICM equity")
+    ap.add_argument("--no-open-limp", action="store_true", help="first in from UTG to the button: fold, open or shove")
     ap.add_argument("--depths", help='tournament average-stack ranges in bb, "LO,HI;LO,HI" (default 10,60)')
     args = ap.parse_args()
-    set_mode(args.stacks, args.tourney, args.depths)
+    set_mode(args.stacks, args.tourney, args.depths, not args.no_open_limp)
     dev = "cuda"
     torch.manual_seed(0)
     os.makedirs(args.out, exist_ok=True)
