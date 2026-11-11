@@ -166,6 +166,21 @@ against 8 frozen copies of the run's checkpoint at the time.
   that matters. Its built-in exploiter reads +29 to +32, the highest of any run, so the in-training exploiters
   find holes the main network does not close.
 
+**Do extra hours help? (`nm9` against its own snapshots, 2026-11-11.)** `--keep-hours 4` kept `nm9`'s network
+at 4 and 8 hours, and the 12-hour network played each of them 1-vs-8 by duplicate
+(`results/ninemax/cross_nm9_hours.json`):
+
+| Hero vs 8 × villain | bb/100 |
+|---|---|
+| 8 h vs 4 h | **+11.6** [+5.6, +17.6] |
+| 12 h vs 4 h | **+11.6** [+5.7, +17.4] |
+| 12 h vs 8 h | +3.8 [−1.6, +9.2] |
+| vs tag: 4 h, 8 h, 12 h | +174, +180, +182 |
+
+Training from 4 to 8 hours made it measurably stronger against itself (+12 bb/100, about 460 M hands), which the
+tag yardstick barely showed (+6, inside its noise). From 8 to 12 hours the gain is small and not significant.
+**So most of the useful training is done by about 8 hours (700 M hands);** beyond that the runs mostly hold.
+
 **Real tables for the newer runs** (`bot_sim`, 2,000 sessions × 24 hands, the same seats as `table2k_nm3`):
 
 | Seat | `nine#nm3` | `nine#nm1` | `nine#nm4` | `nine#nm5` |
