@@ -16,7 +16,7 @@ The neural route has covered steps 1–5 of the original build order (blueprint 
 | The tournament network against those charts (`scripts/ninemax_pushfold_check.py`) | 90% agreement at chip value, but only 74–81% at final tables and real bubbles: **it calls 3–6× too often under ICM** |
 | The old "bubble" tables were satellites (a flat prize ladder) | Fixed: a top-heavy ladder above the bust spots; `nm7` continues as `nm8` |
 | The watch page, https://poker.stbfarm.org | Live behind Cloudflare and nginx; systemd service `poker-watch` |
-| Heads-up table solver run 7 (CPU) | Finished at 2.82 M iterations; its LBR stayed in the +50 to +100 band (±60). The final 30,000-hand LBR is running |
+| Heads-up table solver run 7 (CPU) | Finished at 2.82 M iterations. **Final LBR +104.5 [+84, +125]** on 30,000 hands, level with run 2's +104: more training on a finer abstraction did not help |
 
 ## Phase A: finish the blueprint (GPUs, about 2 days)
 
@@ -70,7 +70,6 @@ The advisor (`advisor/`, Python and Tkinter today) is rewritten in **C++ with Qt
 
 ## Open items (smaller)
 
-- The final run 7 LBR (running), then close the heads-up line in its doc.
 - The automatic commit security review fails with HTTP 401: re-authenticate the security plugin.
 - Optional: a sampling estimate of the full 9-max tree size, which only matters if a 512 GB machine appears.
 
