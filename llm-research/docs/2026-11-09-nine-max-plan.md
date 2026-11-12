@@ -632,6 +632,7 @@ flop too, where push/fold is decided at 10–25bb. The no-search check on `nm12`
 | after the flop only | 2,048 | mix τ=1 | 10,000 | 2,719 | +0.1 [−0.6, +0.8] | 1 min |
 | before the flop too | 2,048 | mix τ=1 | 3,000 | 28,464 | **+1.4** [+0.2, +2.6] | 16 min |
 | before the flop too | 2,048 | greedy | 3,000 | 28,783 | **+3.1** [+1.0, +5.2] | 17 min |
+| before the flop too | 8,192 | greedy | 3,000 | 28,555 | **+3.5** [+1.8, +5.3] | 59 min |
 
 - At 10–25bb few hands see a flop (2,719 searched decisions in 10,000 deals), so searching after the flop adds
   nothing. Before the flop the search finds a small, real gain, larger with greedy.
@@ -639,6 +640,8 @@ flop too, where push/fold is decided at 10–25bb. The no-search check on `nm12`
   more than a chip won pays, so every number is smaller than its chip equivalent.
 - Effective samples are high before the flop (median 1,100 of 2,048): few actions have been taken, so the
   opponents' ranges are wide and the weights even.
-- Running: 8,192 samples greedy, before the flop too. Next: whether the searching bot shoves short and defends the
+- 8,192 samples add little (+3.1 → +3.5), unlike cash (+14 → +32): before the flop the samples are already
+  plentiful (4,400 effective), so the limit is the rollouts themselves, which play on as the network does, with
+  its leaks. Next: whether the searching bot shoves short and defends the
   big blind, measured with the same poker-sense checks.
 
