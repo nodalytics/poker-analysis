@@ -625,6 +625,20 @@ deals. Without search the hero is `nm4` itself and wins 0 by symmetry, so the re
 **Tournaments (2026-11-12).** The search now also runs on the tournament networks. Each rollout is scored by the
 change in the hero's ICM prize equity, the unit they train in, and `--preflop` searches the decisions before the
 flop too, where push/fold is decided at 10–25bb. The no-search check on `nm12` reads −0.8 [−4.8, +3.3]. Runs
-(`results/ninemax/search_icm_nm12_*.json`): after the flop only, 2,048 mix, 10,000 deals; before the flop too,
-2,048 mix and greedy, 3,000 deals each.
+(`results/ninemax/search_icm_nm12_*.json`), gain over `nm12` in ICM equity, bb/100:
+
+| Searched | Samples | Policy | Deals | Decisions searched | Gain | Time |
+|---|---|---|---|---|---|---|
+| after the flop only | 2,048 | mix τ=1 | 10,000 | 2,719 | +0.1 [−0.6, +0.8] | 1 min |
+| before the flop too | 2,048 | mix τ=1 | 3,000 | 28,464 | **+1.4** [+0.2, +2.6] | 16 min |
+| before the flop too | 2,048 | greedy | 3,000 | 28,783 | **+3.1** [+1.0, +5.2] | 17 min |
+
+- At 10–25bb few hands see a flop (2,719 searched decisions in 10,000 deals), so searching after the flop adds
+  nothing. Before the flop the search finds a small, real gain, larger with greedy.
+- The unit is small by nature: ICM equity in chips at the table's average chip value, where a chip lost costs
+  more than a chip won pays, so every number is smaller than its chip equivalent.
+- Effective samples are high before the flop (median 1,100 of 2,048): few actions have been taken, so the
+  opponents' ranges are wide and the weights even.
+- Running: 8,192 samples greedy, before the flop too. Next: whether the searching bot shoves short and defends the
+  big blind, measured with the same poker-sense checks.
 

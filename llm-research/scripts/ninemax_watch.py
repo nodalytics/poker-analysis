@@ -109,6 +109,7 @@ def results():
             out["sense"].update(json.load(open(f)))  # later files replace earlier readings of the same run
         except (OSError, ValueError):
             continue
+    pf = {}
     for f in sorted(glob.glob(os.path.join(res, "pushfold_check*.json")), key=os.path.getmtime):
         try:
             d = json.load(open(f))
@@ -118,8 +119,15 @@ def results():
             run, table = key.split(" | ", 1)
             agree = sum(v["agree"] for v in seats.values()) / len(seats)
             bb = seats.get("bb_vs_sb", {})
-            out["pushfold"].append({"run": run, "table": table, "agree": round(agree, 3),
-                                    "bb_calls": bb.get("in"), "bb_chart": bb.get("chart")})  # fmt: skip
+            row = {
+                "run": run,
+                "table": table,
+                "agree": round(agree, 3),
+                "bb_calls": bb.get("in"),
+                "bb_chart": bb.get("chart"),
+            }
+            pf[(run, table)] = row  # later files replace earlier readings of the same run and table
+    out["pushfold"] = list(pf.values())
     out["search"].sort(key=lambda r: (r["run"] or "", r["samples"] or 0, r["mode"] or "", r["tau"] or 0))
     return out
 
