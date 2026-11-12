@@ -99,8 +99,8 @@
   </section>
   <!-- results: search, poker sense, ICM -->
   <section id="results">
-    <h2>Search at play time <span class="muted">(the thinking bot vs 8 copies of the same network playing on instinct; bb/100 over 10,000 deals, all 9 seats)</span></h2>
-    <p class="muted">Before each decision after the flop (pots of up to 3 players), the bot imagines thousands of possible opponent hands consistent with how they played, tries every action and plays each out. "Effective" = how many of the imagined hands really count.</p>
+    <h2>Search at play time <span class="muted">(the thinking bot vs 8 copies of the same network playing on instinct; bb/100 over the deals, all 9 seats)</span></h2>
+    <p class="muted">Before each decision after the flop (pots of up to 3 players), and with "before the flop too" before every preflop decision, the bot imagines thousands of possible opponent hands consistent with how they played, tries every action and plays each out. "Effective" = how many of the imagined hands really count. Tournament networks are scored in ICM prize equity (converted to big blinds), the same unit they train in; cash networks in chips.</p>
     <div class="runs-wrap"><table class="runs" id="searchTable"></table></div>
     <h2>Poker sense <span class="muted">(what strong tournament players do, and why; docs/2026-11-11-mtt-strategy.md)</span></h2>
     <div class="sense-intro">
@@ -212,10 +212,11 @@ const pct = (v) => v === null || v === undefined ? "–" : (100 * v).toFixed(0) 
 async function refreshResults() {
   try {
     const r = await get("/api/results");
-    $("searchTable").innerHTML = `<tr><th>Network</th><th class="num">Hands imagined</th><th>Policy</th>
+    $("searchTable").innerHTML = `<tr><th>Network</th><th class="num">Hands imagined</th><th>Policy</th><th>Game</th><th>Streets</th>
       <th class="num">Effective (median)</th><th class="num">Gain, bb/100</th><th class="num">95% range</th><th class="num">Decisions</th><th class="num">Time</th></tr>` +
       r.search.map((s) => `<tr><td>${(s.run || "").replace("blueprint/", "")}</td><td class="num">${s.samples}</td>
       <td>${s.samples ? s.mode + (s.mode === "mix" ? " τ=" + s.tau : "") : "no search (check)"}</td>
+      <td>${s.tourney ? "tournament (ICM)" : "cash"}</td><td>${s.preflop ? "before the flop too" : "after the flop"}</td>
       <td class="num">${s.ess_median ?? "–"}</td><td class="num"><b>${sgn(s.bb100, 1)}</b></td>
       <td class="num">${s.ci95 ? sgn(s.ci95[0], 1) + " to " + sgn(s.ci95[1], 1) : "–"}</td>
       <td class="num">${s.searched_decisions ?? "–"}</td><td class="num">${s.seconds ? Math.round(s.seconds / 60) + " min" : "–"}</td></tr>`).join("");

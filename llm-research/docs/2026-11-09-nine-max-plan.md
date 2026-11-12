@@ -600,6 +600,8 @@ deals. Without search the hero is `nm4` itself and wins 0 by symmetry, so the re
 | 2,048 | greedy | 117, 11.6 | **+14.4** [+4.6, +24.3] | 9 min |
 | 2,048 | mix τ=1 | 120, 13.1 | **+20.4** [+10.6, +30.3] | 10 min |
 | 8,192 | mix τ=1 | 480, 47 | **+31.2** [+21.7, +40.7] | 35 min (GPU shared) |
+| 8,192 | greedy | 475, 41 | **+32.1** [+22.4, +41.8] | 32 min |
+| 2,048 | mix τ=3 | 119, 13 | +8.9 [−0.3, +18.2] | 13 min |
 
 (About 25,000–28,000 searched decisions per row; the raw lines are in `results/ninemax/search_v1_nm4.jsonl`.)
 
@@ -617,4 +619,12 @@ deals. Without search the hero is `nm4` itself and wins 0 by symmetry, so the re
   - an exploiter test against the searching bot, since search is meant to fix exploitability, not only add winnings
     against the network;
   - then a real re-solve, in which the opponents' strategies also respond.
+- At 8,192 samples greedy (+32.1) and mix (+31.2) are level: with enough samples the values are clear and mixing no
+  longer helps. τ=3 is too soft (+8.9, half the τ=1 gain).
+
+**Tournaments (2026-11-12).** The search now also runs on the tournament networks. Each rollout is scored by the
+change in the hero's ICM prize equity, the unit they train in, and `--preflop` searches the decisions before the
+flop too, where push/fold is decided at 10–25bb. The no-search check on `nm12` reads −0.8 [−4.8, +3.3]. Runs
+(`results/ninemax/search_icm_nm12_*.json`): after the flop only, 2,048 mix, 10,000 deals; before the flop too,
+2,048 mix and greedy, 3,000 deals each.
 

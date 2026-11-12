@@ -1,0 +1,66 @@
+== nm10/avg_4h (484 M hands): 3/12 within the reference bands
+  ok   premiums raise first in (UTG, 20bb)                  99%  (band 95%-100%)  AA 100% KK 100% QQ 100% AKs 99% AKo 99% | limp max 0%
+  ok   premiums raise first in (BTN, 20bb)                  99%  (band 95%-100%)  AA 100% KK 100% QQ 100% AKs 99% AKo 99% | limp max 0%
+  WARN trash folds first in (UTG, 20bb)                     97%  (band 97%-100%)  72o 98% 83o 97% 94o 97% T2o 97% J3o 97%
+  WARN opens first in (UTG, 20bb)                           10%  (band 10%-20%)  limp 0.0%, opens 4.7%/3.4%/1.4%, shove 0.5%
+  WARN opens first in (MP, 20bb)                            11%  (band 13%-24%)  limp 0.0%, opens 5.8%/3.6%/1.4%, shove 0.5%
+  WARN opens first in (HJ, 20bb)                            16%  (band 18%-30%)  limp 0.0%, opens 8.5%/4.8%/1.8%, shove 0.5%
+  WARN opens first in (CO, 20bb)                            18%  (band 24%-38%)  limp 0.0%, opens 9.9%/5.8%/2.1%, shove 0.6%
+  WARN opens first in (BTN, 20bb)                           22%  (band 35%-58%)  limp 0.0%, opens 11.3%/7.2%/2.5%, shove 0.6%
+  ok   opens first in (SB, 20bb)                            52%  (band 35%-70%)  limp 11.1%, opens 25.8%/11.7%/2.6%, shove 1.0%
+  WARN plays all in at 8bb (UTG), share of hands played     26%  (band 75%-100%)  plays 13% of hands
+  WARN plays all in at 8bb (CO), share of hands played      16%  (band 75%-100%)  plays 19% of hands
+  WARN big blind defends vs button min-open (20bb)          34%  (band 50%-80%)  calls 13%, raises 21%
+== nm10/avg_8h (973 M hands): 7/12 within the reference bands
+  ok   premiums raise first in (UTG, 20bb)                  98%  (band 95%-100%)  AA 100% KK 99% QQ 98% AKs 100% AKo 100% | limp max 0%
+  ok   premiums raise first in (BTN, 20bb)                  99%  (band 95%-100%)  AA 99% KK 100% QQ 99% AKs 99% AKo 100% | limp max 0%
+  WARN trash folds first in (UTG, 20bb)                     95%  (band 97%-100%)  72o 96% 83o 95% 94o 96% T2o 95% J3o 96%
+  ok   opens first in (UTG, 20bb)                           13%  (band 10%-20%)  limp 0.0%, opens 6.0%/4.1%/2.2%, shove 0.6%
+  ok   opens first in (MP, 20bb)                            16%  (band 13%-24%)  limp 0.0%, opens 8.1%/5.4%/2.2%, shove 0.6%
+  ok   opens first in (HJ, 20bb)                            24%  (band 18%-30%)  limp 0.0%, opens 12.2%/8.1%/2.7%, shove 0.7%
+  ok   opens first in (CO, 20bb)                            28%  (band 24%-38%)  limp 0.0%, opens 14.2%/9.8%/3.1%, shove 0.8%
+  WARN opens first in (BTN, 20bb)                           33%  (band 35%-58%)  limp 0.0%, opens 16.6%/11.8%/3.5%, shove 0.8%
+  ok   opens first in (SB, 20bb)                            50%  (band 35%-70%)  limp 8.6%, opens 22.6%/14.0%/3.4%, shove 1.0%
+  WARN plays all in at 8bb (UTG), share of hands played     15%  (band 75%-100%)  plays 12% of hands
+  WARN plays all in at 8bb (CO), share of hands played      10%  (band 75%-100%)  plays 26% of hands
+  WARN big blind defends vs button min-open (20bb)          39%  (band 50%-80%)  calls 21%, raises 18%
+== nm12/avg_4h (959 M hands): 6/12 within the reference bands
+  ok   premiums raise first in (UTG, 20bb)                  100%  (band 95%-100%)  AA 100% KK 100% QQ 100% AKs 100% AKo 100% | limp max 0%
+  ok   premiums raise first in (BTN, 20bb)                  100%  (band 95%-100%)  AA 100% KK 100% QQ 100% AKs 100% AKo 100% | limp max 0%
+  WARN trash folds first in (UTG, 20bb)                     97%  (band 97%-100%)  72o 97% 83o 97% 94o 97% T2o 97% J3o 97%
+  ok   opens first in (UTG, 20bb)                           12%  (band 10%-20%)  limp 0.0%, opens 5.3%/3.9%/2.2%, shove 0.5%
+  ok   opens first in (MP, 20bb)                            15%  (band 13%-24%)  limp 0.0%, opens 7.5%/5.3%/1.8%, shove 0.5%
+  ok   opens first in (HJ, 20bb)                            20%  (band 18%-30%)  limp 0.0%, opens 9.6%/7.2%/2.4%, shove 0.5%
+  WARN opens first in (CO, 20bb)                            24%  (band 24%-38%)  limp 0.0%, opens 11.8%/8.8%/2.8%, shove 0.6%
+  WARN opens first in (BTN, 20bb)                           30%  (band 35%-58%)  limp 0.0%, opens 14.5%/11.0%/3.3%, shove 0.6%
+  ok   opens first in (SB, 20bb)                            57%  (band 35%-70%)  limp 8.7%, opens 26.7%/17.7%/2.9%, shove 1.0%
+  WARN plays all in at 8bb (UTG), share of hands played     8%  (band 75%-100%)  plays 12% of hands
+  WARN plays all in at 8bb (CO), share of hands played      8%  (band 75%-100%)  plays 24% of hands
+  WARN big blind defends vs button min-open (20bb)          23%  (band 50%-80%)  calls 10%, raises 13%
+== nm12/avg_8h (1946 M hands): 8/12 within the reference bands
+  ok   premiums raise first in (UTG, 20bb)                  99%  (band 95%-100%)  AA 99% KK 99% QQ 99% AKs 99% AKo 99% | limp max 0%
+  ok   premiums raise first in (BTN, 20bb)                  99%  (band 95%-100%)  AA 99% KK 99% QQ 99% AKs 99% AKo 99% | limp max 0%
+  ok   trash folds first in (UTG, 20bb)                     97%  (band 97%-100%)  72o 98% 83o 97% 94o 97% T2o 98% J3o 97%
+  ok   opens first in (UTG, 20bb)                           11%  (band 10%-20%)  limp 0.0%, opens 5.5%/4.1%/1.3%, shove 0.5%
+  ok   opens first in (MP, 20bb)                            15%  (band 13%-24%)  limp 0.0%, opens 7.5%/5.4%/1.5%, shove 0.5%
+  ok   opens first in (HJ, 20bb)                            22%  (band 18%-30%)  limp 0.0%, opens 10.8%/8.3%/2.0%, shove 0.7%
+  ok   opens first in (CO, 20bb)                            25%  (band 24%-38%)  limp 0.0%, opens 12.5%/9.8%/2.2%, shove 0.8%
+  WARN opens first in (BTN, 20bb)                           32%  (band 35%-58%)  limp 0.0%, opens 15.3%/13.1%/2.8%, shove 0.9%
+  ok   opens first in (SB, 20bb)                            54%  (band 35%-70%)  limp 13.5%, opens 19.6%/17.7%/2.5%, shove 1.0%
+  WARN plays all in at 8bb (UTG), share of hands played     11%  (band 75%-100%)  plays 12% of hands
+  WARN plays all in at 8bb (CO), share of hands played      18%  (band 75%-100%)  plays 27% of hands
+  WARN big blind defends vs button min-open (20bb)          31%  (band 50%-80%)  calls 17%, raises 14%
+== nm10/avg_8h (973 M hands)
+chip EV, 9 x 10bb                             in/chart by seat: 12%/8% 13%/9% 16%/11% 19%/15% 21%/18% 25%/23% 29%/32% 47%/59% | BB calls SB 38%/38% | agree 90%
+final table, 9 x 10bb                         in/chart by seat: 9%/16% 10%/18% 11%/28% 12%/30% 15%/43% 18%/63% 27%/98% 61%/100% | BB calls SB 22%/4% | agree 68%
+bubble (1 out), 9 x 10bb                      in/chart by seat: 11%/100% 13%/100% 17%/100% 22%/100% 28%/100% 33%/100% 46%/100% 94%/100% | BB calls SB 3%/0% | agree 40%
+bubble (1 out), top-heavy above it            in/chart by seat: 8%/12% 8%/16% 9%/20% 10%/24% 12%/34% 16%/48% 31%/73% 89%/100% | BB calls SB 10%/8% | agree 79%
+bubble (1 out), big stack on the button       in/chart by seat: 8%/100% 9%/100% 11%/100% 14%/100% 16%/100% 16%/100% 99%/100% 91%/100% | BB calls SB 3%/0% | agree 40%
+bubble (1 out), short stack in the big blind  in/chart by seat: 12%/39% 14%/40% 18%/42% 24%/44% 31%/45% 39%/43% 56%/43% 99%/100% | BB calls SB 3%/43% | agree 65%
+== nm12/avg_8h (1946 M hands)
+chip EV, 9 x 10bb                             in/chart by seat: 12%/8% 13%/9% 16%/11% 19%/15% 22%/18% 26%/23% 31%/32% 46%/59% | BB calls SB 37%/38% | agree 90%
+final table, 9 x 10bb                         in/chart by seat: 10%/16% 10%/18% 12%/28% 13%/30% 16%/43% 20%/63% 29%/98% 56%/100% | BB calls SB 22%/4% | agree 68%
+bubble (1 out), 9 x 10bb                      in/chart by seat: 9%/100% 10%/100% 17%/100% 21%/100% 30%/100% 41%/100% 58%/100% 96%/100% | BB calls SB 3%/0% | agree 42%
+bubble (1 out), top-heavy above it            in/chart by seat: 8%/12% 8%/16% 10%/20% 12%/24% 14%/34% 17%/48% 27%/73% 94%/100% | BB calls SB 11%/8% | agree 80%
+bubble (1 out), big stack on the button       in/chart by seat: 6%/100% 6%/100% 9%/100% 11%/100% 14%/100% 20%/100% 98%/100% 94%/100% | BB calls SB 3%/0% | agree 40%
+bubble (1 out), short stack in the big blind  in/chart by seat: 9%/39% 11%/40% 18%/42% 24%/44% 35%/45% 48%/43% 69%/43% 99%/100% | BB calls SB 4%/43% | agree 67%
