@@ -51,6 +51,7 @@ NUM = r"([-+]?\d+(?:\.\d+)?)"
 FIELDS = {
     "tag": r"vs tag: " + NUM,
     "previous": r"vs previous checkpoint: " + NUM,
+    "reg": r"vs reg: " + NUM,
     "maniac": r"vs maniac: " + NUM,
     "station": r"vs station: " + NUM,
     "random": r"vs random: " + NUM,
@@ -229,7 +230,7 @@ class Lab:
                 lg, _ = net(feat, bk[g, i], T.street[g], s)
             probs = F.softmax(masked(lg, legal), 1)
             if opp != "self":
-                rule = rule_probs(opp, T, g, i, legal, s, self.dealer)
+                rule = rule_probs(opp, T, g, i, legal, s, self.dealer, bk)
                 probs = torch.where((i == hero[g])[:, None], probs, rule)
             a = torch.multinomial(probs, 1).squeeze(1)
             to_call = T.bet[g] - T.contrib[g, i]
@@ -416,7 +417,7 @@ def main():
                 if u.path == "/api/live":  # 4: fresh hands from the newest checkpoint
                     run = [r for r in runs() if os.path.basename(r) == q["run"]][0]
                     opp = q.get("opp", "self")
-                    if opp not in ("self", "tag", "maniac", "station", "random"):
+                    if opp not in ("self", "reg", "tag", "maniac", "station", "random"):
                         opp = "self"
                     with LOCK:
                         net, menu, hands = lab.load(run)
