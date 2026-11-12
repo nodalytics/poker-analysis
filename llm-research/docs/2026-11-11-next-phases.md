@@ -79,6 +79,30 @@ The neural route has covered steps 1–5 of the original build order (blueprint 
 
 ## Phase C: realistic opponents (step 6, alongside B)
 
+**Started 2026-11-12, first step: a tournament regular in the training pool.** Twenty hours of `nm10` and `nm12`
+left two leaks unchanged: they shove short with 10–26% of the hands they play (75–100% is right) and defend the big
+blind 23–39% (50–80%). The pool decides what pays, and its maniac and station call shoves light and open
+everything. `reg` (`reg_probs` in `ninemax_selfplay.py`) is a rule player that plays like a competent regular before
+the flop:
+- first in at 13bb or less, it shoves the equilibrium push range by seat (10bb: 8% UTG to 32% button, 59% small
+  blind; wider when shorter);
+- deeper, it opens chart ranges (13% UTG to 45% button);
+- it calls all-ins by price;
+- it defends the big blind 55% against a late open (35% against an early one), and 3-bets or shoves the top 5–10%.
+
+After the flop it plays like `tag`. Checked on the lab: its behaviour matches those numbers, and `nm12` beats it by
++19.7 bb/100 against +35.6 for `tag`, so it is the harder opponent.
+
+Two runs, 12 hours each, start when `nm10` and `nm12` finish (`blueprint/phase_c.sh`). Both use the pool
+`reg,reg,tag,maniac` at half of every batch, at 10–25bb:
+- `nm13` warm-starts from `nm12`;
+- `nm14` starts fresh.
+
+Progress lines now include `vs reg`, also charted on the watch page. Success means the 8bb shove share and the
+big-blind defence move into their bands on the automatic checks, without losing the rest.
+
+Then, as planned:
+
 - Extract HandHQ's 7–10-player hands, and build full-ring clones and opponent models, so the test tables look
   like the real player pool and not the 6-max clones.
 - A tournament mode for `bot_sim` (stacks plus a payout ladder), so tournament networks can play the bots; the
