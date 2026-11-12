@@ -104,7 +104,8 @@ open everything, so neither lesson is taught. This is the case for phase C (real
 the preflop decisions (below).
 
 **Next:**
-- run the checks at each new snapshot (they show on the watch page under Results);
+- the checks now run by themselves on every new snapshot of a tournament run (`scripts/ninemax_autocheck.py` on the
+  lab, results as `sense_<run>_<h>h.json` and `pushfold_check_<run>_<h>h.json`) and show on the watch page;
 - search before the flop on the tournament networks, scored in ICM equity (`ninemax_search.py --preflop`,
   running on `nm12`);
 - if the big-blind defence and short-stack shoving stay outside their bands, look at the training pool first,
