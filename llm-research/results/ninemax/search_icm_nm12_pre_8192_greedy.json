@@ -1,0 +1,20 @@
+{
+ "run": "blueprint/nm12/avg_8h.pt",
+ "hands_trained": 1946107904,
+ "hands": 3000,
+ "samples": 8192,
+ "mode": "greedy",
+ "tau": 1.0,
+ "max_live": 3,
+ "preflop": true,
+ "tourney": true,
+ "searched_decisions": 28555,
+ "bb100": 3.5,
+ "ci95": [
+  1.8,
+  5.3
+ ],
+ "seconds": 3547,
+ "ess_median": 4419.2,
+ "ess_p10": 578.2
+}
