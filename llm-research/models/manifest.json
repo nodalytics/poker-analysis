@@ -18,6 +18,32 @@
   "unpack": "zstd -dc headsup-pack-run2.tar.zst | tar -x -C blueprint/   (from llm-research/; gives blueprint/pack/)"
  },
  "ninemax": {
+  "nm10": {
+   "bytes": 4516705,
+   "hands_trained": 5134483456,
+   "minutes_trained": 1440.0,
+   "note": "MTT, 5-15bb and 20-50bb, no open-limp, mtt menu, 24h",
+   "path": "ninemax/nm10/avg_fp16.pt",
+   "sha256": {
+    "avg_fp16.pt": "6a55d54321233e05706cae1749322ce85c997c420b6d5ab24131349653cda830",
+    "config.json": "c3d5c72958151bcba1ba22d4da12ff769a53bd87421153a6f4dd51fc57d1f485"
+   },
+   "source": "blueprint/nm10",
+   "vs_tag_bb100": 31.2
+  },
+  "nm12": {
+   "bytes": 4516705,
+   "hands_trained": 5816352768,
+   "minutes_trained": 1440.0,
+   "note": "MTT, 10-25bb, no open-limp, mtt menu, 24h",
+   "path": "ninemax/nm12/avg_fp16.pt",
+   "sha256": {
+    "avg_fp16.pt": "fc585762fabeeb3f09fb855e6313f96f66235818328c217b69a2648e6b71ac54",
+    "config.json": "862c2c12a86aa1418e98db86586ae0ed9c48f36e3b642ec01f11b0e956152f33"
+   },
+   "source": "blueprint/nm12",
+   "vs_tag_bb100": 35.9
+  },
   "nm4": {
    "bytes": 4487009,
    "hands_trained": 1191608320,
