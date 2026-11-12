@@ -103,7 +103,7 @@ def results():
         except (OSError, ValueError):
             continue
         out["search"].append({k: r.get(k) for k in ("run", "samples", "mode", "tau", "bb100", "ci95", "ess_median",
-                                                     "searched_decisions", "seconds", "hands")})  # fmt: skip
+                                                     "searched_decisions", "seconds", "hands", "preflop", "tourney")})  # fmt: skip
     for f in sorted(glob.glob(os.path.join(res, "sense_*.json")), key=os.path.getmtime):
         try:
             out["sense"].update(json.load(open(f)))  # later files replace earlier readings of the same run

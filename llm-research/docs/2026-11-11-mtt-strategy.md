@@ -72,8 +72,41 @@ equilibria. A WARN is a spot to look at, not a proof of a leak.
 - **Opening widths are roughly right** (`nm10a` is inside every band but the small blind). Position is learned
   well; the strategy within a range is the problem.
 
+### `nm10` and `nm12` (no open-limping, `mtt` menu), 2026-11-12
+
+Snapshots at 4 and 8 hours, 100,000 hands per check (`results/ninemax/sense_nm10_nm12.json`; log
+`checks_nm10_nm12.log`). `nm10` trains at 5–15bb and 20–50bb, `nm12` at 10–25bb.
+
+| Check | `nm10` 4h | `nm10` 8h | `nm12` 4h | `nm12` 8h | Band |
+|---|---|---|---|---|---|
+| Premiums raised first in, UTG / button | 99 / 99% | 98 / 99% | 100 / 100% | 99 / 99% | 95–100% |
+| Trash folded at UTG | 97% | 95% | 97% | 97% | 97–100% |
+| Played first in: UTG / MP / HJ / CO / BTN / SB | 10/11/16/18/22/52% | 13/16/24/28/33/50% | 12/15/20/24/30/57% | 11/15/22/25/32/54% | see above |
+| All in, share of hands played at 8bb: UTG / CO | 26 / 16% | 15 / 10% | 8 / 8% | 11 / 18% | 75–100% |
+| Big blind defends vs button 2× open | 34% | 39% | 23% | 31% | 50–80% |
+| Within band | 3 of 12 | 7 of 12 | 6 of 12 | 8 of 12 | |
+
+**What it shows:**
+- **The partner's point is fixed.** AA, KK, QQ and AK are raised first in 98–100% of the time from every seat.
+  The rule removed the limp, and the networks chose to raise rather than fold or shove them.
+- **Opening is close to the charts**, slightly tight on the button (32–33% against 35–58%).
+- **Still no short-stack shoving.** At 8bb they play 12–27% of hands but go all in with only 8–26% of them, and it is
+  getting no better with training (`nm10` 26% → 15%). A 2× open at 8bb risks a quarter of the stack and then
+  faces a reshove: against good players this loses, against the training pool it apparently does not.
+- **The big blind still folds too much** (23–39% against 50–80%), though `nm10` is improving (34% → 39%).
+- **ICM push/fold** (`pushfold_check_nm10_nm12_8h.json`): chip-EV agreement 90% as before; at the final table and
+  on the bubble the networks shove far less than the ICM equilibrium (on the button at a final table 27–29%
+  against 98%). They play ICM spots as a tight raise-or-fold game, not as push/fold.
+
+Both open-shove and big-blind defence are things the opponents decide: a shove is good because good players fold
+to it, and a wide defence is good because opens are wide. The pool's maniacs and stations call shoves light and
+open everything, so neither lesson is taught. This is the case for phase C (realistic opponents) and for searching
+the preflop decisions (below).
+
 **Next:**
-- run the checks on `nm10` and `nm12` at each 4-hour snapshot, and put the results on the watch page;
+- run the checks at each new snapshot (they show on the watch page under Results);
+- search before the flop on the tournament networks, scored in ICM equity (`ninemax_search.py --preflop`,
+  running on `nm12`);
 - if the big-blind defence and short-stack shoving stay outside their bands, look at the training pool first,
   because the opponents set what is worth learning;
 - add the checks after the flop.

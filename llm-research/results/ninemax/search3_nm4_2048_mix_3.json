@@ -1,0 +1,18 @@
+{
+ "run": "blueprint/nm4",
+ "hands_trained": 1191608320,
+ "hands": 10000,
+ "samples": 2048,
+ "mode": "mix",
+ "tau": 3.0,
+ "max_live": 3,
+ "searched_decisions": 28225,
+ "bb100": 8.9,
+ "ci95": [
+  -0.3,
+  18.2
+ ],
+ "seconds": 753,
+ "ess_median": 119.1,
+ "ess_p10": 13.2
+}
