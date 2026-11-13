@@ -103,6 +103,40 @@ to it, and a wide defence is good because opens are wide. The pool's maniacs and
 open everything, so neither lesson is taught. This is the case for phase C (realistic opponents) and for searching
 the preflop decisions (below).
 
+### Phase C (`nm13`, `nm14`) and the big-blind ante, 2026-11-13
+
+`nm13` (from `nm12`) and `nm14` (fresh) trained 12 hours with the tournament regular (`reg`) in the pool.
+
+| Check, 12 hours | `nm13` | `nm14` | Band |
+|---|---|---|---|
+| Premiums raised / trash folded | 100 / 97% | 99 / 98% | |
+| Opening widths UTG … SB | 12–41% | 10–49% | |
+| All in, share of hands played at 8bb: UTG / CO | **38 / 54%** | 19 / 21% | 75–100% |
+| Big blind defends vs button min-open | 21% | 24% | 50–80% |
+
+The regular moved `nm13`'s short-stack shoving (from 19/28% in `nm12`), not `nm14`'s, and neither big blind.
+Both still beat `reg` by about +20 bb/100. Against it, min-raising at 8bb steals the blinds about as often as a
+shove (it folds about 85% either way), and it risks 2bb instead of 8. **Without an ante that is a sound
+strategy.** The 75–100% shove band and the 50–80% defence band came from charts for tournaments with a big-blind
+ante, and our tables had none. So the checks were partly asking for answers to a different game.
+
+**The ante is now in the game** (`RULES["ante"]`, `--ante 1`): the big blind posts one more big blind of dead
+money, so 2.5bb is in the middle before anyone acts, as in almost every tournament today.
+- The engine agrees with PokerKit on 13,000 random hands at 9, 6 and 3 players with mixed stacks
+  (`ninemax_check.py ... 1.0`). PokerKit needs ante trimming off for a big-blind ante.
+- The push/fold solver treats antes as dead money (`--bb-ante`), so a short big blind's all-in is not inflated.
+  The charts with the ante (`results/ninemax/icm_pushfold_ante.json`) are much wider:
+
+| Chip EV, 9 × 10bb | Shove by seat (UTG … SB) | Big blind calls the small blind |
+|---|---|---|
+| no ante | 7 8 11 14 19 22 33 59% | 37% |
+| big-blind ante | 12 14 18 21 27 33 43 75% | 58% |
+
+- `reg` uses the ante ranges when the run has one (push 12–75%, opens 16–55%, big blind defends 65% against a late
+  open). The sense checks of an ante run use ante bands: opens UTG 13–22% to button 42–68%, big blind 60–85%.
+
+`nm15` (from `nm13`) and `nm16` (fresh) train 12 hours with the ante, from 2026-11-13 14:05 lab time.
+
 **Next:**
 - the checks now run by themselves on every new snapshot of a tournament run (`scripts/ninemax_autocheck.py` on the
   lab, results as `sense_<run>_<h>h.json` and `pushfold_check_<run>_<h>h.json`) and show on the watch page;

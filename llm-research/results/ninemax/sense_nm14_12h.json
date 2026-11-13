@@ -1,0 +1,127 @@
+{
+ "nm14/avg_12h": {
+  "hands_trained": 3055550464,
+  "checks": [
+   {
+    "check": "premiums raise first in (UTG, 20bb)",
+    "value": 0.991,
+    "band": [
+     0.95,
+     1.0
+    ],
+    "ok": true,
+    "detail": "AA 100% KK 99% QQ 100% AKs 99% AKo 99% | limp max 0%"
+   },
+   {
+    "check": "premiums raise first in (BTN, 20bb)",
+    "value": 0.995,
+    "band": [
+     0.95,
+     1.0
+    ],
+    "ok": true,
+    "detail": "AA 100% KK 100% QQ 100% AKs 99% AKo 99% | limp max 0%"
+   },
+   {
+    "check": "trash folds first in (UTG, 20bb)",
+    "value": 0.977,
+    "band": [
+     0.97,
+     1.0
+    ],
+    "ok": true,
+    "detail": "72o 98% 83o 98% 94o 98% T2o 98% J3o 98%"
+   },
+   {
+    "check": "opens first in (UTG, 20bb)",
+    "value": 0.099,
+    "band": [
+     0.1,
+     0.2
+    ],
+    "ok": false,
+    "detail": "limp 0.0%, opens 4.5%/3.4%/1.6%, shove 0.4%"
+   },
+   {
+    "check": "opens first in (MP, 20bb)",
+    "value": 0.122,
+    "band": [
+     0.13,
+     0.24
+    ],
+    "ok": false,
+    "detail": "limp 0.0%, opens 5.7%/4.5%/1.7%, shove 0.4%"
+   },
+   {
+    "check": "opens first in (HJ, 20bb)",
+    "value": 0.175,
+    "band": [
+     0.18,
+     0.3
+    ],
+    "ok": false,
+    "detail": "limp 0.0%, opens 8.6%/6.5%/1.9%, shove 0.5%"
+   },
+   {
+    "check": "opens first in (CO, 20bb)",
+    "value": 0.203,
+    "band": [
+     0.24,
+     0.38
+    ],
+    "ok": false,
+    "detail": "limp 0.0%, opens 9.8%/7.7%/2.2%, shove 0.6%"
+   },
+   {
+    "check": "opens first in (BTN, 20bb)",
+    "value": 0.254,
+    "band": [
+     0.35,
+     0.58
+    ],
+    "ok": false,
+    "detail": "limp 0.0%, opens 12.0%/9.8%/2.9%, shove 0.7%"
+   },
+   {
+    "check": "opens first in (SB, 20bb)",
+    "value": 0.488,
+    "band": [
+     0.35,
+     0.7
+    ],
+    "ok": true,
+    "detail": "limp 3.0%, opens 23.3%/16.9%/4.7%, shove 0.9%"
+   },
+   {
+    "check": "plays all in at 8bb (UTG), share of hands played",
+    "value": 0.19,
+    "band": [
+     0.75,
+     1.0
+    ],
+    "ok": false,
+    "detail": "plays 10% of hands"
+   },
+   {
+    "check": "plays all in at 8bb (CO), share of hands played",
+    "value": 0.21,
+    "band": [
+     0.75,
+     1.0
+    ],
+    "ok": false,
+    "detail": "plays 18% of hands"
+   },
+   {
+    "check": "big blind defends vs button min-open (20bb)",
+    "value": 0.244,
+    "band": [
+     0.5,
+     0.8
+    ],
+    "ok": false,
+    "detail": "calls 10%, raises 14%"
+   }
+  ]
+ }
+}
