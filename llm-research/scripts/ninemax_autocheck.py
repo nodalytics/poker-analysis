@@ -2,7 +2,8 @@
 
 Every --every minutes, for each blueprint/nm*/ run whose config says "tourney", and each avg_<h>h.pt snapshot that has
 no result yet, it runs the poker-sense checks (ninemax_sense.py -> results/ninemax/sense_<run>_<h>h.json) and the ICM
-push/fold check (ninemax_pushfold_check.py -> pushfold_check_<run>_<h>h.json), one at a time, each in its own
+push/fold check (ninemax_pushfold_check.py -> pushfold_check_<run>_<h>h.json; against icm_pushfold_ante.json for
+runs trained with a big-blind ante), one at a time, each in its own
 process. A check that fails leaves a .failed marker so it is not retried every pass; delete the marker to retry.
 The watch page reads both files on its next refresh (every minute).
 
@@ -33,6 +34,7 @@ def pending():
         except (OSError, ValueError):
             continue
         name = os.path.basename(run)
+        ante = json.load(open(os.path.join(run, "config.json"))).get("ante", 0) > 0
         for snap in sorted(glob.glob(os.path.join(run, "avg_*h.pt")), key=os.path.getmtime):
             if time.time() - os.path.getmtime(snap) < 60:  # still being written
                 continue
@@ -40,7 +42,10 @@ def pending():
             for kind, script, pattern in JOBS:
                 out = os.path.join(RES, pattern.format(run=name, h=h))
                 if not os.path.exists(out) and not os.path.exists(out + ".failed"):
-                    yield kind, script, os.path.relpath(snap, ROOT), out
+                    extra = (
+                        ["--charts", os.path.join(RES, "icm_pushfold_ante.json")] if ante and kind == "pushfold" else []
+                    )
+                    yield kind, script, os.path.relpath(snap, ROOT), out, extra
 
 
 def main():
@@ -49,10 +54,10 @@ def main():
     ap.add_argument("--once", action="store_true")
     a = ap.parse_args()
     while True:
-        for kind, script, snap, out in pending():
+        for kind, script, snap, out, extra in pending():
             t0 = time.time()
             print(f"{time.strftime('%F %T')} {kind} {snap}", flush=True)
-            r = subprocess.run([sys.executable, os.path.join(ROOT, "scripts", script), snap, "--out", out],
+            r = subprocess.run([sys.executable, os.path.join(ROOT, "scripts", script), snap, "--out", out, *extra],
                                cwd=ROOT, capture_output=True, text=True)  # fmt: skip
             log = out[:-5] + ".log"
             open(log, "w").write(r.stdout + r.stderr)

@@ -48,7 +48,11 @@ def load(run, B, dev, part="avg"):
     run = os.path.dirname(ck)
     cfg = json.load(open(os.path.join(run, "config.json")))
     set_mode(
-        cfg.get("stacks", "100"), cfg.get("tourney", False), cfg.get("depths"), not cfg.get("no_open_limp", False)
+        cfg.get("stacks", "100"),
+        cfg.get("tourney", False),
+        cfg.get("depths"),
+        not cfg.get("no_open_limp", False),
+        cfg.get("ante", 0.0),
     )  # the runs compared must share a mode
     net = NineNet(cfg["nfeat"], cfg["actions"], B).to(dev)
     st = torch.load(ck, map_location=dev, weights_only=True)

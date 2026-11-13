@@ -57,11 +57,11 @@ def features(T, g, i):
     """Public features of tables g for actor i: [len(g), NF]."""
     P = T.P
     c = T.contrib[g].float()
-    pot = c.sum(1)
+    pot = c.sum(1) + T.dead[g].float()  # the big-blind ante is in the pot (0 without an ante)
     mine = c.gather(1, i[:, None]).squeeze(1)
     bet = T.bet[g].float()
     to_call = bet - mine
-    stk = T.stack[g]
+    stk = T.avail[g]  # chips each player can put in this hand (the start stack, less the big blind's ante)
     left = stk.gather(1, i[:, None]).squeeze(1) - mine
     live, allin, acted = ~T.folded[g], T.allin[g], T.acted[g]
     f = [
@@ -93,7 +93,7 @@ def features(T, g, i):
         eq = T.eq0[g] * P
         f.append(eq.gather(1, i[:, None]))
         f.append(eq.gather(1, rel))
-        share = stk.float() / stk.sum(1, keepdim=True)
+        share = T.stack[g].float() / T.stack[g].sum(1, keepdim=True)  # chip shares at the start of the hand
         f.append((T.eq0[g] / share.clamp(min=1e-6)).gather(1, i[:, None]).clamp(0, 5))  # equity per chip
     legal, t = T.legal(g, i)
     f.append(legal.float())
@@ -133,7 +133,7 @@ def masked(logits, legal):
 def tag_probs(T, g, i, legal, s, dealer):
     """A rule-based tight-aggressive player on card strength s (0..1) and pot odds; deterministic."""
     c = T.contrib[g].float()
-    pot = c.sum(1)
+    pot = c.sum(1) + T.dead[g].float()
     to_call = T.bet[g].float() - c.gather(1, i[:, None]).squeeze(1)
     odds = to_call / (pot + to_call).clamp(min=1)
     pre = T.street[g] == 0
@@ -152,6 +152,10 @@ def tag_probs(T, g, i, legal, s, dealer):
 
 REG_OPEN = (0.13, 0.14, 0.16, 0.19, 0.23, 0.29, 0.45, 0.45)  # share of hands opened first in: UTG .. button, SB
 REG_PUSH10 = (0.08, 0.09, 0.11, 0.15, 0.18, 0.23, 0.32, 0.59)  # open-shove share at 10bb (chip-EV equilibrium)
+# with a big-blind ante (RULES["ante"] 1bb): 2.5bb in the middle instead of 1.5bb, so everything widens. Push shares
+# from icm_pushfold.py --bb-ante 1 (chip EV, 9 x 10bb); opens from common big-blind-ante charts
+REG_OPEN_ANTE = (0.16, 0.18, 0.21, 0.25, 0.30, 0.38, 0.55, 0.55)
+REG_PUSH10_ANTE = (0.12, 0.14, 0.18, 0.21, 0.27, 0.33, 0.43, 0.75)
 
 
 def pre_top(dealer):
@@ -180,7 +184,8 @@ def reg_probs(T, g, i, legal, bk, dealer):
       facing an  if calling commits a third of what is left (or more): call when the price is good enough for a
       all-in     hand of this strength (wider at a better price), shoving the best part of it;
       facing an  3-bet (shove at 25bb or less) the top 5% (10% in the big blind against a late open), call the
-      open       next hands (the big blind defends 55% against a late open, 35% against an early one), else fold;
+      open       next hands (the big blind defends 55% against a late open, 35% against an early one; 65% and 45%
+                 with a big-blind ante), else fold;
       facing a   continue (shove) with the top 3.5%, else fold.
       3-bet
     After the flop it plays like tag. Unlike the maniac and the station, it folds to shoves that are priced wrong
@@ -192,7 +197,7 @@ def reg_probs(T, g, i, legal, bk, dealer):
     q = pre_top(dealer)[cls]
     pos = (i - 2) % P  # 0 UTG .. P-3 button, P-2 small blind, P-1 big blind
     pos8 = (pos - (P - 9)).clamp(0, 8)  # the same seat names at shorter tables, counted from the button
-    stk = T.stack[g]
+    stk = T.avail[g]
     live = ~T.folded[g]
     me = stk.gather(1, i[:, None]).squeeze(1).float()
     others = torch.where(live & (F.one_hot(i, P) == 0), stk, torch.zeros_like(stk)).max(1).values.float()
@@ -200,7 +205,7 @@ def reg_probs(T, g, i, legal, bk, dealer):
     c = T.contrib[g]
     mine = c.gather(1, i[:, None]).squeeze(1).float()
     to_call = T.bet[g].float() - mine
-    pot = c.sum(1).float()
+    pot = c.sum(1).float() + T.dead[g].float()
     behind = me - mine
     odds = to_call / (pot + to_call).clamp(min=1)
     nr = T.pre_raises[g]
@@ -214,9 +219,10 @@ def reg_probs(T, g, i, legal, bk, dealer):
     a = fold.clone()
     # first in (also the small blind; the big blind only checks)
     first = (nr == 0) & (pos < P - 1)
-    push = (tab(REG_PUSH10) * (10 / eff.clamp(min=1)) ** 1.2).clamp(max=1)
+    ante = RULES["ante"] > 0
+    push = (tab(REG_PUSH10_ANTE if ante else REG_PUSH10) * (10 / eff.clamp(min=1)) ** 1.2).clamp(max=1)
     a = torch.where(first & (eff <= 13) & (q < push), ALLIN, a)
-    a = torch.where(first & (eff > 13) & (q < tab(REG_OPEN)), RAISE, a)
+    a = torch.where(first & (eff > 13) & (q < tab(REG_OPEN_ANTE if ante else REG_OPEN)), RAISE, a)
     # facing an all-in or a raise that commits
     commit = (nr >= 1) & (to_call >= behind / 3)
     cf = (1.6 * (0.62 - odds)).clamp(0.04, 0.55)
@@ -226,7 +232,8 @@ def reg_probs(T, g, i, legal, bk, dealer):
     open1 = (nr == 1) & ~commit
     bb = pos == P - 1
     three = torch.where(bb & late, 0.10, 0.05)
-    defend = torch.where(bb, torch.where(late, 0.55, 0.35), three + torch.where(pos >= P - 3, 0.10, 0.07))
+    defend = torch.where(bb, torch.where(late, 0.65 if ante else 0.55, 0.45 if ante else 0.35),
+                         three + torch.where(pos >= P - 3, 0.10, 0.07))  # fmt: skip
     a = torch.where(open1 & (q < defend), 1, a)
     a = torch.where(open1 & (q < three), torch.where(eff <= 25, ALLIN, RAISE), a)
     # facing a 3-bet or more
@@ -364,10 +371,11 @@ def duplicate(dealer, menu, hero, villain, n, dev):
     return m, m - 1.96 * se, m + 1.96 * se
 
 
-def set_mode(stacks="100", tourney=False, depths=None, open_limp=True):
+def set_mode(stacks="100", tourney=False, depths=None, open_limp=True, ante=0.0):
     """Set FEAT from a run's options (also used by the tools that load a run, from its config.json). depths: the
     tournament tables' average-stack ranges, "LO,HI;LO,HI" (None: icm.scenarios' default, 10-60bb)."""
     RULES["open_limp"] = bool(open_limp)
+    RULES["ante"] = float(ante or 0.0)
     FEAT["depths"] = [tuple(float(x) for x in r.split(",")) for r in depths.split(";")] if depths else None
     FEAT["stacks"] = None if str(stacks) == "100" else tuple(float(x) for x in str(stacks).split(","))
     FEAT["tourney"] = bool(tourney)
@@ -418,10 +426,11 @@ def main():
     ap.add_argument("--stacks", default="100", help='"100" (every hand 100bb) or "LO,HI": each stack log-uniform')
     ap.add_argument("--tourney", action="store_true", help="tournament tables: ICM payouts, reward = ICM equity")
     ap.add_argument("--no-open-limp", action="store_true", help="first in from UTG to the button: fold, open or shove")
+    ap.add_argument("--ante", type=float, default=0.0, help="big-blind ante in big blinds (1.0 = the usual MTT ante)")
     ap.add_argument("--init", help="warm start from a checkpoint.pt or avg_<h>h.pt when out has no checkpoint")
     ap.add_argument("--depths", help='tournament average-stack ranges in bb, "LO,HI;LO,HI" (default 10,60)')
     args = ap.parse_args()
-    set_mode(args.stacks, args.tourney, args.depths, not args.no_open_limp)
+    set_mode(args.stacks, args.tourney, args.depths, not args.no_open_limp, args.ante)
     dev = "cuda"
     torch.manual_seed(0)
     os.makedirs(args.out, exist_ok=True)

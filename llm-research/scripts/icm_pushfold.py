@@ -23,6 +23,8 @@ Usage:
   uv run python scripts/icm_pushfold.py --stacks 12,8,25,10,6,15,9,30,11 --payouts 50,30,20 [--ante 0.125]
       (stacks in big blinds in action order: pos0 ... button, small blind, big blind; payouts for places 1..)
   uv run python scripts/icm_pushfold.py --charts OUT.json   (the scenario set used for the network check)
+  uv run python scripts/icm_pushfold.py --charts OUT.json --bb-ante 1   (the same scenarios with a big-blind ante,
+      results/ninemax/icm_pushfold_ante.json, for runs trained with --ante 1)
 """
 
 import argparse
@@ -92,18 +94,24 @@ def names_for(n):
     return [f"pos{i}" for i in range(n - 3)] + ["button", "small blind", "big blind"]
 
 
-def solve(stacks, payouts, ante=0.0, iters=2000, matrix=None):
-    """Push/fold equilibrium. stacks: big blinds in action order (last two are the blinds). Returns the chart."""
+def solve(stacks, payouts, ante=0.0, iters=2000, matrix=None, bb_ante=0.0):
+    """Push/fold equilibrium. stacks: big blinds in action order (last two are the blinds). ante: every player's
+    ante; bb_ante: the big-blind ante (the big blind alone posts it, as in the engine's RULES["ante"]). Antes are dead
+    money: they are in the pot but no part of a player's all-in that the caller has to match. Returns the chart."""
     cls, E, w = matrix or load_matrix()
     k = len(cls)
     S = np.asarray(stacks, dtype=float)
     n = len(S)
-    post = np.full(n, float(ante))
+    dead = np.full(n, float(ante))
+    dead[n - 1] += float(bb_ante)
+    dead = np.minimum(dead, np.maximum(S - np.where(np.arange(n) == n - 1, 1.0, 0.0), 0))
+    post = dead.copy()
     post[n - 2] += 0.5
     post[n - 1] += 1.0
     post = np.minimum(post, S)
     D = post.sum()
     base = S - post
+    live = S - dead  # what a player can put in that the caller must match
 
     # every terminal result as a stack vector, valued once by ICM
     rows, index = [], {}
@@ -120,12 +128,12 @@ def solve(stacks, payouts, ante=0.0, iters=2000, matrix=None):
         v[p] += D
         add(("steal", p), v)
         for q in range(p + 1, n):
-            e = min(S[p], S[q])
-            pot = 2 * e + D - post[p] - post[q]
+            e = min(live[p], live[q])
+            pot = 2 * e + D - post[p] - post[q] + dead[p] + dead[q]
             for winner, loser in ((p, q), (q, p)):
                 v = base.copy()
-                v[p] = S[p] - e
-                v[q] = S[q] - e
+                v[p] = live[p] - e
+                v[q] = live[q] - e
                 v[winner] += pot
                 add(("allin", p, q, winner), v)
     U = icm_np(np.array(rows), payouts)  # [results, players]
@@ -197,6 +205,7 @@ def solve(stacks, payouts, ante=0.0, iters=2000, matrix=None):
         "stacks_bb": [float(x) for x in S],
         "payouts": [float(x) for x in payouts],
         "ante": ante,
+        "bb_ante": bb_ante,
         "icm_equity": [round(float(x), 4) for x in node[0] / pay_total],
         "chip_share": [round(float(x), 4) for x in S / chips],
         "max_gain_bb": round(dev / pay_total * chips, 4),
@@ -250,6 +259,7 @@ def main():
     ap.add_argument("--stacks")
     ap.add_argument("--payouts", default="1")
     ap.add_argument("--ante", type=float, default=0.0)
+    ap.add_argument("--bb-ante", type=float, default=0.0, help="big-blind ante (bb), for every scenario with --charts")
     ap.add_argument("--iters", type=int, default=2000)
     ap.add_argument("--charts")
     a = ap.parse_args()
@@ -257,15 +267,16 @@ def main():
         selftest()
         return
     if a.stacks:
-        c = solve([float(x) for x in a.stacks.split(",")], [float(x) for x in a.payouts.split(",")], a.ante, a.iters)
+        c = solve([float(x) for x in a.stacks.split(",")], [float(x) for x in a.payouts.split(",")], a.ante, a.iters,
+                  bb_ante=a.bb_ante)  # fmt: skip
         print(json.dumps({k: v for k, v in c.items() if k != "call"}, indent=1))
         return
     if a.charts:
         m = load_matrix()
         out = []
         for name, st, pay, ante in SCENARIOS:
-            c = solve(st, pay, ante, a.iters, matrix=m)
-            c["name"] = name
+            c = solve(st, pay, 0.0 if a.bb_ante else ante, a.iters, matrix=m, bb_ante=a.bb_ante)
+            c["name"] = name + (f", big-blind ante {a.bb_ante:g}bb" if a.bb_ante else "")
             out.append(c)
             sh = " ".join(f"{v['share']:.0%}" for v in c["shove"].values())
             bb = c["call"][f"big blind vs {names_for(len(st))[-2]}"]["share"]

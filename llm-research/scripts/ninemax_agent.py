@@ -46,7 +46,13 @@ class Seat:
         self.dealer = Dealer(LIB, ABS, PLAYERS, self.B, "cpu")
         d = run if os.path.isabs(run) else os.path.join(RUNS, run)
         cfg = json.load(open(os.path.join(d, "config.json")))
-        self.mode = (cfg.get("stacks", "100"), cfg.get("tourney", False))
+        self.mode = (
+            cfg.get("stacks", "100"),
+            cfg.get("tourney", False),
+            cfg.get("depths"),
+            not cfg.get("no_open_limp", False),
+            cfg.get("ante", 0.0),
+        )
         self.menu = Menu(cfg.get("menu", "medium"), "cpu")
         self.net = NineNet(cfg["nfeat"], cfg["actions"], self.B)
         st = torch.load(os.path.join(d, "checkpoint.pt"), map_location="cpu", weights_only=True)

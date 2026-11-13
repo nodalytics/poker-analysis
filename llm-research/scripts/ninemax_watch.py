@@ -160,6 +160,10 @@ def info(run):
         recipe.append("ramped pull")
     if cfg.get("no_open_limp"):
         recipe.append("no open-limping")
+    if cfg.get("ante"):
+        recipe.append(f"big-blind ante {cfg['ante']:g}bb")
+    if cfg.get("init"):
+        recipe.append(f"from {os.path.basename(os.path.dirname(cfg['init']))}")
     pts = curves(run)
     last = pts[-1] if pts else {}
     # training while anything in the run is still being written (a new run has no checkpoint for its first 30 min)
@@ -201,7 +205,11 @@ class Lab:
     def load(self, run):
         cfg = json.load(open(os.path.join(run, "config.json")))
         set_mode(  # under LOCK, until the hands are played
-            cfg.get("stacks", "100"), cfg.get("tourney", False), cfg.get("depths"), not cfg.get("no_open_limp", False)
+            cfg.get("stacks", "100"),
+            cfg.get("tourney", False),
+            cfg.get("depths"),
+            not cfg.get("no_open_limp", False),
+            cfg.get("ante", 0.0),
         )
         menu = self.menus.setdefault(cfg.get("menu", "medium"), Menu(cfg.get("menu", "medium"), "cpu"))
         net = NineNet(cfg["nfeat"], cfg["actions"], self.B)

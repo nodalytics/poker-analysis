@@ -11,7 +11,8 @@ many random hands and reads the network's action probabilities by hand class:
   bb defence   big blind facing the button's 2x open at 20bb, the small blind folded: share it defends
                (calls or raises); the price is good, so a wide defence
 
-Payouts are winner-take-all, so the checks are in chips (ICM is checked by ninemax_pushfold_check.py). The bands
+Runs trained with a big-blind ante (--ante) play the checks with it, against the wider ante bands. Payouts are
+winner-take-all, so the checks are in chips (ICM is checked by ninemax_pushfold_check.py). The bands
 are approximate references from common tournament charts, not exact equilibria: a WARN is a spot to look at, not
 a proof of a leak.
 
@@ -27,7 +28,7 @@ import os
 import torch
 
 from icm import icm
-from ninemax_engine import BB, Dealer, Menu, Tables
+from ninemax_engine import BB, RULES, Dealer, Menu, Tables
 from ninemax_eval import load
 from ninemax_pushfold_check import class_name, policy, seat_of
 
@@ -38,6 +39,11 @@ TRASH = ["72o", "83o", "94o", "T2o", "J3o"]
 # reference bands (share of all hands played first in at 20bb, 9-handed), approximate
 OPEN_BAND = {"UTG": (0.10, 0.20), "MP": (0.13, 0.24), "HJ": (0.18, 0.30), "CO": (0.24, 0.38), "BTN": (0.35, 0.58),
              "SB": (0.35, 0.70)}  # fmt: skip
+# with a big-blind ante (runs trained with --ante): 2.5bb in the middle, so wider opens and a wider big blind
+OPEN_BAND_ANTE = {"UTG": (0.13, 0.22), "MP": (0.16, 0.27), "HJ": (0.22, 0.34), "CO": (0.29, 0.45),
+                  "BTN": (0.42, 0.68), "SB": (0.40, 0.80)}  # fmt: skip
+BB_DEFEND = (0.50, 0.80)
+BB_DEFEND_ANTE = (0.60, 0.85)
 
 
 def spot(net, dealer, menu, dev, G, stack_bb, j, forced=()):
@@ -77,6 +83,7 @@ def check(run, dealer, dev, G):
     d = os.path.dirname(run) if run.endswith(".pt") else run
     menu = Menu(json.load(open(os.path.join(d, "config.json"))).get("menu", "medium"), dev)
     S = menu.S
+    ante = RULES["ante"] > 0  # set by load() from the run's config
     res = []
 
     def add(name, value, band, detail=""):
@@ -100,7 +107,7 @@ def check(run, dealer, dev, G):
         pr, names = spot(net, dealer, menu, dev, G, 20, j)
         play = float(1 - pr[:, 0].mean())
         sizes = pr[:, 2 : 2 + S].mean(0).tolist()
-        add(f"opens first in ({pos}, 20bb)", play, OPEN_BAND[pos],
+        add(f"opens first in ({pos}, 20bb)", play, (OPEN_BAND_ANTE if ante else OPEN_BAND)[pos],
             f"limp {float(pr[:, 1].mean()):.1%}, opens " + "/".join(f"{x:.1%}" for x in sizes) +
             f", shove {float(pr[:, S + 2].mean()):.1%}")  # fmt: skip
     for pos, j in (("UTG", 0), ("CO", 5)):
@@ -111,7 +118,7 @@ def check(run, dealer, dev, G):
             f"plays {float(play.mean()):.0%} of hands")  # fmt: skip
     # big blind vs the button's smallest open (slot 2) at 20bb, small blind folds
     pr, names = spot(net, dealer, menu, dev, G, 20, 6, forced=((2, 1),))
-    add("big blind defends vs button min-open (20bb)", float(1 - pr[:, 0].mean()), (0.50, 0.80),
+    add("big blind defends vs button min-open (20bb)", float(1 - pr[:, 0].mean()), BB_DEFEND_ANTE if ante else BB_DEFEND,
         f"calls {float(pr[:, 1].mean()):.0%}, raises {float(pr[:, 2:].sum(1).mean()):.0%}")  # fmt: skip
     return hands_trained, res
 

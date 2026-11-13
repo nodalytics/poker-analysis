@@ -12,7 +12,9 @@ Rules implemented:
 - no raise when no other player could answer it (all others folded, all in, or unable to cover the bet);
 - a round ends when every live player who is not all in has acted since the last full raise and matched the bet;
   if at most one player can still act, the board runs out;
-- showdown with side pots: each contribution level forms a pot shared by the best live hands that paid into it.
+- showdown with side pots: each contribution level forms a pot shared by the best live hands that paid into it;
+- big-blind ante (RULES["ante"]): dead money posted by the big blind before the blind, at most what leaves it the
+  blind; it counts toward the pot (and its size) but not toward the bet, and goes to the main pot.
 
 Menu (MENUS): pre-flop open sizes in bb and re-raise multiples of the current bet by raise level; post-flop bet and
 raise sizes as pot fractions, smaller once 3+ players are in the pot; caps on raises per street. Action slots are
@@ -30,7 +32,9 @@ SB = 50
 # run plays the same game). open_limp False: a player first in before the flop, from UTG to the button, cannot just
 # call the big blind: fold, open or shove (the small blind may still complete). Limping strong hands to trap was a
 # habit learned against the rule-based maniacs and stations in the training pool (2026-11-11).
-RULES = {"open_limp": True}
+# ante: the big-blind ante in big blinds (1.0 = the big blind also posts one big blind of dead money, the format of
+# almost every tournament today); 0 = no ante (every run before nm15, 2026-11-13).
+RULES = {"open_limp": True, "ante": 0.0}
 STACK = 100 * BB
 
 # open sizes (bb), re-raise multiples by level, max pre-flop raises, heads-up bet / raise fractions,
@@ -108,6 +112,11 @@ class Tables:
         self.contrib = z()
         self.contrib[:, 0], self.contrib[:, 1] = SB, BB
         self.folded, self.allin, self.acted = z(torch.bool), z(torch.bool), z(torch.bool)
+        # the big-blind ante: dead money [G], and the chips each player can still put into the pot [G, P]
+        self.dead = torch.clamp(self.stack[:, 1] - BB, max=int(round(RULES["ante"] * BB)))
+        self.avail = self.stack.clone()
+        self.avail[:, 1] -= self.dead
+        self.allin[:, 1] = self.avail[:, 1] <= BB
         g = lambda v: torch.full((G,), v, dtype=torch.long, device=dev)  # noqa: E731
         self.bet, self.last_raise, self.raises, self.street = g(BB), g(BB), g(0), g(0)
         self.pre_raises = g(0)  # complete raises pre-flop: 1 = opened, 2 = 3-bet pot, ...
@@ -155,7 +164,7 @@ class Tables:
     def targets(self, g, i):
         """Raise-to totals of the menu sizes for tables g with actor i: [len(g), S] (nan where unused)."""
         m = self.menu
-        bet, pot = self.bet[g], self.contrib[g].sum(1)
+        bet, pot = self.bet[g], self.contrib[g].sum(1) + self.dead[g]
         to_call = bet - self.contrib[g, i]
         pre = self.street[g] == 0
         lvl = (self.raises[g] - 1).clamp(0, len(m.rer) - 1)
@@ -176,11 +185,11 @@ class Tables:
         reopened = ~self.acted[g, i]  # False after an incomplete all-in raise: call or fold only
         # no raise when no other player could answer it: every other player has folded, is all in, or has no more
         # chips than the current bet (calling is all they can do). Only possible with unequal stacks.
-        can_answer = ~self.folded[g] & ~self.allin[g] & (self.stack[g] > bet[:, None])
+        can_answer = ~self.folded[g] & ~self.allin[g] & (self.avail[g] > bet[:, None])
         can_answer[torch.arange(len(g), device=self.dev), i] = False
         others = can_answer.any(1)
         reopened = reopened & others
-        stk = self.stack[g, i]
+        stk = self.avail[g, i]
         ok_size = (
             ~torch.isnan(t)
             & (t - bet[:, None] >= self.last_raise[g][:, None])
@@ -206,7 +215,7 @@ class Tables:
         fold = a == 0
         call = a == 1
         size = (a >= 2) & (a < 2 + S)
-        stk = self.stack[g, i]
+        stk = self.avail[g, i]
         total = torch.where(size, t.gather(1, (a - 2).clamp(0, S - 1)[:, None]).squeeze(1).long(), stk)
         total = torch.where(call, torch.minimum(bet, stk), total)
         total = torch.where(fold, self.contrib[g, i], total)
@@ -253,6 +262,12 @@ class Tables:
                 nw = winners.sum(1)
             win += winners.float() * (pot / nw.clamp(min=1))[:, None]
             prev = L
+        if bool((self.dead > 0).any()):  # the ante goes to the main pot: every live player is eligible
+            rl = torch.where(live, ranks, torch.full_like(ranks, big))
+            main = live & (ranks == rl.min(1).values[:, None])
+            win += main.float() * (self.dead.float() / main.sum(1).clamp(min=1))[:, None]
+            c = c.clone()
+            c[:, 1] += self.dead.float()
         return win - c
 
 

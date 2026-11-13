@@ -10,7 +10,10 @@ Random play leans towards calls and small raises so that hands reach later stree
 With STACKS "mix", every seat starts with its own stack, 2-200bb (log-uniform), so short all-ins, incomplete raises
 and side pots between unequal stacks are exercised too.
 
+ANTE (big blinds, default 0): the big-blind ante, posted by the big blind before its blind (PokerKit's antes {1: ...}).
+
 Usage (lab, GPU venv on the CPU): .venv-gpu/bin/python scripts/ninemax_check.py [TABLES] [PLAYERS] [MENU] [STACKS]
+    [ANTE]
 """
 
 import sys
@@ -19,7 +22,7 @@ import warnings
 import torch
 from pokerkit import Automation, NoLimitTexasHoldem
 
-from ninemax_engine import BB, SB, STACK, Dealer, Menu, Tables
+from ninemax_engine import BB, RULES, SB, STACK, Dealer, Menu, Tables
 
 RANKS, SUITS = "23456789TJQKA", "cdhs"
 
@@ -34,6 +37,8 @@ def main():
     P = int(sys.argv[2]) if len(sys.argv) > 2 else 9
     menu_name = sys.argv[3] if len(sys.argv) > 3 else "medium"
     mix = len(sys.argv) > 4 and sys.argv[4] == "mix"
+    RULES["ante"] = float(sys.argv[5]) if len(sys.argv) > 5 else 0.0
+    ante = int(round(RULES["ante"] * BB))
     dev = "cpu"
     torch.manual_seed(0)
     dealer = Dealer("blueprint/libbp5.so", "blueprint/out", P, 200, dev)
@@ -54,7 +59,12 @@ def main():
         for k in range(len(g)):
             log[g[k]].append((int(i[k]), int(a[k]), int(T.contrib[g[k], i[k]]), int(bet_before[k])))
     ours = T.payoffs(rk)
-    stats = {"tables": n, "showdowns": int(T.showdown.sum()), "max_actions": max(map(len, log))}
+    stats = {
+        "ante_bb": RULES["ante"],
+        "tables": n,
+        "showdowns": int(T.showdown.sum()),
+        "max_actions": max(map(len, log)),
+    }
     side = int(((T.allin.sum(1) >= 2) & T.showdown).sum())
     bad = 0
     for k in range(n):
@@ -64,7 +74,8 @@ def main():
                 Automation.CARD_BURNING, Automation.HOLE_CARDS_SHOWING_OR_MUCKING, Automation.HAND_KILLING,
                 Automation.CHIPS_PUSHING, Automation.CHIPS_PULLING,
             ),  # fmt: skip
-            True, 0, (SB, BB), BB, tuple(stacks[k].tolist()), P,
+            not ante, {1: ante} if ante else 0, (SB, BB), BB, tuple(stacks[k].tolist()), P,  # no ante trimming: a
+            # big-blind ante is the only ante, and trimming would hand it back
         )  # fmt: skip
         cd = cards[k]
         board = [card(c) for c in cd[2 * P :]]
@@ -89,7 +100,9 @@ def main():
                 elif a == 1:
                     st.check_or_call()
                 else:  # PokerKit raises to an amount for this street; the engine records totals for the hand
-                    before = int(stacks[k, seat]) - st.stacks[seat] - st.bets[seat]
+                    before = (
+                        int(stacks[k, seat]) - st.stacks[seat] - st.bets[seat] - (int(T.dead[k]) if seat == 1 else 0)
+                    )
                     st.complete_bet_or_raise_to(total - before)
             deal()
             assert not st.status, "PokerKit hand not over"
