@@ -1,10 +1,15 @@
 """A vectorised N-player no-limit hold'em engine on the GPU, for the 9-max neural blueprint (ninemax_selfplay.py).
 
 G tables are played at once as tensors. Cards come from libbp5's bp_deal_n (buckets per street, showdown ranks and,
-optionally, the cards). Seats are fixed: 0 = small blind, 1 = big blind, 2 = UTG ... P-1 = button (P >= 3).
+optionally, the cards). Seats are fixed: 0 = small blind, 1 = big blind, 2 = UTG ... P-1 = button (P >= 2).
 Pre-flop UTG acts first; after the flop the first live player from the small blind. Blinds 50/100 chips (1 bb = 100).
 Every player starts with STACK chips (100bb), or with their own stack: Tables(..., stacks=[G, P] chips, at least 2bb
 each), for mixed stack depths and tournaments.
+
+Short-handed tables (final tables down to heads-up): a stack of 0 is an empty seat. It is folded from the start and
+never acts. The blinds (seats 0 and 1) must be seated; empty seats are the early ones (UTG, UTG+1, ...), so the
+seats that remain keep their names counted from the button, as at a real short table. Heads-up (only the blinds
+seated) the small blind is the button: it acts first before the flop and the big blind first after it.
 
 Rules implemented:
 - fold, check/call, raises to the sizes of a menu (below), all-in; a raise must be at least the last raise;
@@ -108,10 +113,13 @@ class Tables:
         z = lambda dt=torch.long: torch.zeros(G, P, dtype=dt, device=dev)  # noqa: E731
         # chips each player starts the hand with (contributions can never exceed them)
         self.stack = torch.full((G, P), STACK, dtype=torch.long, device=dev) if stacks is None else stacks.long()
-        assert bool((self.stack >= 2 * BB).all()), "every stack must be at least 2bb"
+        self.seated = self.stack > 0  # a stack of 0 is an empty seat
+        assert bool(((self.stack >= 2 * BB) | ~self.seated).all()), "every stack must be at least 2bb (0: empty)"
+        assert bool(self.seated[:, :2].all()), "the blinds must be seated"
+        self.hu = self.seated.sum(1) == 2  # heads-up: the big blind acts first after the flop
         self.contrib = z()
         self.contrib[:, 0], self.contrib[:, 1] = SB, BB
-        self.folded, self.allin, self.acted = z(torch.bool), z(torch.bool), z(torch.bool)
+        self.folded, self.allin, self.acted = ~self.seated, z(torch.bool), z(torch.bool)
         # the big-blind ante: dead money [G], and the chips each player can still put into the pot [G, P]
         self.dead = torch.clamp(self.stack[:, 1] - BB, max=int(round(RULES["ante"] * BB)))
         self.avail = self.stack.clone()
@@ -158,7 +166,8 @@ class Tables:
             self.raises = torch.where(nxt, 0, self.raises)
             self.last_raise = torch.where(nxt, BB, self.last_raise)
             self.acted &= ~nxt[:, None]
-            self.to_act = torch.where(nxt, self.P - 1, self.to_act)  # scan starts at the small blind
+            # the scan starts at the small blind (heads-up: at the big blind, the small blind being the button)
+            self.to_act = torch.where(nxt, torch.where(self.hu, 0, self.P - 1), self.to_act)
 
     # ---- the action menu ----
     def targets(self, g, i):

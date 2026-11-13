@@ -137,6 +137,37 @@ money, so 2.5bb is in the middle before anyone acts, as in almost every tourname
 
 `nm15` (from `nm13`) and `nm16` (fresh) train 12 hours with the ante, from 2026-11-13 14:05 lab time.
 
+Early reading, 2.5 hours in (100,000 hands per check, ante bands):
+
+| Check | `nm15` | `nm16` | Band |
+|---|---|---|---|
+| Big blind defends vs button min-open | 39% (`nm13`: 21%) | 48% (`nm14`: 24%) | 60–85% |
+| All in, share of hands played at 8bb: UTG / CO | 31 / 47% | 40 / 38% | 75–100% |
+| Opens first in, button | 36% | 35% | 42–68% |
+
+The ante moved the big-blind defence at once, after five runs stuck in the 20s. Short-stack shoving has not moved
+yet.
+
+### Short-handed final tables, 2026-11-13
+
+A final table plays down from nine to two, and short-handed poker is a different game: wider opens, wider
+defence, heads-up push/fold. Until now every training hand was nine-handed.
+- **Engine:** a stack of 0 is an empty seat, folded from the start. The early seats empty first (UTG, UTG+1, ...),
+  so the seats left keep their names counted from the button. Heads-up the small blind is the button: first before
+  the flop, last after it. Checked against PokerKit on 18,000 hands with 2–9 players seated, with and without the
+  ante: 0 mismatches (`ninemax_check.py N 9 mtt mixshort 1.0`; PokerKit reverses the blinds heads-up but keeps
+  its antes keyed by blind position).
+- **Tournament tables:** `icm.scenarios(short=...)`: that share of final tables seats 2–8 players (uniform), with
+  only places 1..n paid. ICM needs nothing new: a player with no chips takes no place while anyone has chips
+  (checked against brute force). Training option `--short`.
+- **Checks:** two heads-up checks in `ninemax_sense.py`. The small blind first in at 10bb should play at least the
+  push/fold equilibrium's shove share (59%, 75% with the ante; `icm_pushfold.py --stacks 10,10`); the big blind
+  should defend 55–85% (65–92% with the ante) against a min-raise at 20bb. The nine-handed networks fail the second
+  badly: `nm13` defends 18%, `nm14` 30%.
+
+`nm17` (from `nm15` at 2.5 hours, ante, half the final tables 2–8 handed) trains 12 hours on the 3090 from
+2026-11-13 16:43 lab time. The automatic checks moved to the PRO 6000, since `nm17` fills the 3090.
+
 **Next:**
 - the checks now run by themselves on every new snapshot of a tournament run (`scripts/ninemax_autocheck.py` on the
   lab, results as `sense_<run>_<h>h.json` and `pushfold_check_<run>_<h>h.json`) and show on the watch page;

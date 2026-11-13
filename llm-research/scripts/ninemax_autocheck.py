@@ -8,7 +8,7 @@ process. A check that fails leaves a .failed marker so it is not retried every p
 The watch page reads both files on its next refresh (every minute).
 
 Usage (lab, from llm-research; detached, one copy only):
-  (setsid nohup env PYTHONPATH=scripts CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES=0 OMP_NUM_THREADS=4 \\
+  (setsid nohup env PYTHONPATH=scripts CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES=2 OMP_NUM_THREADS=4 \\
       .venv-gpu/bin/python scripts/ninemax_autocheck.py > results/ninemax/autocheck.log 2>&1 &)
 """
 

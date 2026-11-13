@@ -52,6 +52,7 @@ class Seat:
             cfg.get("depths"),
             not cfg.get("no_open_limp", False),
             cfg.get("ante", 0.0),
+            cfg.get("short", 0.0),
         )
         self.menu = Menu(cfg.get("menu", "medium"), "cpu")
         self.net = NineNet(cfg["nfeat"], cfg["actions"], self.B)

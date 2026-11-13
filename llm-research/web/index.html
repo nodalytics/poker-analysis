@@ -309,6 +309,7 @@ function Replayer(el, opts = {}) {
       if (k >= n) { d.style.display = "none"; return; }
       d.style.display = "";
       const st = H.seats[k], res = H.result[k];
+      if (st.stack === 0) { d.className = "seat out"; d.innerHTML = `<div class="pos">${st.pos}</div><div class="pos">empty seat</div>`; return; }
       const showCards = all || end && H.showdown && !folded[k];
       d.className = "seat" + (S && !end && S.seat === k ? " act" : "") + (folded[k] ? " out" : "");
       const stk = st.stack !== undefined ? ` · ${(+st.stack).toFixed(0)} bb` : "";
