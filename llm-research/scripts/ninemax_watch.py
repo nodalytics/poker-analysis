@@ -162,8 +162,18 @@ def info(run):
         recipe.append("no open-limping")
     if cfg.get("ante"):
         recipe.append(f"big-blind ante {cfg['ante']:g}bb")
+    if cfg.get("short"):
+        recipe.append(f"{cfg['short']:.0%} of final tables 2-8 handed")
     if cfg.get("init"):
-        recipe.append(f"from {os.path.basename(os.path.dirname(cfg['init']))}")
+        src = os.path.basename(cfg["init"])  # run/checkpoint.pt or run/avg_4h.pt: the run; a copied file: its name
+        recipe.append(
+            "from "
+            + (
+                os.path.basename(os.path.dirname(cfg["init"]))
+                if src == "checkpoint.pt" or src.startswith("avg_")
+                else src[:-3]
+            )
+        )
     pts = curves(run)
     last = pts[-1] if pts else {}
     # training while anything in the run is still being written (a new run has no checkpoint for its first 30 min)
@@ -210,6 +220,7 @@ class Lab:
             cfg.get("depths"),
             not cfg.get("no_open_limp", False),
             cfg.get("ante", 0.0),
+            cfg.get("short", 0.0),
         )
         menu = self.menus.setdefault(cfg.get("menu", "medium"), Menu(cfg.get("menu", "medium"), "cpu"))
         net = NineNet(cfg["nfeat"], cfg["actions"], self.B)
@@ -227,7 +238,8 @@ class Lab:
         T = Tables(n, P, menu, "cpu", stacks=stacks)
         if pay is not None:
             T.pay, T.eq0 = pay.float(), icm(T.stack.float(), pay).float()
-        hero = torch.randint(P, (n,))  # with a rule opponent: the network's seat at each table
+        # with a rule opponent: the network's seat at each table, a random seated one (short tables have empty seats)
+        hero = torch.multinomial((T.stack > 0).float(), 1).squeeze(1)
         steps = [[] for _ in range(n)]
         while not bool(T.done.all()):
             g = (~T.done).nonzero().squeeze(1)

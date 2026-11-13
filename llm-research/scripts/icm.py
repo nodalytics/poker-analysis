@@ -13,6 +13,9 @@ table's finishing places 1..P (in units of the prize money at stake at this tabl
                chips above the min-cash carry the deep run). Until 2026-11-10 the ladder above was nearly flat,
                which is a satellite (nm7 trained on that);
   in the money all places paid, a gentle ladder: deep in the money, between pay jumps.
+Short-handed final tables (short > 0): that share of final tables seats only 2..P-1 players (uniform), the early
+seats empty (stack 0, see ninemax_engine.py) and only places 1..n paid. ICM handles the empty seats as they are: a
+player with no chips takes no place while anyone has chips.
 A hand's reward is the change in the player's ICM equity, in big-blind equivalents: equity change x the table's chips
 / BB. With prizes proportional to chips this is the chip result, so cash play and tournament play share a scale.
 
@@ -63,11 +66,12 @@ def end_stacks(start, payoff):
     return torch.where(bust, start.double() * 1e-9, after)
 
 
-def scenarios(G, P, dev, kinds=(0.4, 0.4, 0.2), avg_bb=(10, 60), spread=0.7, gen=None):
+def scenarios(G, P, dev, kinds=(0.4, 0.4, 0.2), avg_bb=(10, 60), spread=0.7, gen=None, short=0.0):
     """Random tournament tables: stacks [G, P] in chips (>= 2bb, rounded to the chip), payouts [G, P] summing to 1,
     and the kind of each table (0 final table, 1 bubble, 2 in the money). avg_bb: the range (LO, HI) of a table's
     average stack in big blinds, log-uniform, or a list of ranges, one picked per table with equal odds (nm10:
-    [(5, 15), (20, 50)], push/fold depths and realistic mid-stack depths)."""
+    [(5, 15), (20, 50)], push/fold depths and realistic mid-stack depths). short: the share of final tables with
+    2..P-1 players (empty seats have stack 0 and the places below the last player pay nothing)."""
     r = lambda *shape: torch.rand(*shape, device=dev, generator=gen)  # noqa: E731
     kind = torch.multinomial(torch.tensor(kinds, device=dev), G, replacement=True, generator=gen)
     ranges = torch.tensor(avg_bb if isinstance(avg_bb[0], (list, tuple)) else [avg_bb], device=dev, dtype=torch.float)
@@ -86,6 +90,12 @@ def scenarios(G, P, dev, kinds=(0.4, 0.4, 0.2), avg_bb=(10, 60), spread=0.7, gen
     bubble = torch.where(place > P - busts, torch.zeros_like(final), final)
     money = 1 + (0.3 + 0.7 * r(G, 1)) * (P - place) / P
     pay = torch.where((kind == 0)[:, None], final, torch.where((kind == 1)[:, None], bubble, money))
+    if short > 0:  # short-handed final tables: seat n players, the blinds and the last n-2 seats
+        n = torch.where((kind == 0)[:, None] & (r(G, 1) < short),
+                        torch.randint(2, P, (G, 1), device=dev, generator=gen), torch.full((G, 1), P, device=dev))  # fmt: skip
+        seat = torch.arange(P, device=dev)[None, :]
+        stacks = torch.where((seat < 2) | (seat >= P - (n - 2)), stacks, torch.zeros_like(stacks))
+        pay = torch.where(place <= n, pay, torch.zeros_like(pay))
     pay = pay / pay.sum(1, keepdim=True)
     return stacks, pay, kind
 
@@ -120,7 +130,17 @@ if __name__ == "__main__":
     wta = torch.zeros(2000, 9)
     wta[:, 0] = 1
     assert torch.allclose(icm(st.float(), wta), chip, atol=1e-5)
-    print("ICM matches brute force (3, 5, 7 players); 9-player equities sum to the pool; winner-take-all = chips")
+    st2, pay2, kind2 = scenarios(4000, 9, "cpu", short=0.5)
+    n = (st2 > 0).sum(1)
+    assert bool(((n == 9) | (kind2 == 0)).all()) and bool((n[kind2 == 0] < 9).any()) and int(n.min()) == 2
+    eq2 = icm(st2.float(), pay2)
+    assert torch.allclose(eq2.sum(1), torch.ones(4000), atol=1e-5) and bool((eq2[st2 == 0] == 0).all())
+    for g in (n < 9).nonzero().squeeze(1)[:20].tolist():  # empty seats change nothing for the seated players
+        on = st2[g] > 0
+        ref = _brute(st2[g][on].tolist(), pay2[g][: int(on.sum())].tolist())
+        assert max(abs(a - b) for a, b in zip(eq2[g][on].tolist(), ref)) < 1e-5
+    print("ICM matches brute force (3, 5, 7 players); 9-player equities sum to the pool; winner-take-all = chips;"
+          " short-handed tables (empty seats) match brute force over the seated players")  # fmt: skip
     big = st.float().argmax(1)
     print("bubble tables: the chip leader's equity / chip share, mean:",
           round(float((eq / chip)[torch.arange(2000), big][kind == 1].mean()), 3))  # fmt: skip

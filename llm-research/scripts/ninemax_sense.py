@@ -10,6 +10,9 @@ many random hands and reads the network's action probabilities by hand class:
   shove short  first in at 8bb: of the hands it plays, the share that are all in (open-shove territory)
   bb defence   big blind facing the button's 2x open at 20bb, the small blind folded: share it defends
                (calls or raises); the price is good, so a wide defence
+  heads-up     (final tables down to two, --short runs) the small blind (the button) first in at 10bb: share of
+               hands played, at least the push/fold equilibrium's shove share (59%, 75% with the ante; limping and
+               min-raising more hands is fine); the big blind against a min-raise at 20bb: share defended
 
 Runs trained with a big-blind ante (--ante) play the checks with it, against the wider ante bands. Payouts are
 winner-take-all, so the checks are in chips (ICM is checked by ninemax_pushfold_check.py). The bands
@@ -44,14 +47,20 @@ OPEN_BAND_ANTE = {"UTG": (0.13, 0.22), "MP": (0.16, 0.27), "HJ": (0.22, 0.34), "
                   "BTN": (0.42, 0.68), "SB": (0.40, 0.80)}  # fmt: skip
 BB_DEFEND = (0.50, 0.80)
 BB_DEFEND_ANTE = (0.60, 0.85)
+# heads-up (icm_pushfold.py --stacks 10,10: the small blind shoves 58.7%, 74.7% with a big-blind ante)
+HU_SB_PLAY, HU_SB_PLAY_ANTE = (0.59, 1.0), (0.75, 1.0)
+HU_BB_DEFEND, HU_BB_DEFEND_ANTE = (0.55, 0.85), (0.65, 0.92)
 
 
-def spot(net, dealer, menu, dev, G, stack_bb, j, forced=()):
+def spot(net, dealer, menu, dev, G, stack_bb, j, forced=(), seated=9):
     """Hands dealt at stack_bb for everyone, players before action index j fold, then the forced actions (slots)
-    are taken in turn; returns the policy [G, A], the class name of each hand of the player to act, and the menu."""
+    are taken in turn; returns the policy [G, A], the class name of each hand of the player to act, and the menu.
+    seated < 9: a short-handed table, the early seats empty (j still counts the 9-handed action order)."""
     n = 9
     bk, _, cd = dealer.deal(G, cards=True)
-    T = Tables(G, n, menu, dev, stacks=torch.full((G, n), int(stack_bb * BB), device=dev))
+    st = torch.full((G, n), int(stack_bb * BB), device=dev)
+    st[:, 2 : 2 + n - seated] = 0  # empty seats: UTG, UTG+1, ...
+    T = Tables(G, n, menu, dev, stacks=st)
     T.pay = torch.zeros(G, n, device=dev)
     T.pay[:, 0] = 1.0  # winner takes all: chip value
     T.eq0 = icm(T.stack.float(), T.pay).float()
@@ -119,6 +128,15 @@ def check(run, dealer, dev, G):
     # big blind vs the button's smallest open (slot 2) at 20bb, small blind folds
     pr, names = spot(net, dealer, menu, dev, G, 20, 6, forced=((2, 1),))
     add("big blind defends vs button min-open (20bb)", float(1 - pr[:, 0].mean()), BB_DEFEND_ANTE if ante else BB_DEFEND,
+        f"calls {float(pr[:, 1].mean()):.0%}, raises {float(pr[:, 2:].sum(1).mean()):.0%}")  # fmt: skip
+    # heads-up: the small blind first in at 10bb, and the big blind against its min-raise at 20bb
+    pr, names = spot(net, dealer, menu, dev, G, 10, 7, seated=2)
+    add("heads-up: small blind plays first in (10bb)", float(1 - pr[:, 0].mean()), HU_SB_PLAY_ANTE if ante else HU_SB_PLAY,
+        f"limp {float(pr[:, 1].mean()):.0%}, opens {float(pr[:, 2 : 2 + S].sum(1).mean()):.0%}, "
+        f"shove {float(pr[:, S + 2].mean()):.0%}")  # fmt: skip
+    pr, names = spot(net, dealer, menu, dev, G, 20, 7, forced=((2, 0),), seated=2)
+    add("heads-up: big blind defends vs min-raise (20bb)", float(1 - pr[:, 0].mean()),
+        HU_BB_DEFEND_ANTE if ante else HU_BB_DEFEND,
         f"calls {float(pr[:, 1].mean()):.0%}, raises {float(pr[:, 2:].sum(1).mean()):.0%}")  # fmt: skip
     return hands_trained, res
 
