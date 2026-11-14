@@ -35,10 +35,12 @@ json at(const json& r, const json& fields, const char* key) {
         if (!r.contains(p) || !r[p].is_object()) return nullptr;
         std::vector<std::string> keys;
         for (auto& [k, v] : r[p].items()) keys.push_back(k);
-        std::sort(keys.begin(), keys.end(), [](const std::string& a, const std::string& b) {
-            bool na = !a.empty() && a.find_first_not_of("0123456789") == std::string::npos;
-            bool nb = !b.empty() && b.find_first_not_of("0123456789") == std::string::npos;
-            return na && nb ? std::stoll(a) < std::stoll(b) : a < b;
+        auto numeric = [](const std::string& k) { return !k.empty() && k.find_first_not_of("0123456789") == std::string::npos; };
+        std::sort(keys.begin(), keys.end(), [&](const std::string& a, const std::string& b) {
+            const bool na = numeric(a), nb = numeric(b);
+            if (na != nb) return na;  // numbers first, compared as numbers of any length
+            if (na && a.size() != b.size()) return a.size() < b.size();
+            return a < b;
         });
         json out = json::array();
         for (auto& k : keys) {
@@ -375,9 +377,29 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
             size_t b = path.find('}', a);
             if (b == std::string::npos) break;
             std::string k = path.substr(a + 1, b - a - 1);
-            path.replace(a, b - a + 1, e.contains(k) ? id_of(e[k]) : "");
+            std::string v = e.contains(k) ? id_of(e[k]) : "";
+            if (v.empty() || v.size() > 32 ||
+                v.find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-.") != std::string::npos)
+                throw std::runtime_error("event field " + k + " is not a short identifier");
+            path.replace(a, b - a + 1, v);
         }
         return json::json_pointer(path);
+    };
+    // the slot a path names in the table document, making objects (never arrays) along the way
+    auto slot = [&](const json::json_pointer& p) -> json& {
+        json* cur = &doc;
+        std::string rest = p.to_string();
+        for (size_t at_ = 0; at_ < rest.size();) {
+            size_t next = rest.find('/', at_ + 1);
+            std::string tok = rest.substr(at_ + 1, next == std::string::npos ? std::string::npos : next - at_ - 1);
+            for (size_t k; (k = tok.find("~1")) != std::string::npos;) tok.replace(k, 2, "/");
+            for (size_t k; (k = tok.find("~0")) != std::string::npos;) tok.replace(k, 2, "~");
+            if (!cur->is_object()) *cur = json::object();
+            cur = &(*cur)[tok];
+            if (next == std::string::npos) break;
+            at_ = next;
+        }
+        return *cur;
     };
     auto send_route = [&](const std::string& name) {
         vars["nonce"] = std::to_string(++nonce);
@@ -391,27 +413,28 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
         if (!events.contains("apply") || !events["apply"].contains(type)) return false;
         const json& rule = events["apply"][type];
         const json ops_reset = rule.value("reset", json::array());
-        for (auto& path : ops_reset) doc[path_of(path.get<std::string>(), e)] = nullptr;
+        for (auto& path : ops_reset) slot(path_of(path.get<std::string>(), e)) = nullptr;
         const json ops_unset = rule.value("unset", json::array());
         for (auto& path : ops_unset) {
             auto p = path_of(path.get<std::string>(), e);
-            if (doc.contains(p)) doc[p.parent_pointer()].erase(p.back());
+            if (doc.contains(p) && doc[p.parent_pointer()].is_object()) doc[p.parent_pointer()].erase(p.back());
         }
         const json ops_copy = rule.value("copy", json::object());
         for (auto& [path, src] : ops_copy.items()) {
             json::json_pointer from(src.get<std::string>());
-            doc[path_of(path, e)] = doc.contains(from) ? doc[from] : json();
+            json v = doc.contains(from) ? doc[from] : json();
+            slot(path_of(path, e)) = std::move(v);
         }
         const json ops_set = rule.value("set", json::object());
         for (auto& [path, how] : ops_set.items()) {
             json one = {{"v", how}};
-            doc[path_of(path, e)] = at(e, one, "v");
+            slot(path_of(path, e)) = at(e, one, "v");
         }
         const json ops_append = rule.value("append", json::object());
         for (auto& [path, how] : ops_append.items()) {
             json one = {{"v", how}};
             json v = at(e, one, "v");
-            json& dst = doc[path_of(path, e)];
+            json& dst = slot(path_of(path, e));
             if (!dst.is_array()) dst = json::array();
             if (v.is_array())
                 for (auto& x : v) dst.push_back(x);
@@ -422,7 +445,7 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
         for (auto& [path, spec_] : ops_push.items()) {
             json o = json::object();
             for (auto& [k, how] : spec_.items()) o[k] = at(e, spec_, k.c_str());
-            json& dst = doc[path_of(path, e)];
+            json& dst = slot(path_of(path, e));
             if (!dst.is_array()) dst = json::array();
             dst.push_back(o);
         }
@@ -430,14 +453,14 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
         for (auto& [path, how] : ops_merge.items()) {
             json one = {{"v", how}};
             json v = at(e, one, "v");
-            json& dst = doc[path_of(path, e)];
+            json& dst = slot(path_of(path, e));
             if (!dst.is_object()) dst = json::object();
             if (v.is_object()) dst.update(v);
         }
         const json ops_index = rule.value("index", json::object());
         for (auto& [path, idx] : ops_index.items()) {  // a list of objects into a map
             json::json_pointer from(idx.at("at").get<std::string>());
-            json& dst = doc[path_of(path, e)];
+            json& dst = slot(path_of(path, e));
             if (!dst.is_object()) dst = json::object();
             if (e.contains(from) && e[from].is_array())
                 for (auto& x : e[from]) {
@@ -485,7 +508,16 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
                     break;
                 }
             }
-            turn_event = apply_event(e);
+            try {
+                turn_event = apply_event(e);
+            } catch (const std::exception& x) {
+                emit({{"type", "platform_error"}, {"error", std::string("event not applied: ") + x.what()}});
+                if (++sum.errors >= plan.max_errors) {
+                    sum.stopped = std::string("too many platform errors: ") + x.what();
+                    break;
+                }
+                continue;
+            }
             r = doc;
         } else {
             r = tr->call(state_route, vars);
