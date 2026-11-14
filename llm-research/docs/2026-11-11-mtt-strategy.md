@@ -265,3 +265,23 @@ opponents it is a question of reading them, which a single network without oppon
 - if the big-blind defence and short-stack shoving stay outside their bands, look at the training pool first,
   because the opponents set what is worth learning;
 - add the checks after the flop.
+
+### The dealer is fair (2026-11-14)
+
+The trainer's dealer (`bp_deal_n` in `blueprint/bp.cpp`) shuffles with a partial Fisher–Yates, one seeded splitmix64
+stream per deal, so deals are fast and reproducible. `scripts/dealer_check.py` tests it against exact odds on
+4,000,000 nine-handed deals (`results/ninemax/dealer_check.json`):
+
+| Test | Result |
+|---|---|
+| Every card equally likely in each of the 23 hole and board positions | combined p = 0.11 (worst position 0.07) |
+| A card twice in one deal | never |
+| The 169 starting-hand classes at 6/4/12 combinations out of 1,326 | p = 0.45 |
+| Seat 0's seven-card hand category against the exact counts in C(52, 7) | p = 0.48 (pair 43.87% vs 43.82%, flush 3.03% vs 3.03%) |
+| The two hole cards independent | p = 0.99 |
+| Consecutive deals, and the same deal in successive calls, sharing a card | p = 0.99 and 0.21 |
+| Same seed, same cards; next seed, different cards | yes; no identical deals |
+
+No bias at this sample. Provably fair shuffles like CoinPoker's (a committed seed, randomness from the players, a
+record on the blockchain) prove a real-money deal to its players. They would add nothing to training, which needs
+speed and reproducibility.
