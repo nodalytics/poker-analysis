@@ -100,6 +100,7 @@ main { padding: 18px; max-width: 1400px; margin: 0 auto; }
 .bar .lab { color: var(--muted); }
 .bar .p { text-align: right; }
 .why { margin-top: 10px; color: var(--muted); font-size: 12px; }
+.engine { font-size: 12px; color: var(--muted); margin: -6px 0 12px; }
 .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .stat .v { font-size: 22px; font-weight: 600; } .stat .l { color: var(--muted); font-size: 12px; }
 .spark { width: 100%; height: 70px; margin-top: 12px; }
@@ -156,6 +157,9 @@ select, input { width: 100%; padding: 9px 11px; border-radius: 10px; border: 1px
   <h2>New table</h2>
   <label>Connector</label><select id="conn"></select>
   <div class="reach mono" id="reach"></div>
+  <label>Model</label><select id="model"></select>
+  <label>Solver</label><select id="solver"></select>
+  <div class="reach" id="about"></div>
   <label>Hands</label><input id="hands" type="number" min="1" value="200">
   <div class="row-end"><button class="btn ghost" id="cancel">Cancel</button><button class="btn primary" id="start">Start</button></div>
 </dialog>
@@ -268,7 +272,9 @@ function decisionView(t) {
               || (picked === "call" && o.kind === "call") || (picked === "check" && o.kind === "check");
     return `<div class="bar ${pick ? "pick" : ""}"><span class="lab">${lab}</span><div class="t"><div class="f" style="width:${(o.prob*100).toFixed(1)}%"></div></div><span class="p mono">${(o.prob*100).toFixed(0)}%</span></div>`;
   }).join("");
-  return `<div class="bars">${rows}</div><div class="why">${d.on_tree ? "Heads-up blueprint · " + STREETS[Math.max(0,(d.action||"").split("/").length-1)] : "Off the blueprint's tree: check or call"}</div>`;
+  const how = !d.on_tree ? "Off the blueprint's tree: check or call"
+    : (d.resolved ? "Re-solved (safe river re-solve)" : "Heads-up blueprint") + " · " + STREETS[Math.max(0,(d.action||"").split("/").length-1)] + (d.floored ? " · defence floor" : "");
+  return `<div class="bars">${rows}</div><div class="why">${how}</div>`;
 }
 
 function spark(t) {
@@ -292,7 +298,7 @@ function screenView(t) {
     <div>${tableView(t)}<div class="panel" style="margin-top:18px"><h3>This hand</h3><div class="mono" style="font-size:13px;line-height:1.7">${describe(t) || "–"}</div></div></div>
     <div class="side">
       <div class="panel"><h3>Kestrel's decision</h3>${decisionView(t)}</div>
-      <div class="panel"><h3>Session · ${cname}</h3>
+      <div class="panel"><h3>Session · ${cname}</h3><div class="engine mono">${esc(t.model || "hu-blueprint")} + ${esc(t.solver || "none")}</div>
         <div class="stats">
           <div class="stat"><div class="v mono">${hands}${t.target ? `<span style="color:var(--muted);font-size:13px"> / ${t.target}</span>` : ""}</div><div class="l">hands</div></div>
           <div class="stat"><div class="v mono ${total >= 0 ? "win" : "loss"}">${sign(total)} bb</div><div class="l">won${hands ? ` · ${sign(rate)} bb/100` : ""}</div></div>
@@ -336,7 +342,7 @@ function upsert(id, connector) {
 function onEvent(e) {
   if (e.table == null) return;
   const t = upsert(e.table, e.connector);
-  if (e.type === "table") { t.status = e.status; if (current == null) current = t.id; }
+  if (e.type === "table") { t.status = e.status; if (e.model) { t.model = e.model; t.solver = e.solver; } if (current == null) current = t.id; }
   else if (e.type === "decision") { t.state = e; t.lastDecision = e; }
   else if (e.type === "deal") { t.state = { ...e, board: [], action: "" }; }
   else if (e.type === "hand") {
@@ -352,7 +358,7 @@ async function load() {
   const s = await api("/v1/sessions");
   const from = s.seq;
   for (const x of s.sessions) {
-    const t = upsert(x.id, x.connector); Object.assign(t, { status: x.status, hands: x.hands, bb100: x.bb100, won: x.won_bb, target: x.hands_target });
+    const t = upsert(x.id, x.connector); Object.assign(t, { status: x.status, hands: x.hands, bb100: x.bb100, won: x.won_bb, target: x.hands_target, model: x.model, solver: x.solver });
     const d = await api(`/v1/sessions/${x.id}`);
     t.state = d.state; t.recent = d.recent || [];
     let c = 0; t.curve = [0, ...t.recent.map(h => c += h.result_bb)];
@@ -367,24 +373,38 @@ async function load() {
 function setView(v) { view = v; document.querySelectorAll("#view button").forEach(b => b.classList.toggle("on", b.dataset.v === v)); render(); }
 $("#view").onclick = e => { if (e.target.dataset.v) setView(e.target.dataset.v); };
 
-let connectors = [];
+let connectors = [], engines = { models: [], solvers: [] };
 async function openNew() {
-  connectors = (await api("/v1/connectors")).connectors;
+  [connectors, engines] = await Promise.all([api("/v1/connectors").then(r => r.connectors), api("/v1/engines")]);
   $("#conn").innerHTML = connectors.map(c => `<option>${esc(c.name)}</option>`).join("");
   showReach(); $("#dlg").showModal();
 }
+function fillEngines() {
+  const c = connectors.find(x => x.name === $("#conn").value); if (!c) return;
+  const fits = engines.models.filter(m => m.players === c.players);
+  $("#model").innerHTML = engines.models.map(m => `<option value="${esc(m.name)}" ${m.available && m.players === c.players ? "" : "disabled"}>${esc(m.name)} · ${esc(m.game)}</option>`).join("");
+  const first = fits.find(m => m.available); if (first) $("#model").value = first.name;
+  $("#solver").innerHTML = engines.solvers.map(x => `<option value="${esc(x.name)}" ${x.available ? "" : "disabled"}>${esc(x.name)}</option>`).join("");
+  $("#solver").value = "none"; showAbout();
+}
+function showAbout() {
+  const m = engines.models.find(x => x.name === $("#model").value), v = engines.solvers.find(x => x.name === $("#solver").value);
+  $("#about").innerHTML = `${esc(m?.about || "")}<br>${esc(v?.about || "")}`;
+}
+$("#model").onchange = showAbout; $("#solver").onchange = showAbout;
 function showReach() {
   const c = connectors.find(x => x.name === $("#conn").value); if (!c) return;
   $("#reach").innerHTML = `talks to ${esc(c.hosts.join(", "))}${c.env.length ? "<br>reads " + esc(c.env.join(", ")) : ""}`;
+  fillEngines();
 }
 $("#conn").onchange = showReach;
 $("#new").onclick = openNew;
 $("#cancel").onclick = () => $("#dlg").close();
 $("#start").onclick = async () => {
   const r = await api("/v1/sessions", { method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ connector: $("#conn").value, hands: +$("#hands").value }) });
+    body: JSON.stringify({ connector: $("#conn").value, hands: +$("#hands").value, model: $("#model").value, solver: $("#solver").value }) });
   $("#dlg").close();
-  if (r.id) { const t = upsert(r.id, $("#conn").value); t.target = +$("#hands").value; current = r.id; setView("screen"); }
+  if (r.id) { const t = upsert(r.id, $("#conn").value); Object.assign(t, { target: +$("#hands").value, model: $("#model").value, solver: $("#solver").value }); current = r.id; setView("screen"); }
   else toast(r.error || "could not start");
 };
 async function stopTable(id) { await api(`/v1/sessions/${id}`, { method: "DELETE" }); toast("Stopping after this hand"); }

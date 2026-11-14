@@ -13,6 +13,7 @@ struct SessionPlan {
     std::string out_dir;
     int max_errors = 20;
     uint64_t seed = 1;
+    std::string model = "hu-blueprint", solver = "none";
 };
 
 struct SessionSummary {

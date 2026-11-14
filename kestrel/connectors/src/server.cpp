@@ -6,6 +6,7 @@
 #include <csignal>
 #include <deque>
 #include <filesystem>
+#include <algorithm>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -23,9 +24,42 @@ namespace {
 
 constexpr const char* VERSION = "0.1.0";
 
+// the models and solvers a table can play with; heads-up connectors take the heads-up blueprint
+const char* SOLVERS[][3] = {{"none", "the model's own policy", "1"},
+                            {"kestrel-river", "safe river re-solve (CFR+ with the gadget), heads-up", "1"},
+                            {"texassolver", "TexasSolver on turn and river, heads-up (not built yet)", "0"}};
+
+struct Engines {
+    std::mutex mu;
+    std::map<std::string, std::shared_ptr<HUBlueprint>> by_key;
+    std::shared_ptr<HUBlueprint> get(const ServeOptions& o, const std::string& model, const std::string& solver) {
+        std::lock_guard<std::mutex> lk(mu);
+        auto& e = by_key[model + "+" + solver];
+        if (!e) {
+            e = std::make_shared<HUBlueprint>(o.pack);
+            if (solver == "kestrel-river") e->set_resolve(o.resolve_iters);
+        }
+        return e;
+    }
+};
+
+json models_json(const ServeOptions& o) {
+    json a = json::array();
+    a.push_back({{"name", "hu-blueprint"}, {"game", "heads-up"}, {"players", 2}, {"available", true},
+                 {"about", "heads-up blueprint, 200bb (the data pack)"}});
+    std::error_code ec;
+    if (!o.models.empty())
+        for (auto& d : std::filesystem::directory_iterator(o.models, ec))
+            if (std::filesystem::exists(d.path() / "net.json"))
+                a.push_back({{"name", d.path().filename().string()}, {"game", "9-max tournament"}, {"players", 9},
+                             {"available", false}, {"about", "9-max tournament network; no 9-max connector yet"}});
+    return a;
+}
+
 struct Table {
     int id = 0;
     ConnectorSpec spec;
+    std::string model, solver;
     int hands = 0;
     std::atomic<bool> stop{false};
     std::thread th;
@@ -66,7 +100,8 @@ void on_signal(int) {
 
 json table_json(const Table& t) {
     double bb100 = t.done ? t.total_bb / t.done * 100 : 0;
-    json j = {{"id", t.id},           {"connector", t.spec.name}, {"status", t.status},
+    json j = {{"id", t.id},           {"connector", t.spec.name}, {"status", t.status}, {"model", t.model},
+              {"solver", t.solver},
               {"hands_target", t.hands}, {"hands", t.done},       {"bb100", bb100},
               {"won_bb", t.total_bb}};
     if (!t.summary.is_null()) j["summary"] = t.summary;
@@ -91,7 +126,8 @@ void reply(httplib::Response& res, const json& j, int status = 200) {
 int serve(const ServeOptions& o) {
     Hub hub;
     g_hub = &hub;
-    HUBlueprint engine(o.pack);
+    Engines engines;
+    engines.get(o, "hu-blueprint", "none");
     httplib::Server srv;
     g_srv = &srv;
 
@@ -111,11 +147,21 @@ int serve(const ServeOptions& o) {
         reply(res, {{"connectors", a}, {"not_loaded", errors}});
     });
 
+    srv.Get("/v1/engines", [&](const httplib::Request&, httplib::Response& res) {
+        json s = json::array();
+        for (auto& x : SOLVERS) s.push_back({{"name", x[0]}, {"about", x[1]}, {"available", x[2][0] == '1'}});
+        reply(res, {{"models", models_json(o)}, {"solvers", s}, {"default", {{"model", "hu-blueprint"}, {"solver", "none"}}}});
+    });
+
     srv.Post("/v1/sessions", [&](const httplib::Request& req, httplib::Response& res) {
         json body = json::parse(req.body, nullptr, false);
         if (body.is_discarded() || !body.contains("connector")) return reply(res, {{"error", "need connector"}}, 400);
         std::string name = body["connector"];
         int hands = std::clamp(body.value("hands", 100), 1, 1000000);
+        std::string model = body.value("model", "hu-blueprint"), solver = body.value("solver", "none");
+        if (model != "hu-blueprint") return reply(res, {{"error", "model " + model + " cannot play this connector"}}, 400);
+        if (solver != "none" && solver != "kestrel-river")
+            return reply(res, {{"error", "solver " + solver + " is not available"}}, 400);
         std::vector<std::string> errors;
         auto cs = all_connectors(o, &errors);
         auto it = std::find_if(cs.begin(), cs.end(), [&](auto& c) { return c.name == name; });
@@ -126,11 +172,15 @@ int serve(const ServeOptions& o) {
             t->id = hub.next_id++;
             t->spec = *it;
             t->hands = hands;
+            t->model = model, t->solver = solver;
             hub.tables[t->id] = t;
         }
-        hub.publish({{"type", "table"}, {"table", t->id}, {"connector", name}, {"status", "starting"}});
-        t->th = std::thread([&hub, &engine, &o, t] {
+        hub.publish({{"type", "table"}, {"table", t->id}, {"connector", name}, {"status", "starting"}, {"model", model},
+                     {"solver", solver}});
+        auto engine = engines.get(o, model, solver);
+        t->th = std::thread([&hub, engine, &o, t] {
             SessionPlan plan;
+            plan.model = t->model, plan.solver = t->solver;
             plan.hands = t->hands;
             plan.out_dir = o.out + "/" + std::to_string(t->id) + "-" + t->spec.name;
             plan.seed = uint64_t(t->id) * 7919;
@@ -144,7 +194,7 @@ int serve(const ServeOptions& o) {
             set_status("playing");
             try {
                 auto sum = run_session(
-                    t->spec, plan, engine, nullptr, &t->stop, [&](const json& e) {
+                    t->spec, plan, *engine, nullptr, &t->stop, [&](const json& e) {
                         json ev = e;
                         ev["table"] = t->id;
                         ev["connector"] = t->spec.name;

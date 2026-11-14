@@ -43,9 +43,9 @@ std::vector<std::string> split(const std::string& s, char sep) {
 }
 }
 
-HUBlueprint::HUBlueprint(const std::string& dir, double purify, double floor_from)
+HUBlueprint::HUBlueprint(const std::string& dir, double purify, double floor_from, const std::string& abs)
     : floor_from_(floor_from), purify_(purify) {
-    buckets_init(dir);
+    buckets_init(abs.empty() ? dir : abs);
     std::ifstream t(dir + "/tree.tsv");
     if (!t) throw std::runtime_error("no " + dir + "/tree.tsv");
     std::string line;
@@ -65,8 +65,18 @@ HUBlueprint::HUBlueprint(const std::string& dir, double purify, double floor_fro
         n.labels = split(f[7], ',');
         for (auto& c : split(f[8], ',')) n.children.push_back(std::stoi(c));
     }
+    for (auto& n : nodes_)
+        for (size_t k = 0; k < n.labels.size(); ++k)
+            if (n.labels[k] == "fold") nodes_[n.children[k]].folder = n.player;
+    std::ifstream f32(dir + "/avg.f32", std::ios::binary | std::ios::ate);
+    if (f32) {
+        avgf_.resize(size_t(f32.tellg()) / 4);
+        f32.seekg(0);
+        f32.read(reinterpret_cast<char*>(avgf_.data()), std::streamsize(avgf_.size() * 4));
+        return;
+    }
     std::ifstream a(dir + "/avg.u8", std::ios::binary | std::ios::ate);
-    if (!a) throw std::runtime_error("no " + dir + "/avg.u8");
+    if (!a) throw std::runtime_error("no " + dir + "/avg.u8 or avg.f32");
     avg_.resize(size_t(a.tellg()));
     a.seekg(0);
     a.read(reinterpret_cast<char*>(avg_.data()), std::streamsize(avg_.size()));
@@ -160,8 +170,40 @@ HUAnswer HUBlueprint::decide(const HUSpot& s, bool det, int64_t round_to) {
     size_t k = n.labels.size();
     std::vector<double> st(k);
     double tot = 0;
-    for (size_t j = 0; j < k; ++j) tot += st[j] = avg_[n.offset + uint64_t(b) * k + j];
+    for (size_t j = 0; j < k; ++j) tot += st[j] = av(n.offset + uint64_t(b) * k + j);
     for (auto& v : st) v = tot > 0 ? v / tot : 1.0 / double(k);
+    if (resolve_iters_ > 0 && n.street == 3 && s.board.size() == 5) {
+        int root = node;
+        std::string key;
+        for (const Step& h : history) {
+            if (h.board_n == 5 && root == node) root = h.node;
+            key += std::to_string(h.node) + ":" + std::to_string(h.child) + ",";
+        }
+        for (int c : s.board) key += "/" + std::to_string(c);
+        auto it = resolved_.find(key);
+        if (it == resolved_.end()) {
+            std::vector<Step> before;
+            for (const Step& h : history)
+                if (h.board_n < 5) before.push_back(h);
+            std::vector<float> out;
+            if (river_resolve(root, node, s.board, reach(before, 0, s.board), reach(before, 1, s.board), out)) {
+                if (resolved_.size() > 64) resolved_.clear();
+                it = resolved_.emplace(key, std::move(out)).first;
+            }
+        }
+        if (it != resolved_.end()) {
+            int lo = std::min(s.hole[0], s.hole[1]), hi = std::max(s.hole[0], s.hole[1]);
+            int combo = lo * 51 - lo * (lo - 1) / 2 + (hi - lo - 1);
+            std::vector<double> r(k);
+            double rt = 0;
+            for (size_t j = 0; j < k; ++j) rt += r[j] = it->second[size_t(combo) * 6 + j];
+            if (rt > 0) {
+                for (size_t j = 0; j < k; ++j) st[j] = r[j] / rt;
+                ans.resolved = true;
+            }
+        }
+    }
+    ans.strategy = st;
     tot = 0;
     for (auto& v : st) tot += v = v < purify_ ? 0.0 : v;
     for (auto& v : st) v = tot > 0 ? v / tot : 1.0 / double(k);
@@ -243,10 +285,10 @@ std::vector<double> HUBlueprint::reach(const std::vector<Step>& history, int pla
                 w[k] = 0.0;
                 continue;
             }
-            const uint8_t* row = &avg_[n.offset + uint64_t(bk) * K];
+            uint64_t row = n.offset + uint64_t(bk) * K;
             double tot = 0;
-            for (size_t j = 0; j < K; ++j) tot += row[j];
-            w[k] *= tot > 0 ? row[h.child] / tot : 1.0 / double(K);
+            for (size_t j = 0; j < K; ++j) tot += av(row + j);
+            w[k] *= tot > 0 ? av(row + h.child) / tot : 1.0 / double(K);
         }
     }
     return w;
