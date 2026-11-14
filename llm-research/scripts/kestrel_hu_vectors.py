@@ -75,6 +75,12 @@ def main():
         "--floor", action="store_true", help="keep the minimum-defence floor on (vectors_headsup_floor.json)"
     )
     ap.add_argument(
+        "--texassolver",
+        action="store_true",
+        help="turn and river decisions, with TexasSolver's strategy at our hand from the blueprint ranges "
+        "(vectors_headsup_texassolver.json; SOLVER_THREADS=1 for a deterministic solve)",
+    )
+    ap.add_argument(
         "--resolve",
         action="store_true",
         help="river decisions only, with the safe re-solve's strategy at our hand (vectors_headsup_resolve.json; "
@@ -100,7 +106,7 @@ def main():
                 continue
             scale = 100 / max(state.blinds_or_straddles)
             w = bp.walk(state, scale)
-            if a.resolve and len(board) < 5:
+            if a.resolve and len(board) < 5 or a.texassolver and len(board) < 4:
                 continue
             dist = bp.distribution(state, i, scale) if w else None
             res = None
@@ -110,6 +116,9 @@ def main():
                 hole = sorted(r["hole"], key=deck.index)
                 mine = all_s.get(hole[0] + hole[1]) if all_s else None
                 res = [round(float(x), 6) for x in mine] if mine is not None else None
+            if a.texassolver and w:
+                ts = bp.resolve(state, i, scale)
+                res = {k: round(float(v), 6) for k, v in ts.items()} if ts else None
             lo, hi, facing, last = sc.legal_range(sc.tokens(text))
             cases.append({
                 "action": text, "pos": i, "hole": r["hole"], "board": board,
@@ -123,6 +132,8 @@ def main():
     name = "vectors_headsup_floor.json" if a.floor else "vectors_headsup.json"
     if a.resolve:
         name = "vectors_headsup_resolve.json"
+    if a.texassolver:
+        name = "vectors_headsup_texassolver.json"
     out = os.path.join(ROOT, "..", "kestrel", "testdata", name)
     os.makedirs(os.path.dirname(out), exist_ok=True)
     json.dump({"source": a.run, "hands": len(rows), "cases": cases}, open(out, "w"))

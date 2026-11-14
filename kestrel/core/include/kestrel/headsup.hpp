@@ -8,6 +8,8 @@
 #include <string>
 #include <vector>
 
+#include "kestrel/texassolver.hpp"
+
 namespace kestrel {
 
 int card_from(const std::string& s);
@@ -51,6 +53,8 @@ class HUBlueprint {
                          const std::string& abs = "");
     // safe re-solving of river spots: CFR+ iterations (0 = off) and the gadget's minimum opponent reach
     void set_resolve(int iters, double min_reach = 0.02) { resolve_iters_ = iters, min_reach_ = min_reach; }
+    // TexasSolver on the turn and river, from both players' blueprint ranges (as the Python bot's resolve())
+    void set_texassolver(const TexasSolverConfig& c) { ts_ = c, use_ts_ = true; }
     HUAnswer decide(const HUSpot& spot, bool deterministic = false, int64_t round_to = 0);
     int bucket(const std::array<int, 2>& hole, const std::vector<int>& board) const;
 
@@ -70,6 +74,7 @@ class HUBlueprint {
         int node, child, player, board_n;
     };
     std::vector<double> reach(const std::vector<Step>& history, int player, const std::vector<int>& board) const;
+    bool texassolver(const HUSpot& s, const std::vector<Step>& history, HUAnswer& ans);
     bool defence_floor(const HUSpot& s, const std::vector<Step>& history, const Node& n, std::vector<double>& st) const;
     double floor_from_;
     std::vector<Node> nodes_;
@@ -79,6 +84,9 @@ class HUBlueprint {
     int resolve_iters_ = 0;
     double min_reach_ = 0.02;
     std::map<std::string, std::vector<float>> resolved_;
+    TexasSolverConfig ts_;
+    bool use_ts_ = false;
+    std::map<std::string, nlohmann::json> ts_trees_;
     bool river_resolve(int root, int target, const std::vector<int>& board, const std::vector<double>& r0,
                        const std::vector<double>& r1, std::vector<float>& out) const;
     double purify_;

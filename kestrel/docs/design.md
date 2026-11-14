@@ -148,7 +148,8 @@ Each port gets test vectors written by the Python code it replaces, and the C++ 
 | Qt 6 app | after the web app |
 | Open Poker (openpoker.ai, 6-max cash over WebSocket): an account, a 6-max cash model and a connector | waiting on the user's sign-in (magic link to the account's email); protocol read from the lab (see Platforms) |
 | Search at play time: the heads-up safe river re-solve, then 9-max search | heads-up re-solve done: matches Python's `libresolve` on 121 logged river decisions (119 within 7e-4; one spot at 3e-3, float vs double normalisation through 500 CFR+ iterations); made faster on 2026-11-14: one-pass strategies, reused scratch memory, the root's subtrees on 4 threads (summed in order, so the result is the serial solve's), optional `-DKESTREL_NATIVE=ON`. On the lab: 0.68 s → 0.31 s per river decision over all 121, still matching Python. Opt-in per table. 9-max once it beats the plain network |
-| Model and solver chosen per table | done for heads-up (`hu-blueprint` with `none` or `kestrel-river`) in the web app, the API (`GET /v1/engines`) and `kestreld play`; TexasSolver next |
+| Model and solver chosen per table | done for heads-up: `hu-blueprint` with `none`, `kestrel-river` or `texassolver`, in the web app, the API (`GET /v1/engines`) and `kestreld play` |
+| TexasSolver as a solver | done: the Python bot's script and tree walk, from the blueprint's ranges on the turn and river; matches the Python bot on 12 logged decisions to 5e-7 (single-threaded, deterministic). Live it is slow, tens of seconds per turn solve here, so it suits Slumbot more than platforms with turn timers. Run as a separate program (AGPL); configured with `--texassolver BIN --texassolver-resources DIR`, and refused without the hand-ranking tables |
 | CI: Linux, macOS, Windows builds, self-test, GitHub Releases on `kestrel-v*` tags | done |
 
 ## Platforms (searched 2026-11-14)

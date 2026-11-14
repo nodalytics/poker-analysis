@@ -16,7 +16,7 @@
 using namespace kestrel;
 
 int main(int argc, char** argv) {
-    std::string vectors, run, abs;
+    std::string vectors, run, abs, ts_bin, ts_res;
     int iters = 500, limit = 1 << 30;
     double secs = 0;
     for (int k = 1; k + 1 < argc; k += 2) {
@@ -26,6 +26,8 @@ int main(int argc, char** argv) {
         else if (a == "--abs") abs = v;
         else if (a == "--iters") iters = std::stoi(v);
         else if (a == "--limit") limit = std::stoi(v);
+        else if (a == "--texassolver") ts_bin = v;
+        else if (a == "--resources") ts_res = v;
     }
     if (vectors.empty() || run.empty()) {
         std::fprintf(stderr, "usage: kestrel_resolve_check --vectors FILE --run DIR [--abs DIR] [--iters N]\n");
@@ -34,7 +36,18 @@ int main(int argc, char** argv) {
     std::ifstream f(vectors);
     auto V = nlohmann::json::parse(f);
     HUBlueprint bp(run, 0.05, 0.0, abs);
-    bp.set_resolve(iters, 0.02);
+    if (ts_bin.empty()) {
+        bp.set_resolve(iters, 0.02);
+    } else {
+        TexasSolverConfig c;
+        c.bin = ts_bin, c.resources = ts_res, c.threads = 1;
+        std::string why;
+        if (!c.usable(&why)) {
+            std::fprintf(stderr, "%s\n", why.c_str());
+            return 2;
+        }
+        bp.set_texassolver(c);
+    }
     acpc::Game g;
     int cases = 0, resolved = 0, bad = 0, skipped = 0;
     double worst = 0;
@@ -56,10 +69,19 @@ int main(int argc, char** argv) {
             continue;
         }
         ++resolved;
-        auto want = C["resolve"].get<std::vector<double>>();
         double e = 0;
-        for (size_t a = 0; a < want.size() && a < ans.strategy.size(); ++a)
-            e = std::max(e, std::fabs(ans.strategy[a] - want[a]));
+        if (C["resolve"].is_object()) {  // TexasSolver: probabilities by action name
+            for (auto& [name, p] : C["resolve"].items()) {
+                double got = 0;
+                for (auto& o : ans.options)
+                    if (o.label == "texassolver " + name) got = o.prob;
+                e = std::max(e, std::fabs(got - p.get<double>()));
+            }
+        } else {
+            auto want = C["resolve"].get<std::vector<double>>();
+            for (size_t a = 0; a < want.size() && a < ans.strategy.size(); ++a)
+                e = std::max(e, std::fabs(ans.strategy[a] - want[a]));
+        }
         worst = std::max(worst, e);
         if (e > 5e-3) {
             ++bad;
@@ -67,9 +89,9 @@ int main(int argc, char** argv) {
         }
         if (cases % 20 == 0) std::printf("%d cases, worst %.2e\n", cases, worst), std::fflush(stdout);
     }
-    std::printf("%d river decisions, %d re-solved, %d differ by more than 5e-3, worst difference %.2e%s\n", cases,
+    std::printf("%d decisions, %d re-solved, %d differ by more than 5e-3, worst difference %.2e%s\n", cases,
                 resolved, bad, worst, skipped ? " (some skipped)" : "");
-    std::printf("mean %.2f s per decision (%d iterations)\n", cases ? secs / cases : 0.0, iters);
+    std::printf("mean %.2f s per decision\n", cases ? secs / cases : 0.0);
     std::printf(bad ? "FAIL\n" : "PASS\n");
     return bad ? 1 : 0;
 }

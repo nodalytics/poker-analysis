@@ -21,10 +21,11 @@ int usage() {
     std::fprintf(stderr,
                  "usage: kestreld list [DIR]\n"
                  "       kestreld check CONNECTOR\n"
-                 "       kestreld play CONNECTOR --hands N --out DIR [--pack DIR] [--model M] [--solver none|kestrel-river]\n"
-                 "                     [--resolve-iters N] [--seed S] [--max-errors E]\n"
+                 "       kestreld play CONNECTOR --hands N --out DIR [--pack DIR] [--model M]\n"
+                 "                     [--solver none|kestrel-river|texassolver] [--resolve-iters N]\n"
+                 "                     [--texassolver BIN --texassolver-resources DIR] [--seed S] [--max-errors E]\n"
                  "       kestreld serve [--port P] [--pack DIR] [--models DIR] [--connectors DIR]... [--web DIR] [--assets DIR]\n"
-                 "                      [--out DIR] [--resolve-iters N]\n");
+                 "                      [--out DIR] [--resolve-iters N] [--texassolver BIN --texassolver-resources DIR]\n");
     return 2;
 }
 }
@@ -60,6 +61,8 @@ int main(int argc, char** argv) {
             else if (a == "--out") o.out = v;
             else if (a == "--models") o.models = v;
             else if (a == "--resolve-iters") o.resolve_iters = std::stoi(v);
+            else if (a == "--texassolver") o.ts_bin = v;
+            else if (a == "--texassolver-resources") o.ts_resources = v;
             else return usage();
         }
         o.connectors.push_back(default_dir());
@@ -85,6 +88,7 @@ int main(int argc, char** argv) {
         SessionPlan plan;
         std::string pack = "blueprint/pack";
         int iters = 500;
+        TexasSolverConfig ts;
         for (int k = 3; k + 1 < argc; k += 2) {
             std::string a = argv[k], v = argv[k + 1];
             if (a == "--hands") plan.hands = std::stoi(v);
@@ -95,16 +99,21 @@ int main(int argc, char** argv) {
             else if (a == "--model") plan.model = v;
             else if (a == "--solver") plan.solver = v;
             else if (a == "--resolve-iters") iters = std::stoi(v);
+            else if (a == "--texassolver") ts.bin = v;
+            else if (a == "--texassolver-resources") ts.resources = v;
             else return usage();
         }
         if (plan.out_dir.empty()) return usage();
         std::signal(SIGINT, on_signal);
         std::signal(SIGTERM, on_signal);
         if (plan.model != "hu-blueprint") throw std::runtime_error("model " + plan.model + " cannot play this connector");
-        if (plan.solver != "none" && plan.solver != "kestrel-river")
+        std::string why;
+        if (plan.solver == "texassolver" && !ts.usable(&why)) throw std::runtime_error(why);
+        if (plan.solver != "none" && plan.solver != "kestrel-river" && plan.solver != "texassolver")
             throw std::runtime_error("solver " + plan.solver + " is not available");
         HUBlueprint engine(pack);
         if (plan.solver == "kestrel-river") engine.set_resolve(iters);
+        if (plan.solver == "texassolver") engine.set_texassolver(ts);
         int n = 0;
         double total = 0;
         auto s = run_session(

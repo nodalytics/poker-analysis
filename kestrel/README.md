@@ -13,6 +13,9 @@ research that feeds it (training, the models, the Python reference) is in `llm-r
 kestreld check kestrel/connectors/slumbot.yaml        # what it talks to and which KESTREL_* variables it reads
 kestreld play kestrel/connectors/slumbot.yaml --hands 1000 --out sessions/slumbot --pack llm-research/blueprint/pack
 kestreld list                                          # every connector in ~/.config/kestrel/connectors
+kestreld play kestrel/connectors/slumbot.yaml --hands 100 --out sessions/ts --pack llm-research/blueprint/pack \
+    --solver texassolver --texassolver tools/TexasSolver/build/console_solver \
+    --texassolver-resources tools/TexasSolver/resources   # model + solver: the blueprint with TexasSolver
 kestreld serve --pack llm-research/blueprint/pack --connectors kestrel/connectors --web kestrel/web --assets kestrel/assets
                                                        # the web app at http://127.0.0.1:8790/ with live tables
 ```

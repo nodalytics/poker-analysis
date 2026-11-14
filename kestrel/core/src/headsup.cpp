@@ -167,6 +167,10 @@ HUAnswer HUBlueprint::decide(const HUSpot& s, bool det, int64_t round_to) {
     int b = bucket(s.hole, s.board);
     if (b < 0) return ans;
     ans.node = node, ans.bucket = b;
+    if (use_ts_ && (s.board.size() == 4 || s.board.size() == 5) && texassolver(s, history, ans)) {
+        ans.on_tree = true;
+        return ans;
+    }
     size_t k = n.labels.size();
     std::vector<double> st(k);
     double tot = 0;
@@ -323,6 +327,93 @@ bool HUBlueprint::defence_floor(const HUSpot& s, const std::vector<Step>& histor
     if (pct < 1 - mdf) return false;
     st[ci] += st[fi];
     st[fi] = 0.0;
+    return true;
+}
+
+bool HUBlueprint::texassolver(const HUSpot& s, const std::vector<Step>& history, HUAnswer& ans) {
+    const double unit = 50.0;  // half a big blind, the Python bot's unit (TexasSolver's accuracy is absolute)
+    const int nb = int(s.board.size());
+    std::vector<Step> before;
+    std::string key;
+    for (const Step& h : history)
+        if (h.board_n < nb) before.push_back(h), key += std::to_string(h.node) + ":" + std::to_string(h.child) + ",";
+    for (int c : s.board) key += "/" + std::to_string(c);
+    key += "|" + std::to_string(s.me) + "|" + std::to_string(s.hole[0]) + "," + std::to_string(s.hole[1]);
+    auto it = ts_trees_.find(key);
+    if (it == ts_trees_.end()) {
+        const auto& C = combos();
+        auto r_me = reach(before, s.me, s.board), r_op = reach(before, 1 - s.me, s.board);
+        double top_me = 0;
+        for (size_t k = 0; k < C.size(); ++k) {
+            if (C[k][0] == s.hole[0] || C[k][1] == s.hole[0] || C[k][0] == s.hole[1] || C[k][1] == s.hole[1])
+                r_op[k] = 0;
+            top_me = std::max(top_me, r_me[k]);
+        }
+        std::array<int, 2> h{std::min(s.hole[0], s.hole[1]), std::max(s.hole[0], s.hole[1])};
+        for (size_t k = 0; k < C.size(); ++k)
+            if (C[k] == h) r_me[k] = std::max(r_me[k], top_me * 0.02);
+        auto range = [&](const std::vector<double>& w) {
+            double top = *std::max_element(w.begin(), w.end());
+            std::string out;
+            char buf[32];
+            if (top <= 0) return out;
+            for (size_t k = 0; k < C.size(); ++k)
+                if (w[k] / top >= 0.001) {
+                    std::snprintf(buf, sizeof buf, "%s%s:%.3f", card_str(C[k][0]).c_str(), card_str(C[k][1]).c_str(),
+                                  w[k] / top);
+                    out += (out.empty() ? "" : ",") + std::string(buf);
+                }
+            return out;
+        };
+        std::string rm = range(r_me), ro = range(r_op);
+        if (rm.empty() || ro.empty()) return false;
+        TexasSolverSpot sp;
+        for (int c : s.board) sp.board.push_back(card_str(c));
+        bool oop_is_me = s.me == 1;  // the big blind acts first after the flop
+        sp.range_oop = oop_is_me ? rm : ro, sp.range_ip = oop_is_me ? ro : rm;
+        sp.pot = std::round(double(s.pot - s.my_bet - s.their_bet) / unit);
+        sp.eff = std::round(double(s.my_stack + s.my_bet) / unit);
+        auto tree = texassolver_solve(ts_, sp);
+        if (tree.is_null()) return false;
+        if (ts_trees_.size() > 32) ts_trees_.clear();
+        it = ts_trees_.emplace(key, std::move(tree)).first;
+    }
+    std::vector<std::pair<std::string, double>> acts;
+    int64_t bets[2] = {0, 0};
+    for (const HUAction& a : s.streets.back()) {
+        if (a.kind == 'b') {
+            acts.push_back({"raise", std::round(double(a.to - bets[a.player]) / unit)});
+            bets[a.player] = a.to;
+        } else {
+            acts.push_back({a.kind == 'f' ? "fold" : a.kind == 'c' ? "call" : "check", 0.0});
+            if (a.kind == 'c') bets[a.player] = bets[1 - a.player];
+        }
+    }
+    const nlohmann::json* nd = texassolver_walk(it->second, acts);
+    if (!nd || !nd->contains("strategy") || !(*nd)["strategy"].contains("strategy")) return false;
+    const auto& strat = (*nd)["strategy"]["strategy"];
+    std::string h1 = card_str(s.hole[0]) + card_str(s.hole[1]), h2 = card_str(s.hole[1]) + card_str(s.hole[0]);
+    const nlohmann::json* probs = strat.contains(h1) ? &strat[h1] : strat.contains(h2) ? &strat[h2] : nullptr;
+    if (!probs) return false;
+    const auto& names = (*nd)["actions"];
+    ans.options.clear();
+    ans.strategy.clear();
+    for (size_t j = 0; j < names.size() && j < probs->size(); ++j) {
+        double p = (*probs)[j].get<double>();
+        std::string n = names[j].get<std::string>(), head = n.substr(0, n.find(' '));
+        ans.strategy.push_back(p);
+        if (p <= 0) continue;
+        if (head == "FOLD") {
+            ans.options.push_back({'f', 0, p, "texassolver " + n});
+        } else if (head == "CHECK" || head == "CALL" || !s.can_raise) {
+            ans.options.push_back({'k', 0, p, "texassolver " + n});
+        } else {
+            int64_t to = s.my_bet + int64_t(std::stod(n.substr(n.find(' ') + 1))) * int64_t(unit);
+            ans.options.push_back({'b', std::clamp(to, s.min_to, s.max_to), p, "texassolver " + n});
+        }
+    }
+    if (ans.options.empty()) return false;
+    ans.resolved = true;
     return true;
 }
 
