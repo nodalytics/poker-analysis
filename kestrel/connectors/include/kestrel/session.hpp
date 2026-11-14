@@ -21,6 +21,7 @@ struct SessionSummary {
     int hands = 0, errors = 0, off_tree = 0, fallbacks = 0;
     double bb100 = 0, ci_lo = 0, ci_hi = 0;
     std::string stopped;
+    json luck;  // the luck-adjusted estimate (kestrel/luck.hpp), when the platform shows the opponent's cards
     json to_json() const;
 };
 

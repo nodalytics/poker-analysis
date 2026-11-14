@@ -47,6 +47,8 @@ def main():
     ap.add_argument("--icm", type=int, default=200)
     ap.add_argument("--lib", default=os.path.join(ROOT, "blueprint", "libbp5.so"))
     ap.add_argument("--abs", default=os.path.join(ROOT, "blueprint", "out"))
+    ap.add_argument("--out", help="where to write net.bin and net.json (default: beside the model)")
+    ap.add_argument("--vectors-out", help="the test-vector file (default: ../kestrel/testdata/vectors_<name>.json)")
     a = ap.parse_args()
     dev = "cpu"
     torch.manual_seed(5)
@@ -61,7 +63,9 @@ def main():
 
     # ---- weights ----
     sd = net.state_dict()
-    with open(os.path.join(d, "net.bin"), "wb") as f:
+    wd = a.out or d
+    os.makedirs(wd, exist_ok=True)
+    with open(os.path.join(wd, "net.bin"), "wb") as f:
         for t in sd.values():
             f.write(t.detach().half().contiguous().numpy().astype("<f2").tobytes())
     meta = {
@@ -73,7 +77,7 @@ def main():
         "pre_strength": r6(dealer.pre_strength.tolist()),
         "source": a.model,
     }  # fmt: skip
-    json.dump(meta, open(os.path.join(d, "net.json"), "w"), indent=1)
+    json.dump(meta, open(os.path.join(wd, "net.json"), "w"), indent=1)
 
     # ---- hands ----
     hands = []
@@ -121,12 +125,12 @@ def main():
         pay = torch.tensor([sorted(np.random.dirichlet(np.ones(n)).tolist(), reverse=True)], dtype=torch.float64)
         icm_cases.append({"stacks": r6(st[0]), "pay": [float(x) for x in pay[0]], "eq": r6(icm(st, pay)[0])})
 
-    out = os.path.join(ROOT, "..", "kestrel", "testdata", f"vectors_{name}.json")
+    out = a.vectors_out or os.path.join(ROOT, "..", "kestrel", "testdata", f"vectors_{name}.json")
     os.makedirs(os.path.dirname(out), exist_ok=True)
     json.dump({"model": name, "bb": BB, "hands": hands, "icm": icm_cases}, open(out, "w"))
     n_dec = sum(len(x["steps"]) for x in hands)
     print(
-        f"{name}: {len(sd)} tensors -> {d}/net.bin; {len(hands)} hands, {n_dec} decisions, {len(icm_cases)} ICM -> {out}"
+        f"{name}: {len(sd)} tensors -> {wd}/net.bin; {len(hands)} hands, {n_dec} decisions, {len(icm_cases)} ICM -> {out}"
     )
 
 

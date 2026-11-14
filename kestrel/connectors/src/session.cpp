@@ -9,12 +9,15 @@
 #include <vector>
 
 #include "kestrel/codec_acpc.hpp"
+#include "kestrel/luck.hpp"
 
 namespace kestrel {
 
 json SessionSummary::to_json() const {
-    return {{"connector", connector}, {"hands", hands},      {"bb100", bb100},         {"ci95", {ci_lo, ci_hi}},
-            {"errors", errors},       {"off_tree", off_tree}, {"fallbacks", fallbacks}, {"stopped", stopped}};
+    json j = {{"connector", connector}, {"hands", hands},      {"bb100", bb100},         {"ci95", {ci_lo, ci_hi}},
+              {"errors", errors},       {"off_tree", off_tree}, {"fallbacks", fallbacks}, {"stopped", stopped}};
+    if (!luck.is_null()) j["luck_adjusted"] = luck;
+    return j;
 }
 
 namespace {
@@ -100,6 +103,7 @@ SessionSummary run_session(const ConnectorSpec& spec, const SessionPlan& plan, H
     SessionSummary sum;
     sum.connector = spec.name;
     std::vector<double> results;
+    std::vector<LuckHand> luck;
     std::map<std::string, std::string> vars;
 
     auto keep_token = [&](const json& r) {
@@ -192,6 +196,13 @@ SessionSummary run_session(const ConnectorSpec& spec, const SessionPlan& plan, H
                      {"action", at(r, fields, "action")},
                      {"result_bb", won}};
         if (fields.contains("their_hole")) line["their_hole"] = at(r, fields, "their_hole");
+        if (spec.codec == "acpc") {
+            try {
+                LuckHand lh;
+                if (luck_hand(line, spec.big, spec.stack, lh)) luck.push_back(lh);
+            } catch (const std::exception&) {
+            }
+        }
         log << line.dump() << "\n" << std::flush;
         if (on_hand) on_hand(line);
         json ev = line;
@@ -203,6 +214,7 @@ SessionSummary run_session(const ConnectorSpec& spec, const SessionPlan& plan, H
     double m, lo, hi;
     bootstrap(results, m, lo, hi);
     sum.bb100 = m * 100, sum.ci_lo = lo * 100, sum.ci_hi = hi * 100;
+    if (luck.size() >= 2) sum.luck = luck_estimate(luck).to_json();
     std::ofstream(plan.out_dir + "/summary.json") << sum.to_json().dump(1) << "\n";
     return sum;
 }

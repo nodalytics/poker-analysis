@@ -32,7 +32,7 @@ target_include_directories(kestrel_cards PUBLIC ${phe_SOURCE_DIR}/cpp/include ${
 
 add_library(kestrel_core
   core/src/table.cpp core/src/icm.cpp core/src/net.cpp core/src/buckets.cpp core/src/headsup.cpp core/src/resolve.cpp
-  core/src/texassolver.cpp
+  core/src/texassolver.cpp core/src/luck.cpp core/src/models.cpp
   connectors/src/codec_acpc.cpp)
 target_include_directories(kestrel_core PUBLIC core/include connectors/include)
 target_link_libraries(kestrel_core PUBLIC nlohmann_json::nlohmann_json PRIVATE kestrel_cards)
@@ -69,6 +69,9 @@ if(NOT KESTREL_CORE_ONLY)
   target_link_libraries(kestrel_connectors PUBLIC kestrel_core PRIVATE httplib::httplib yaml-cpp::yaml-cpp)
   add_executable(kestreld tools/kestreld.cpp)
   target_link_libraries(kestreld PRIVATE kestrel_core kestrel_connectors)
+  if(OpenMP_CXX_FOUND)
+    target_link_libraries(kestreld PRIVATE OpenMP::OpenMP_CXX)
+  endif()
   list(APPEND KESTREL_BINARIES kestreld)
   if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(kestrel_connectors PRIVATE -Wall -Wextra)
@@ -95,6 +98,7 @@ add_test(NAME selftest
 include(GNUInstallDirs)
 install(TARGETS ${KESTREL_BINARIES} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES README.md docs/design.md DESTINATION ${CMAKE_INSTALL_DATADIR}/kestrel)
+install(PROGRAMS packaging/install-desktop.sh DESTINATION ${CMAKE_INSTALL_DATADIR}/kestrel)
 install(FILES connectors/slumbot.yaml DESTINATION ${CMAKE_INSTALL_DATADIR}/kestrel/connectors)
 install(DIRECTORY web/ DESTINATION ${CMAKE_INSTALL_DATADIR}/kestrel/web)
 install(DIRECTORY assets/ DESTINATION ${CMAKE_INSTALL_DATADIR}/kestrel/assets)

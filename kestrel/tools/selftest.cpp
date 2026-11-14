@@ -37,16 +37,17 @@ struct Check {
 }
 
 int main(int argc, char** argv) {
-    std::string vdir, model, pack;
+    std::string vdir, model, pack, nine;
     for (int k = 1; k + 1 < argc; k += 2) {
         std::string a = argv[k];
-        (a == "--vectors" ? vdir : a == "--model" ? model : a == "--pack" ? pack : vdir) = argv[k + 1];
+        (a == "--vectors" ? vdir : a == "--model" ? model : a == "--pack" ? pack : a == "--nine-max" ? nine : vdir) =
+            argv[k + 1];
     }
     if (vdir.empty() || model.empty() || pack.empty()) {
         std::fprintf(stderr, "usage: kestrel_selftest --vectors DIR --model MODEL_DIR --pack PACK_DIR\n");
         return 2;
     }
-    std::ifstream vf(vdir + "/vectors_nm17.json");
+    std::ifstream vf(nine.empty() ? vdir + "/vectors_nm17.json" : nine);
     json V = json::parse(vf);
     Net net(model);
     const NetInfo& info = net.info();

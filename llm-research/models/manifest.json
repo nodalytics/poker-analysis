@@ -1,4 +1,7 @@
 {
+ "champions": {
+  "9max-mtt": "nm17"
+ },
  "headsup_pack": {
   "archive_sha256": "736f292eae7e91bf18b12e899fdc0fedf58db00881d204a0fe866db610fc12e6",
   "asset": "headsup-pack-run2.tar.zst",
