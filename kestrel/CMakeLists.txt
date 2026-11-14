@@ -105,6 +105,12 @@ install(DIRECTORY assets/ DESTINATION ${CMAKE_INSTALL_DATADIR}/kestrel/assets)
 install(DIRECTORY testdata DESTINATION ${CMAKE_INSTALL_DATADIR}/kestrel)
 install(FILES ${KESTREL_DATA}/models/ninemax/nm17/net.bin ${KESTREL_DATA}/models/ninemax/nm17/net.json
         DESTINATION ${CMAKE_INSTALL_DATADIR}/kestrel/models/ninemax/nm17 OPTIONAL)
+option(KESTREL_SHIP_PACK "include the heads-up data pack (about 80 MB) in the install, so heads-up tables work out of the box" OFF)
+if(KESTREL_SHIP_PACK)
+  foreach(f tree.tsv avg.u8 flop_buckets.u8 turn_buckets.u8 river_cuts.f32 meta.txt)
+    install(FILES ${KESTREL_DATA}/blueprint/pack/${f} DESTINATION ${CMAKE_INSTALL_DATADIR}/kestrel/pack)
+  endforeach()
+endif()
 install(FILES ${phe_SOURCE_DIR}/LICENSE DESTINATION ${CMAKE_INSTALL_DATADIR}/kestrel/licenses
         RENAME PokerHandEvaluator.txt OPTIONAL)
 install(FILES ${iso_SOURCE_DIR}/LICENSE.txt DESTINATION ${CMAKE_INSTALL_DATADIR}/kestrel/licenses

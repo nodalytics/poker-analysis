@@ -155,6 +155,7 @@ int launch(const char* argv0) {
     o.web = (share / "web").string(), o.assets = (share / "assets").string();
     o.connectors = {(share / "connectors").string(), default_dir()};
     o.models = default_models_dir();
+    o.extra_models = {(share / "models").string(), (share / "models" / "ninemax").string()};
     o.out = (data / "sessions").string();
     o.pack = std::getenv("KESTREL_PACK") ? std::getenv("KESTREL_PACK")
              : fs::exists(share / "pack" / "tree.tsv") ? (share / "pack").string()
@@ -205,7 +206,7 @@ int main(int argc, char** argv) {
             else if (a == "--web") o.web = v;
             else if (a == "--assets") o.assets = v;
             else if (a == "--out") o.out = v;
-            else if (a == "--models") o.models = v;
+            else if (a == "--models") o.extra_models.push_back(v);
             else if (a == "--resolve-iters") o.resolve_iters = std::stoi(v);
             else if (a == "--texassolver") o.ts_bin = v;
             else if (a == "--texassolver-resources") o.ts_resources = v;

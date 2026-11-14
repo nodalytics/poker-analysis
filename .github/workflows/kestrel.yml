@@ -60,7 +60,7 @@ jobs:
           else echo "version=0.0.0-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"; fi
 
       - name: configure
-        run: cmake -S kestrel -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DKESTREL_STATIC=ON
+        run: cmake -S kestrel -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DKESTREL_STATIC=ON -DKESTREL_SHIP_PACK=ON
       - name: build
         run: cmake --build build -j 4
       - name: self-test
@@ -100,7 +100,8 @@ jobs:
         run: |
           tag="${GITHUB_REF#refs/tags/}"
           notes="Kestrel ${tag#kestrel-v}: builds for Linux (x86_64), macOS (Apple silicon) and Windows (x86_64).
-          Each archive holds the binaries, the 9-max tournament network (nm17) and the self-test data; every build
-          passed the self-test before it was packaged. The heads-up data pack is the separate release
-          headsup-pack-run2. Check downloads against SHA256SUMS."
+          Each archive holds the binaries, the web app, the heads-up data pack, the 9-max tournament network (nm17)
+          and the self-test data; every build passed the self-test before it was packaged. Unpack it and
+          double-click bin/kestreld (kestreld.exe on Windows): the app opens in your browser. Check downloads
+          against SHA256SUMS."
           gh release create "$tag" dist/* --repo "$GITHUB_REPOSITORY" --title "Kestrel ${tag#kestrel-v}" --notes "$notes"

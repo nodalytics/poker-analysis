@@ -7,7 +7,8 @@ namespace kestrel {
 struct ServeOptions {
     int port = 8790;
     std::string pack;
-    std::string models;  // models/ninemax: the 9-max networks, listed for the tables that can use them
+    std::string models;                     // installed model packages (kestreld models install)
+    std::vector<std::string> extra_models;  // more folders of models, e.g. the ones shipped beside the program
     int resolve_iters = 500;
     std::string ts_bin, ts_resources;  // TexasSolver's console_solver and resources/, if installed
     int ts_threads = 8;

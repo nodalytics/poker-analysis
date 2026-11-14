@@ -38,7 +38,7 @@ namespace kestrel {
 
 namespace {
 
-constexpr const char* VERSION = "0.1.0";
+constexpr const char* VERSION = "0.2.0";
 
 // the models and solvers a table can play with; heads-up connectors take the heads-up blueprint
 TexasSolverConfig ts_config(const ServeOptions& o) {
@@ -80,14 +80,18 @@ std::vector<std::pair<std::string, std::string>> nine_max_models(const ServeOpti
     for (auto& m : list_models(o.models.empty() ? default_models_dir() : o.models))
         if (m.verified && m.players == 9 && std::filesystem::exists(std::filesystem::path(m.dir) / "net.json"))
             out.push_back({m.name, m.dir});
-    std::error_code ec;
-    if (!o.models.empty())
-        for (auto& d : std::filesystem::directory_iterator(o.models, ec))
-            if (std::filesystem::exists(d.path() / "net.json") && !std::filesystem::exists(d.path() / "model.json")) {
-                std::string n = d.path().filename().string();
-                if (std::none_of(out.begin(), out.end(), [&](auto& x) { return x.first == n; }))
-                    out.push_back({n, d.path().string()});
-            }
+    std::vector<std::string> dirs = o.extra_models;
+    if (!o.models.empty()) dirs.insert(dirs.begin(), o.models);
+    for (auto& dir : dirs) {
+        std::error_code ec;
+        for (auto& d : std::filesystem::directory_iterator(dir, ec)) {
+            if (!std::filesystem::exists(d.path() / "net.json")) continue;
+            if (std::filesystem::exists(d.path() / "model.json") && !verify_model(d.path().string()).verified) continue;
+            std::string n = d.path().filename().string();
+            if (std::none_of(out.begin(), out.end(), [&](auto& x) { return x.first == n; }))
+                out.push_back({n, d.path().string()});
+        }
+    }
     return out;
 }
 
@@ -425,11 +429,15 @@ int serve(const ServeOptions& o) {
         hub.publish({{"type", "table"}, {"table", t->id}, {"connector", "practice"}, {"kind", "practice"},
                      {"status", "playing"}, {"model", model}, {"solver", "none"}, {"players", pc.players},
                      {"human", pc.human}});
-        t->th = std::thread([&hub, t, net, pc, pace] {
+        const std::string logdir = o.out + "/" + std::to_string(t->id) + "-practice";
+        t->th = std::thread([&hub, t, net, pc, pace, logdir] {
             {
                 std::lock_guard<std::mutex> lk(hub.mu);
                 t->status = "playing";
             }
+            std::error_code ec;
+            std::filesystem::create_directories(logdir, ec);
+            std::ofstream log(logdir + "/hands.jsonl", std::ios::app);  // every hand, for study afterwards
             uint64_t round = 0;
             while (!t->stop && t->done < t->hands) {
                 PracticeConfig c = pc;
@@ -464,6 +472,7 @@ int serve(const ServeOptions& o) {
                             t->state = ev;
                         }
                         hub.publish(ev);
+                        if (e["type"] == "practice_hand" && log) log << ev.dump() << "\n" << std::flush;
                         if (pace && e["type"] == "practice_decision") std::this_thread::sleep_for(std::chrono::milliseconds(pace));
                     }, pc.human ? std::function<int(const json&)>(ask) : nullptr);
                     if (pace) std::this_thread::sleep_for(std::chrono::milliseconds(pace * 2));
