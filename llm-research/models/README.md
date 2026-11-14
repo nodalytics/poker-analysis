@@ -28,6 +28,10 @@ abstraction build in `blueprint/` (see `blueprint/README.md`).
 | `nm4` | cash, 100bb, NeuRD | The least exploitable cash network: a fresh 30-minute exploiter wins +44 [+39, +50]; real tables +30.1 |
 | `nm11` (once its 24 hours are done) | cash, random 20–50bb stacks | Realistic depths |
 | `nm10` (once its 24 hours are done) | tournament, ICM, 5–15bb and 20–50bb tables | The tournament network |
+| `nm12` | tournament, ICM, 10–25bb, no open-limping, `mtt` menu, 24h | The first 10–25bb tournament network |
+| `nm13`, `nm14` | tournament, 10–25bb, the tournament regular in the pool, 12h | Phase C, before the ante |
+| `nm15`, `nm16` | tournament, 10–25bb, big-blind ante 1bb, 12h | The ante; `nm15` warm from `nm13`, `nm16` fresh |
+| **`nm17`** | tournament, 10–25bb, ante 1bb, half the final tables 2–8 handed, 12h | **The most complete tournament network**: heads-up and short-handed play in band |
 
 ## Heads-up data pack (GitHub Release)
 
