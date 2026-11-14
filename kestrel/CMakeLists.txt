@@ -38,6 +38,8 @@ endif()
 add_library(kestrel_cards STATIC
   ${phe_SOURCE_DIR}/cpp/src/evaluator7.c ${phe_SOURCE_DIR}/cpp/src/hash.c ${phe_SOURCE_DIR}/cpp/src/hashtable.c
   ${phe_SOURCE_DIR}/cpp/src/hashtable7.c ${phe_SOURCE_DIR}/cpp/src/dptables.c
+  ${phe_SOURCE_DIR}/cpp/src/evaluator5.c ${phe_SOURCE_DIR}/cpp/src/evaluator6.c
+  ${phe_SOURCE_DIR}/cpp/src/hashtable5.c ${phe_SOURCE_DIR}/cpp/src/hashtable6.c
   ${phe_SOURCE_DIR}/cpp/src/tables_bitwise.c
   ${iso_SOURCE_DIR}/src/hand_index.c ${iso_SOURCE_DIR}/src/deck.c)
 set_target_properties(kestrel_cards PROPERTIES C_STANDARD 99 POSITION_INDEPENDENT_CODE ON)
