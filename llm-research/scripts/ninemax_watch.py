@@ -190,6 +190,10 @@ def info(run):
         "recipe": ", ".join(recipe),
         "status": "training" if training else "finished",
         "hours": round(last.get("minutes", 0) / 60, 1),
+        # a run that has not reached its first evaluation: minutes since it started (its config.json is written then)
+        "running_minutes": round((time.time() - os.path.getmtime(os.path.join(run, "config.json"))) / 60)
+        if training and not pts and os.path.exists(os.path.join(run, "config.json"))
+        else None,
         "hands": last.get("hands", 0),
         "tag": last.get("tag"),
         "exploiter": last.get("exploiter"),

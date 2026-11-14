@@ -239,7 +239,7 @@ async function refreshInfo() {
     const info = await get("/api/info");
     const rows = Object.entries(info).reverse().map(([n, r]) => `<tr>
       <td><span class="dot ${r.status}"></span><b>${n}</b></td><td class="wrap">${r.mode}</td><td class="wrap">${r.recipe}</td>
-      <td>${r.status}</td><td class="num">${r.hours} h</td><td class="num">${sgn(r.tag)}</td>
+      <td>${r.status === "training" && !r.hands ? `training · started ${r.running_minutes ?? 0} min ago, first evaluation at 30 min` : r.status}</td><td class="num">${r.running_minutes != null && !r.hands ? r.running_minutes + " min" : r.hours + " h"}</td><td class="num">${sgn(r.tag)}</td>
       <td class="num">${sgn(r.exploiter)}</td>
       <td class="num">${r.fresh_exploit ? sgn(r.fresh_exploit.bb100) + ` <span class="muted">(${r.fresh_exploit.minutes.toFixed(0)} min)</span>` : "–"}</td>
       <td class="num">${sgn(r.tables, 1)}</td><td>${r.snapshots.join(", ") || "–"}</td></tr>`).join("");
@@ -280,7 +280,7 @@ async function refreshCharts() {
   try {
     const runs = await get("/api/runs");
     const series = Object.entries(runs).map(([name, pts], k) => ({ name, pts, color: COLORS[k % COLORS.length] }));
-    $("legend").innerHTML = series.map((s) => `<span><i style="background:${s.color}"></i>${s.name} (${s.pts.length} evaluations)</span>`).join("");
+    $("legend").innerHTML = series.map((s) => `<span><i style="background:${s.color}"></i>${s.name} (${s.pts.length ? s.pts.length + " evaluations" : "training: first evaluation after 30 min"})</span>`).join("");
     $("charts").innerHTML = chartHands(series) + METRICS.map(([k, t, n]) => chart(series, k, t, n)).join("");
     $("totals").innerHTML = totals(series);
     for (const sel of [$("snapRun"), $("liveRun")]) {
@@ -442,7 +442,12 @@ async function liveNext() {
     liveBatch = r.hands.length;
     liveLabel();
     C.load(r.hands); C.play();
-  } catch (e) { $("liveInfo").textContent = "could not deal: " + e.message; liveStop(); }
+  } catch (e) {
+    $("liveInfo").textContent = /checkpoint|404|500/i.test(e.message)
+      ? `${$("liveRun").value} has no checkpoint yet: a new run saves its first after 30 minutes`
+      : "could not deal: " + e.message;
+    liveStop();
+  }
 }
 C.onHandDone = () => { if (liveOn) { livePlayed++; liveLabel(); } };
 C.onEnd = () => { if (!liveOn) return; setTimeout(liveNext, 600); };
