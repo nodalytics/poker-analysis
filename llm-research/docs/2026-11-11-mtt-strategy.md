@@ -168,6 +168,40 @@ defence, heads-up push/fold. Until now every training hand was nine-handed.
 `nm17` (from `nm15` at 2.5 hours, ante, half the final tables 2–8 handed) trains 12 hours on the 3090 from
 2026-11-13 16:43 lab time. The automatic checks moved to the PRO 6000, since `nm17` fills the 3090.
 
+`nm17` at 4 hours: heads-up small blind plays 93% at 10bb, big blind defends 84% against a min-raise (both in band;
+`nm15` 53% and 24%). Short-handed training fixed heads-up within hours. At 8 hours `nm15` and `nm16` were no better
+than at 4 nine-handed (big blind 34–40%, all in at 8bb 8–50% of played hands).
+
+### Do the leaks cost anything? Played out, not charted (2026-11-14)
+
+Seven runs, with and without the ante, warm and fresh, land in the same place: they min-raise at 8bb where the
+charts shove, and defend the big blind about half as often as the charts. `scripts/ninemax_sizecheck.py` asks
+whether that loses against the players the networks meet. Each deal is played once per action (forced), then
+finished by the policies (the hero's own network after its forced action); 400,000 deals per action, everyone
+8bb (opens) or 20bb (big blind against the button's min-raise), ante 1bb. Scored in ICM equity with the training's
+tournament payouts (`--icm`), and in chips.
+
+| Spot (ICM, against the same network) | Best response | `nm15` 8h | `nm16` 8h | `nm17` 4h | Network gives up per spot |
+|---|---|---|---|---|---|
+| 8bb UTG: plays / of those all in | 17–25% / 87–96% | 14% / 55% | 13% / 53% | 13% / 53% | 0.02bb |
+| 8bb CO: plays / of those all in | 60–73% / 88–97% | 36% / 70% | 34% / 67% | 33% / 67% | 0.05–0.06bb |
+| Big blind vs button min-raise, 20bb: defends | **100%** | 36% | 38% | 37% | **1.0–1.1bb** |
+
+- **All in or min-raise hardly matters** against these opponents: the shove is better by 0.01–0.12bb on the hands
+  the network plays. With that little at stake the training has no reason to learn it; the 75–100% band is a
+  claim about good opponents, not about the training pool.
+- **The big blind's folding is the real leak**, and it holds in chips, in ICM and against `reg` (0.7bb per spot). In
+  ICM, folding costs about 1.0bb, calling 72o costs 0.8bb, and re-shoving 20bb with 72o *wins* 0.16bb: the networks'
+  button folds to a re-shove far too often. Two matching holes, one in each seat, and the gain (a big blind's worth
+  every time) is available against the network itself, so this is not only a matter of the opponents in the pool:
+  the training is not learning a large, available gain.
+- Against `reg`, opening at 8bb from UTG loses (it calls shoves with the top 30% at that price, ignoring ICM): a
+  limit of the regular as a training opponent.
+
+Next: find why self-play does not take the big blind's gain (the KL pull towards the slow magnet, NeuRD's logit
+bound, the critic's estimate in this spot), with short fine-tuning runs that change one at a time and measure the
+defence with this script.
+
 **Next:**
 - the checks now run by themselves on every new snapshot of a tournament run (`scripts/ninemax_autocheck.py` on the
   lab, results as `sense_<run>_<h>h.json` and `pushfold_check_<run>_<h>h.json`) and show on the watch page;
