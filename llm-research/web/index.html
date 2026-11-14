@@ -26,6 +26,9 @@
   .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 8px 0; }
   select, input { background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 6px;
            padding: 5px 8px; font: inherit; }
+  .totals { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; margin: 10px 0 14px; }
+  .totals div { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+  .totals b { display: block; font-size: 20px; } .totals span { color: var(--muted); font-size: 12px; }
   .charts { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 12px; }
   .chart { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px; }
   .chart h3 { margin: 0 0 4px; font-size: 13px; } .chart p { margin: 0 0 6px; color: var(--muted); font-size: 12px; }
@@ -91,7 +94,8 @@
   <!-- 1 + 2: on by default -->
   <section id="train" class="on">
     <h2>The runs <span class="muted">(what each one tests and where it stands; bb/100)</span></h2>
-    <p class="muted">Target: <b>9-max tournaments (MTT)</b>, with ICM. nm10 and nm12 are the current tournament runs, at 10–25bb (nm10 also 5–10bb), and they cannot open-limp: first in, they fold, raise 2.5× or shove. nm1–nm9 and nm11 are earlier cash runs, kept for reference. Tournament results are in ICM-equity chips, not comparable with cash.</p>
+    <p class="muted">Target: <b>9-max tournaments (MTT)</b>, with ICM. nm17 is the champion (10–25bb, a big-blind ante, half the final tables short-handed), shipped to Kestrel as mtt9. nm10–nm20 are tournament runs; nm1–nm9 and nm11 are earlier cash runs, kept for reference. Tournament results are in ICM-equity chips, not comparable with cash.</p>
+    <div class="totals" id="totals"></div>
     <div class="runs-wrap"><table class="runs" id="runsTable"></table></div>
     <h2>How it is learning <span class="muted">(1-vs-8 duplicate results, bb/100; x = hands trained)</span></h2>
     <div class="legend" id="legend"></div>
@@ -179,7 +183,36 @@ const METRICS = [
   ["random", "vs random players", "higher is better"],
   ["rate", "Training speed", "hands per second"],
   ["entropy", "Entropy of its play", "how mixed its strategy is"],
+  ["loss", "Training loss", "the policy and value loss of each update; noisy, its trend is what counts"],
+  ["kl", "Distance from its reference policy (KL)", "how far it moves from the slower magnet policy it is pulled towards"],
+  ["pull", "Strength of that pull", "the KL weight; some runs ramp it up"],
 ];
+// hands played in training against hours, per run
+function chartHands(series) {
+  const W = 380, H = 190, L = 44, R = 8, T = 8, B = 24;
+  const pts = series.flatMap((s) => s.pts);
+  if (!pts.length) return "";
+  const x1 = Math.max(...pts.map((p) => p.minutes / 60)) || 1, y1 = Math.max(...pts.map((p) => p.hands / 1e9)) || 1;
+  const X = (v) => L + v / x1 * (W - L - R), Y = (v) => T + (y1 - v) / y1 * (H - T - B);
+  let g = "";
+  for (const v of [0, y1 / 2, y1]) g += `<text x="${L - 4}" y="${Y(v) + 3}" text-anchor="end">${v.toFixed(1)}</text>`;
+  g += `<text x="${W - R}" y="${H - 6}" text-anchor="end">${x1.toFixed(0)} hours</text><text x="${L}" y="${H - 6}">0</text>`;
+  series.forEach((s) => {
+    if (!s.pts.length) return;
+    g += `<polyline fill="none" stroke="${s.color}" stroke-width="2" points="${s.pts.map((q) => X(q.minutes / 60) + "," + Y(q.hands / 1e9)).join(" ")}"/>`;
+    const q = s.pts[s.pts.length - 1];
+    g += `<circle cx="${X(q.minutes / 60)}" cy="${Y(q.hands / 1e9)}" r="3" fill="${s.color}"><title>${s.name}: ${(q.hands / 1e9).toFixed(2)} billion hands in ${(q.minutes / 60).toFixed(1)} hours</title></circle>`;
+  });
+  return `<div class="chart"><h3>Hands played in training</h3><p>billions of hands against hours, per run (the end of a line is where the run stands)</p><svg viewBox="0 0 ${W} ${H}" width="100%">${g}</svg></div>`;
+}
+function totals(series) {
+  const last = series.map((s) => s.pts[s.pts.length - 1]).filter(Boolean);
+  const hands = last.reduce((a, p) => a + p.hands, 0), hours = last.reduce((a, p) => a + p.minutes / 60, 0);
+  const newest = series.length ? series[series.length - 1] : null, np = newest ? newest.pts[newest.pts.length - 1] : null;
+  return [[`${(hands / 1e9).toFixed(1)} billion`, "hands played in training, all runs"], [`${hours.toFixed(0)} hours`, "of training, all runs"],
+          [`${series.length}`, "runs"], [np ? `${newest.name}: ${(np.hands / 1e9).toFixed(1)} B` : "–", "the newest run, hands so far"]]
+    .map(([v, l]) => `<div><b>${v}</b><span>${l}</span></div>`).join("");
+}
 function chart(series, key, title, note) {
   const W = 380, H = 190, L = 44, R = 8, T = 8, B = 24;
   const pts = series.flatMap((s) => s.pts.filter((p) => p[key] !== undefined));
@@ -248,7 +281,8 @@ async function refreshCharts() {
     const runs = await get("/api/runs");
     const series = Object.entries(runs).map(([name, pts], k) => ({ name, pts, color: COLORS[k % COLORS.length] }));
     $("legend").innerHTML = series.map((s) => `<span><i style="background:${s.color}"></i>${s.name} (${s.pts.length} evaluations)</span>`).join("");
-    $("charts").innerHTML = METRICS.map(([k, t, n]) => chart(series, k, t, n)).join("");
+    $("charts").innerHTML = chartHands(series) + METRICS.map(([k, t, n]) => chart(series, k, t, n)).join("");
+    $("totals").innerHTML = totals(series);
     for (const sel of [$("snapRun"), $("liveRun")]) {
       const cur = sel.value;
       sel.innerHTML = series.map((s) => `<option>${s.name}</option>`).join("");
