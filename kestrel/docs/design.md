@@ -146,6 +146,7 @@ Each port gets test vectors written by the Python code it replaces, and the C++ 
 | `structured` codec, 9-max tables through a connector, tournament simulator | next |
 | Defence floor in the heads-up engine | to port |
 | Qt 6 app | after the web app |
+| Open Poker (openpoker.ai, 6-max over WebSocket): sign up under an address the user chooses, then a connector | to do, waiting on the address |
 | CI: Linux, macOS, Windows builds, self-test, GitHub Releases on `kestrel-v*` tags | done |
 
 ## Order of work
