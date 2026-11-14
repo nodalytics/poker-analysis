@@ -40,6 +40,10 @@ from ninemax_selfplay import features, rule_probs
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 P = 9
 ICM = {"on": False}
+# with --ranges, each deal counts by the probability that the players before the hero would really have taken the
+# scripted actions (their folds, the button's min-raise) with their cards: the hero then faces their real ranges,
+# not every hand. Without it every deal counts once, which faces the hero with random hands (the first results).
+RANGES = {"on": False}
 
 
 def class_ids(cd, seat):
@@ -70,7 +74,8 @@ def probs_for(pol, T, g, bk, dealer):
 def play_spot(net, opp, dealer, menu, dev, deal, stack_bb, script, hero, hero_action):
     """One batch of deals: the scripted actions ((seat, slot), everyone in between folds), everyone before hero
     folds, hero takes hero_action (None: read its policy and stop), the rest is played out. Returns hero's result
-    in bb [G], or hero's policy [G, A]."""
+    in bb [G], or (hero's policy [G, A], the deal's weight [G]: the chance the players before the hero act as
+    scripted, 1 without --ranges)."""
     bk, rk, cd, pay = deal
     G = bk.shape[0]
     T = Tables(G, P, menu, dev, stacks=torch.full((G, P), int(stack_bb * BB), device=dev))
@@ -78,11 +83,16 @@ def play_spot(net, opp, dealer, menu, dev, deal, stack_bb, script, hero, hero_ac
     T.eq0 = icm(T.stack.float(), T.pay).float()
     g = torch.arange(G, device=dev)
     z = torch.zeros(G, dtype=torch.long, device=dev)
+    w = torch.ones(G, device=dev)
     for seat, a in [*script, (hero, hero_action)]:
         while int(T.actor[0]) != seat:
+            if hero_action is None and RANGES["on"]:
+                w = w * probs_for(opp, T, g, bk, dealer)[:, 0]
             T.step(g, z)
-        if a is None:
-            return policy(net, T, g, bk, dealer)[0]
+        if seat == hero and a is None:
+            return policy(net, T, g, bk, dealer)[0], w
+        if seat != hero and hero_action is None and RANGES["on"]:
+            w = w * probs_for(opp, T, g, bk, dealer)[:, a]
         T.step(g, torch.full((G,), a, dtype=torch.long, device=dev))
     while not bool(T.done.all()):
         g = (~T.done).nonzero().squeeze(1)
@@ -112,13 +122,14 @@ def measure(net, opp, dealer, menu, dev, n, chunk, stack_bb, script, hero, actio
             pay[:, 0] = 1.0
         deal = (*dealer.deal(chunk, cards=True), pay)
         cls = class_ids(torch.as_tensor(deal[2], device=dev), hero)
-        cnt += torch.bincount(cls, minlength=S).double()
-        pr = play_spot(net, opp, dealer, menu, dev, deal, stack_bb, script, hero, None)
-        pol.index_add_(0, cls, pr.double())
+        pr, w = play_spot(net, opp, dealer, menu, dev, deal, stack_bb, script, hero, None)
+        w = w.double()
+        cnt += torch.bincount(cls, weights=w, minlength=S)
+        pol.index_add_(0, cls, pr.double() * w[:, None])
         for k, a in enumerate(actions):
             u = play_spot(net, opp, dealer, menu, dev, deal, stack_bb, script, hero, a)
-            ev[:, k].index_add_(0, cls, u.double())
-    c = cnt.clamp(min=1)[:, None]
+            ev[:, k].index_add_(0, cls, u.double() * w)
+    c = cnt.clamp(min=1e-12)[:, None]
     return ev / c, cnt, pol / c
 
 
@@ -129,6 +140,8 @@ def main():
     ap.add_argument("--deals", type=int, default=400000)
     ap.add_argument("--chunk", type=int, default=50000)
     ap.add_argument("--icm", action="store_true", help="tournament payouts and ICM results, as in training")
+    ap.add_argument("--ranges", action="store_true", help="weight deals so the players before the hero act with "
+                    "their real ranges (folds, the button's min-raise), not with every hand")  # fmt: skip
     ap.add_argument("--out")
     ap.add_argument("--part", default="avg", help="checkpoint part: avg (the averaged policy) or net (the live one)")
     ap.add_argument("--lib", default=os.path.join(ROOT, "blueprint", "libbp5.so"))
@@ -142,15 +155,25 @@ def main():
     pre_s = dealer.pre_strength[torch.tensor(bk0[:, :, 0].ravel(), device=dev)]
     dealer.pre_q = (torch.quantile(pre_s, 0.88).item(), torch.quantile(pre_s, 0.65).item())
     ICM["on"] = a.icm
+    RANGES["on"] = a.ranges
     net, hands = load(a.run, B, dev, a.part)
     d = os.path.dirname(a.run) if a.run.endswith(".pt") else a.run
     menu = Menu(json.load(open(os.path.join(d, "config.json"))).get("menu", "medium"), dev)
     opp = net if a.opp == "self" else a.opp
     ALLIN, MIN = menu.A - 1, 2
     ante = RULES["ante"]
-    out = {"run": a.run, "part": a.part, "opp": a.opp, "icm": a.icm, "ante_bb": ante, "deals": a.deals, "spots": {}}
+    out = {
+        "run": a.run,
+        "part": a.part,
+        "ranges": a.ranges,
+        "opp": a.opp,
+        "icm": a.icm,
+        "ante_bb": ante,
+        "deals": a.deals,
+        "spots": {},
+    }
     print(
-        f"{a.run} ({a.part}) vs {a.opp}, {'ICM' if a.icm else 'chips'}, ante {ante:g}bb, {a.deals} deals per action",
+        f"{a.run} ({a.part}) vs {a.opp}, {'ICM' if a.icm else 'chips'}, {'real ranges' if a.ranges else 'every hand'}, ante {ante:g}bb, {a.deals} deals per action",
         flush=True,
     )
 

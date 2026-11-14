@@ -225,10 +225,37 @@ the same network (best response: 100% everywhere):
 - The poker-sense check (chips, winner-takes-all) reads 41–53% where the ICM check reads 28–42%: the network folds
   more under tournament payouts, as it should, but further than the payouts justify.
 
-So the learning signal itself does not favour calling in this spot. Next: read the training signal there directly
-(the NeuRD update per action and hand class, from training-like batches) and the critic's value against the
-played-out result, and check the spot against each pool member and the exploiter, which may punish a wide
-defence after the flop.
+#### Correction: the big blind faced random hands (2026-11-14)
+
+The size check above forced the button to min-raise, and everyone else to fold, **with every hand**. The big blind
+was facing a random hand, against which defending everything is right. `ninemax_sizecheck.py --ranges` now weights
+each deal by the chance that the players before the hero really fold and min-raise with their cards, so the hero
+faces their real ranges (`results/ninemax/ranges_check.sh`). Live networks, ICM:
+
+| Big blind vs button min-raise, 20bb | Best response defends | Network defends | Gives up per spot |
+|---|---|---|---|
+| `nm16` vs itself, every hand (above) | 100% | 34% | 1.05bb |
+| `nm16` vs itself, real ranges | 49% | 36% | **0.13bb** |
+| `nm17` vs itself, real ranges | 71% | 44% | **0.29bb** |
+| `nm16` vs `reg`, real ranges | 94% | 37% | 0.57bb |
+
+- **Most of the "1bb leak" was the test.** Against its own real min-raising range the network gives up 0.13–0.29bb a
+  spot; best responses are argmaxes over noisy class EVs, so even that is an upper bound.
+- `scripts/ninemax_signal.py` reads what one training step does in this spot (NeuRD push per action, the KL pull
+  and the entropy bonus, from the network's own sampled play, real ranges). Against itself the push is ~0 (fold
+  +0.03, call −0.04): the network sits at its own fixed point here. The KL and entropy terms are ~0.002, a hundred
+  times smaller than the policy term wherever it is not at rest, which is why `nm19` and `nm20` changed nothing.
+- **The pool pulls both ways and the network cannot tell its opponents apart:** against `tag` (a tight min-raiser)
+  the push is towards folding (fold +0.72), against `reg` away from it (fold −0.30, raise +1.33); `maniac` never
+  min-raises from the button (weight 0). With no opponent features, the big blind learns one defence for the mix.
+- The poker-sense check's own number (the network's defence) is unaffected, since the big blind cannot see the
+  button's cards; its 60–85% band is a chart claim about a wider opener than these networks.
+- The 8bb open spots barely move with `--ranges` (only folds precede the opener); their "best response plays"
+  shares jump between runs (CO 42–93%) because many classes are near zero EV and the argmax is noisy. Read the
+  "gives up" column (0.02–0.06bb), not the shares.
+
+So the big blind is not a training failure. What is left is small against itself, and against particular
+opponents it is a question of reading them, which a single network without opponent features cannot do.
 
 **Next:**
 - the checks now run by themselves on every new snapshot of a tournament run (`scripts/ninemax_autocheck.py` on the
