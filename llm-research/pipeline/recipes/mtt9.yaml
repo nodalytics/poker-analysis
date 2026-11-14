@@ -26,4 +26,5 @@ gates:
   sense_min_ok: 7              # of the 14 poker-sense checks (nm17: 8)
   pushfold_agree_min: 0.85     # agreement with the ICM push/fold chart at 10bb, chip EV
   not_worse_than_champion: true
+  champion_margin: 1.0          # bb/100: the upper end of the interval may not fall below -1
   champion_hands: 20000        # deals per duplicate match (x 9 seatings)

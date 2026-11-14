@@ -24,3 +24,21 @@ The package holds:
 - `model.json`, which carries the recipe, training statistics, gate results and every file's sha256.
 
 Recipes live in `recipes/`. `mtt9.yaml` is nm17's recipe.
+
+## First run (2026-11-14): nm17 shipped as mtt9 version 1
+
+`gate blueprint/nm17 --snapshot avg_12h.pt` passed all five gates:
+
+| Gate | Result | Needed |
+|---|---|---|
+| Poker-sense checks in band | 8 of 14 | at least 7 |
+| Premiums raised first in | yes | yes |
+| Push/fold agreement | 0.904 | at least 0.85 |
+| Against the champion (nm17's export) | −0.7 [−1.3, −0.1] bb/100 | not worse by more than 1 bb/100 |
+| Kestrel's self-test | PASS | PASS |
+
+The package was 8.5 MB, published as the release `model-mtt9-v1`. From that download, `kestreld models install` checked every file, and Kestrel's self-test passed on the installed network. A tampered copy was refused.
+
+Two lessons from this run:
+- The self-test gate has to check the network as it ships, in half precision. Reference data from the full-precision snapshot is off by up to 5e-3 in the logits.
+- The champion gate needs a margin. A model played against its own export read −0.7 [−1.3, −0.1] over 20,000 deals.

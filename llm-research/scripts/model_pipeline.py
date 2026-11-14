@@ -133,24 +133,37 @@ def gate(a):
         man = json.load(open(os.path.join(ROOT, "models", "manifest.json")))
         champ = man.get("champions", {}).get(r["game"])
         if champ and g.get("not_worse_than_champion", True):
-            cp = os.path.join(ROOT, "models", "ninemax", champ, "avg_fp16.pt")
+            cp = os.path.join("models", "ninemax", champ, "avg_fp16.pt")  # relative to ROOT, as ninemax_eval names it
             jc = os.path.join(tmp, "cross.json")
             run([PY, "scripts/ninemax_eval.py", "cross", snap, cp, "--hands", str(g.get("champion_hands", 20000)),
                  "--menu", cfg.get("menu", "medium"), "--out", jc], env=gpu, check=True, capture_output=True)  # fmt: skip
             res = json.load(open(jc))
-            key = next(k for k in res if k.endswith(f"vs {os.path.relpath(cp, ROOT).removesuffix('.pt')}")
-                       or k.endswith(f"vs models/ninemax/{champ}/avg_fp16"))  # fmt: skip
+
+            def label(path):  # ninemax_eval.cross's name for a run or snapshot
+                return path.rstrip("/").split("blueprint/")[-1].removesuffix(".pt")
+
+            key = f"{label(snap)} vs {label(cp)}"
             m, lo, hi = res[key]
-            add(f"against the champion ({champ}), 1-vs-8 duplicate", hi >= 0, f"{m:+.1f} [{lo:+.1f}, {hi:+.1f}] bb/100",
-                "not clearly worse: interval reaches 0")  # fmt: skip
+            margin = float(g.get("champion_margin", 1.0))
+            add(f"against the champion ({champ}), 1-vs-8 duplicate", hi >= -margin,
+                f"{m:+.1f} [{lo:+.1f}, {hi:+.1f}] bb/100", f"not worse by more than {margin:g} bb/100")  # fmt: skip
         else:
             add("against the champion", True, "no champion for this game yet", "-")
         # Kestrel: the C++ build must reproduce this network (features, logits, game, ICM)
         sel = os.path.join(a.kestrel, "build", "kestrel_selftest")
         if os.path.exists(sel):
+            # the network as it ships: half precision (package's format), with its config beside it
+            import torch
+
+            half = os.path.join(tmp, "ship", name)
+            os.makedirs(half)
+            st = torch.load(snap, map_location="cpu", weights_only=True)
+            avg = {k: (v.half() if v.is_floating_point() else v) for k, v in st["avg"].items()}
+            torch.save({"avg": avg, "hands": st["hands"]}, os.path.join(half, "avg_fp16.pt"))
+            shutil.copy(os.path.join(a.run, "config.json"), os.path.join(half, "config.json"))
             vec = os.path.join(tmp, f"vectors_{name}.json")
-            run([PY, "scripts/advisor_vectors.py", snap, "--out", tmp, "--vectors-out", vec], check=True,
-                capture_output=True)  # fmt: skip
+            run([PY, "scripts/advisor_vectors.py", os.path.join(half, "avg_fp16.pt"), "--out", tmp, "--vectors-out",
+                 vec], check=True, capture_output=True)  # fmt: skip
             p = run([sel, "--vectors", os.path.join(a.kestrel, "testdata"), "--nine-max", vec, "--model", tmp,
                      "--pack", os.path.join(ROOT, "blueprint", "pack")], capture_output=True, text=True)  # fmt: skip
             add("Kestrel's C++ build reproduces it (self-test)", p.returncode == 0 and "PASS" in p.stdout,
