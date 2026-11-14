@@ -25,9 +25,23 @@ namespace {
 constexpr const char* VERSION = "0.1.0";
 
 // the models and solvers a table can play with; heads-up connectors take the heads-up blueprint
-const char* SOLVERS[][3] = {{"none", "the model's own policy", "1"},
-                            {"kestrel-river", "safe river re-solve (CFR+ with the gadget), heads-up", "1"},
-                            {"texassolver", "TexasSolver on turn and river, heads-up (not built yet)", "0"}};
+TexasSolverConfig ts_config(const ServeOptions& o) {
+    TexasSolverConfig c;
+    c.bin = o.ts_bin, c.resources = o.ts_resources, c.threads = o.ts_threads;
+    return c;
+}
+
+json solvers_json(const ServeOptions& o) {
+    std::string why;
+    bool ts = ts_config(o).usable(&why);
+    return json::array({{{"name", "none"}, {"about", "the model's own policy"}, {"available", true}},
+                        {{"name", "kestrel-river"}, {"about", "safe river re-solve (CFR+ with the gadget), heads-up"},
+                         {"available", true}},
+                        {{"name", "texassolver"},
+                         {"about", ts ? "TexasSolver on the turn and river from the blueprint's ranges, heads-up"
+                                      : "TexasSolver: " + why},
+                         {"available", ts}}});
+}
 
 struct Engines {
     std::mutex mu;
@@ -38,6 +52,7 @@ struct Engines {
         if (!e) {
             e = std::make_shared<HUBlueprint>(o.pack);
             if (solver == "kestrel-river") e->set_resolve(o.resolve_iters);
+            if (solver == "texassolver") e->set_texassolver(ts_config(o));
         }
         return e;
     }
@@ -148,9 +163,8 @@ int serve(const ServeOptions& o) {
     });
 
     srv.Get("/v1/engines", [&](const httplib::Request&, httplib::Response& res) {
-        json s = json::array();
-        for (auto& x : SOLVERS) s.push_back({{"name", x[0]}, {"about", x[1]}, {"available", x[2][0] == '1'}});
-        reply(res, {{"models", models_json(o)}, {"solvers", s}, {"default", {{"model", "hu-blueprint"}, {"solver", "none"}}}});
+        reply(res, {{"models", models_json(o)}, {"solvers", solvers_json(o)},
+                    {"default", {{"model", "hu-blueprint"}, {"solver", "none"}}}});
     });
 
     srv.Post("/v1/sessions", [&](const httplib::Request& req, httplib::Response& res) {
@@ -160,8 +174,10 @@ int serve(const ServeOptions& o) {
         int hands = std::clamp(body.value("hands", 100), 1, 1000000);
         std::string model = body.value("model", "hu-blueprint"), solver = body.value("solver", "none");
         if (model != "hu-blueprint") return reply(res, {{"error", "model " + model + " cannot play this connector"}}, 400);
-        if (solver != "none" && solver != "kestrel-river")
-            return reply(res, {{"error", "solver " + solver + " is not available"}}, 400);
+        bool known = false;
+        for (auto& x : solvers_json(o))
+            if (x["name"] == solver && x["available"] == true) known = true;
+        if (!known) return reply(res, {{"error", "solver " + solver + " is not available"}}, 400);
         std::vector<std::string> errors;
         auto cs = all_connectors(o, &errors);
         auto it = std::find_if(cs.begin(), cs.end(), [&](auto& c) { return c.name == name; });
