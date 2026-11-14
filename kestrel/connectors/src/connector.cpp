@@ -67,6 +67,9 @@ ConnectorSpec load_connector(const std::string& path) {
     const json& r = c.raw;
     c.name = r.value("name", "");
     if (c.name.empty()) throw std::runtime_error(path + ": no name");
+    if (c.name.size() > 64 || c.name.find("..") != std::string::npos ||
+        c.name.find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-") != std::string::npos)
+        throw std::runtime_error(path + ": name may use letters, digits, '.', '_' and '-' only");
     c.codec = r.value("codec", "");
     if (c.codec.empty()) throw std::runtime_error(c.name + ": no codec");
     if (r.contains("game")) {
