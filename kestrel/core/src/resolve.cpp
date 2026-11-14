@@ -1,6 +1,10 @@
 // Safe river re-solving (Brown & Sandholm 2017, with the re-solve gadget of Burch, Johanson & Bowling 2014): a port
 // of llm-research/blueprint/resolve.cpp onto Kestrel's blueprint, so it runs on the data pack too.
 #include <algorithm>
+#include <stdexcept>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 #include <unordered_map>
 
 #include "kestrel/buckets.hpp"
@@ -11,6 +15,8 @@ extern "C" int evaluate_7cards(int a, int b, int c, int d, int e, int f, int g);
 namespace kestrel {
 
 namespace {
+
+constexpr int kThreads = 4;  // the root's subtrees in parallel: 4 threads were fastest on 64 cores (0.26 s vs 0.42)
 
 struct Combos {
     int a[1326], b[1326];
@@ -93,6 +99,29 @@ struct Resolver {
     std::vector<float> R, S;
     int us = 0;
 
+    struct Scratch {
+        std::vector<float> buf;
+        size_t top = 0;
+        float* get(size_t k) {
+            float* p = buf.data() + top;
+            top += k;
+            if (top > buf.size()) throw std::runtime_error("re-solve scratch overflow");
+            return p;
+        }
+    };
+    std::vector<Scratch> scratch;  // one per thread: [0] the caller, [1 + k] OpenMP thread k
+
+    // the current strategy (regret matching) at a node for every hand, into sg[a * n + i]
+    void current(int id, float* sg) const {
+        const int na = int(T[id].children.size()), n = b.n;
+        const float* x = R.data() + at.at(id);
+        for (int i = 0; i < n; ++i) {
+            float tot = 0;
+            for (int k = 0; k < na; ++k) tot += std::max(x[k * n + i], 0.0f);
+            for (int a = 0; a < na; ++a) sg[a * n + i] = tot > 0 ? std::max(x[a * n + i], 0.0f) / tot : 1.0f / na;
+        }
+    }
+
     Resolver(const HUBlueprint& p, const std::vector<int>& board) : bp(p), T(p.nodes_), purify(p.purify_) {
         const auto& C = CB();
         bool used[52] = {false};
@@ -148,6 +177,12 @@ struct Resolver {
         }
         R.assign(total, 0.0f);
         S.assign(total, 0.0f);
+        int threads = 1;
+#ifdef _OPENMP
+        threads += std::min(kThreads, omp_get_max_threads());
+#endif
+        scratch.assign(threads, Scratch{});
+        for (auto& sc : scratch) sc.buf.resize(size_t(1326) * 80 * 64);
     }
 
     void terminal(int id, int trav, const float* ro, float* out) const {
@@ -162,36 +197,56 @@ struct Resolver {
         }
     }
 
-    void cfr(int id, int trav, const float* rt, const float* ro, float* out, float weight) {
+    // CFR+ for player trav. At the root (par) the actions' subtrees run in parallel; they touch disjoint regrets and
+    // their values are summed in action order, so the result is the serial solve's
+    void cfr(int id, int trav, const float* rt, const float* ro, float* out, float weight, Scratch& ar, bool par) {
         const auto& nd = T[id];
         const int n = b.n;
         if (nd.kind != 0) return terminal(id, trav, ro, out);
         const int na = int(nd.children.size());
-        std::vector<float> sg(size_t(na) * n), child(n), reach(n);
-        for (int a = 0; a < na; ++a)
-            for (int i = 0; i < n; ++i) sg[size_t(a) * n + i] = strat(true, false, id, i, a);
-        std::fill(out, out + n, 0.0f);
-        float* Rn = R.data() + at[id];
-        float* Sn = S.data() + at[id];
-        if (nd.player == trav) {
-            std::vector<float> vals(size_t(na) * n);
+        const size_t mark = ar.top;
+        const bool mine = nd.player == trav;
+        float* sg = ar.get(size_t(na) * n);
+        current(id, sg);
+        float* vals = ar.get(size_t(na) * n);
+#ifdef _OPENMP
+        if (par && na > 1) {
+            float* reach = ar.get(size_t(na) * n);
+            for (int a = 0; a < na; ++a)
+                for (int i = 0; i < n; ++i) reach[size_t(a) * n + i] = (mine ? rt[i] : ro[i]) * sg[size_t(a) * n + i];
+#pragma omp parallel for schedule(dynamic, 1) num_threads(std::min(kThreads, omp_get_max_threads()))
             for (int a = 0; a < na; ++a) {
-                for (int i = 0; i < n; ++i) reach[i] = rt[i] * sg[size_t(a) * n + i];
-                cfr(nd.children[a], trav, reach.data(), ro, vals.data() + size_t(a) * n, weight);
-                for (int i = 0; i < n; ++i) out[i] += sg[size_t(a) * n + i] * vals[size_t(a) * n + i];
+                const float* r = reach + size_t(a) * n;
+                cfr(nd.children[a], trav, mine ? r : rt, mine ? ro : r, vals + size_t(a) * n, weight,
+                    scratch[1 + omp_get_thread_num()], false);
             }
+        } else
+#endif
+        {
+            float* reach = ar.get(n);
+            for (int a = 0; a < na; ++a) {
+                for (int i = 0; i < n; ++i) reach[i] = (mine ? rt[i] : ro[i]) * sg[size_t(a) * n + i];
+                cfr(nd.children[a], trav, mine ? reach : rt, mine ? ro : reach, vals + size_t(a) * n, weight, ar,
+                    false);
+            }
+        }
+        std::fill(out, out + n, 0.0f);
+        if (mine) {
+            const size_t off = at.at(id);
+            float* Rn = R.data() + off;
+            float* Sn = S.data() + off;
+            for (int a = 0; a < na; ++a)
+                for (int i = 0; i < n; ++i) out[i] += sg[size_t(a) * n + i] * vals[size_t(a) * n + i];
             for (int a = 0; a < na; ++a)
                 for (int i = 0; i < n; ++i) {
                     Rn[a * n + i] = std::max(Rn[a * n + i] + vals[size_t(a) * n + i] - out[i], 0.0f);
                     Sn[a * n + i] += weight * rt[i] * sg[size_t(a) * n + i];
                 }
         } else {
-            for (int a = 0; a < na; ++a) {
-                for (int i = 0; i < n; ++i) reach[i] = ro[i] * sg[size_t(a) * n + i];
-                cfr(nd.children[a], trav, rt, reach.data(), child.data(), weight);
-                for (int i = 0; i < n; ++i) out[i] += child[i];
-            }
+            for (int a = 0; a < na; ++a)
+                for (int i = 0; i < n; ++i) out[i] += vals[size_t(a) * n + i];
         }
+        ar.top = mark;
     }
 
     void best_response(bool sub, int id, int br, const float* ro, float* out) const {
@@ -228,8 +283,8 @@ struct Resolver {
         };
         for (int t = 1; t <= iters; ++t) {
             for (int i = 0; i < n; ++i) ro[i] = rg[i] * enter(i);
-            cfr(root, us, r_us, ro.data(), v.data(), float(t));
-            cfr(root, opp, rg.data(), r_us, v.data(), float(t));
+            cfr(root, us, r_us, ro.data(), v.data(), float(t), scratch[0], true);
+            cfr(root, opp, rg.data(), r_us, v.data(), float(t), scratch[0], true);
             for (int i = 0; i < n; ++i) {
                 float e = enter(i), mix = e * v[i] + (1 - e) * cbv[i];
                 g[i] = std::max(g[i] + v[i] - mix, 0.0f);
