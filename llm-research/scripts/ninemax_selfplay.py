@@ -43,7 +43,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from icm import end_stacks, icm, scenarios
-from ninemax_engine import BB, RULES, STACK, Dealer, Menu, Tables, strength
+from ninemax_engine import BB, RULES, STACK, Dealer, Menu, Tables, read_buckets, strength
 
 # What the network sees and plays for, set once per run (main, or from a run's config.json by the tools that load it):
 #   stacks   None: every hand 100bb (cash). (lo, hi): each seat's stack log-uniform in lo..hi big blinds, and the
@@ -106,7 +106,8 @@ def features(T, g, i):
 class NineNet(nn.Module):
     def __init__(self, nfeat, A, buckets, hidden=512, blocks=4, emb=32):
         super().__init__()
-        self.emb = nn.ModuleList([nn.Embedding(169, emb)] + [nn.Embedding(buckets, emb) for _ in range(3)])
+        per_street = list(buckets) if isinstance(buckets, (list, tuple)) else [buckets] * 3  # flop, turn, river
+        self.emb = nn.ModuleList([nn.Embedding(169, emb)] + [nn.Embedding(b, emb) for b in per_street])
         self.inp = nn.Linear(nfeat + 4 * emb + 1, hidden)
         self.blocks = nn.ModuleList(
             nn.Sequential(nn.LayerNorm(hidden), nn.Linear(hidden, hidden), nn.GELU(), nn.Linear(hidden, hidden))
@@ -300,7 +301,7 @@ def context(G, P, dev):
     return None, None
 
 
-def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None, assign=None, ctx=None):
+def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None, assign=None, ctx=None, views=None):
     """Play len(bk) hands; policies[seat] is a NineNet or a rule name (rule_probs). Returns payoffs [G, P] (chips)
     and, with record, the decisions (only those of the policy `learner`, or of a list of policies, when given), each
     with the index of the policy that took it (last field).
@@ -310,7 +311,10 @@ def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None,
     tables, sets the time, so one loop over a mixed batch is several times faster than one loop per seating.
 
     ctx (stacks, payouts): the tables' starting stacks and tournament payouts; drawn for the run's mode if None. In
-    tournament mode the returned results are ICM equity changes in chip equivalents, not chips."""
+    tournament mode the returned results are ICM equity changes in chip equivalents, not chips.
+
+    views {id(policy): (bk, dealer)}: a network that reads another abstraction sees the same cards through its own
+    buckets and hand strength (ninemax_absmatch.py); the others use bk and dealer."""
     G, P = bk.shape[0], bk.shape[1]
     stacks, pay = ctx if ctx is not None else context(G, P, dev)
     T = Tables(G, P, menu, dev, stacks=stacks)
@@ -340,6 +344,13 @@ def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None,
                 continue
             if isinstance(pol, str):
                 probs = rule_probs(pol, T, g[m], i[m], legal[m], s[m], dealer, bk)
+            elif views and id(pol) in views:
+                vbk, vdl = views[id(pol)]
+                gm, im = g[m], i[m]
+                sv = strength(vdl, vbk[gm], T.street[gm]).gather(1, im[:, None]).squeeze(1)
+                with torch.no_grad():
+                    lg, _ = pol(feat[m], vbk[gm, im], T.street[gm], sv)
+                probs = F.softmax(masked(lg, legal[m]), 1)
             else:
                 with torch.no_grad():
                     lg, _ = pol(feat[m], mybk[m], T.street[g][m], s[m])
@@ -445,7 +456,8 @@ def main():
     dealer.pre_q = (torch.quantile(pre_s, 0.88).item(), torch.quantile(pre_s, 0.65).item())
     menu = Menu(args.menu, dev)
     nfeat = n_features(args.players, menu, dev)
-    net = NineNet(nfeat, menu.A, B).to(dev)
+    buckets = list(read_buckets(args.abs))
+    net = NineNet(nfeat, menu.A, buckets).to(dev)
     magnet, avg = copy.deepcopy(net), copy.deepcopy(net)
     for m in (magnet, avg):
         m.requires_grad_(False)
@@ -470,7 +482,7 @@ def main():
     rules = [x for x in args.pool.split(",") if x] if args.pool else []
     snaps = []
     pool = (rules or None) if args.pool_share > 0 else None
-    json.dump({**vars(args), "nfeat": nfeat, "actions": menu.A}, open(os.path.join(args.out, "config.json"), "w"),
+    json.dump({**vars(args), "nfeat": nfeat, "actions": menu.A, "buckets": buckets}, open(os.path.join(args.out, "config.json"), "w"),
               indent=1)  # fmt: skip
     log = open(os.path.join(args.out, "progress.log"), "a", buffering=1)
     t0 = last_eval = time.time()

@@ -285,3 +285,34 @@ stream per deal, so deals are fast and reproducible. `scripts/dealer_check.py` t
 No bias at this sample. Provably fair shuffles like CoinPoker's (a committed seed, randomness from the players, a
 record on the blockchain) prove a real-money deal to its players. They would add nothing to training, which needs
 speed and reproducibility.
+
+### Card buckets: different counts per street, and non-uniform cuts (started 2026-11-14)
+
+Every network so far has seen the cards through the same abstraction: 200 buckets on each of the flop, turn and
+river, with equal-population cuts on hand strength (EHS² on the flop and turn, HS on the river). The test asks
+whether spending the buckets differently helps.
+
+`blueprint/abstraction.cpp` now takes `OUT FLOP TURN RIVER [GAMMA]`:
+- The counts can differ per street.
+- With `GAMMA > 1`, cut k sits at quantile 1 − (1 − k/B)^GAMMA, which makes buckets narrower towards the strong end.
+- A cut that lands on the previous cut's value moves to the next distinct value, since a tie can't be split.
+
+| Run | Abstraction | Flop / turn / river | Notes |
+|---|---|---|---|
+| `nm21` | `blueprint/out` (control) | 200 / 200 / 200 | equal-population, as every earlier run |
+| `nm22` | `abs_100_200_500` | 100 / 200 / 500 | coarse to fine (1 empty river bucket) |
+| `nm23` | `abs_1000_500_200` | 1,000 / 500 / 200 | fine to coarse |
+| `nm24` | `abs_200g2` | 200 / 200 / 200, gamma 2 | narrower near the top. 16 river and 3 turn buckets stay empty, because the warp puts its top cuts inside the nut tie (0.44% of river states share full strength) |
+
+**Setup:**
+- Each run is the champion's recipe (nm17, short-handed final tables included), trained fresh for 6 hours.
+- All four share the 96 GB GPU, so each gets the same hardware.
+- `results/ninemax/abs_arms.sh` has the launch commands.
+- The rebuilt equal-count builder matches `blueprint/out` on the flop and river exactly; 2 of 14 million turn states moved by one bucket.
+
+**Comparison:**
+1. Each run's 1-vs-8 duplicate results against the rule players, from its training log.
+2. A round-robin head-to-head between the runs: `scripts/ninemax_absmatch.py` deals the cards once, and each network reads them through its own buckets, via the library's new `bp_bucket_cards`. Its smoke test, nm17 against a 90-second run on 1,000/500/200, read +7.0 and −9.4, and both abstractions agreed on every showdown rank.
+3. The poker-sense checks.
+
+The trainer, network and tools take per-street counts from the abstraction's `meta.txt`, and a run's config records its counts as `buckets`. Abstractions with one count work as before.

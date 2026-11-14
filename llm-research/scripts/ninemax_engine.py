@@ -27,6 +27,7 @@ fixed: 0 fold, 1 check/call, 2..2+S-1 the menu sizes, last all-in; illegal slots
 """
 
 import ctypes
+import os
 
 import numpy as np
 import torch
@@ -63,13 +64,27 @@ MENUS = {
 }
 
 
+def read_buckets(absdir):
+    """The abstraction's bucket counts (flop, turn, river) from its meta.txt: per street when it gives them
+    (abstraction.cpp OUT FLOP TURN RIVER), else the one count for all three."""
+    meta = {}
+    for line in open(os.path.join(absdir, "meta.txt")):
+        k, _, v = line.partition(" ")
+        meta[k] = v.strip()
+    b = int(meta["buckets"])
+    return tuple(int(meta.get(f"buckets_{s}", b)) for s in ("flop", "turn", "river"))
+
+
 class Dealer:
     def __init__(self, lib, absdir, players, buckets, dev, seed=1):
         self.lib = ctypes.CDLL(lib)
         if self.lib.bp_init(absdir.encode()) != 0:
             raise RuntimeError(f"no buckets in {absdir}")
         self.lib.bp_deal_n.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_uint64] + [ctypes.c_void_p] * 3
-        self.P, self.B, self.dev, self.seed = players, buckets, dev, seed
+        self.P, self.dev, self.seed = players, dev, seed
+        self.Bs = read_buckets(absdir)  # flop, turn, river
+        self.B = self.Bs[2]
+        buckets = self.B
         # pre-flop class strength: the mean final (river) bucket of each of the 169 classes, scaled to 0..1
         bk, _, _ = self.raw(1 << 18)
         fin = bk[:, :, 3].ravel() / (buckets - 1)
@@ -87,6 +102,17 @@ class Dealer:
         self.seed += 1
         self.lib.bp_deal_n(n, self.P, self.seed, bk.ctypes.data, rk.ctypes.data, cd.ctypes.data if cards else None)
         return bk, rk, cd
+
+    def buckets_for(self, cards):
+        """This abstraction's buckets and the showdown ranks for cards dealt elsewhere: cards [n, 2P + 5] (numpy)."""
+        n = cards.shape[0]
+        c = np.ascontiguousarray(cards, dtype=np.int32)
+        bk = np.zeros((n, self.P, 4), np.int32)
+        rk = np.zeros((n, self.P), np.int32)
+        self.lib.bp_bucket_cards.argtypes = [ctypes.c_int, ctypes.c_int] + [ctypes.c_void_p] * 3
+        self.lib.bp_bucket_cards(n, self.P, c.ctypes.data, bk.ctypes.data, rk.ctypes.data)
+        t = lambda a: torch.tensor(a, device=self.dev, dtype=torch.long)  # noqa: E731
+        return t(bk), t(rk)
 
     def deal(self, n, cards=False):
         bk, rk, cd = self.raw(n, cards)
@@ -284,4 +310,5 @@ def strength(dealer, bk, street):
     """0..1 strength of each player's current bucket: pre-flop class strength, else bucket / (B - 1)."""
     b = bk.gather(2, street[:, None, None].expand(-1, bk.shape[1], 1)).squeeze(2)
     pre = dealer.pre_strength[b.clamp(max=168)]
-    return torch.where(street[:, None] == 0, pre, b.float() / (dealer.B - 1))
+    denom = torch.tensor([1.0, *(x - 1.0 for x in dealer.Bs)], device=b.device)[street][:, None]
+    return torch.where(street[:, None] == 0, pre, b.float() / denom)
