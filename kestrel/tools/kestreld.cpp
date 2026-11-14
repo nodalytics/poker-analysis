@@ -19,6 +19,7 @@
 #include <thread>
 
 #include "kestrel/gateway.hpp"
+#include "kestrel/buckets.hpp"
 #include "kestrel/headsup.hpp"
 #include "kestrel/luck.hpp"
 #include "kestrel/models.hpp"
@@ -41,6 +42,7 @@ int usage() {
                  "       kestreld play CONNECTOR --hands N --out DIR [--pack DIR] [--model M]\n"
                  "                     [--solver none|kestrel-river|texassolver] [--resolve-iters N]\n"
                  "                     [--texassolver BIN --texassolver-resources DIR] [--seed S] [--max-errors E]\n"
+                 "                     table connectors (codec structured): --model <9-max model folder> [--tournaments N]\n"
                  "       kestreld                         (no arguments: start the app and open it, as a double-click does)\n"
                  "       kestreld serve [--port P] [--lan on|off] [--pack DIR] [--models DIR] [--connectors DIR]...\n"
                  "                      [--web DIR] [--assets DIR]\n"
@@ -285,6 +287,7 @@ int main(int argc, char** argv) {
             else if (a == "--seed") plan.seed = std::stoull(v);
             else if (a == "--max-errors") plan.max_errors = std::stoi(v);
             else if (a == "--model") plan.model = v;
+            else if (a == "--tournaments") plan.tournaments = std::stoi(v);
             else if (a == "--solver") plan.solver = v;
             else if (a == "--resolve-iters") iters = std::stoi(v);
             else if (a == "--texassolver") ts.bin = v;
@@ -294,6 +297,26 @@ int main(int argc, char** argv) {
         if (plan.out_dir.empty()) return usage();
         std::signal(SIGINT, on_signal);
         std::signal(SIGTERM, on_signal);
+        int n = 0;
+        double total = 0;
+        auto progress = [&](const json& h) {
+            total += h["result_bb"].get<double>();
+            if (++n % 50 == 0) std::printf("%d hands, %+.1f bb/100 so far\n", n, total / n * 100), std::fflush(stdout);
+        };
+        if (spec.codec == "structured") {  // a 2-9 handed table: --model is a 9-max model folder (net.json, net.bin)
+            if (plan.model == "hu-blueprint") throw std::runtime_error("this connector needs --model <9-max model folder>");
+            buckets_init(pack);
+            Net net(plan.model);
+            auto s = run_ninemax_session(spec, plan, net, progress, &g_stop, [](const json& e) {
+                if (e["type"] == "replay_error")
+                    std::fprintf(stderr, "hand %s: could not replay: %s\n", e["hand"].dump().c_str(), e["error"].get<std::string>().c_str());
+                if (e["type"] == "tournament")
+                    std::printf("tournament %zu: place %s\n", e["tournaments"].get<size_t>(), e["place"].dump().c_str()),
+                        std::fflush(stdout);
+            });
+            std::printf("%s\n", s.to_json().dump().c_str());
+            return 0;
+        }
         if (plan.model != "hu-blueprint") throw std::runtime_error("model " + plan.model + " cannot play this connector");
         std::string why;
         if (plan.solver == "texassolver" && !ts.usable(&why)) throw std::runtime_error(why);
@@ -302,16 +325,7 @@ int main(int argc, char** argv) {
         HUBlueprint engine(pack);
         if (plan.solver == "kestrel-river") engine.set_resolve(iters);
         if (plan.solver == "texassolver") engine.set_texassolver(ts);
-        int n = 0;
-        double total = 0;
-        auto s = run_session(
-            spec, plan, engine,
-            [&](const json& h) {
-                total += h["result_bb"].get<double>();
-                if (++n % 50 == 0)
-                    std::printf("%d hands, %+.1f bb/100 so far\n", n, total / n * 100), std::fflush(stdout);
-            },
-            &g_stop);
+        auto s = run_session(spec, plan, engine, progress, &g_stop);
         std::printf("%s\n", s.to_json().dump().c_str());
         return 0;
     } catch (const std::exception& e) {

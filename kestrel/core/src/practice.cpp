@@ -14,8 +14,6 @@ namespace kestrel {
 
 using json = nlohmann::json;
 
-namespace {
-
 // position names for n players by seat (0 small blind, 1 big blind, the last occupied seat the button)
 std::vector<std::string> position_names(int n) {
     static const char* nine[] = {"SB", "BB", "UTG", "UTG+1", "MP", "LJ", "HJ", "CO", "BTN"};
@@ -35,6 +33,9 @@ std::string bb_str(double chips) {
     std::snprintf(b, sizeof b, std::fabs(x - std::round(x)) < 1e-9 ? "%.0f" : "%.1f", x);
     return b;
 }
+
+namespace {
+
 
 }  // namespace
 

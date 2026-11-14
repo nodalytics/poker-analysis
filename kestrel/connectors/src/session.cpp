@@ -6,10 +6,12 @@
 #include <fstream>
 #include <random>
 #include <stdexcept>
+#include <thread>
 #include <vector>
 
 #include "kestrel/codec_acpc.hpp"
 #include "kestrel/luck.hpp"
+#include "kestrel/ninemax_spot.hpp"
 
 namespace kestrel {
 
@@ -17,6 +19,7 @@ json SessionSummary::to_json() const {
     json j = {{"connector", connector}, {"hands", hands},      {"bb100", bb100},         {"ci95", {ci_lo, ci_hi}},
               {"errors", errors},       {"off_tree", off_tree}, {"fallbacks", fallbacks}, {"stopped", stopped}};
     if (!luck.is_null()) j["luck_adjusted"] = luck;
+    if (!tournaments.is_null()) j["tournaments"] = tournaments;
     return j;
 }
 
@@ -25,6 +28,18 @@ namespace {
 json at(const json& r, const json& fields, const char* key) {
     if (!fields.contains(key)) return nullptr;
     const json& f = fields[key];
+    if (f.is_object() && f.contains("value")) return render(f["value"], {});
+    if (f.is_object() && f.contains("items")) {
+        json::json_pointer p(f.value("at", ""));
+        json out = json::array();
+        if (!r.contains(p) || !r[p].is_array()) return nullptr;
+        for (auto& item : r[p]) {
+            json o = json::object();
+            for (auto& [k, sub] : f["items"].items()) o[k] = at(item, f["items"], k.c_str());
+            out.push_back(o);
+        }
+        return out;
+    }
     std::string ptr = f.is_string() ? f.get<std::string>() : f.value("at", "");
     json::json_pointer p(ptr);
     if (!r.contains(p)) return nullptr;
@@ -69,6 +84,21 @@ void bootstrap(const std::vector<double>& x, double& mean, double& lo, double& h
     lo = m[25], hi = m[974];
 }
 
+}
+
+std::string id_of(const json& v) { return v.is_string() ? v.get<std::string>() : v.is_null() ? "" : v.dump(); }
+
+double num(const json& v, double dflt = 0) {
+    if (v.is_number()) return v.get<double>();
+    if (v.is_string()) try {
+            return std::stod(v.get<std::string>());
+        } catch (...) {
+        }
+    return dflt;
+}
+
+bool truthy(const json& v) {
+    return v.is_boolean() ? v.get<bool>() : v.is_number() ? v.get<double>() != 0 : v.is_string() ? !v.get<std::string>().empty() : false;
 }
 
 SessionSummary run_session(const ConnectorSpec& spec, const SessionPlan& plan, HUBlueprint& engine,
@@ -216,6 +246,222 @@ SessionSummary run_session(const ConnectorSpec& spec, const SessionPlan& plan, H
     sum.bb100 = m * 100, sum.ci_lo = lo * 100, sum.ci_hi = hi * 100;
     if (luck.size() >= 2) sum.luck = luck_estimate(luck).to_json();
     std::ofstream(plan.out_dir + "/summary.json") << sum.to_json().dump(1) << "\n";
+    return sum;
+}
+
+// ---- 2 to 9 handed tables (the structured codec): poll the table state, answer when it is our turn ----
+SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan& plan, const Net& net,
+                                   const std::function<void(const json&)>& on_hand, const std::atomic<bool>* stop,
+                                   const std::function<void(const json&)>& on_event) {
+    auto emit = [&](json e) {
+        if (on_event) on_event(std::move(e));
+    };
+    if (spec.codec != "structured") throw std::runtime_error(spec.name + ": 9-max models play structured connectors");
+    const json& routes = spec.raw["routes"];
+    const json& flow = spec.raw["flow"];
+    if (!flow.contains("state")) throw std::runtime_error(spec.name + ": flow.state (the table state route) is required");
+    auto tr = make_transport(spec);
+    const json& state_route = routes[flow["state"].get<std::string>()];
+    const json& act_route = routes[flow["act"].get<std::string>()];
+    const json fields = spec.raw["fields"];
+    const json answer = spec.raw.value("answer", json::object());
+    const json amap = answer.value("actions", json::object());
+    const bool send_add = answer.value("amount", "to") == "add";
+    const double ascale = answer.value("scale", 1.0);
+    const auto poll = std::chrono::milliseconds(spec.raw["transport"].value("poll_ms", 250));
+    std::string token_ptr;
+    if (spec.raw.contains("session") && spec.raw["session"].contains("token_field"))
+        token_ptr = spec.raw["session"]["token_field"].get<std::string>();
+
+    std::filesystem::create_directories(plan.out_dir);
+    std::ofstream log(plan.out_dir + "/hands.jsonl", std::ios::app);
+    std::mt19937_64 rng(plan.seed);
+    SessionSummary sum;
+    sum.connector = spec.name;
+    sum.tournaments = json::array();
+    std::vector<double> results;
+    std::map<std::string, std::string> vars;
+    auto keep_token = [&](const json& r) {
+        if (!token_ptr.empty()) {
+            json::json_pointer p(token_ptr);
+            if (r.contains(p) && r[p].is_string()) vars["token"] = r[p].get<std::string>();
+        }
+    };
+    auto platform_error = [&](const json& r) {
+        json e = at(r, fields, "error");
+        return e.is_null() || (e.is_string() && e.get<std::string>().empty()) ? std::string() : id_of(e);
+    };
+    auto call = [&](const std::string& step) {
+        json r = tr->call(routes[flow[step].get<std::string>()], vars);
+        keep_token(r);
+        return r;
+    };
+    if (flow.contains("login"))
+        if (auto e = platform_error(call("login")); !e.empty()) throw std::runtime_error(spec.name + ": login refused: " + e);
+    if (auto e = platform_error(call("start")); !e.empty()) throw std::runtime_error(spec.name + ": could not join: " + e);
+
+    std::string cur_hand, acted_at;
+    double cur_start = 0, cur_bb = 0;
+    json cur_line;
+    auto my_start = [&](const NMSpot& sp) {
+        for (auto& p : sp.players)
+            if (p.id == sp.me) return p.stack;
+        return 0.0;
+    };
+    auto close_hand = [&](double now_chips, const json& r) {
+        if (cur_hand.empty() || cur_bb <= 0) return;
+        double won = (now_chips - cur_start) / cur_bb;
+        results.push_back(won);
+        cur_line["result_bb"] = won;
+        if (json b = at(r, fields, "last_board"); !b.is_null()) cur_line["board"] = cards(b);
+        log << cur_line.dump() << "\n" << std::flush;
+        if (on_hand) on_hand(cur_line);
+        json ev = cur_line;
+        ev["type"] = "hand";
+        ev["table9"] = true;
+        ev["hand"] = int(results.size());
+        emit(ev);
+    };
+    int idle = 0, t_start = 0, translated = 0, decisions = 0;
+    while (true) {
+        if (stop && *stop) {
+            sum.stopped = "stopped";
+            break;
+        }
+        json r = tr->call(state_route, vars);
+        keep_token(r);
+        if (auto e = platform_error(r); !e.empty()) {
+            if (++sum.errors >= plan.max_errors) {
+                sum.stopped = "too many platform errors: " + e;
+                break;
+            }
+            std::this_thread::sleep_for(poll);
+            continue;
+        }
+        NMSpot sp;
+        sp.me = id_of(at(r, fields, "me"));
+        if (truthy(at(r, fields, "finished"))) {
+            if (json c = at(r, fields, "chips"); !c.is_null()) close_hand(num(c), r);
+            json t = {{"place", at(r, fields, "place")}, {"prize", at(r, fields, "prize")},
+                      {"hands", int(results.size()) - t_start}};
+            t_start = int(results.size());
+            cur_hand.clear(), acted_at.clear();  // a new tournament numbers its hands from 1 again
+            sum.tournaments.push_back(t);
+            emit({{"type", "tournament"}, {"table9", true}, {"place", t["place"]}, {"prize", t["prize"]},
+                  {"hands", t["hands"]}, {"tournaments", sum.tournaments.size()}});
+            if (int(sum.tournaments.size()) >= plan.tournaments || int(results.size()) >= plan.hands) break;
+            if (auto e = platform_error(call("start")); !e.empty()) {
+                sum.stopped = "could not join again: " + e;
+                break;
+            }
+            continue;
+        }
+        json players = at(r, fields, "players");
+        std::string hand = id_of(at(r, fields, "hand"));
+        if (!players.is_array() || hand.empty()) {
+            if (++idle > 2400) {
+                sum.stopped = "no table state for too long";
+                break;
+            }
+            std::this_thread::sleep_for(poll);
+            continue;
+        }
+        idle = 0;
+        for (auto& p : players) sp.players.push_back({id_of(p["id"]), num(p["stack"])});
+        sp.button = id_of(at(r, fields, "button"));
+        sp.sb = num(at(r, fields, "sb")), sp.bb = num(at(r, fields, "bb")), sp.ante = num(at(r, fields, "ante"));
+        if (hand != cur_hand) {
+            close_hand(my_start(sp), r);
+            if (int(results.size()) >= plan.hands) break;
+            cur_hand = hand, cur_start = my_start(sp), cur_bb = sp.bb;
+            cur_line = {{"connector", spec.name}, {"model", plan.model}, {"hand_id", hand}, {"players", sp.players.size()},
+                        {"start_bb", sp.bb > 0 ? cur_start / sp.bb : 0.0}, {"decisions", json::array()}};
+        }
+        if (id_of(at(r, fields, "to_act")) != sp.me && !(at(r, fields, "to_act").is_boolean() && truthy(at(r, fields, "to_act")))) {
+            std::this_thread::sleep_for(poll);
+            continue;
+        }
+        auto hole = cards(at(r, fields, "hole"));
+        if (hole.size() != 2) {
+            std::this_thread::sleep_for(poll);
+            continue;
+        }
+        sp.hole = {hole[0], hole[1]};
+        sp.board = cards(at(r, fields, "board"));
+        json acts = at(r, fields, "actions");
+        if (acts.is_array())
+            for (auto& a : acts) {
+                std::string kind = id_of(a["kind"]);
+                if (kind != "fold" && kind != "check" && kind != "call" && kind != "bet" && kind != "raise" && kind != "allin")
+                    continue;  // blinds, antes, shows
+                sp.actions.push_back({id_of(a["player"]), a.contains("street") && !a["street"].is_null() ? int(num(a["street"])) : -1,
+                                      kind, num(a["to"])});
+            }
+        if (json pay = at(r, fields, "payouts"); pay.is_array())
+            for (auto& x : pay) sp.payouts.push_back(num(x));
+        // a state the platform has not yet updated after our move: wait, never answer twice
+        std::string key = hand + "/" + std::to_string(sp.actions.size());
+        if (key == acted_at) {
+            std::this_thread::sleep_for(poll);
+            continue;
+        }
+        NMAdvice adv = ninemax_decide(net, sp);
+        NMOption pick{"check", 0, 0, 1.0, 1, "check"};
+        if (!adv.error.empty() || adv.options.empty()) {
+            ++sum.off_tree;
+            emit({{"type", "replay_error"}, {"hand", hand}, {"error", adv.error}});
+            std::ofstream(plan.out_dir + "/replay_errors.jsonl", std::ios::app)
+                << json{{"error", adv.error}, {"state", r}}.dump() << "\n";
+        } else {
+            std::vector<double> w;
+            for (auto& o : adv.options) w.push_back(o.prob);
+            pick = adv.options[std::discrete_distribution<size_t>(w.begin(), w.end())(rng)];
+        }
+        auto send = [&](const NMOption& o) {
+            vars["action"] = amap.contains(o.action) ? id_of(amap[o.action]) : o.action;
+            double amt = (send_add ? o.add : o.to) * ascale;
+            vars["amount"] = o.action == "raise" || o.action == "allin" || answer.value("amount_always", false)
+                                 ? json(std::round(amt * 100) / 100).dump()
+                                 : "";
+            return tr->call(act_route, vars);
+        };
+        json ar = send(pick);
+        keep_token(ar);
+        if (!platform_error(ar).empty()) {
+            ++sum.fallbacks;
+            ar = send({"check", 0, 0, 1.0, 1, "check"});
+            keep_token(ar);
+            if (!platform_error(ar).empty()) ar = send({"fold", 0, 0, 1.0, 0, "fold"});
+        }
+        acted_at = key;
+        ++decisions, translated += adv.translated;
+        json opts = json::array();
+        for (auto& o : adv.options)
+            opts.push_back({{"label", o.label}, {"action", o.action}, {"to", o.to}, {"prob", o.prob},
+                            {"chosen", o.slot == pick.slot && !adv.options.empty()}});
+        const int street = sp.board.size() >= 5 ? 3 : sp.board.size() >= 4 ? 2 : sp.board.size() >= 3 ? 1 : 0;
+        std::string chose = pick.label.empty() ? pick.action : pick.label;
+        cur_line["hole"] = hole;
+        cur_line["decisions"].push_back({{"street", street}, {"chose", chose}});
+        std::string summary;
+        for (auto& d : cur_line["decisions"]) summary += (summary.empty() ? "" : ", ") + d["chose"].get<std::string>();
+        cur_line["action"] = summary;
+        json ev = adv.view.is_object() ? adv.view : json::object();
+        ev.update({{"type", "decision"}, {"table9", true}, {"hand", hand}, {"hole", hole}, {"options", opts},
+                   {"chose", chose}, {"to", pick.to}, {"translated", adv.translated}, {"value_bb", adv.value_bb},
+                   {"model", plan.model}, {"error", adv.error}, {"street", street}, {"board", sp.board},
+                   {"tournament", int(sum.tournaments.size()) + 1}});
+        ev["places"] = json::array();
+        for (auto& x : sum.tournaments) ev["places"].push_back(x["place"]);
+        emit(ev);
+    }
+    sum.hands = int(results.size());
+    double m, lo, hi;
+    bootstrap(results, m, lo, hi);
+    sum.bb100 = m * 100, sum.ci_lo = lo * 100, sum.ci_hi = hi * 100;
+    json j = sum.to_json();
+    j["decisions"] = decisions, j["translated_sizes"] = translated;
+    std::ofstream(plan.out_dir + "/summary.json") << j.dump(1) << "\n";
     return sum;
 }
 

@@ -32,6 +32,7 @@
 #include "kestrel/buckets.hpp"
 #include "kestrel/luck.hpp"
 #include "kestrel/net.hpp"
+#include "kestrel/ninemax_spot.hpp"
 #include "kestrel/practice.hpp"
 #include "kestrel/models.hpp"
 #include "kestrel/session.hpp"
@@ -74,6 +75,13 @@ struct Engines {
         }
         return e;
     }
+    std::map<std::string, std::shared_ptr<Net>> nets;
+    std::shared_ptr<Net> net(const std::string& dir) {
+        std::lock_guard<std::mutex> lk(mu);
+        auto& n = nets[dir];
+        if (!n) n = std::make_shared<Net>(dir);
+        return n;
+    }
 };
 
 // the 9-max tournament networks: installed packages (verified) and plain model folders with net.json
@@ -105,8 +113,8 @@ json models_json(const ServeOptions& o) {
                  {"about", pack ? "heads-up blueprint, 200bb (the data pack)"
                                 : "heads-up blueprint: the data pack is not installed (" + o.pack + ")"}});
     for (auto& [name, dir] : nine_max_models(o))
-        a.push_back({{"name", name}, {"game", "9-max tournament"}, {"players", 9}, {"available", false},
-                     {"practice", pack}, {"about", "9-max tournament network: practice tournaments; no 9-max platform connector yet"}});
+        a.push_back({{"name", name}, {"game", "9-max tournament"}, {"players", 9}, {"available", pack},
+                     {"practice", pack}, {"about", "9-max tournament network: practice tournaments, advice (/v1/decide) and 9-max platforms"}});
     return a;
 }
 
@@ -308,16 +316,28 @@ int serve(const ServeOptions& o) {
         if (body.is_discarded() || !body.contains("connector")) return reply(res, {{"error", "need connector"}}, 400);
         std::string name = body["connector"];
         int hands = std::clamp(body.value("hands", 100), 1, 1000000);
-        std::string model = body.value("model", "hu-blueprint"), solver = body.value("solver", "none");
-        if (model != "hu-blueprint") return reply(res, {{"error", "model " + model + " cannot play this connector"}}, 400);
-        bool known = false;
-        for (auto& x : solvers_json(o))
-            if (x["name"] == solver && x["available"] == true) known = true;
-        if (!known) return reply(res, {{"error", "solver " + solver + " is not available"}}, 400);
         std::vector<std::string> errors;
         auto cs = all_connectors(o, &errors);
         auto it = std::find_if(cs.begin(), cs.end(), [&](auto& c) { return c.name == name; });
         if (it == cs.end()) return reply(res, {{"error", "no connector " + name}}, 404);
+        const bool table9 = it->codec == "structured";
+        auto ms = nine_max_models(o);
+        std::string model = body.value("model", table9 ? (ms.empty() ? "" : ms.front().first) : "hu-blueprint");
+        std::string solver = body.value("solver", "none");
+        std::string net_dir;
+        if (table9) {
+            auto m = std::find_if(ms.begin(), ms.end(), [&](auto& x) { return x.first == model; });
+            if (m == ms.end()) return reply(res, {{"error", "no 9-max model " + model + " for this connector"}}, 400);
+            if (solver != "none") return reply(res, {{"error", "9-max tables play the model alone (solver none)"}}, 400);
+            net_dir = m->second;
+        } else {
+            if (model != "hu-blueprint") return reply(res, {{"error", "model " + model + " cannot play this connector"}}, 400);
+            bool known = false;
+            for (auto& x : solvers_json(o))
+                if (x["name"] == solver && x["available"] == true) known = true;
+            if (!known) return reply(res, {{"error", "solver " + solver + " is not available"}}, 400);
+        }
+        const int tournaments = std::clamp(body.value("tournaments", 1), 1, 10000);
         auto t = std::make_shared<TableRun>();
         {
             std::lock_guard<std::mutex> lk(hub.mu);
@@ -331,15 +351,22 @@ int serve(const ServeOptions& o) {
                      {"solver", solver}});
         if (!pack_problem.empty()) return reply(res, {{"error", pack_problem}}, 400);
         std::shared_ptr<HUBlueprint> engine;
+        std::shared_ptr<Net> net;
         try {
-            engine = engines.get(o, model, solver);
+            if (table9) {
+                buckets_init(o.pack);
+                net = engines.net(net_dir);
+            } else {
+                engine = engines.get(o, model, solver);
+            }
         } catch (const std::exception& e) {
             return reply(res, {{"error", e.what()}}, 400);
         }
-        t->th = std::thread([&hub, engine, &o, t] {
+        t->th = std::thread([&hub, engine, net, tournaments, &o, t] {
             SessionPlan plan;
             plan.model = t->model, plan.solver = t->solver;
             plan.hands = t->hands;
+            plan.tournaments = tournaments;
             plan.out_dir = o.out + "/" + std::to_string(t->id) + "-" + t->spec.name;
             plan.seed = uint64_t(t->id) * 7919;
             auto set_status = [&](const std::string& s) {
@@ -351,8 +378,7 @@ int serve(const ServeOptions& o) {
             };
             set_status("playing");
             try {
-                auto sum = run_session(
-                    t->spec, plan, *engine, nullptr, &t->stop, [&](const json& e) {
+                auto on_event = [&](const json& e) {
                         json ev = e;
                         ev["table"] = t->id;
                         ev["connector"] = t->spec.name;
@@ -380,7 +406,9 @@ int serve(const ServeOptions& o) {
                             t->state = ev;
                         }
                         hub.publish(ev);
-                    });
+                    };
+                auto sum = net ? run_ninemax_session(t->spec, plan, *net, nullptr, &t->stop, on_event)
+                               : run_session(t->spec, plan, *engine, nullptr, &t->stop, on_event);
                 {
                     std::lock_guard<std::mutex> lk(hub.mu);
                     t->summary = sum.to_json();
@@ -521,8 +549,24 @@ int serve(const ServeOptions& o) {
         json b = json::parse(req.body, nullptr, false);
         if (b.is_discarded()) return reply(res, {{"error", "bad JSON"}}, 400);
         std::string game = b.value("game", "");
-        if (game != "headsup") return reply(res, {{"error", "game must be headsup (ninemax: coming with the 9-max connector)"}}, 400);
+        if (game != "headsup" && game != "ninemax") return reply(res, {{"error", "game must be headsup or ninemax"}}, 400);
         if (!pack_problem.empty()) return reply(res, {{"error", pack_problem}}, 400);
+        if (game == "ninemax") {
+            auto ms = nine_max_models(o);
+            if (ms.empty()) return reply(res, {{"error", "no 9-max model is installed"}}, 404);
+            std::string model = b.value("model", ms.front().first);
+            auto it = std::find_if(ms.begin(), ms.end(), [&](auto& m) { return m.first == model; });
+            if (it == ms.end()) return reply(res, {{"error", "no 9-max model " + model}}, 404);
+            try {
+                buckets_init(o.pack);
+                auto adv = ninemax_decide(*engines.net(it->second), NMSpot::from_json(b));
+                json j = adv.to_json();
+                j["model"] = model;
+                return reply(res, j, adv.error.empty() ? 200 : 400);
+            } catch (const std::exception& e) {
+                return reply(res, {{"error", e.what()}}, 400);
+            }
+        }
         try {
             auto eng = engines.get(o, "hu-blueprint", b.value("solver", "none"));
             HUSpot sp;

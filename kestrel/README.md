@@ -41,6 +41,23 @@ kestreld serve --pack llm-research/blueprint/pack --connectors kestrel/connector
                                                        # the web app at http://127.0.0.1:8790/ with live tables
 ```
 
+**9-max tables.** A table connector (`codec: structured`) is played by a 9-max model at 2–9 handed tables, any bet sizes. The test platform is a PokerKit tournament against rule bots on this computer:
+
+```
+uv --project llm-research run python kestrel/testplatform/ninemax_platform.py &       # 127.0.0.1:8793
+kestreld play kestrel/connectors/testplatform.yaml --model llm-research/models/ninemax/nm17 \
+    --tournaments 20 --hands 100000 --out sessions/test9 --pack llm-research/blueprint/pack
+```
+
+Advice for one spot, in the platform's own chips (`to` is the street total):
+
+```
+curl -s -X POST http://127.0.0.1:8790/v1/decide -H 'Content-Type: application/json' -d '{"game": "ninemax",
+  "players": [{"id": "a", "stack": 1500}, {"id": "me", "stack": 900}, {"id": "c", "stack": 2200}],
+  "button": "a", "me": "me", "sb": 25, "bb": 50, "ante": 50, "hole": ["Ah", "Kd"],
+  "actions": [{"player": "a", "street": 0, "kind": "raise", "to": 125}], "payouts": [0.5, 0.3, 0.2]}'
+```
+
 The web app shows every running table live, each on its own screen. Switch screens with tabs or keys `1`–`9`, press `g` for a grid of all tables, `n` to start a new table and `t` to change theme. Each screen shows:
 - the cards, the pot and the betting as it happens;
 - Kestrel's decision, with its probabilities;
@@ -59,14 +76,15 @@ The self-test replays reference data written by the Python code in `llm-research
 - the legal actions and the raise sizes;
 - the features and the network's output.
 
-It also checks the payoffs and ICM, and for heads-up the blueprint's node, bucket, strategy and raise sizes. It prints `PASS` only if all of them match.
+It also checks the payoffs and ICM, and for heads-up the blueprint's node, bucket, strategy and raise sizes. For platform tables it re-describes 1,922 self-played decisions as a platform would and must get the network's own answer exactly. It prints `PASS` only if all of them match.
 
 The data it reads (the network `models/ninemax/nm17/net.bin` and the heads-up pack `blueprint/pack/`) defaults to `../llm-research`. Set `-DKESTREL_DATA=...` to point elsewhere.
 
 | Path | Contents |
 |---|---|
 | `core/` | game state (port of `ninemax_engine.Tables`), ICM, network features and forward pass, heads-up blueprint and buckets |
-| `connectors/` | platform codecs (`acpc`: Slumbot's action strings); transports and the session runner next |
+| `connectors/` | connector files, the codecs (`acpc` heads-up, `structured` tables), the session runners, the server and the JSON-RPC gateway |
+| `testplatform/` | a PokerKit 9-max tournament platform for testing table connectors |
 | `docs/design.md` | the design |
 | `assets/` | the logo: `logo.svg` (app icon), `logo-mark.svg` (the bird), `logo-animated.svg` (hovering, for busy states) |
 | `connectors/*.yaml` | connector files; `slumbot.yaml` is the worked example |

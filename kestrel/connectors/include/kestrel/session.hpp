@@ -5,6 +5,7 @@
 
 #include "kestrel/connector.hpp"
 #include "kestrel/headsup.hpp"
+#include "kestrel/net.hpp"
 
 namespace kestrel {
 
@@ -14,6 +15,7 @@ struct SessionPlan {
     int max_errors = 20;
     uint64_t seed = 1;
     std::string model = "hu-blueprint", solver = "none";
+    int tournaments = 1;  // structured connectors: tournaments to play (the hands cap still applies)
 };
 
 struct SessionSummary {
@@ -21,6 +23,7 @@ struct SessionSummary {
     int hands = 0, errors = 0, off_tree = 0, fallbacks = 0;
     double bb100 = 0, ci_lo = 0, ci_hi = 0;
     std::string stopped;
+    json tournaments;  // structured connectors: each tournament's place and prize
     json luck;  // the luck-adjusted estimate (kestrel/luck.hpp), when the platform shows the opponent's cards
     json to_json() const;
 };
@@ -29,5 +32,11 @@ SessionSummary run_session(const ConnectorSpec& spec, const SessionPlan& plan, H
                            const std::function<void(const json&)>& on_hand = nullptr,
                            const std::atomic<bool>* stop = nullptr,
                            const std::function<void(const json&)>& on_event = nullptr);
+
+// a 2-9 handed table (codec structured) played by a 9-max tournament network
+SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan& plan, const Net& net,
+                                   const std::function<void(const json&)>& on_hand = nullptr,
+                                   const std::atomic<bool>* stop = nullptr,
+                                   const std::function<void(const json&)>& on_event = nullptr);
 
 }
