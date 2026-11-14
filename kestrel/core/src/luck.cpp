@@ -63,6 +63,7 @@ double equity(const std::array<int, 2>& h, const std::array<int, 2>& v, const st
 }
 
 bool luck_hand(const nlohmann::json& r, int64_t big, int64_t stack, LuckHand& out) {
+    if (big <= 0) return false;
     auto theirs = r.contains("their_hole") ? r["their_hole"] : r.value("slumbot_hole", nlohmann::json());
     if (!theirs.is_array() || theirs.size() != 2 || !r.contains("hole") || !r["hole"].is_array()) return false;
     std::array<int, 2> me{card_from(r["hole"][0]), card_from(r["hole"][1])};
@@ -70,7 +71,20 @@ bool luck_hand(const nlohmann::json& r, int64_t big, int64_t stack, LuckHand& ou
     std::vector<int> board;
     if (r.contains("board") && r["board"].is_array())
         for (auto& c : r["board"]) board.push_back(card_from(c));
-    out.pos = r.value("pos", 0);
+    if (board.size() > 5 || !r.contains("pos") || !r["pos"].is_number_integer()) return false;
+    out.pos = r["pos"].get<int>();
+    if (out.pos != 0 && out.pos != 1) return false;
+    {  // every card at most once
+        bool seen[52] = {false};
+        for (int c : {me[0], me[1], op[0], op[1]}) {
+            if (seen[c]) return false;
+            seen[c] = true;
+        }
+        for (int c : board) {
+            if (seen[c]) return false;
+            seen[c] = true;
+        }
+    }
     out.raw = r.contains("result_bb") ? r["result_bb"].get<double>() : r["winnings_chips"].get<double>() / double(big);
     out.adjusted = out.raw;
     out.pre = equity(me, op, {});
@@ -78,6 +92,7 @@ bool luck_hand(const nlohmann::json& r, int64_t big, int64_t stack, LuckHand& ou
     out.allin = false;
     // chips in per position and the street betting ended on (ACPC positions: 0 big blind, 1 small blind)
     auto st = acpc::tokens(r.value("action", ""));
+    if (st.size() > 4) return false;
     int64_t total[2] = {0, 0};
     std::vector<int64_t> pots;
     for (size_t si = 0; si < st.size(); ++si) {

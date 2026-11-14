@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <cctype>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -182,13 +183,18 @@ ModelInfo install_model(const std::string& package, const std::string& dir) {
         fs::remove_all(tmp);
         throw std::runtime_error(package + ": " + m.problem);
     }
-    if (m.name.empty() || m.name.find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-") !=
-                              std::string::npos) {
+    if (m.name.empty() || !std::isalnum(static_cast<unsigned char>(m.name[0])) || m.name.size() > 64 ||
+        m.name.find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-") !=
+            std::string::npos) {
         fs::remove_all(tmp);
         throw std::runtime_error("bad model name in " + package);
     }
     fs::create_directories(dir);
     fs::path dest = fs::path(dir) / m.name;
+    if (fs::weakly_canonical(dest).parent_path() != fs::weakly_canonical(fs::path(dir))) {
+        fs::remove_all(tmp);
+        throw std::runtime_error("model name leaves the models folder: " + m.name);
+    }
     std::error_code ec;
     fs::remove_all(dest, ec);
     fs::rename(inner, dest, ec);

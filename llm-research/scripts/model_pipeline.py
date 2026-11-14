@@ -16,9 +16,9 @@
       models/manifest.json. Kestrel installs it with: kestreld models install <name>-<version>.tar.gz
 
 Recipes are YAML files in pipeline/recipes/ (see nm17.yaml). Usage (lab, from llm-research):
-  PYTHONPATH=scripts .venv-gpu/bin/python scripts/model_pipeline.py train pipeline/recipes/mtt9.yaml --run blueprint/nm20 --gpu 1
-  PYTHONPATH=scripts .venv-gpu/bin/python scripts/model_pipeline.py gate blueprint/nm20 --snapshot avg_12h.pt
-  PYTHONPATH=scripts .venv-gpu/bin/python scripts/model_pipeline.py package blueprint/nm20 --name mtt9 --version 2
+  PYTHONPATH=scripts .venv-gpu/bin/python scripts/model_pipeline.py train pipeline/recipes/mtt9.yaml --run blueprint/nm21 --gpu 1
+  PYTHONPATH=scripts .venv-gpu/bin/python scripts/model_pipeline.py gate blueprint/nm21 --snapshot avg_12h.pt
+  PYTHONPATH=scripts .venv-gpu/bin/python scripts/model_pipeline.py package blueprint/nm21 --name mtt9 --version 2
   uv run python scripts/model_pipeline.py publish dist/models/mtt9-2.tar.gz          # on your machine
 """
 
