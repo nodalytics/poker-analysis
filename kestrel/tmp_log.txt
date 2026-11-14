@@ -1,2 +1,0 @@
-{"exploitibility":1.5111843347549438,"iteration":20,"time_ms":7034}
-{"exploitibility":0.31726324558258057,"iteration":40,"time_ms":13151}

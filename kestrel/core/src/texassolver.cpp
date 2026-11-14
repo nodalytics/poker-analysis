@@ -57,9 +57,10 @@ nlohmann::json texassolver_solve(const TexasSolverConfig& c, const TexasSolverSp
        << "set_max_iteration " << (river ? c.river_iters : c.turn_iters) << "\nset_print_interval 20\n"
        << "set_use_isomorphism 1\nstart_solve\nset_dump_rounds 1\ndump_result " << (dir / "out.json").string() << "\n";
     in.close();
-    std::string cmd;
+    // run inside the temporary folder: TexasSolver writes its progress log (tmp_log.txt) to the working directory
+    std::string cmd = "cd " + quote(dir.string()) + " && ";
 #ifndef _WIN32
-    cmd = "timeout " + std::to_string(c.timeout_s) + " nice -n 10 ";
+    cmd += "timeout " + std::to_string(c.timeout_s) + " nice -n 10 ";
 #endif
     cmd += quote(c.bin) + " --input_file " + quote((dir / "in.txt").string()) + " --resource_dir " +
            quote(c.resources);
