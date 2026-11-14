@@ -144,6 +144,7 @@ Each port gets test vectors written by the Python code it replaces, and the C++ 
 | Web app: live tables, screens 1–N, grid, new table, light and dark themes, logo | done |
 | WebSocket, TCP and MCP interfaces and transports | next |
 | `structured` codec, 9-max tables through a connector, tournament simulator | next |
+| Kestrel against Slumbot, with the defence floor (2026-11-14) | 3,000 hands: −1.9 bb/100 [−67, +56], even with Slumbot; no platform errors; 19 hands left the blueprint's tree (checked or called). The Python bot read +12.4 and +30.9 (with the floor) over 5,000 hands each; all within each other's intervals. Telling the versions apart needs tens of thousands of hands or luck adjustment (AIVAT) |
 | Defence floor in the heads-up engine | done: on 5,853 logged decisions it fires 36 times and agrees with Python on all but 5, river spots where the order of tied hands decides (Python's sort leaves it arbitrary) |
 | Qt 6 app | after the web app |
 | Open Poker (openpoker.ai, 6-max cash over WebSocket): an account, a 6-max cash model and a connector | waiting on the user's sign-in (magic link to the account's email); protocol read from the lab (see Platforms) |
