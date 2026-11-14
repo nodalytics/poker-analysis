@@ -32,7 +32,7 @@ target_include_directories(kestrel_cards PUBLIC ${phe_SOURCE_DIR}/cpp/include ${
 
 add_library(kestrel_core
   core/src/table.cpp core/src/icm.cpp core/src/net.cpp core/src/buckets.cpp core/src/headsup.cpp core/src/resolve.cpp
-  core/src/texassolver.cpp core/src/luck.cpp core/src/models.cpp
+  core/src/texassolver.cpp core/src/luck.cpp core/src/models.cpp core/src/practice.cpp
   connectors/src/codec_acpc.cpp)
 target_include_directories(kestrel_core PUBLIC core/include connectors/include)
 target_link_libraries(kestrel_core PUBLIC nlohmann_json::nlohmann_json PRIVATE kestrel_cards)
