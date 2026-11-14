@@ -1,4 +1,4 @@
-"""Reference data for Kestrel, the C++ advisor (kestrel/): network weights in a flat file, and test vectors it must
+"""Reference data for Kestrel, the C++ advisor (../kestrel/, at the repo root): network weights in a flat file, and test vectors it must
 reproduce.
 
 Writes, for one exported 9-max network (models/ninemax/<name>/):
@@ -7,7 +7,7 @@ Writes, for one exported 9-max network (models/ninemax/<name>/):
   net.json  the tensor names and shapes (in that order), the run's game settings (menu, ante, open-limp, tournament
             features), the bucket count and the 169 pre-flop class strengths the features use (from the trainer's
             dealer, seed 1, as in training).
-and kestrel/testdata/vectors_<name>.json:
+and ../kestrel/testdata/vectors_<name>.json:
   hands     whole hands at random tournament tables (stacks, payouts, empty seats as in training), each decision with
             the actor, the legal mask, the raise-to targets, the feature vector, the network's logits and value, and
             the action taken (the network's choice, or 1 in 5 a uniformly random legal action, to reach odd states);
@@ -121,7 +121,7 @@ def main():
         pay = torch.tensor([sorted(np.random.dirichlet(np.ones(n)).tolist(), reverse=True)], dtype=torch.float64)
         icm_cases.append({"stacks": r6(st[0]), "pay": [float(x) for x in pay[0]], "eq": r6(icm(st, pay)[0])})
 
-    out = os.path.join(ROOT, "kestrel", "testdata", f"vectors_{name}.json")
+    out = os.path.join(ROOT, "..", "kestrel", "testdata", f"vectors_{name}.json")
     os.makedirs(os.path.dirname(out), exist_ok=True)
     json.dump({"model": name, "bb": BB, "hands": hands, "icm": icm_cases}, open(out, "w"))
     n_dec = sum(len(x["steps"]) for x in hands)

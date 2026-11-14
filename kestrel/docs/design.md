@@ -1,9 +1,10 @@
 # Kestrel, the C++ advisor: core, interfaces and connectors (phase D, started 2026-11-14)
 
 **Kestrel** is the advisor's new name (2026-11-14), after the small hawk that hovers, watches and strikes. The
-daemon is `kestreld` and the app is `Kestrel`; the code is in `kestrel/`.
+daemon is `kestreld` and the app is `Kestrel`; Kestrel is a standalone project at the repo root (`kestrel/`); the research that feeds it (training, models, the
+Python reference) stays in `llm-research/`.
 
-Phase D of [`2026-11-11-next-phases.md`](2026-11-11-next-phases.md), widened on 2026-11-14: besides advising, the
+Phase D of [`llm-research/docs/2026-11-11-next-phases.md`](../../llm-research/docs/2026-11-11-next-phases.md), widened on 2026-11-14: besides advising, the
 advisor **plays by itself** on platforms that offer a bot API, through **connectors described in a file** (YAML or
 JSON) that are added after the build, without recompiling. You give it a connector file and a session plan, start
 it, and leave it: it plays, logs every hand, and reports results with confidence intervals.
@@ -18,12 +19,12 @@ our own lab simulators, and any site that invites bots.
 - Capture-only screenshots stay as planned: they pause while a real-money client is running.
 - There is no screen reading and no clicking: a connector has no way to drive a desktop client.
 
-## Layout (`kestrel/`)
+## Layout
 
 | Part | What | Depends on |
 |---|---|---|
-| `core/` (library) | Card and hand types; the single-table game state (a port of `ninemax_engine.Tables`: menus, legality, the big-blind ante, empty seats, side pots); ICM (`icm.py`); the push/fold charts (`results/ninemax/icm_pushfold*.json`); the 9-max network's features and forward pass (a port of `features()` and `NineNet`); bucket lookup through `bp` (`bp_bucket`); the heads-up blueprint through `bp` | C++20 only, plus `blueprint/bp.cpp` |
-| `engines` | One interface, `decide(state) -> action distribution`. The router picks by game: 9-max tournament at 25bb or less goes to the tournament network (`models/ninemax/nm17`), or push/fold at 10bb or less; deep heads-up cash goes to the heads-up blueprint pack, which already played Slumbot about even (−14 bb/100 [−45, +17], luck-adjusted, `2026-11-07-edges-and-real-tests.md`) | core |
+| `core/` (library) | Card and hand types; the single-table game state (a port of `ninemax_engine.Tables`: menus, legality, the big-blind ante, empty seats, side pots); ICM (`icm.py`); the push/fold charts (`results/ninemax/icm_pushfold*.json`); the 9-max network's features and forward pass (a port of `features()` and `NineNet`); bucket lookup through `bp` (`bp_bucket`); the heads-up blueprint through `bp` | C++20, nlohmann/json, and the 7-card evaluator and hand indexer at the pinned commits the trainer uses |
+| `engines` | One interface, `decide(state) -> action distribution`. The router picks by game: 9-max tournament at 25bb or less goes to the tournament network (`models/ninemax/nm17`), or push/fold at 10bb or less; deep heads-up cash goes to the heads-up blueprint pack, which played Slumbot level or slightly ahead: +12.4 bb/100 [−16, +41], and +30.9 [−10, +72] with the defence floor, 5,000 hands each, luck-adjusted (`llm-research/docs/2026-11-08-blueprint-speed-accuracy.md`) | core |
 | `api/` | Kestrel's own **local API** (REST, WebSocket, TCP, MCP; see below), bound to `127.0.0.1`: `POST /v1/decide`, `GET /v1/health`, `GET/POST /v1/connectors`, `POST /v1/sessions` (start), `GET /v1/sessions/{id}` (progress, bb/100 with an interval), `DELETE /v1/sessions/{id}` (stop) | cpp-httplib, IXWebSocket, standalone asio, nlohmann/json |
 | `connectors/` | The runtime that reads connector files and plays sessions over HTTP, WebSocket or MCP | cpp-httplib (with OpenSSL for https), yaml-cpp |
 | `kestreld` | The headless daemon: the API plus the session runner. **Set and forget** runs here | the above |
@@ -136,8 +137,9 @@ Each port gets test vectors written by the Python code it replaces, and the C++ 
 1. **Core, headless (done 2026-11-14):** the network weights in a flat file (`scripts/ninemax_export_bin.py`), the test vectors, the
    game state, features, the forward pass and ICM. The self-test passes on the first build: 120 hands, 1,118
    decisions. Actors, legal actions and raise sizes match exactly; features to 1.6e-5, logits to 5e-5, payoffs to
-   2.4e-4 chips, ICM to 7e-7. Still to do: bucket lookup through `bp` (`bp_bucket`), which needs the 660 MB
-   abstraction.
+   2.4e-4 chips, ICM to 7e-7. The heads-up engine (a port of `blueprint_bot.py` over the data pack, with its
+   own bucket lookup) and the Slumbot codec reproduce 1,160 logged Slumbot decisions: nodes, buckets, strategy
+   (to 5e-7) and raise sizes match exactly. Not yet ported: the defence floor (the +30.9 version).
 2. **API and runner:** `kestreld`, the local REST API, the connector runtime, and the `acpc` codec with the Slumbot
    file. First real test: the heads-up engine against Slumbot, compared with the Python client's results.
 3. **Tournament play:** our own tournament simulator, served through the same connector interface. No public
