@@ -1,0 +1,520 @@
+{
+ "nm18/avg_2h | chip EV, 9 x 10bb, big-blind ante 1bb": {
+  "pos0": {
+   "chart": 0.118,
+   "in": 0.128,
+   "shove": 0.01,
+   "agree": 0.953,
+   "in_when_chart_in": 0.834,
+   "in_when_chart_out": 0.03
+  },
+  "pos1": {
+   "chart": 0.14,
+   "in": 0.131,
+   "shove": 0.011,
+   "agree": 0.946,
+   "in_when_chart_in": 0.78,
+   "in_when_chart_out": 0.027
+  },
+  "pos2": {
+   "chart": 0.179,
+   "in": 0.149,
+   "shove": 0.016,
+   "agree": 0.923,
+   "in_when_chart_in": 0.701,
+   "in_when_chart_out": 0.028
+  },
+  "pos3": {
+   "chart": 0.21,
+   "in": 0.173,
+   "shove": 0.026,
+   "agree": 0.919,
+   "in_when_chart_in": 0.709,
+   "in_when_chart_out": 0.021
+  },
+  "pos4": {
+   "chart": 0.27,
+   "in": 0.199,
+   "shove": 0.034,
+   "agree": 0.896,
+   "in_when_chart_in": 0.676,
+   "in_when_chart_out": 0.022
+  },
+  "pos5": {
+   "chart": 0.327,
+   "in": 0.242,
+   "shove": 0.043,
+   "agree": 0.881,
+   "in_when_chart_in": 0.688,
+   "in_when_chart_out": 0.025
+  },
+  "button": {
+   "chart": 0.43,
+   "in": 0.293,
+   "shove": 0.072,
+   "agree": 0.829,
+   "in_when_chart_in": 0.642,
+   "in_when_chart_out": 0.03
+  },
+  "small blind": {
+   "chart": 0.747,
+   "in": 0.599,
+   "shove": 0.142,
+   "agree": 0.802,
+   "in_when_chart_in": 0.768,
+   "in_when_chart_out": 0.094
+  },
+  "bb_vs_sb": {
+   "chart": 0.578,
+   "in": 0.66,
+   "shove": 0.66,
+   "agree": 0.865,
+   "in_when_chart_in": 0.958,
+   "in_when_chart_out": 0.261
+  }
+ },
+ "nm18/avg_2h | final table, 9 x 10bb, big-blind ante 1bb": {
+  "pos0": {
+   "chart": 0.284,
+   "in": 0.121,
+   "shove": 0.037,
+   "agree": 0.774,
+   "in_when_chart_in": 0.316,
+   "in_when_chart_out": 0.042
+  },
+  "pos1": {
+   "chart": 0.363,
+   "in": 0.131,
+   "shove": 0.048,
+   "agree": 0.722,
+   "in_when_chart_in": 0.295,
+   "in_when_chart_out": 0.039
+  },
+  "pos2": {
+   "chart": 0.427,
+   "in": 0.155,
+   "shove": 0.065,
+   "agree": 0.681,
+   "in_when_chart_in": 0.31,
+   "in_when_chart_out": 0.038
+  },
+  "pos3": {
+   "chart": 0.581,
+   "in": 0.183,
+   "shove": 0.09,
+   "agree": 0.573,
+   "in_when_chart_in": 0.29,
+   "in_when_chart_out": 0.037
+  },
+  "pos4": {
+   "chart": 0.765,
+   "in": 0.228,
+   "shove": 0.13,
+   "agree": 0.445,
+   "in_when_chart_in": 0.287,
+   "in_when_chart_out": 0.034
+  },
+  "pos5": {
+   "chart": 0.991,
+   "in": 0.287,
+   "shove": 0.176,
+   "agree": 0.296,
+   "in_when_chart_in": 0.29,
+   "in_when_chart_out": 0.033
+  },
+  "button": {
+   "chart": 1.0,
+   "in": 0.356,
+   "shove": 0.216,
+   "agree": 0.356,
+   "in_when_chart_in": 0.356,
+   "in_when_chart_out": 0.0
+  },
+  "small blind": {
+   "chart": 1.0,
+   "in": 0.803,
+   "shove": 0.364,
+   "agree": 0.803,
+   "in_when_chart_in": 0.803,
+   "in_when_chart_out": 0.0
+  },
+  "bb_vs_sb": {
+   "chart": 0.071,
+   "in": 0.305,
+   "shove": 0.305,
+   "agree": 0.765,
+   "in_when_chart_in": 0.982,
+   "in_when_chart_out": 0.252
+  }
+ },
+ "nm18/avg_2h | bubble (1 out), 9 x 10bb, big-blind ante 1bb": {
+  "pos0": {
+   "chart": 1.0,
+   "in": 0.098,
+   "shove": 0.051,
+   "agree": 0.098,
+   "in_when_chart_in": 0.098,
+   "in_when_chart_out": 0.0
+  },
+  "pos1": {
+   "chart": 1.0,
+   "in": 0.142,
+   "shove": 0.084,
+   "agree": 0.142,
+   "in_when_chart_in": 0.142,
+   "in_when_chart_out": 0.0
+  },
+  "pos2": {
+   "chart": 1.0,
+   "in": 0.169,
+   "shove": 0.11,
+   "agree": 0.169,
+   "in_when_chart_in": 0.169,
+   "in_when_chart_out": 0.0
+  },
+  "pos3": {
+   "chart": 1.0,
+   "in": 0.208,
+   "shove": 0.141,
+   "agree": 0.208,
+   "in_when_chart_in": 0.208,
+   "in_when_chart_out": 0.0
+  },
+  "pos4": {
+   "chart": 1.0,
+   "in": 0.294,
+   "shove": 0.205,
+   "agree": 0.294,
+   "in_when_chart_in": 0.294,
+   "in_when_chart_out": 0.0
+  },
+  "pos5": {
+   "chart": 1.0,
+   "in": 0.426,
+   "shove": 0.298,
+   "agree": 0.426,
+   "in_when_chart_in": 0.426,
+   "in_when_chart_out": 0.0
+  },
+  "button": {
+   "chart": 1.0,
+   "in": 0.712,
+   "shove": 0.478,
+   "agree": 0.712,
+   "in_when_chart_in": 0.712,
+   "in_when_chart_out": 0.0
+  },
+  "small blind": {
+   "chart": 1.0,
+   "in": 0.991,
+   "shove": 0.564,
+   "agree": 0.991,
+   "in_when_chart_in": 0.991,
+   "in_when_chart_out": 0.0
+  },
+  "bb_vs_sb": {
+   "chart": 0.005,
+   "in": 0.034,
+   "shove": 0.034,
+   "agree": 0.97,
+   "in_when_chart_in": 0.974,
+   "in_when_chart_out": 0.03
+  }
+ },
+ "nm18/avg_2h | bubble (1 out), top-heavy above it, big-blind ante 1bb": {
+  "pos0": {
+   "chart": 0.214,
+   "in": 0.101,
+   "shove": 0.045,
+   "agree": 0.816,
+   "in_when_chart_in": 0.309,
+   "in_when_chart_out": 0.043
+  },
+  "pos1": {
+   "chart": 0.264,
+   "in": 0.108,
+   "shove": 0.054,
+   "agree": 0.785,
+   "in_when_chart_in": 0.296,
+   "in_when_chart_out": 0.042
+  },
+  "pos2": {
+   "chart": 0.291,
+   "in": 0.133,
+   "shove": 0.073,
+   "agree": 0.776,
+   "in_when_chart_in": 0.344,
+   "in_when_chart_out": 0.046
+  },
+  "pos3": {
+   "chart": 0.403,
+   "in": 0.162,
+   "shove": 0.098,
+   "agree": 0.71,
+   "in_when_chart_in": 0.34,
+   "in_when_chart_out": 0.045
+  },
+  "pos4": {
+   "chart": 0.529,
+   "in": 0.203,
+   "shove": 0.132,
+   "agree": 0.629,
+   "in_when_chart_in": 0.341,
+   "in_when_chart_out": 0.047
+  },
+  "pos5": {
+   "chart": 0.62,
+   "in": 0.251,
+   "shove": 0.172,
+   "agree": 0.594,
+   "in_when_chart_in": 0.374,
+   "in_when_chart_out": 0.053
+  },
+  "button": {
+   "chart": 0.882,
+   "in": 0.426,
+   "shove": 0.307,
+   "agree": 0.531,
+   "in_when_chart_in": 0.476,
+   "in_when_chart_out": 0.063
+  },
+  "small blind": {
+   "chart": 1.0,
+   "in": 0.974,
+   "shove": 0.582,
+   "agree": 0.974,
+   "in_when_chart_in": 0.974,
+   "in_when_chart_out": 0.0
+  },
+  "bb_vs_sb": {
+   "chart": 0.142,
+   "in": 0.127,
+   "shove": 0.127,
+   "agree": 0.945,
+   "in_when_chart_in": 0.75,
+   "in_when_chart_out": 0.023
+  }
+ },
+ "nm18/avg_2h | bubble (1 out), big stack on the button, big-blind ante 1bb": {
+  "pos0": {
+   "chart": 1.0,
+   "in": 0.067,
+   "shove": 0.032,
+   "agree": 0.067,
+   "in_when_chart_in": 0.067,
+   "in_when_chart_out": 0.0
+  },
+  "pos1": {
+   "chart": 1.0,
+   "in": 0.085,
+   "shove": 0.047,
+   "agree": 0.085,
+   "in_when_chart_in": 0.085,
+   "in_when_chart_out": 0.0
+  },
+  "pos2": {
+   "chart": 1.0,
+   "in": 0.095,
+   "shove": 0.058,
+   "agree": 0.095,
+   "in_when_chart_in": 0.095,
+   "in_when_chart_out": 0.0
+  },
+  "pos3": {
+   "chart": 1.0,
+   "in": 0.109,
+   "shove": 0.073,
+   "agree": 0.109,
+   "in_when_chart_in": 0.109,
+   "in_when_chart_out": 0.0
+  },
+  "pos4": {
+   "chart": 1.0,
+   "in": 0.135,
+   "shove": 0.095,
+   "agree": 0.135,
+   "in_when_chart_in": 0.135,
+   "in_when_chart_out": 0.0
+  },
+  "pos5": {
+   "chart": 1.0,
+   "in": 0.165,
+   "shove": 0.119,
+   "agree": 0.165,
+   "in_when_chart_in": 0.165,
+   "in_when_chart_out": 0.0
+  },
+  "button": {
+   "chart": 1.0,
+   "in": 0.984,
+   "shove": 0.669,
+   "agree": 0.984,
+   "in_when_chart_in": 0.984,
+   "in_when_chart_out": 0.0
+  },
+  "small blind": {
+   "chart": 1.0,
+   "in": 0.992,
+   "shove": 0.554,
+   "agree": 0.992,
+   "in_when_chart_in": 0.992,
+   "in_when_chart_out": 0.0
+  },
+  "bb_vs_sb": {
+   "chart": 0.009,
+   "in": 0.03,
+   "shove": 0.03,
+   "agree": 0.979,
+   "in_when_chart_in": 0.98,
+   "in_when_chart_out": 0.022
+  }
+ },
+ "nm18/avg_2h | bubble (1 out), short stack in the big blind, big-blind ante 1bb": {
+  "pos0": {
+   "chart": 0.124,
+   "in": 0.112,
+   "shove": 0.058,
+   "agree": 0.879,
+   "in_when_chart_in": 0.464,
+   "in_when_chart_out": 0.061
+  },
+  "pos1": {
+   "chart": 0.119,
+   "in": 0.154,
+   "shove": 0.089,
+   "agree": 0.869,
+   "in_when_chart_in": 0.597,
+   "in_when_chart_out": 0.095
+  },
+  "pos2": {
+   "chart": 0.124,
+   "in": 0.187,
+   "shove": 0.121,
+   "agree": 0.854,
+   "in_when_chart_in": 0.66,
+   "in_when_chart_out": 0.118
+  },
+  "pos3": {
+   "chart": 0.13,
+   "in": 0.234,
+   "shove": 0.161,
+   "agree": 0.826,
+   "in_when_chart_in": 0.734,
+   "in_when_chart_out": 0.161
+  },
+  "pos4": {
+   "chart": 0.13,
+   "in": 0.333,
+   "shove": 0.236,
+   "agree": 0.757,
+   "in_when_chart_in": 0.844,
+   "in_when_chart_out": 0.256
+  },
+  "pos5": {
+   "chart": 0.151,
+   "in": 0.522,
+   "shove": 0.376,
+   "agree": 0.608,
+   "in_when_chart_in": 0.931,
+   "in_when_chart_out": 0.449
+  },
+  "button": {
+   "chart": 0.154,
+   "in": 0.875,
+   "shove": 0.602,
+   "agree": 0.273,
+   "in_when_chart_in": 0.973,
+   "in_when_chart_out": 0.856
+  },
+  "small blind": {
+   "chart": 0.882,
+   "in": 0.995,
+   "shove": 0.516,
+   "agree": 0.88,
+   "in_when_chart_in": 0.995,
+   "in_when_chart_out": 0.995
+  },
+  "bb_vs_sb": {
+   "chart": 0.973,
+   "in": 0.411,
+   "shove": 0.411,
+   "agree": 0.437,
+   "in_when_chart_in": 0.422,
+   "in_when_chart_out": 0.019
+  }
+ },
+ "nm18/avg_2h | final table, mixed stacks, ante, big-blind ante 1bb": {
+  "pos0": {
+   "chart": 0.118,
+   "in": 0.12,
+   "shove": 0.01,
+   "agree": 0.887,
+   "in_when_chart_in": 0.529,
+   "in_when_chart_out": 0.065
+  },
+  "pos1": {
+   "chart": 0.074,
+   "in": 0.133,
+   "shove": 0.062,
+   "agree": 0.928,
+   "in_when_chart_in": 0.903,
+   "in_when_chart_out": 0.07
+  },
+  "pos2": {
+   "chart": 0.391,
+   "in": 0.241,
+   "shove": 0.007,
+   "agree": 0.776,
+   "in_when_chart_in": 0.522,
+   "in_when_chart_out": 0.061
+  },
+  "pos3": {
+   "chart": 0.186,
+   "in": 0.163,
+   "shove": 0.07,
+   "agree": 0.872,
+   "in_when_chart_in": 0.595,
+   "in_when_chart_out": 0.065
+  },
+  "pos4": {
+   "chart": 0.107,
+   "in": 0.247,
+   "shove": 0.151,
+   "agree": 0.849,
+   "in_when_chart_in": 0.958,
+   "in_when_chart_out": 0.163
+  },
+  "pos5": {
+   "chart": 0.318,
+   "in": 0.268,
+   "shove": 0.042,
+   "agree": 0.807,
+   "in_when_chart_in": 0.618,
+   "in_when_chart_out": 0.104
+  },
+  "button": {
+   "chart": 0.228,
+   "in": 0.285,
+   "shove": 0.172,
+   "agree": 0.832,
+   "in_when_chart_in": 0.755,
+   "in_when_chart_out": 0.145
+  },
+  "small blind": {
+   "chart": 1.0,
+   "in": 0.995,
+   "shove": 0.422,
+   "agree": 0.995,
+   "in_when_chart_in": 0.995,
+   "in_when_chart_out": 0.0
+  },
+  "bb_vs_sb": {
+   "chart": 0.035,
+   "in": 0.297,
+   "shove": 0.297,
+   "agree": 0.738,
+   "in_when_chart_in": 0.982,
+   "in_when_chart_out": 0.271
+  }
+ }
+}
