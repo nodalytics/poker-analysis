@@ -22,7 +22,7 @@ jobs:
       matrix:
         include:
           - {os: ubuntu-22.04, name: linux-x86_64, shell: bash}  # the older glibc, so the binary runs on more systems
-          - {os: macos-14, name: macos-arm64, shell: bash}
+          - {os: macos-15, name: macos-arm64, shell: bash}  # macos-14 maps to a runner size this org does not have
           - {os: windows-latest, name: windows-x86_64, shell: "msys2 {0}"}
     runs-on: ${{ matrix.os }}
     defaults:
