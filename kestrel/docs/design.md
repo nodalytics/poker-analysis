@@ -57,6 +57,23 @@ Connectors use the same set of transports towards a platform: `http`, `websocket
   and the backend is bound to `127.0.0.1` (decision of 2026-11-10). Remote controls would first need
   authentication.
 
+### Look and feel (both GUIs)
+
+Modern and sleek, as one design across the web page and the app:
+- **Dark first, with a light theme**, both from one set of colour tokens; a restrained palette, a single accent
+  colour for actions, and green and red only for results.
+- **Typography:** Inter (UI) and JetBrains Mono (numbers, cards, logs), with tabular figures so columns of bb/100 do
+  not jitter; a clear type scale and generous spacing.
+- **Cards and tables drawn, not pictured:** vector suits in four colours, a felt-free table view with seats, stacks,
+  the pot and the action history.
+- **Live without noise:** session cards with a sparkline of results and a confidence band, short transitions
+  (150–200 ms), no spinners where a skeleton will do.
+- **Advice as a bar:** each action's probability as a segmented bar, with the EV and the reason (network, push/fold
+  chart, blueprint) in one line.
+- Keyboard first (command palette, shortcuts), responsive down to a phone width, readable contrast (WCAG AA).
+- The Qt app uses the same tokens through a QSS theme and Qt Quick-like spacing, so it does not look like a default
+  widget app.
+
 ## MCP, both ways
 
 - **As a connector transport:** a connector can name an MCP server instead of an HTTP base URL. That covers a
