@@ -22,6 +22,21 @@ FetchContent_Declare(iso GIT_REPOSITORY https://github.com/kdub0/hand-isomorphis
 # (SOURCE_SUBDIR no-cmake: fetch the sources only; the files we need are compiled below)
 FetchContent_MakeAvailable(json phe iso)
 
+# connectors: HTTP(S) client and server (cpp-httplib, with OpenSSL) and YAML connector files (yaml-cpp)
+find_package(OpenSSL REQUIRED)
+set(HTTPLIB_REQUIRE_OPENSSL ON CACHE BOOL "" FORCE)
+set(HTTPLIB_USE_ZLIB_IF_AVAILABLE OFF CACHE BOOL "" FORCE)
+set(HTTPLIB_USE_BROTLI_IF_AVAILABLE OFF CACHE BOOL "" FORCE)
+set(HTTPLIB_USE_ZSTD_IF_AVAILABLE OFF CACHE BOOL "" FORCE)
+FetchContent_Declare(httplib GIT_REPOSITORY https://github.com/yhirose/cpp-httplib.git GIT_TAG v0.18.3)
+set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
+set(YAML_CPP_BUILD_CONTRIB OFF CACHE BOOL "" FORCE)
+set(YAML_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)  # yaml-cpp 0.8.0 asks for an older CMake than CMake 4 accepts
+FetchContent_Declare(yaml-cpp GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git GIT_TAG 0.8.0)
+FetchContent_MakeAvailable(httplib yaml-cpp)
+
 # third-party C: the 7-card evaluator and suit-isomorphic hand indexing (only the files the buckets need)
 add_library(kestrel_cards STATIC
   ${phe_SOURCE_DIR}/cpp/src/evaluator7.c ${phe_SOURCE_DIR}/cpp/src/hash.c ${phe_SOURCE_DIR}/cpp/src/hashtable.c
@@ -38,9 +53,13 @@ target_include_directories(kestrel_core PUBLIC core/include)
 target_link_libraries(kestrel_core PUBLIC nlohmann_json::nlohmann_json PRIVATE kestrel_cards)
 
 # connectors: platform notations (codecs) and, next, the transports and the session runner
-add_library(kestrel_connectors connectors/src/codec_acpc.cpp)
+add_library(kestrel_connectors connectors/src/codec_acpc.cpp connectors/src/connector.cpp connectors/src/session.cpp)
 target_include_directories(kestrel_connectors PUBLIC connectors/include)
-target_link_libraries(kestrel_connectors PUBLIC kestrel_core)
+target_link_libraries(kestrel_connectors PUBLIC kestrel_core PRIVATE httplib::httplib yaml-cpp::yaml-cpp)
+
+# kestreld: the daemon (sessions now; the local API and the web page next)
+add_executable(kestreld tools/kestreld.cpp)
+target_link_libraries(kestreld PRIVATE kestrel_core kestrel_connectors)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   target_compile_options(kestrel_core PRIVATE -Wall -Wextra)
@@ -65,6 +84,7 @@ foreach(t kestreld)  # the daemon, once it exists
   endif()
 endforeach()
 install(FILES README.md docs/design.md DESTINATION ${CMAKE_INSTALL_DATADIR}/kestrel)
+install(FILES connectors/slumbot.yaml DESTINATION ${CMAKE_INSTALL_DATADIR}/kestrel/connectors)
 install(DIRECTORY testdata DESTINATION ${CMAKE_INSTALL_DATADIR}/kestrel)
 # the tournament network the router uses (4.5 MB); the heads-up pack (80 MB) ships as its own release asset
 install(FILES ${KESTREL_DATA}/models/ninemax/nm17/net.bin ${KESTREL_DATA}/models/ninemax/nm17/net.json
@@ -76,5 +96,7 @@ install(FILES ${json_SOURCE_DIR}/LICENSE.MIT DESTINATION ${CMAKE_INSTALL_DATADIR
 
 option(KESTREL_STATIC "link the C and C++ runtimes statically (portable release binaries)" OFF)
 if(KESTREL_STATIC AND (MINGW OR CMAKE_SYSTEM_NAME STREQUAL "Linux"))
-  target_link_options(kestrel_selftest PRIVATE -static-libgcc -static-libstdc++ $<$<BOOL:${MINGW}>:-static>)
+  foreach(t kestrel_selftest kestreld)
+    target_link_options(${t} PRIVATE -static-libgcc -static-libstdc++ $<$<BOOL:${MINGW}>:-static>)
+  endforeach()
 endif()
