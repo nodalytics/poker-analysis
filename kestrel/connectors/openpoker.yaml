@@ -1,0 +1,72 @@
+# Open Poker (openpoker.ai): 6-max NLHE cash for bots, virtual chips, 14-day seasons. DRAFT, not yet played: written
+# from its protocol docs (docs.openpoker.ai/llms-full.txt, revision 2026-09-02) and tested against
+# testplatform/ws_platform.py, which speaks the same messages. Before it plays for real:
+# - the account: sign in by the magic link, create a Self Host bot, put its key on the lab as KESTREL_OPENPOKER_KEY;
+#   play from the lab (Cloudflare refuses this machine);
+# - a 6-max cash model (50-250bb, no ICM): the 9-max tournament networks are a placeholder here;
+# - after a reconnect Kestrel joins the lobby again instead of resyncing a seat it still holds (resync_request);
+#   a turn pending during a disconnect is folded by the server after 45 s.
+name: openpoker
+game: {variant: nlhe, players: 6, format: cash}
+codec: structured
+
+transport:
+  websocket: wss://openpoker.ai/ws
+  headers: {Authorization: "Bearer ${env:KESTREL_OPENPOKER_KEY}"}
+  rate_limit_per_s: 20         # Open Poker's limit is 20 messages a second
+  reconnect_s: 6               # and 10 connections a minute
+
+routes:                        # WebSocket routes are message templates
+  join: {message: {type: join_lobby, buy_in: 2000}}
+  act:
+    message: {type: action, hand_id: "${hand_id}", action: "${action}", amount: "${num:amount}",
+              client_action_id: "${nonce}", turn_token: "${turn_token}"}
+
+flow:
+  start: join                  # sent when the socket opens, and after busting or a closed table (events.apply)
+  act: act
+
+session:
+  vars: {turn_token: /turn_token, hand_id: /hand_id}   # from whichever event carries them
+
+events:
+  type: /type
+  apply:                       # how each event updates the table document (paths into it; values from the event)
+    table_joined:
+      reset: [/stacks]
+      index: {/stacks: {at: /players, key: /seat, value: /stack}}
+      set: {/me: /seat}
+    player_joined: {set: {"/stacks/{seat}": /stack}}
+    player_left: {unset: ["/stacks/{seat}"]}
+    hand_start:
+      reset: [/hole, /board, /actions]
+      set: {/hand: /hand_id, /button: /dealer_seat, /me: /seat, /sb: /blinds/small_blind, /bb: /blinds/big_blind}
+      copy: {/start: /stacks}  # the stacks at the hand's start
+    hole_cards: {set: {/hole: /cards}}
+    community_cards: {append: {/board: /cards}}
+    player_action:
+      push:
+        /actions: {player: /seat, street: {at: /street, map: {preflop: 0, flop: 1, turn: 2, river: 3}},
+                   kind: {at: /action, map: {all_in: allin}}, add: /contribution_delta, left: /stack}
+    your_turn: {turn: true}
+    action_ack: {accept: true}
+    action_rejected: {reject: true}   # our move refused: Kestrel checks, then folds
+    hand_result: {merge: {/stacks: /final_stacks}}
+    busted: {send: join}
+    table_closed: {send: join}
+
+fields:                        # read from the table document
+  me: /me
+  hand: /hand
+  players: {at: /start, entries: {id: "$key", stack: "$value"}}
+  button: /button
+  sb: /sb
+  bb: /bb
+  hole: /hole
+  board: /board
+  actions: {at: /actions, items: {player: /player, street: /street, kind: /kind, add: /add, left: /left}}
+  error: /code                 # error and action_rejected carry a code
+
+answer:
+  actions: {fold: fold, check: check, call: call, raise: raise, allin: all_in}
+  amount: to                   # raise-to, whole chips

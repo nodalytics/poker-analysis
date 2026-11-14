@@ -40,6 +40,7 @@ AUTO = (
 )
 PAYOUTS = [0.30, 0.20, 0.145, 0.105, 0.08, 0.065, 0.05, 0.035, 0.02]
 RANKS = "23456789TJQKA"
+STREETS = {0: "preflop", 3: "flop", 4: "turn", 5: "river"}
 BOTS = ["limper", "station", "odd", "tag", "minraiser", "odd", "limper", "tag"]
 
 
@@ -54,7 +55,8 @@ def strength(hole, board):
 
 
 class Tournament:
-    def __init__(self, name, players, rng):
+    def __init__(self, name, players, rng, ante=True, outbox=None):
+        self.use_ante, self.outbox, self.board_seen = ante, outbox, 0
         self.rng = rng
         self.names = [name] + [f"{BOTS[k % len(BOTS)]}{k}" for k in range(1, players)]
         self.kind = {n: n.rstrip("0123456789") for n in self.names[1:]}
@@ -92,13 +94,20 @@ class Tournament:
                 order = [self.ring[(self.button + 1 + k) % n] for k in range(n)]
             self.hands += 1
             bb = self.bb()
-            self.order, self.sb_, self.bb_, self.ante = order, bb // 2, bb, bb
+            self.order, self.sb_, self.bb_, self.ante = order, bb // 2, bb, bb if self.use_ante else 0
             self.start = {p: self.chips[p] for p in order}
             self.actions = []
             self.state = NoLimitTexasHoldem.create_state(
-                AUTO, False, {1: bb}, (bb // 2, bb), bb, [self.chips[p] for p in order], n,
+                AUTO, False, {1: self.ante}, (bb // 2, bb), bb, [self.chips[p] for p in order], n,
                 mode=Mode.TOURNAMENT,
             )  # fmt: skip
+            self.board_seen = 0
+            if self.me in order:
+                self.out({"type": "hand_start", "hand_id": f"h-{self.hands}", "seat": self.seat(self.me),
+                          "dealer_seat": self.seat(order[-1]), "blinds": {"small_blind": bb // 2, "big_blind": bb}})  # fmt: skip
+                self.out(
+                    {"type": "hole_cards", "cards": [repr(c) for c in self.state.hole_cards[order.index(self.me)]]}
+                )
             self.run_bots()
             if self.state is not None:
                 return
@@ -106,12 +115,22 @@ class Tournament:
     def finish_hand(self):
         for p, s in zip(self.order, self.state.stacks):
             self.chips[p] = s
+        self.out({"type": "hand_result", "final_stacks": {str(self.seat(p)): self.chips[p] for p in self.ring}})
         self.button = (self.ring.index(self.order[-1]) + 1) % len(self.ring)
         self.state = None
 
-    def record(self, i, kind):
-        st = self.state
-        self.actions.append({"player": self.order[i], "street": st.street_index, "type": kind, "to": st.bets[i]})
+    def seat(self, name):
+        return self.names.index(name)
+
+    def out(self, msg):
+        if self.outbox is not None:
+            self.outbox.append(msg)
+
+    def board_events(self):
+        board = [repr(c) for cs in self.state.board_cards for c in cs] if self.state else []
+        if len(board) > self.board_seen:
+            self.out({"type": "community_cards", "cards": board[self.board_seen :], "street": STREETS[len(board)]})
+            self.board_seen = len(board)
 
     def apply(self, i, action, amount=0):
         """Play a move; the street total is worked out first, as PokerKit collects the bets when a street closes."""
@@ -130,7 +149,13 @@ class Tournament:
             to = min(top, mine + st.stacks[i])
             st.check_or_call()
             kind = "call" if top > mine else "check"
-        self.actions.append({"player": self.order[i], "street": street, "type": kind, "to": to})
+        self.actions.append({"player": self.order[i], "street": street, "type": kind, "to": to, "add": to - mine})
+        self.out({"type": "player_action", "seat": self.seat(self.order[i]), "name": self.order[i],
+                  "action": {"allin": "all_in", "bet": "raise"}.get(kind, kind),
+                  "amount": None if kind in ("fold", "check") else to - mine if kind == "call" else to,
+                  "street": STREETS[[0, 3, 4, 5][street]], "contribution_delta": to - mine,
+                  "stack": st.stacks[i]})  # fmt: skip
+        self.board_events()
 
     def bot(self, i):
         st, name = self.state, self.order[i]

@@ -60,7 +60,8 @@ if(NOT KESTREL_CORE_ONLY)
   set(YAML_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
   set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
   FetchContent_Declare(yaml-cpp GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git GIT_TAG 0.8.0)
-  set(USE_TLS OFF CACHE BOOL "" FORCE)
+  set(USE_TLS ON CACHE BOOL "" FORCE)        # wss:// connectors (Open Poker), through the same OpenSSL as https
+  set(USE_OPEN_SSL ON CACHE BOOL "" FORCE)
   set(USE_ZLIB OFF CACHE BOOL "" FORCE)
   set(IXWEBSOCKET_INSTALL OFF CACHE BOOL "" FORCE)
   FetchContent_Declare(ixwebsocket GIT_REPOSITORY https://github.com/machinezone/IXWebSocket.git

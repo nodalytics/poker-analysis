@@ -49,6 +49,8 @@ kestreld play kestrel/connectors/testplatform.yaml --model llm-research/models/n
     --tournaments 20 --hands 100000 --out sessions/test9 --pack llm-research/blueprint/pack
 ```
 
+Other connectors: `pokerpi.yaml` (a self-hosted bot tournament server, long polling), `testplatform-ws.yaml` (the test platform over a WebSocket, speaking Open Poker's protocol: `uv run --with websockets==14.1 python kestrel/testplatform/ws_platform.py`) and `openpoker.yaml` (a draft until the account exists). The connector format is in [`docs/design.md`](docs/design.md#connector-files).
+
 Advice for one spot, in the platform's own chips (`to` is the street total):
 
 ```

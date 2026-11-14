@@ -30,6 +30,28 @@ json at(const json& r, const json& fields, const char* key) {
     if (!fields.contains(key)) return nullptr;
     const json& f = fields[key];
     if (f.is_object() && f.contains("value")) return render(f["value"], {});
+    if (f.is_object() && f.contains("entries")) {  // an object read as items: "$key", "$value", or pointers into the value
+        json::json_pointer p(f.value("at", ""));
+        if (!r.contains(p) || !r[p].is_object()) return nullptr;
+        std::vector<std::string> keys;
+        for (auto& [k, v] : r[p].items()) keys.push_back(k);
+        std::sort(keys.begin(), keys.end(), [](const std::string& a, const std::string& b) {
+            bool na = !a.empty() && a.find_first_not_of("0123456789") == std::string::npos;
+            bool nb = !b.empty() && b.find_first_not_of("0123456789") == std::string::npos;
+            return na && nb ? std::stoll(a) < std::stoll(b) : a < b;
+        });
+        json out = json::array();
+        for (auto& k : keys) {
+            const json& v = r[p][k];
+            json o = json::object();
+            for (auto& [name, how] : f["entries"].items()) {
+                std::string h = how.get<std::string>();
+                o[name] = h == "$key" ? json(k) : h == "$value" ? v : (v.is_object() && v.contains(json::json_pointer(h)) ? v[json::json_pointer(h)] : json());
+            }
+            out.push_back(o);
+        }
+        return out;
+    }
     if (f.is_object() && f.contains("items")) {
         json::json_pointer p(f.value("at", ""));
         json out = json::array();
@@ -41,6 +63,8 @@ json at(const json& r, const json& fields, const char* key) {
         }
         return out;
     }
+    if (!f.is_string() && !f.is_object())
+        throw std::runtime_error(std::string("field ") + key + ": a JSON pointer or {at: ...}, not " + f.dump());
     std::string ptr = f.is_string() ? f.get<std::string>() : f.value("at", "");
     json::json_pointer p(ptr);
     if (!r.contains(p)) return nullptr;
@@ -261,9 +285,11 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
     if (spec.codec != "structured") throw std::runtime_error(spec.name + ": 9-max models play structured connectors");
     const json& routes = spec.raw["routes"];
     const json& flow = spec.raw["flow"];
-    if (!flow.contains("state")) throw std::runtime_error(spec.name + ": flow.state (the table state route) is required");
     auto tr = make_transport(spec);
-    const json& state_route = routes[flow["state"].get<std::string>()];
+    const bool stream = tr->streaming();
+    if (!stream && !flow.contains("state")) throw std::runtime_error(spec.name + ": flow.state (the table state route) is required");
+    if (stream && !spec.raw.contains("events")) throw std::runtime_error(spec.name + ": a WebSocket connector needs events");
+    const json& state_route = stream ? routes[flow["act"].get<std::string>()] : routes[flow["state"].get<std::string>()];
     const json& act_route = routes[flow["act"].get<std::string>()];
     const json fields = spec.raw["fields"];
     const json answer = spec.raw.value("answer", json::object());
@@ -338,14 +364,134 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
         emit(ev);
     };
     int idle = 0, t_start = 0, translated = 0, decisions = 0;
+    // streams: each event updates a table document that `fields` read, as they read a polled platform's reply
+    json doc = json::object();
+    const json events = spec.raw.value("events", json::object());
+    const std::string type_ptr = events.value("type", "/type");
+    int fallback_stage = 0;  // after a move: 1 when a rejection should get a check, 2 a fold
+    uint64_t nonce = rng();
+    auto path_of = [&](std::string path, const json& e) {  // "/stacks/{seat}": fields of the event fill the braces
+        for (size_t a; (a = path.find('{')) != std::string::npos;) {
+            size_t b = path.find('}', a);
+            if (b == std::string::npos) break;
+            std::string k = path.substr(a + 1, b - a - 1);
+            path.replace(a, b - a + 1, e.contains(k) ? id_of(e[k]) : "");
+        }
+        return json::json_pointer(path);
+    };
+    auto send_route = [&](const std::string& name) {
+        vars["nonce"] = std::to_string(++nonce);
+        tr->call(routes.at(name), vars);
+    };
+    // returns true when the event opens our turn
+    auto apply_event = [&](const json& e) {
+        json::json_pointer tp(type_ptr);
+        if (!e.contains(tp)) return false;
+        std::string type = id_of(e[tp]);
+        if (!events.contains("apply") || !events["apply"].contains(type)) return false;
+        const json& rule = events["apply"][type];
+        const json ops_reset = rule.value("reset", json::array());
+        for (auto& path : ops_reset) doc[path_of(path.get<std::string>(), e)] = nullptr;
+        const json ops_unset = rule.value("unset", json::array());
+        for (auto& path : ops_unset) {
+            auto p = path_of(path.get<std::string>(), e);
+            if (doc.contains(p)) doc[p.parent_pointer()].erase(p.back());
+        }
+        const json ops_copy = rule.value("copy", json::object());
+        for (auto& [path, src] : ops_copy.items()) {
+            json::json_pointer from(src.get<std::string>());
+            doc[path_of(path, e)] = doc.contains(from) ? doc[from] : json();
+        }
+        const json ops_set = rule.value("set", json::object());
+        for (auto& [path, how] : ops_set.items()) {
+            json one = {{"v", how}};
+            doc[path_of(path, e)] = at(e, one, "v");
+        }
+        const json ops_append = rule.value("append", json::object());
+        for (auto& [path, how] : ops_append.items()) {
+            json one = {{"v", how}};
+            json v = at(e, one, "v");
+            json& dst = doc[path_of(path, e)];
+            if (!dst.is_array()) dst = json::array();
+            if (v.is_array())
+                for (auto& x : v) dst.push_back(x);
+            else if (!v.is_null())
+                dst.push_back(v);
+        }
+        const json ops_push = rule.value("push", json::object());
+        for (auto& [path, spec_] : ops_push.items()) {
+            json o = json::object();
+            for (auto& [k, how] : spec_.items()) o[k] = at(e, spec_, k.c_str());
+            json& dst = doc[path_of(path, e)];
+            if (!dst.is_array()) dst = json::array();
+            dst.push_back(o);
+        }
+        const json ops_merge = rule.value("merge", json::object());
+        for (auto& [path, how] : ops_merge.items()) {
+            json one = {{"v", how}};
+            json v = at(e, one, "v");
+            json& dst = doc[path_of(path, e)];
+            if (!dst.is_object()) dst = json::object();
+            if (v.is_object()) dst.update(v);
+        }
+        const json ops_index = rule.value("index", json::object());
+        for (auto& [path, idx] : ops_index.items()) {  // a list of objects into a map
+            json::json_pointer from(idx.at("at").get<std::string>());
+            json& dst = doc[path_of(path, e)];
+            if (!dst.is_object()) dst = json::object();
+            if (e.contains(from) && e[from].is_array())
+                for (auto& x : e[from]) {
+                    json::json_pointer kp(idx.at("key").get<std::string>()), vp(idx.at("value").get<std::string>());
+                    if (x.contains(kp) && x.contains(vp)) dst[id_of(x[kp])] = x[vp];
+                }
+        }
+        if (rule.contains("send")) send_route(rule["send"].get<std::string>());
+        if (rule.value("reject", false) && fallback_stage > 0) {  // our move was refused: check, then fold
+            ++sum.fallbacks;
+            std::ofstream(plan.out_dir + "/refused.jsonl", std::ios::app) << json{{"event", e}, {"doc", doc}}.dump() << "\n";
+            vars["action"] = amap.contains(fallback_stage == 1 ? "check" : "fold") ? id_of(amap[fallback_stage == 1 ? "check" : "fold"])
+                                                                                     : (fallback_stage == 1 ? "check" : "fold");
+            vars["amount"] = "";
+            send_route(flow["act"].get<std::string>());
+            fallback_stage = fallback_stage == 1 ? 2 : 0;
+        }
+        if (rule.value("accept", false)) fallback_stage = 0;
+        return rule.value("turn", false);
+    };
     while (true) {
         if (stop && *stop) {
             sum.stopped = "stopped";
             break;
         }
-        json r = tr->call(state_route, vars);
-        keep_token(r);
-        if (auto e = platform_error(r); !e.empty()) {
+        json r;
+        bool turn_event = true;
+        if (stream) {
+            json e = tr->next(500);
+            if (e.is_null()) continue;
+            if (e.contains("$transport")) {
+                emit({{"type", "transport"}, {"state", e["$transport"]}, {"reason", e.value("reason", "")}});
+                if (e["$transport"] == "open" && flow.contains("start")) send_route(flow["start"].get<std::string>());
+                continue;
+            }
+            keep_token(e);
+            json::json_pointer tp(type_ptr);
+            const std::string etype = e.contains(tp) ? id_of(e[tp]) : "";
+            const bool refusal = events.contains("apply") && events["apply"].contains(etype) &&
+                                 events["apply"][etype].value("reject", false);  // counted as a fallback, not an error
+            if (auto why = refusal ? std::string() : platform_error(e); !why.empty()) {
+                emit({{"type", "platform_error"}, {"error", why}});
+                if (++sum.errors >= plan.max_errors) {
+                    sum.stopped = "too many platform errors: " + why;
+                    break;
+                }
+            }
+            turn_event = apply_event(e);
+            r = doc;
+        } else {
+            r = tr->call(state_route, vars);
+            keep_token(r);
+        }
+        if (auto e = stream ? std::string() : platform_error(r); !e.empty()) {
             if (++sum.errors >= plan.max_errors) {
                 sum.stopped = "too many platform errors: " + e;
                 break;
@@ -356,7 +502,7 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
         NMSpot sp;
         sp.me = id_of(at(r, fields, "me"));
         sp.ante_each = ante_each;
-        if (status_route && at(r, fields, "hand").is_null() &&
+        if (!stream && status_route && at(r, fields, "hand").is_null() &&
             std::chrono::steady_clock::now() - last_status > std::chrono::seconds(2)) {
             last_status = std::chrono::steady_clock::now();
             json st = tr->call(*status_route, vars);
@@ -371,6 +517,7 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
                       {"hands", int(results.size()) - t_start}};
             t_start = int(results.size());
             cur_hand.clear(), acted_at.clear();  // a new tournament numbers its hands from 1 again
+            if (stream) doc = json::object();
             sum.tournaments.push_back(t);
             emit({{"type", "tournament"}, {"table9", true}, {"place", t["place"]}, {"prize", t["prize"]},
                   {"hands", t["hands"]}, {"tournaments", sum.tournaments.size()}});
@@ -384,6 +531,7 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
         json players = at(r, fields, "players");
         std::string hand = id_of(at(r, fields, "hand"));
         if (!players.is_array() || hand.empty()) {
+            if (stream) continue;
             if (++idle > 2400) {
                 sum.stopped = "no table state for too long";
                 break;
@@ -392,7 +540,8 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
             continue;
         }
         idle = 0;
-        for (auto& p : players) sp.players.push_back({id_of(p["id"]), num(p["stack"])});
+        for (auto& p : players)
+            if (num(p["stack"]) > 0) sp.players.push_back({id_of(p["id"]), num(p["stack"])});  // busted seats sit out
         sp.button = id_of(at(r, fields, "button"));
         sp.sb = num(at(r, fields, "sb")), sp.bb = num(at(r, fields, "bb")), sp.ante = num(at(r, fields, "ante"));
         if (hand != cur_hand) {
@@ -402,7 +551,9 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
             cur_line = {{"connector", spec.name}, {"model", plan.model}, {"hand_id", hand}, {"players", sp.players.size()},
                         {"start_bb", sp.bb > 0 ? cur_start / sp.bb : 0.0}, {"decisions", json::array()}};
         }
-        if (id_of(at(r, fields, "to_act")) != sp.me && !(at(r, fields, "to_act").is_boolean() && truthy(at(r, fields, "to_act")))) {
+        if (stream ? !turn_event
+                   : id_of(at(r, fields, "to_act")) != sp.me && !(at(r, fields, "to_act").is_boolean() && truthy(at(r, fields, "to_act")))) {
+            if (stream) continue;
             std::this_thread::sleep_for(poll);
             continue;
         }
@@ -420,12 +571,13 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
                 if (kind != "fold" && kind != "check" && kind != "call" && kind != "bet" && kind != "raise" && kind != "allin")
                     continue;  // blinds, antes, shows
                 sp.actions.push_back({id_of(a["player"]), a.contains("street") && !a["street"].is_null() ? int(num(a["street"])) : -1,
-                                      kind, num(a["to"])});
+                                      kind, num(a["to"]), a.contains("add") && !a["add"].is_null() ? num(a["add"]) : -1.0,
+                                      a.contains("left") && !a["left"].is_null() ? num(a["left"]) : -1.0});
             }
         if (json pay = at(r, fields, "payouts"); pay.is_array())
             for (auto& x : pay) sp.payouts.push_back(num(x));
         // a state the platform has not yet updated after our move: wait, never answer twice
-        std::string key = hand + "/" + std::to_string(sp.actions.size());
+        std::string key = hand + "/" + std::to_string(sp.actions.size()) + (stream ? "/" + std::to_string(nonce) : "");
         if (key == acted_at) {
             std::this_thread::sleep_for(poll);
             continue;
@@ -449,9 +601,11 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
             vars["amount"] = o.action == "raise" || o.action == "allin" || answer.value("amount_always", false)
                                  ? (unit >= 1 ? json(int64_t(amt)) : json(amt)).dump()
                                  : "";
+            vars["nonce"] = std::to_string(++nonce);
             return tr->call(act_route, vars);
         };
         json ar = send(pick);
+        fallback_stage = stream ? 1 : 0;
         keep_token(ar);
         if (auto why = platform_error(ar); !why.empty()) {
             ++sum.fallbacks;

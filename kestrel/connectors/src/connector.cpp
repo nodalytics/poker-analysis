@@ -11,6 +11,11 @@
 #include <yaml-cpp/yaml.h>
 
 #include <httplib.h>
+#include <ixwebsocket/IXWebSocket.h>
+
+#include <condition_variable>
+#include <deque>
+#include <mutex>
 
 namespace kestrel {
 
@@ -89,7 +94,8 @@ ConnectorSpec load_connector(const std::string& path) {
     for (const char* k : {"start", "act"})
         if (!r["flow"].contains(k)) throw std::runtime_error(c.name + ": flow." + k + " is required");
     for (auto& [name, rt] : r["routes"].items()) {
-        if (!rt.contains("path")) throw std::runtime_error(c.name + ": routes." + name + " has no path");
+        if (!rt.contains("path") && !rt.contains("message"))
+            throw std::runtime_error(c.name + ": routes." + name + " has no path (HTTP) or message (WebSocket)");
         std::string m = rt.value("method", "POST");
         if (m != "GET" && m != "POST" && m != "PUT" && m != "PATCH" && m != "DELETE")
             throw std::runtime_error(c.name + ": routes." + name + ": method " + m);
@@ -109,7 +115,7 @@ ConnectorSpec load_connector(const std::string& path) {
         }
     };
     scan(r);
-    c.hosts.push_back(r["transport"].value("base_url", ""));
+    c.hosts.push_back(r["transport"].value("base_url", r["transport"].value("websocket", "")));
     for (auto& [name, rt] : r["routes"].items()) {
         std::string p = rt.value("path", "");
         if (p.find("://") != std::string::npos) c.hosts.push_back(p);
@@ -276,13 +282,85 @@ class HttpTransport : public Transport {
     std::unique_ptr<httplib::Client> cli_;
 };
 
+// a WebSocket: messages in a queue as they arrive; reconnects on its own, no faster than reconnect_s
+class WsTransport : public Transport {
+  public:
+    explicit WsTransport(const json& tr) {
+        url_ = tr.at("websocket").get<std::string>();
+        if (tr.contains("headers")) headers_ = tr["headers"];
+        double rate = tr.value("rate_limit_per_s", 10.0);
+        gap_ = std::chrono::milliseconds(rate > 0 ? int(1000.0 / rate) : 0);
+        ws_.setUrl(url_);
+        ix::WebSocketHttpHeaders h;
+        json rh = render(headers_, {});
+        for (auto it = rh.begin(); it != rh.end(); ++it) h[it.key()] = it.value().get<std::string>();
+        ws_.setExtraHeaders(h);
+        int back = int(tr.value("reconnect_s", 6.0) * 1000);
+        ws_.setMinWaitBetweenReconnectionRetries(back);
+        ws_.setMaxWaitBetweenReconnectionRetries(std::max(back, 60000));
+        ws_.setPingInterval(30);
+        ws_.setOnMessageCallback([this](const ix::WebSocketMessagePtr& m) {
+            json ev;
+            if (m->type == ix::WebSocketMessageType::Message) {
+                ev = json::parse(m->str, nullptr, false);
+                if (ev.is_discarded()) return;
+            } else if (m->type == ix::WebSocketMessageType::Open) {
+                ev = {{"$transport", "open"}};
+            } else if (m->type == ix::WebSocketMessageType::Close) {
+                ev = {{"$transport", "closed"}, {"code", m->closeInfo.code}, {"reason", m->closeInfo.reason}};
+            } else if (m->type == ix::WebSocketMessageType::Error) {
+                ev = {{"$transport", "error"}, {"reason", m->errorInfo.reason}};
+            } else {
+                return;
+            }
+            std::lock_guard<std::mutex> lk(mu_);
+            q_.push_back(std::move(ev));
+            if (q_.size() > 10000) q_.pop_front();
+            cv_.notify_one();
+        });
+        ws_.start();
+    }
+    ~WsTransport() override { ws_.stop(); }
+
+    bool streaming() const override { return true; }
+    json call(const json& route, const std::map<std::string, std::string>& vars) override {
+        send(route, vars);
+        return json::object();
+    }
+    void send(const json& route, const std::map<std::string, std::string>& vars) override {
+        if (!route.contains("message")) throw std::runtime_error("a WebSocket route needs a message");
+        auto now = std::chrono::steady_clock::now();
+        if (now < next_) std::this_thread::sleep_until(next_);
+        next_ = std::chrono::steady_clock::now() + gap_;
+        ws_.send(render(route["message"], vars).dump());
+    }
+    json next(int timeout_ms) override {
+        std::unique_lock<std::mutex> lk(mu_);
+        if (!cv_.wait_for(lk, std::chrono::milliseconds(timeout_ms), [&] { return !q_.empty(); })) return nullptr;
+        json e = std::move(q_.front());
+        q_.pop_front();
+        return e;
+    }
+
+  private:
+    std::string url_;
+    json headers_;
+    ix::WebSocket ws_;
+    std::mutex mu_;
+    std::condition_variable cv_;
+    std::deque<json> q_;
+    std::chrono::milliseconds gap_{0};
+    std::chrono::steady_clock::time_point next_{};
+};
+
 }
 
 std::unique_ptr<Transport> make_transport(const ConnectorSpec& spec) {
     const json& tr = spec.raw.at("transport");
     if (tr.contains("base_url")) return std::make_unique<HttpTransport>(tr);
-    if (tr.contains("websocket") || tr.contains("tcp") || tr.contains("mcp"))
-        throw std::runtime_error(spec.name + ": websocket, tcp and mcp transports are not built yet");
+    if (tr.contains("websocket")) return std::make_unique<WsTransport>(tr);
+    if (tr.contains("tcp") || tr.contains("mcp"))
+        throw std::runtime_error(spec.name + ": tcp and mcp transports are not built yet");
     throw std::runtime_error(spec.name + ": transport needs base_url (http/https)");
 }
 
