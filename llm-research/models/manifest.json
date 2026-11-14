@@ -44,6 +44,71 @@
    "source": "blueprint/nm12",
    "vs_tag_bb100": 35.9
   },
+  "nm13": {
+   "bytes": 4516705,
+   "hands_trained": 8523120640,
+   "minutes_trained": 720.0,
+   "note": "MTT 10-25bb, no ante, from nm12 with the tournament regular in the pool, 12h",
+   "path": "ninemax/nm13/avg_fp16.pt",
+   "sha256": {
+    "avg_fp16.pt": "59f7d916b458d90e6a797951aeb1928a2e0d039cec341fee68bb05d4e8421cd8",
+    "config.json": "2bccdfde69bada60065e5c4d8258d9f90d49847996266e952f17868b15ae1c32"
+   },
+   "source": "blueprint/nm13",
+   "vs_tag_bb100": 35.8
+  },
+  "nm14": {
+   "bytes": 4516705,
+   "hands_trained": 3055550464,
+   "minutes_trained": 720.0,
+   "note": "MTT 10-25bb, no ante, fresh, the tournament regular in the pool, 12h",
+   "path": "ninemax/nm14/avg_fp16.pt",
+   "sha256": {
+    "avg_fp16.pt": "6691523bd9546b0b096099b34ff8ffd0d0c6990e4d694527528b8efa2893d936",
+    "config.json": "0e9a49878c6db03bd3059572c759568c5361d497db81fc57206f616ffef7b5d7"
+   },
+   "source": "blueprint/nm14",
+   "vs_tag_bb100": 37.1
+  },
+  "nm15": {
+   "bytes": 4516705,
+   "hands_trained": 10954620928,
+   "minutes_trained": 720.0,
+   "note": "MTT 10-25bb, big-blind ante 1bb, from nm13, 12h",
+   "path": "ninemax/nm15/avg_fp16.pt",
+   "sha256": {
+    "avg_fp16.pt": "8aca4db6f3e37780f9685b1eebae6128e8a10f820fdd0bb2f69d00f4620137b9",
+    "config.json": "1edb522bc63d4d25786ae2df446011433c1e2deba1b4131578459553a5e8316a"
+   },
+   "source": "blueprint/nm15",
+   "vs_tag_bb100": 34.1
+  },
+  "nm16": {
+   "bytes": 4516705,
+   "hands_trained": 2679488512,
+   "minutes_trained": 720.0,
+   "note": "MTT 10-25bb, big-blind ante 1bb, fresh, 12h",
+   "path": "ninemax/nm16/avg_fp16.pt",
+   "sha256": {
+    "avg_fp16.pt": "ac822ad19ff40866a89c512da0fae34690944b3ee47a17717e7edc2508ece379",
+    "config.json": "5ecbafea7a2357673ad35f3768bc5f3637d81cb902bc39e3eddb83fc29fdf5f0"
+   },
+   "source": "blueprint/nm16",
+   "vs_tag_bb100": 33.4
+  },
+  "nm17": {
+   "bytes": 4516705,
+   "hands_trained": 10904567808,
+   "minutes_trained": 720.0,
+   "note": "MTT 10-25bb, big-blind ante 1bb, half the final tables 2-8 handed, from nm15 at 2.5h, 12h: the most complete tournament network",
+   "path": "ninemax/nm17/avg_fp16.pt",
+   "sha256": {
+    "avg_fp16.pt": "02e593cd84ef58836e42f5e73db530c012e9c56ba86648ad7b9a8b91ee2f7e69",
+    "config.json": "41b3e51afe1b347e1cd3afbb9a6de641c5ac29f500c51b0fb18509e997afc2af"
+   },
+   "source": "blueprint/nm17",
+   "vs_tag_bb100": 29.2
+  },
   "nm4": {
    "bytes": 4487009,
    "hands_trained": 1191608320,
