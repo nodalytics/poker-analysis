@@ -15,6 +15,10 @@
 #include <string>
 
 #include "kestrel/connector.hpp"
+#include <httplib.h>
+#include <thread>
+
+#include "kestrel/gateway.hpp"
 #include "kestrel/headsup.hpp"
 #include "kestrel/luck.hpp"
 #include "kestrel/models.hpp"
@@ -32,6 +36,7 @@ int usage() {
                  "usage: kestreld list [DIR]\n"
                  "       kestreld luck DIR... [--big 100 --stack 20000]   luck-adjusted results of session logs\n"
                  "       kestreld models list|install PACKAGE.tar.gz|verify NAME [--dir DIR]\n"
+                 "       kestreld mcp [--port 8790]        MCP over stdio for LLMs and agents\n"
                  "       kestreld check CONNECTOR\n"
                  "       kestreld play CONNECTOR --hands N --out DIR [--pack DIR] [--model M]\n"
                  "                     [--solver none|kestrel-river|texassolver] [--resolve-iters N]\n"
@@ -145,7 +150,7 @@ std::filesystem::path exe_dir(const char* argv0) {
 
 // a double-click: serve with everything found beside the program (the release layout: bin/ and share/kestrel/) and
 // in the user's folders, and open the app in the browser
-int launch(const char* argv0) {
+ServeOptions defaults(const char* argv0) {
     namespace fs = std::filesystem;
     fs::path share = exe_dir(argv0).parent_path() / "share" / "kestrel";
     std::string home = std::getenv("HOME") ? std::getenv("HOME") : (std::getenv("USERPROFILE") ? std::getenv("USERPROFILE") : ".");
@@ -162,13 +167,19 @@ int launch(const char* argv0) {
                                                          : (data / "pack").string();
     if (const char* b = std::getenv("TEXASSOLVER_BIN")) o.ts_bin = b;
     if (const char* r = std::getenv("TEXASSOLVER_RESOURCES")) o.ts_resources = r;
-    o.open_browser = true;
     o.token_file = config_dir() + "/token";
     {  // settings.json: {"lan": true} to reach the app from other devices on the network
         std::ifstream sf(config_dir() + "/settings.json");
         auto st = nlohmann::json::parse(sf, nullptr, false);
         if (!st.is_discarded() && st.is_object()) o.lan = st.value("lan", false), o.port = st.value("port", 8790);
     }
+    return o;
+}
+
+int launch(const char* argv0) {
+    namespace fs = std::filesystem;
+    ServeOptions o = defaults(argv0);
+    o.open_browser = true;
     if (!fs::exists(fs::path(o.web) / "index.html")) {
         std::fprintf(stderr, "kestreld: the web app is not beside the program (%s)\n", o.web.c_str());
         return 1;
@@ -181,8 +192,34 @@ int launch(const char* argv0) {
     }
 }
 
+// MCP over stdio for LLMs and agents: joins a running Kestrel, or starts one quietly in this process
+int mcp_command(int argc, char** argv) {
+    ServeOptions o = defaults(argv[0]);
+    for (int k = 2; k + 1 < argc; k += 2)
+        if (std::string(argv[k]) == "--port") o.port = std::stoi(argv[k + 1]);
+    auto running = [&] {
+        httplib::Client c("127.0.0.1", o.port);
+        c.set_connection_timeout(1);
+        auto r = c.Get("/v1/health");
+        return r && r->status == 200;
+    };
+    if (!running()) {
+        o.quiet = true, o.open_browser = false;
+        std::thread([o] {
+            try {
+                serve(o);
+            } catch (const std::exception& e) {
+                std::fprintf(stderr, "kestreld: %s\n", e.what());
+            }
+        }).detach();
+        for (int k = 0; k < 100 && !running(); ++k) std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    return mcp_stdio(o.port, "0.2.0");
+}
+
 int main(int argc, char** argv) {
     if (argc == 1) return launch(argv[0]);
+    if (std::string(argv[1]) == "mcp") return mcp_command(argc, argv);
     if (argc >= 2 && std::string(argv[1]) == "luck") return luck_command(argc, argv);
     if (argc >= 2 && std::string(argv[1]) == "models") return models_command(argc, argv);
     if (argc >= 2 && std::string(argv[1]) == "list") {
@@ -211,6 +248,8 @@ int main(int argc, char** argv) {
             else if (a == "--texassolver") o.ts_bin = v;
             else if (a == "--texassolver-resources") o.ts_resources = v;
             else if (a == "--lan") o.lan = v == "on" || v == "1" || v == "true";
+            else if (a == "--ws-port") o.ws_port = std::stoi(v);
+            else if (a == "--tcp-port") o.tcp_port = std::stoi(v);
             else return usage();
         }
         o.connectors.push_back(default_dir());
