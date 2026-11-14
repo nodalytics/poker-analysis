@@ -269,7 +269,7 @@ function miniView(t) {
   return `<div class="mt">
     <div class="r"><div class="p"><span class="av mono">${esc(t.connector[0].toUpperCase())}</span><span><div class="n">${esc(t.connector)}</div>
       <div class="st mono">${e.their_stack != null ? bb(e.their_stack, big) : 200} bb${e.pos === 0 ? " · BTN" : ""}</div></span></div><div class="cards">${theirs}</div></div>
-    <div class="mid"><div class="cards">${board}</div><div style="text-align:right"><div class="street">${street} · ${e.hand || "–"}</div>
+    <div class="mid"><div class="cards">${board}</div><div style="text-align:right"><div class="street">${street} · ${esc(String(e.hand || "–"))}</div>
       ${done ? `<div class="mono ${e.result_bb >= 0 ? "win" : "loss"}" style="font-weight:700">${sign(e.result_bb)} bb</div>` : `<div class="pot mono">pot <b>${e.pot != null ? bb(e.pot, big) : "–"}</b></div>`}</div></div>
     <div class="r"><div class="p"><span class="av">${LOGO}</span><span><div class="n">Kestrel</div>
       <div class="st mono">${e.my_stack != null ? bb(e.my_stack, big) : 200} bb${e.pos === 1 ? " · BTN" : ""}</div></span></div><div class="cards">${mine}</div></div>
@@ -290,7 +290,7 @@ function tableView(t) {
   const btnThem = e.pos === 0 ? `<span class="badge">BTN</span>` : "";
   return `<div class="table">
     <div class="oval"></div>
-    <div class="streetlabel">${done ? "Showdown" : STREETS[street] || ""} · hand ${e.hand || "–"}</div>${res}
+    <div class="streetlabel">${done ? "Showdown" : STREETS[street] || ""} · hand ${esc(String(e.hand || "–"))}</div>${res}
     <div class="seat top">
       <div class="who"><span class="av mono">${esc(t.connector[0].toUpperCase())}</span><span><div class="name">${esc(t.connector)}</div>
         <div class="stack mono">${e.their_stack != null ? bb(e.their_stack, big) + " bb" : "200 bb"}</div></span>${btnThem}</div>
@@ -335,7 +335,7 @@ function spark(t) {
 const won = t => t.won ?? (t.curve[t.curve.length - 1] || 0);
 function screenView(t) {
   const hands = t.hands || 0, rate = t.bb100 || 0, total = won(t);
-  const recent = t.recent.slice(-30).reverse().map(h => `<div class="row"><span class="mono">#${h.hand}</span>
+  const recent = t.recent.slice(-30).reverse().map(h => `<div class="row"><span class="mono">#${esc(String(h.hand))}</span>
       <span class="a mono">${esc((h.hole || []).join(" "))} · ${esc(h.action)}</span>
       <span class="mono ${h.result_bb >= 0 ? "win" : "loss"}">${sign(h.result_bb)}</span></div>`).join("");
   const cname = esc(t.connector);
@@ -379,7 +379,7 @@ function practiceTable(t, mini = false) {
       <div class="said">${done && r ? `<span class="${r.result_bb >= 0 ? "win" : "loss"}">${sign(r.result_bb)} bb</span>` : esc(last[st.name] || (st.in_bb ? `in ${(+st.in_bb).toFixed(1)}` : ""))}</div></div>`;
   }).join("");
   return `<div class="pt"><div class="oval"></div>
-    <div class="streetlabel">${done ? (e.showdown ? "Showdown" : "Hand over") : STREETS[e.street || 0]} · hand ${e.hand || "–"}${e.level ? ` · level ${e.level}` : ""}</div>
+    <div class="streetlabel">${done ? (e.showdown ? "Showdown" : "Hand over") : STREETS[e.street || 0]} · hand ${esc(String(e.hand || "–"))}${e.level ? ` · level ${esc(String(e.level))}` : ""}</div>
     <div class="center"><div class="board">${boardHTML}</div><div class="pot mono">${done ? "" : `pot <b>${(+(e.pot_bb || 0)).toFixed(1)}</b> bb`}</div></div>
     ${seatsHTML}</div>`;
 }
@@ -412,16 +412,16 @@ function table9View(t) {
   const e = t.state || {}, d = t.lastDecision;
   const bars = d ? d.options.map(o => `<div class="bar ${o.chosen ? "pick" : ""}"><span class="lab">${esc(o.label)}</span><div class="t"><div class="f" style="width:${(o.prob * 100).toFixed(1)}%"></div></div><span class="p mono">${(o.prob * 100).toFixed(0)}%</span></div>`).join("") : "";
   const log = (e.log || []).map(x => `<div>${STREETS[x.street]} · ${esc(x.pos)} ${esc(x.name)} ${esc(x.action)}</div>`).join("");
-  const hands = t.hands || 0, total = won(t), places = t.places || [];
+  const hands = t.hands || 0, total = won(t), places = (t.places || []).map(Number).filter(Number.isFinite);
   const mean = places.length ? places.reduce((a, b) => a + b, 0) / places.length : 0;
-  const recent = t.recent.slice(-30).reverse().map(h => `<div class="row"><span class="mono">#${h.hand}</span>
+  const recent = t.recent.slice(-30).reverse().map(h => `<div class="row"><span class="mono">#${esc(String(h.hand))}</span>
       <span class="a mono">${esc((h.hole || []).join(" "))} · ${esc(h.action || "")}</span>
       <span class="mono ${h.result_bb >= 0 ? "win" : "loss"}">${sign(h.result_bb)}</span></div>`).join("");
   return `<div class="screen">
     <div>${practiceTable(t)}<div class="panel" style="margin-top:18px"><h3>This hand</h3><div class="mono" style="font-size:13px;line-height:1.7">${log || "–"}</div></div></div>
     <div class="side">
       <div class="panel"><h3>Kestrel's decision${d ? ` · ${esc(d.pos)}` : ""}</h3>${bars ? `<div class="bars">${bars}</div><div class="why">${esc(t.model)} · ${STREETS[d.street]} · value ${sign(d.value_bb)} bb${d.translated ? ` · ${d.translated} bet${d.translated > 1 ? "s" : ""} off the model's sizes` : ""}${d.error ? ` · could not replay: ${esc(d.error)}` : ""}</div>` : `<div class="why">Waiting for Kestrel's turn…</div>`}</div>
-      <div class="panel"><h3>Session · ${esc(t.connector)}</h3><div class="engine mono">${esc(t.model || "")} · ${t.players || 9}-max tournament${t.tournament ? ` #${t.tournament}` : ""}</div>
+      <div class="panel"><h3>Session · ${esc(t.connector)}</h3><div class="engine mono">${esc(t.model || "")} · ${t.players || 9}-max tournament${t.tournament ? ` #${esc(String(t.tournament))}` : ""}</div>
         <div class="stats">
           <div class="stat"><div class="v mono">${hands}${t.target ? `<span style="color:var(--muted);font-size:13px"> / ${t.target}</span>` : ""}</div><div class="l">hands</div></div>
           <div class="stat"><div class="v mono ${total >= 0 ? "win" : "loss"}">${sign(total)} bb</div><div class="l">won${hands ? ` · ${sign(t.bb100 || 0)} bb/100` : ""}</div></div>

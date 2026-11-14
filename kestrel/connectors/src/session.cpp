@@ -342,7 +342,7 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
         sp.me = id_of(at(r, fields, "me"));
         if (truthy(at(r, fields, "finished"))) {
             if (json c = at(r, fields, "chips"); !c.is_null()) close_hand(num(c), r);
-            json t = {{"place", at(r, fields, "place")}, {"prize", at(r, fields, "prize")},
+            json t = {{"place", int(num(at(r, fields, "place")))}, {"prize", num(at(r, fields, "prize"))},
                       {"hands", int(results.size()) - t_start}};
             t_start = int(results.size());
             cur_hand.clear(), acted_at.clear();  // a new tournament numbers its hands from 1 again
