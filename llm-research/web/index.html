@@ -277,6 +277,7 @@ function Replayer(el, opts = {}) {
   let hands = [], h = 0, step = 0, timer = null;
   const self = {
     onEnd: null,
+    onHandDone: null,  // called each time a hand has been played to its end
     // plays by default: a new set of hands starts moving at once
     load(list, start = 0) { self.stop(); hands = list || []; h = start; step = 0; drawList(); draw(); if (hands.length) self.play(); },
     play() { if (timer) return; el.querySelector('[data-k="play"]').textContent = "Pause"; tick(); },
@@ -285,7 +286,7 @@ function Replayer(el, opts = {}) {
   function tick() {
     const H = hands[h];
     if (!H) return self.stop();
-    if (step < H.steps.length + 1) { step++; draw(); }
+    if (step < H.steps.length + 1) { step++; draw(); if (step === H.steps.length + 1 && self.onHandDone) self.onHandDone(); }
     else if (h < hands.length - 1) { h++; step = 0; drawList(); draw(); }
     else {  // the last hand is over: the caller decides what comes next, else start again from the first
       self.stop();
@@ -393,21 +394,28 @@ $("realDir").onchange = loadReal;
 
 // ---------------- 4: live (from the GUI)
 const C = Replayer($("replayC"));
-var liveOn = false;
+var liveOn = false, livePlayed = 0, liveBatch = 0, liveTrained = "";
+function liveLabel() {
+  $("liveInfo").textContent = `${liveTrained} · played live: ${livePlayed} hand${livePlayed === 1 ? "" : "s"}`;
+}
 async function liveNext() {
   if (!liveOn) return;
-  $("liveInfo").textContent = "dealing…";
+  $("liveInfo").textContent = liveTrained ? `${liveTrained} · played live: ${livePlayed} hands · dealing…` : "dealing…";
   try {
     const r = await get(`/api/live?run=${$("liveRun").value}&opp=${$("liveOpp").value}`);
-    $("liveInfo").textContent = `${r.run}, ${(r.hands_trained / 1e6).toFixed(0)} M hands trained`;
+    const b = r.hands_trained / 1e9;
+    liveTrained = `${r.run.replace("blueprint/", "")}, trained on ${b >= 1 ? b.toFixed(1) + " billion" : (r.hands_trained / 1e6).toFixed(0) + " million"} hands`;
+    liveBatch = r.hands.length;
+    liveLabel();
     C.load(r.hands); C.play();
   } catch (e) { $("liveInfo").textContent = "could not deal: " + e.message; liveStop(); }
 }
-C.onEnd = () => liveOn && setTimeout(liveNext, 600);
+C.onHandDone = () => { if (liveOn) { livePlayed++; liveLabel(); } };
+C.onEnd = () => { if (!liveOn) return; setTimeout(liveNext, 600); };
 function liveStop() { liveOn = false; C.stop(); $("liveGo").textContent = "Start"; }
-function liveStart() { if (!$("liveRun").value) return; liveOn = true; $("liveGo").textContent = "Stop"; liveNext(); }
+function liveStart() { if (!$("liveRun").value) return; liveOn = true; livePlayed = 0; liveTrained = ""; $("liveGo").textContent = "Stop"; liveNext(); }
 $("liveGo").onclick = () => liveOn ? liveStop() : liveStart();
-$("liveRun").onchange = $("liveOpp").onchange = () => { if (liveOn) { C.stop(); liveNext(); } };
+$("liveRun").onchange = $("liveOpp").onchange = () => { if (liveOn) { C.stop(); livePlayed = 0; liveBatch = 0; liveNext(); } };
 
 // ---------------- start: 1 and 2 on by default
 (async () => {
