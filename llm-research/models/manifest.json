@@ -125,5 +125,15 @@
    "source": "blueprint/nm4",
    "vs_tag_bb100": 195.4
   }
+ },
+ "releases": {
+  "model-mtt9-v1": {
+   "asset": "mtt9-1.tar.gz",
+   "game": "9max-mtt",
+   "gates_passed": true,
+   "name": "mtt9",
+   "sha256": "3665b5b46c4e8c06acd1e41fc21be92b8edc0f00e4c8369e89862c73bb4a40d3",
+   "version": "1"
+  }
  }
 }
