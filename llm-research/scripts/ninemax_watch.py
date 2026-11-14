@@ -59,6 +59,8 @@ FIELDS = {
     "rate": NUM + r" hands/s",
     "entropy": r"entropy " + NUM,
     "pull": r"pull " + NUM,
+    "loss": r"loss " + NUM,
+    "kl": r" kl " + NUM,
 }
 
 
