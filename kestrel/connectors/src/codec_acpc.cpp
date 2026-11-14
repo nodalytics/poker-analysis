@@ -33,7 +33,7 @@ bool spot(const std::string& action, int pos, const std::vector<std::string>& ho
           const std::vector<std::string>& board, const Game& g, HUSpot& s) {
     auto st = tokens(action);
     s = HUSpot{};
-    int64_t prev[2] = {0, 0};  // chips in on earlier streets, by position (0 big blind, 1 small blind)
+    int64_t prev[2] = {0, 0};
     int64_t street[2] = {0, 0}, last = 0, raise_size = g.big;
     int actor = 1;
     bool over = false;
@@ -47,7 +47,7 @@ bool spot(const std::string& action, int pos, const std::vector<std::string>& ho
         }
         s.streets.emplace_back();
         for (const Token& t : st[si]) {
-            s.streets.back().push_back({1 - actor, t.kind, t.to});  // blueprint player = 1 - position
+            s.streets.back().push_back({1 - actor, t.kind, t.to});
             if (t.kind == 'b') {
                 raise_size = std::max(raise_size, t.to - last);
                 last = t.to;
@@ -64,6 +64,9 @@ bool spot(const std::string& action, int pos, const std::vector<std::string>& ho
     }
     if (over || actor != pos) return false;
     int64_t max_to = g.stack - prev[pos];
+    s.pot = prev[0] + prev[1] + street[0] + street[1];
+    s.my_bet = street[pos], s.their_bet = street[1 - pos];
+    s.my_stack = g.stack - prev[pos] - street[pos], s.their_stack = g.stack - prev[1 - pos] - street[1 - pos];
     s.me = 1 - pos;
     s.min_to = std::min(last + raise_size, max_to);
     s.max_to = max_to;
@@ -84,4 +87,4 @@ std::string encode(const HUOption& o, const HUSpot& s) {
     return s.facing ? "c" : "k";
 }
 
-}  // namespace kestrel::acpc
+}

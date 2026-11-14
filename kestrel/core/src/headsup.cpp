@@ -8,7 +8,6 @@
 #include <sstream>
 #include <stdexcept>
 
-
 namespace kestrel {
 
 int card_from(const std::string& s) {
@@ -34,14 +33,14 @@ std::vector<std::string> split(const std::string& s, char sep) {
     while (std::getline(ss, x, sep)) out.push_back(x);
     return out;
 }
-}  // namespace
+}
 
 HUBlueprint::HUBlueprint(const std::string& dir, double purify) : purify_(purify) {
     buckets_init(dir);
     std::ifstream t(dir + "/tree.tsv");
     if (!t) throw std::runtime_error("no " + dir + "/tree.tsv");
     std::string line;
-    std::getline(t, line);  // header
+    std::getline(t, line);
     while (std::getline(t, line)) {
         if (!line.empty() && line.back() == '\r') line.pop_back();
         std::vector<std::string> f;
@@ -71,7 +70,7 @@ int HUBlueprint::bucket(const std::array<int, 2>& hole, const std::vector<int>& 
 }
 
 double HUBlueprint::frac(double to, double their, double mine, double pot) {
-    return (to - their) / std::max(pot + (their - mine), 1.0);  // the raise as a fraction of the pot after calling
+    return (to - their) / std::max(pot + (their - mine), 1.0);
 }
 
 int HUBlueprint::child(int node, std::initializer_list<const char*> labels) const {
@@ -109,9 +108,10 @@ int HUBlueprint::map_raise(int node, double x, bool det) {
 }
 
 HUAnswer HUBlueprint::decide(const HUSpot& s, bool det, int64_t round_to) {
+    std::lock_guard<std::mutex> lk(mu_);
     HUAnswer ans;
     int node = 0;
-    double bets[2] = {50, 100}, pot = 0;  // blueprint player 0 posts the small blind
+    double bets[2] = {50, 100}, pot = 0;
     auto rnd = [&](int64_t v) {
         return round_to > 0 ? double(std::llround(double(v) / double(round_to)) * round_to) : double(v);
     };
@@ -138,7 +138,6 @@ HUAnswer HUBlueprint::decide(const HUSpot& s, bool det, int64_t round_to) {
             if (node < 0) return ans;
         }
     }
-    // the walked node must be our decision on the current street
     const Node& n = nodes_[node];
     int p = s.me;
     if (n.kind != 0 || n.player != p || n.street != int(s.streets.size()) - 1) return ans;
@@ -150,7 +149,6 @@ HUAnswer HUBlueprint::decide(const HUSpot& s, bool det, int64_t round_to) {
     double tot = 0;
     for (size_t j = 0; j < k; ++j) tot += st[j] = avg_[n.offset + uint64_t(b) * k + j];
     for (auto& v : st) v = tot > 0 ? v / tot : 1.0 / double(k);
-    // purification, then renormalise (as blueprint_bot.distribution)
     tot = 0;
     for (auto& v : st) tot += v = v < purify_ ? 0.0 : v;
     for (auto& v : st) v = tot > 0 ? v / tot : 1.0 / double(k);
@@ -176,4 +174,4 @@ HUAnswer HUBlueprint::decide(const HUSpot& s, bool det, int64_t round_to) {
     return ans;
 }
 
-}  // namespace kestrel
+}

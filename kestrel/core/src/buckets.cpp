@@ -1,6 +1,4 @@
-// Card buckets of the heads-up blueprint's abstraction: the lookup half of llm-research/blueprint/bp.cpp, so Kestrel
 // builds on its own. Suit-isomorphic indexing (hand-isomorphism, Kevin Waugh) per street into the pack's bucket
-// tables; on the river, without the 123 MB table, the bucket comes from hand strength against every opponent holding
 // and the pack's equal-population cut points (river_cuts.f32). 7-card evaluation: PokerHandEvaluator (Henry Lee).
 #include "kestrel/buckets.hpp"
 
@@ -11,10 +9,10 @@
 #include <string>
 #include <vector>
 
-#define _Bool bool  // hand_index.h is C99
+#define _Bool bool
 extern "C" {
 #include "hand_index.h"
-int evaluate_7cards(int a, int b, int c, int d, int e, int f, int g);  // lower is stronger
+int evaluate_7cards(int a, int b, int c, int d, int e, int f, int g);
 }
 
 namespace kestrel {
@@ -72,7 +70,7 @@ int river_from_hs(const uint8_t* c) {
     return std::min(bk, int(T->rcut.size()) - 1);
 }
 
-}  // namespace
+}
 
 void buckets_init(const std::string& dir) {
     std::lock_guard<std::mutex> lk(init_mu);
@@ -92,7 +90,6 @@ void buckets_init(const std::string& dir) {
         delete t;
         throw std::runtime_error("no blueprint buckets in " + dir);
     }
-    // board order does not matter within a street, so the board is one round: hole cards, then all board cards
     const uint8_t c1[] = {2}, c2[] = {2, 3}, c3[] = {2, 4}, c4[] = {2, 5};
     if (!hand_indexer_init(1, c1, &t->pre) || !hand_indexer_init(2, c2, &t->flop) ||
         !hand_indexer_init(2, c3, &t->turn) || !hand_indexer_init(2, c4, &t->river))
@@ -105,7 +102,7 @@ int bucket_of(const int* cards, int n) {
     uint8_t c[7];
     bool seen[52] = {false};
     for (int i = 0; i < n; ++i) {
-        if (cards[i] < 0 || cards[i] > 51 || seen[cards[i]]) return -1;  // the indexer aborts on duplicates
+        if (cards[i] < 0 || cards[i] > 51 || seen[cards[i]]) return -1;
         seen[cards[i]] = true;
         c[i] = uint8_t(cards[i]);
     }
@@ -115,4 +112,4 @@ int bucket_of(const int* cards, int n) {
     return T->rb.empty() ? river_from_hs(c) : T->rb[hand_index_last(&T->river, c)];
 }
 
-}  // namespace kestrel
+}

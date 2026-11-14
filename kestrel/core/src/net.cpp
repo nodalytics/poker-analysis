@@ -19,7 +19,7 @@ float half_to_float(uint16_t h) {
     if (exp == 0) {
         if (man == 0) {
             bits = sign;
-        } else {  // subnormal: normalise
+        } else {
             exp = 127 - 15 + 1;
             while (!(man & 0x400)) man <<= 1, --exp;
             bits = sign | (exp << 23) | ((man & 0x3ff) << 13);
@@ -53,7 +53,7 @@ void layernorm(const std::vector<float>& w, const std::vector<float>& b, const f
     for (int k = 0; k < n; ++k) y[k] = (x[k] - float(m)) * inv * w[k] + b[k];
 }
 
-}  // namespace
+}
 
 float strength(const NetInfo& info, int street, int bucket) {
     if (street == 0) return info.pre_strength[std::min(bucket, 168)];
@@ -151,7 +151,6 @@ Net::Net(const std::string& dir) {
         for (size_t k = 0; k < n; ++k) r[k] = half_to_float(h[k]);
         return r;
     };
-    // tensors in state_dict order; place each by name
     int nblocks = 0;
     for (auto& t : j["tensors"]) {
         std::string name = t[0];
@@ -185,7 +184,7 @@ Net::Net(const std::string& dir) {
             norm_.w = std::move(data);
         } else if (name == "norm.bias") {
             norm_.b = std::move(data);
-        } else if (name.rfind("blocks.", 0) == 0) {  // blocks.<k>.<0 LayerNorm | 1 Linear | 3 Linear>.<weight|bias>
+        } else if (name.rfind("blocks.", 0) == 0) {
             int k = std::stoi(name.substr(7));
             size_t dot = name.find('.', 7);
             int part = name[dot + 1] - '0';
@@ -217,7 +216,7 @@ void Net::forward(const std::vector<float>& feat, const std::array<int, 4>& bk, 
     for (size_t k = 0; k < b1_.size(); ++k) {
         layernorm(bln_[k].w, bln_[k].b, h.data(), a.data(), H);
         linear(b1_[k].w, b1_[k].b, H, H, a.data(), b.data());
-        for (auto& z : b) z = 0.5f * z * (1.0f + std::erf(z * 0.70710678118654752f));  // exact GELU
+        for (auto& z : b) z = 0.5f * z * (1.0f + std::erf(z * 0.70710678118654752f));
         linear(b2_[k].w, b2_[k].b, H, H, b.data(), a.data());
         for (int q = 0; q < H; ++q) h[q] += a[q];
     }
@@ -239,4 +238,4 @@ std::vector<float> Net::policy(const std::vector<float>& logits, const std::vect
     return p;
 }
 
-}  // namespace kestrel
+}

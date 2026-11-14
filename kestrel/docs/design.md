@@ -134,6 +134,20 @@ Each port gets test vectors written by the Python code it replaces, and the C++ 
 
 `kestreld --selftest` runs all of them.
 
+## Status (2026-11-14)
+
+| Part | State |
+|---|---|
+| Core (9-max game, ICM, network; heads-up blueprint and buckets) | done, self-tested against the Python reference |
+| Connectors: user-written YAML/JSON, user-listed routes with request and response structure, HTTP(S) | done; Slumbot plays by itself |
+| `kestreld serve`: REST API and the live stream (server-sent events), tables side by side | done |
+| Web app: live tables, screens 1–N, grid, new table, light and dark themes, logo | done |
+| WebSocket, TCP and MCP interfaces and transports | next |
+| `structured` codec, 9-max tables through a connector, tournament simulator | next |
+| Defence floor in the heads-up engine | to port |
+| Qt 6 app | after the web app |
+| CI: Linux, macOS, Windows builds, self-test, GitHub Releases on `kestrel-v*` tags | done |
+
 ## Order of work
 
 1. **Core, headless (done 2026-11-14):** the network weights in a flat file (`scripts/ninemax_export_bin.py`), the test vectors, the
