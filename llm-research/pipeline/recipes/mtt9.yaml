@@ -1,0 +1,29 @@
+# The 9-max tournament network: nm17's recipe. Every key under train is a ninemax_selfplay.py option.
+name: mtt9
+game: 9max-mtt
+about: 9-max tournaments at 10-25bb with ICM, a big-blind ante, no open-limping, half the final tables 2-8 handed
+init: models/ninemax/nm17/avg_fp16.pt   # warm start; leave out to train fresh
+train:
+  minutes: 720
+  batch: 16384
+  menu: mtt
+  pg: neurd
+  entropy: 0.02
+  kl: 0.3
+  keep-hours: 4
+  eval-minutes: 30
+  pool: reg,reg,tag,maniac
+  pool-share: 0.5
+  chunks: 4
+  exploit-share: 0.25
+  exploit-reset: 60
+  tourney: true
+  no-open-limp: true
+  depths: "10,25"
+  ante: 1
+  short: 0.5
+gates:
+  sense_min_ok: 7              # of the 14 poker-sense checks (nm17: 8)
+  pushfold_agree_min: 0.85     # agreement with the ICM push/fold chart at 10bb, chip EV
+  not_worse_than_champion: true
+  champion_hands: 20000        # deals per duplicate match (x 9 seatings)

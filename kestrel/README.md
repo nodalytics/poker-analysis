@@ -7,6 +7,14 @@ Kestrel is the C++ poker advisor and self-playing bot (phase D). It covers 9-max
 Design, boundary and order of work: [`docs/design.md`](docs/design.md). Kestrel stands alone at the repo root; the
 research that feeds it (training, the models, the Python reference) is in `llm-research/`.
 
+## Start it
+
+Double-click `kestreld` (`kestreld.exe` on Windows) in the release's `bin/` folder, or run it with no arguments. It starts the app and opens it in your browser. If it's already running, it just opens it. On Linux, `share/kestrel/install-desktop.sh` adds Kestrel to the applications menu.
+
+It finds its web app, logo and connectors next to itself, and your own connectors and models in `~/.config/kestrel/connectors` and `~/.local/share/kestrel/models`. The heads-up data pack goes in `~/.local/share/kestrel/pack`, or set `KESTREL_PACK`.
+
+**From other devices on your network:** put `{"lan": true}` in `~/.config/kestrel/settings.json` and start Kestrel again. The "On your network" button shows the links to open on a phone or another PC. Each link carries an access token, and devices without it are refused.
+
 ## Play
 
 ```

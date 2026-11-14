@@ -7,15 +7,25 @@
 #include <deque>
 #include <filesystem>
 #include <algorithm>
+#include <cstdlib>
+#include <fstream>
 #include <map>
+#include <random>
 #include <memory>
 #include <mutex>
 #include <thread>
 
 #include <httplib.h>
+#ifndef _WIN32
+#include <arpa/inet.h>
+#include <ifaddrs.h>
+#include <netinet/in.h>
+#endif
 
 #include "kestrel/connector.hpp"
 #include "kestrel/headsup.hpp"
+#include "kestrel/luck.hpp"
+#include "kestrel/models.hpp"
 #include "kestrel/session.hpp"
 
 namespace kestrel {
@@ -60,8 +70,14 @@ struct Engines {
 
 json models_json(const ServeOptions& o) {
     json a = json::array();
-    a.push_back({{"name", "hu-blueprint"}, {"game", "heads-up"}, {"players", 2}, {"available", true},
-                 {"about", "heads-up blueprint, 200bb (the data pack)"}});
+    bool pack = std::filesystem::exists(std::filesystem::path(o.pack) / "tree.tsv");
+    a.push_back({{"name", "hu-blueprint"}, {"game", "heads-up"}, {"players", 2}, {"available", pack},
+                 {"about", pack ? "heads-up blueprint, 200bb (the data pack)"
+                                : "heads-up blueprint: the data pack is not installed (" + o.pack + ")"}});
+    for (auto& m : list_models(o.models.empty() ? default_models_dir() : o.models))
+        if (m.verified)
+            a.push_back({{"name", m.name}, {"version", m.version}, {"game", m.game}, {"players", m.players},
+                         {"available", false}, {"about", m.about + " (no connector for this game yet)"}});
     std::error_code ec;
     if (!o.models.empty())
         for (auto& d : std::filesystem::directory_iterator(o.models, ec))
@@ -84,6 +100,7 @@ struct Table {
     int done = 0;
     double total_bb = 0;
     json summary;
+    std::vector<LuckHand> luck;
 };
 
 struct Hub {
@@ -113,6 +130,65 @@ void on_signal(int) {
     if (g_srv) g_srv->stop();
 }
 
+std::string access_token(const std::string& file) {
+    namespace fs = std::filesystem;
+    std::ifstream in(file);
+    std::string t;
+    if (in >> t && t.size() >= 32) return t;
+    std::random_device rd;
+    const char* hex = "0123456789abcdef";
+    t.clear();
+    for (int k = 0; k < 40; ++k) t += hex[rd() & 15];
+    fs::create_directories(fs::path(file).parent_path());
+    std::ofstream(file) << t << "\n";
+    std::error_code ec;
+    fs::permissions(file, fs::perms::owner_read | fs::perms::owner_write, fs::perm_options::replace, ec);
+    return t;
+}
+
+std::vector<std::string> lan_addresses() {
+    std::vector<std::string> out;
+#ifndef _WIN32
+    ifaddrs* ifa = nullptr;
+    if (getifaddrs(&ifa) == 0) {
+        for (auto* i = ifa; i; i = i->ifa_next) {
+            if (!i->ifa_addr || i->ifa_addr->sa_family != AF_INET) continue;
+            char buf[INET_ADDRSTRLEN];
+            inet_ntop(AF_INET, &reinterpret_cast<sockaddr_in*>(i->ifa_addr)->sin_addr, buf, sizeof buf);
+            std::string ip = buf;
+            if (ip.rfind("127.", 0) != 0 && ip.rfind("169.254.", 0) != 0) out.push_back(ip);
+        }
+        freeifaddrs(ifa);
+    }
+#else
+    char name[256];
+    if (gethostname(name, sizeof name) == 0) {
+        addrinfo hints{}, *res = nullptr;
+        hints.ai_family = AF_INET;
+        if (getaddrinfo(name, nullptr, &hints, &res) == 0) {
+            for (auto* r = res; r; r = r->ai_next) {
+                char buf[INET_ADDRSTRLEN];
+                inet_ntop(AF_INET, &reinterpret_cast<sockaddr_in*>(r->ai_addr)->sin_addr, buf, sizeof buf);
+                if (std::string(buf).rfind("127.", 0) != 0) out.push_back(buf);
+            }
+            freeaddrinfo(res);
+        }
+    }
+#endif
+    return out;
+}
+
+void open_url(const std::string& url) {
+#ifdef _WIN32
+    std::string cmd = "start \"\" \"" + url + "\"";
+#elif defined(__APPLE__)
+    std::string cmd = "open '" + url + "' >/dev/null 2>&1 &";
+#else
+    std::string cmd = "xdg-open '" + url + "' >/dev/null 2>&1 &";
+#endif
+    if (std::system(cmd.c_str()) != 0) std::printf("open %s in your browser\n", url.c_str());
+}
+
 json table_json(const Table& t) {
     double bb100 = t.done ? t.total_bb / t.done * 100 : 0;
     json j = {{"id", t.id},           {"connector", t.spec.name}, {"status", t.status}, {"model", t.model},
@@ -120,6 +196,7 @@ json table_json(const Table& t) {
               {"hands_target", t.hands}, {"hands", t.done},       {"bb100", bb100},
               {"won_bb", t.total_bb}};
     if (!t.summary.is_null()) j["summary"] = t.summary;
+    if (t.luck.size() >= 20) j["luck"] = luck_estimate(t.luck).to_json();
     return j;
 }
 
@@ -142,7 +219,9 @@ int serve(const ServeOptions& o) {
     Hub hub;
     g_hub = &hub;
     Engines engines;
-    engines.get(o, "hu-blueprint", "none");
+    std::string pack_problem;
+    if (!std::filesystem::exists(std::filesystem::path(o.pack) / "tree.tsv"))
+        pack_problem = "the heads-up data pack is not installed (looked in " + o.pack + ")";
     httplib::Server srv;
     g_srv = &srv;
 
@@ -193,7 +272,13 @@ int serve(const ServeOptions& o) {
         }
         hub.publish({{"type", "table"}, {"table", t->id}, {"connector", name}, {"status", "starting"}, {"model", model},
                      {"solver", solver}});
-        auto engine = engines.get(o, model, solver);
+        if (!pack_problem.empty()) return reply(res, {{"error", pack_problem}}, 400);
+        std::shared_ptr<HUBlueprint> engine;
+        try {
+            engine = engines.get(o, model, solver);
+        } catch (const std::exception& e) {
+            return reply(res, {{"error", e.what()}}, 400);
+        }
         t->th = std::thread([&hub, engine, &o, t] {
             SessionPlan plan;
             plan.model = t->model, plan.solver = t->solver;
@@ -214,8 +299,17 @@ int serve(const ServeOptions& o) {
                         json ev = e;
                         ev["table"] = t->id;
                         ev["connector"] = t->spec.name;
+                        LuckHand lh;
+                        bool lucky = false;
+                        if (e["type"] == "hand" && t->spec.codec == "acpc") {
+                            try {
+                                lucky = luck_hand(e, t->spec.big, t->spec.stack, lh);
+                            } catch (const std::exception&) {
+                            }
+                        }
                         {
                             std::lock_guard<std::mutex> lk(hub.mu);
+                            if (lucky) t->luck.push_back(lh);
                             if (e["type"] == "hand") {
                                 ++t->done;
                                 t->total_bb += e["result_bb"].get<double>();
@@ -224,6 +318,7 @@ int serve(const ServeOptions& o) {
                                 ev["hands"] = t->done;
                                 ev["bb100"] = t->total_bb / t->done * 100;
                                 ev["won_bb"] = t->total_bb;
+                                if (t->luck.size() >= 20) ev["luck"] = luck_estimate(t->luck).to_json();
                             }
                             t->state = ev;
                         }
@@ -304,19 +399,52 @@ int serve(const ServeOptions& o) {
     });
 
     const std::string p = std::to_string(o.port);
-    srv.set_pre_routing_handler([p](const httplib::Request& req, httplib::Response& res) {
+    // who may use the app: this computer always; other devices on the network only with --lan and the access token
+    // (a cookie set by opening the link with ?token=, or an X-Kestrel-Token header). Writes must come from this app's
+    // own pages (Origin), POST bodies must be JSON, and on this computer the Host must be a local name (DNS
+    // rebinding).
+    const std::string token = o.lan ? access_token(o.token_file) : "";
+    const auto addrs = o.lan ? lan_addresses() : std::vector<std::string>{};
+    srv.set_pre_routing_handler([p, token, addrs](const httplib::Request& req, httplib::Response& res) {
+        auto deny = [&](const char* why) {
+            res.status = 403;
+            res.set_content(std::string(R"({"error":"refused: )") + why + "\"}", "application/json");
+            return httplib::Server::HandlerResponse::Handled;
+        };
         auto host = req.get_header_value("Host");
-        bool local = host == "127.0.0.1:" + p || host == "localhost:" + p;
+        bool loopback = req.remote_addr == "127.0.0.1" || req.remote_addr == "::1";
+        bool local_host = host == "127.0.0.1:" + p || host == "localhost:" + p;
+        for (auto& ip : addrs) local_host = local_host || host == ip + ":" + p;
+        if (!local_host) return deny("unknown host name");
+        if (!loopback) {
+            if (token.empty()) return deny("this app accepts requests from this computer only");
+            std::string got = req.get_header_value("X-Kestrel-Token");
+            if (got.empty() && req.has_param("token")) got = req.get_param_value("token");
+            if (got.empty()) {
+                auto c = req.get_header_value("Cookie");
+                auto k = c.find("kestrel_token=");
+                if (k != std::string::npos) got = c.substr(k + 14, c.find(';', k) == std::string::npos ? std::string::npos : c.find(';', k) - k - 14);
+            }
+            if (got != token) return deny("this device needs the access link (with its token)");
+            if (req.has_param("token")) {  // remember the device, and drop the token from the address bar
+                res.set_header("Set-Cookie", "kestrel_token=" + token + "; Path=/; HttpOnly; SameSite=Strict; Max-Age=31536000");
+                res.set_redirect(req.path);
+                return httplib::Server::HandlerResponse::Handled;
+            }
+        }
         bool write = req.method != "GET" && req.method != "HEAD";
         auto origin = req.get_header_value("Origin");
-        bool same = origin.empty() || origin == "http://127.0.0.1:" + p || origin == "http://localhost:" + p;
-        bool json_body = req.method != "POST" || req.get_header_value("Content-Type").rfind("application/json", 0) == 0;
-        if (!local || (write && !same) || !json_body) {
-            res.status = 403;
-            res.set_content(R"({"error":"refused: local requests from this app only"})", "application/json");
-            return httplib::Server::HandlerResponse::Handled;
-        }
+        if (write && !origin.empty() && origin != "http://" + host) return deny("cross-site request");
+        if (req.method == "POST" && req.get_header_value("Content-Type").rfind("application/json", 0) != 0)
+            return deny("JSON bodies only");
         return httplib::Server::HandlerResponse::Unhandled;
+    });
+    srv.Get("/v1/network", [&, token, addrs](const httplib::Request& req, httplib::Response& res) {
+        bool loopback = req.remote_addr == "127.0.0.1" || req.remote_addr == "::1";
+        json urls = json::array();
+        if (loopback)  // the access links are shown on this computer only
+            for (auto& ip : addrs) urls.push_back("http://" + ip + ":" + std::to_string(o.port) + "/?token=" + token);
+        reply(res, {{"lan", !token.empty()}, {"links", urls}});
     });
     if (!o.assets.empty()) srv.set_mount_point("/assets", o.assets);
     if (!o.web.empty()) srv.set_mount_point("/", o.web);
@@ -324,9 +452,37 @@ int serve(const ServeOptions& o) {
 
     std::signal(SIGINT, on_signal);
     std::signal(SIGTERM, on_signal);
-    std::printf("kestreld %s: http://127.0.0.1:%d/  (Ctrl-C to stop)\n", VERSION, o.port);
+    const std::string url = "http://127.0.0.1:" + std::to_string(o.port) + "/";
+    // loopback only: reach it from elsewhere through an SSH tunnel
+    {  // one Kestrel per port: if it is already running, open it instead
+        httplib::Client c("127.0.0.1", o.port);
+        c.set_connection_timeout(1);
+        auto r = c.Get("/v1/health");
+        if (r && r->status == 200 && r->body.find("\"version\"") != std::string::npos) {
+            std::printf("kestreld is already running: %s\n", url.c_str());
+            if (o.open_browser) open_url(url);
+            return 0;
+        }
+    }
+    srv.set_socket_options([](socket_t sock) {  // no port sharing: a second server must fail to bind
+        int yes = 1;
+#ifdef _WIN32
+        setsockopt(sock, SOL_SOCKET, SO_EXCLUSIVEADDRUSE, reinterpret_cast<const char*>(&yes), sizeof yes);
+#else
+        setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes);
+#endif
+    });
+    if (!srv.bind_to_port(o.lan ? "0.0.0.0" : "127.0.0.1", o.port))
+        throw std::runtime_error("port " + std::to_string(o.port) + " is in use by another program");
+    std::printf("kestreld %s: %s  (Ctrl-C to stop)\n", VERSION, url.c_str());
+    if (!pack_problem.empty()) std::printf("  note: %s; heads-up tables are unavailable\n", pack_problem.c_str());
+    if (o.lan) {
+        std::printf("  on your network (open once per device; the link carries the access token):\n");
+        for (auto& ip : addrs) std::printf("    http://%s:%d/?token=%s\n", ip.c_str(), o.port, token.c_str());
+    }
     std::fflush(stdout);
-    bool ok = srv.listen("127.0.0.1", o.port);  // loopback only: reach it from elsewhere through an SSH tunnel
+    if (o.open_browser) open_url(url);
+    bool ok = srv.listen_after_bind();
     hub.quit = true;
     hub.cv.notify_all();
     std::vector<std::shared_ptr<Table>> ts;
