@@ -255,6 +255,9 @@ class Lab:
             a = torch.multinomial(probs, 1).squeeze(1)
             to_call = T.bet[g] - T.contrib[g, i]
             street = T.street[g].clone()
+            _, targets = T.legal(g, i)
+            avail = T.avail[g, i]
+            pr = probs.tolist()
             T.step(g, a)
             for k in range(len(g)):
                 t, seat, act = int(g[k]), int(i[k]), int(a[k])
@@ -267,8 +270,24 @@ class Lab:
                     text = f"all-in {total / BB:g}"
                 else:
                     text = f"raises to {total / BB:g}"
+                # the decision: every legal action with its probability (the network's, or the rule player's)
+                opts = []
+                for slot, p in enumerate(pr[k]):
+                    if p < 0.005:
+                        continue
+                    if slot == 0:
+                        lab = "fold"
+                    elif slot == 1:
+                        lab = f"call {int(to_call[k]) / BB:g}" if int(to_call[k]) else "check"
+                    elif slot == menu.A - 1:
+                        lab = f"all-in {int(avail[k]) / BB:g}"
+                    else:
+                        lab = f"raise to {float(targets[k, slot - 2]) / BB:g}"
+                    opts.append([lab, round(p, 3), slot == act])
+                net_seat = opp == "self" or seat == int(hero[t])
                 steps[t].append({
-                    "street": int(street[k]), "seat": seat, "text": text,
+                    "street": int(street[k]), "seat": seat, "text": text, "options": opts,
+                    "by": "network" if net_seat else opp,
                     "contrib": [round(x / BB, 2) for x in T.contrib[t].tolist()],
                     "folded": T.folded[t].tolist(),
                 })  # fmt: skip
