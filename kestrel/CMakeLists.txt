@@ -36,6 +36,9 @@ set(YAML_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5)  # yaml-cpp 0.8.0 asks for an older CMake than CMake 4 accepts
 FetchContent_Declare(yaml-cpp GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git GIT_TAG 0.8.0)
 FetchContent_MakeAvailable(httplib yaml-cpp)
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")  # yaml-cpp 0.8.0 misses <cstdint>, which GCC 15 no longer pulls in
+  target_compile_options(yaml-cpp PRIVATE -include cstdint)
+endif()
 
 # third-party C: the 7-card evaluator and suit-isomorphic hand indexing (only the files the buckets need)
 add_library(kestrel_cards STATIC
