@@ -1,6 +1,10 @@
-// kestrel_selftest VECTORS MODEL_DIR: replays the Python reference hands (scripts/advisor_vectors.py) through the C++
-// table, features and network, and checks every decision (actor, street, legal actions, raise targets, features,
-// strength, logits, value), every hand's payoffs and ICM equities, and the ICM cases. Exit 0 only if all match.
+// kestrel_selftest --vectors DIR --model MODEL_DIR --pack PACK_DIR: checks Kestrel against the Python reference.
+//  9-max (vectors_nm17.json, llm-research/scripts/advisor_vectors.py): every decision of the reference hands through
+//    the C++ table, features and network (actor, street, legal actions, raise targets, features, strength, logits,
+//    value), every hand's payoffs and ICM equities, and the ICM cases.
+//  heads-up (vectors_headsup.json, llm-research/scripts/kestrel_hu_vectors.py): logged Slumbot decisions through the
+//    acpc codec and the blueprint (node, bucket, strategy, raise sizes).
+// Exit 0 only if all match.
 #include <cmath>
 #include <cstdio>
 #include <fstream>
@@ -9,6 +13,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include "kestrel/codec_acpc.hpp"
+#include "kestrel/headsup.hpp"
 #include "kestrel/icm.hpp"
 #include "kestrel/net.hpp"
 #include "kestrel/table.hpp"
@@ -38,13 +44,18 @@ struct Check {
 }  // namespace
 
 int main(int argc, char** argv) {
-    if (argc < 3) {
-        std::fprintf(stderr, "usage: kestrel_selftest VECTORS.json MODEL_DIR\n");
+    std::string vdir, model, pack;
+    for (int k = 1; k + 1 < argc; k += 2) {
+        std::string a = argv[k];
+        (a == "--vectors" ? vdir : a == "--model" ? model : a == "--pack" ? pack : vdir) = argv[k + 1];
+    }
+    if (vdir.empty() || model.empty() || pack.empty()) {
+        std::fprintf(stderr, "usage: kestrel_selftest --vectors DIR --model MODEL_DIR --pack PACK_DIR\n");
         return 2;
     }
-    std::ifstream vf(argv[1]);
+    std::ifstream vf(vdir + "/vectors_nm17.json");
     json V = json::parse(vf);
-    Net net(argv[2]);
+    Net net(model);
     const NetInfo& info = net.info();
     Menu menu = Menu::named(info.menu);
 
@@ -106,9 +117,46 @@ int main(int argc, char** argv) {
         for (size_t j = 0; j < want.size(); ++j) icmc.cmp(e[j], want[j], "case " + std::to_string(c));
         ++c;
     }
+    // ---- heads-up: the blueprint through the Slumbot codec ----
+    Check hturn{"hu: our turn", 0}, hnode{"hu: node", 0}, hbk{"hu: bucket", 0}, hn{"hu: options", 0},
+        hkind{"hu: kinds", 0}, hprob{"hu: probs", 1e-5}, hto{"hu: raise to", 50};
+    std::ifstream hf(vdir + "/vectors_headsup.json");
+    json HV = json::parse(hf);
+    HUBlueprint bp(pack);
+    acpc::Game g;
+    int hc = 0;
+    for (auto& C : HV["cases"]) {
+        std::string w = "case " + std::to_string(hc++) + " '" + C["action"].get<std::string>() + "'";
+        HUSpot sp;
+        bool mine = acpc::spot(C["action"], C["pos"], C["hole"].get<std::vector<std::string>>(),
+                               C["board"].get<std::vector<std::string>>(), g, sp);
+        hturn.eq(mine, 1, w);
+        if (!mine) continue;
+        hto.eq(sp.min_to, C["legal"]["min_to"].get<long>(), w + " min_to");
+        hto.eq(sp.max_to, C["legal"]["max_to"].get<long>(), w + " max_to");
+        auto ans = bp.decide(sp, true, 50);
+        if (C["node"].is_null()) {
+            hnode.eq(ans.on_tree, 0, w);
+            continue;
+        }
+        hnode.eq(ans.node, C["node"].get<long>(), w);
+        hbk.eq(ans.bucket, C["bucket"].get<long>(), w);
+        auto& d = C["dist"];
+        hn.eq(long(ans.options.size()), long(d.size()), w);
+        for (size_t k = 0; k < std::min(ans.options.size(), d.size()); ++k) {
+            const auto& o = ans.options[k];
+            std::string kind = d[k][0];
+            char want = kind == "fold" ? 'f' : kind == "call" ? 'k' : 'b';
+            hkind.eq(o.kind, want, w + " option " + std::to_string(k));
+            hprob.cmp(o.prob, d[k][2].get<double>(), w + " option " + std::to_string(k));
+            if (o.kind == 'b' && !d[k][1].is_null()) hto.eq(o.to, d[k][1].get<long>(), w + " option " + std::to_string(k));
+        }
+    }
+
     bool ok = true;
-    std::printf("kestrel self-test: %zu hands, %d ICM cases, model %s\n", V["hands"].size(), c, argv[2]);
-    for (Check* k : {&actor, &street, &legal, &targets, &feat, &str, &logit, &value, &done, &pay, &eq0, &icmc}) {
+    std::printf("kestrel self-test: %zu 9-max hands, %d ICM cases, %d heads-up decisions\n", V["hands"].size(), c, hc);
+    for (Check* k : {&actor, &street, &legal, &targets, &feat, &str, &logit, &value, &done, &pay, &eq0, &icmc, &hturn,
+                     &hnode, &hbk, &hn, &hkind, &hprob, &hto}) {
         std::printf("  %-6s %-10s %6ld checks, worst error %.2e (tolerance %.0e)%s\n", k->bad ? "FAIL" : "ok",
                     k->name.c_str(), k->n, k->worst, k->tol, k->bad ? "" : "");
         if (k->bad) {
