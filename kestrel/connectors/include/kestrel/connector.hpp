@@ -30,7 +30,12 @@ json render(const json& tmpl, const std::map<std::string, std::string>& vars);
 class Transport {
   public:
     virtual ~Transport() = default;
+    // request and response (HTTP)
     virtual json call(const json& route, const std::map<std::string, std::string>& vars) = 0;
+    // a stream of messages (WebSocket): the platform pushes, Kestrel sends a route's message template
+    virtual bool streaming() const { return false; }
+    virtual void send(const json&, const std::map<std::string, std::string>&) {}
+    virtual json next(int /*timeout_ms*/) { return nullptr; }  // the next message, null if none came in time
 };
 
 std::unique_ptr<Transport> make_transport(const ConnectorSpec& spec);

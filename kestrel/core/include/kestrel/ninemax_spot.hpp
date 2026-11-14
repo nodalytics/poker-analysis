@@ -23,6 +23,8 @@ struct NMAction {
     int street = -1;   // 0 pre-flop .. 3 river; checked against the replay when given
     std::string kind;  // fold, check, call, bet, raise, allin
     double to = 0;     // bet, raise, allin: the player's total on this street after the action (platform chips)
+    double add = -1;   // or the chips the action put in (platforms that report that instead); -1: not given
+    double left = -1;  // or the player's stack after the action; -1: not given
 };
 
 struct NMSpot {

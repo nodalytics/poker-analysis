@@ -27,7 +27,7 @@ NMSpot NMSpot::from_json(const json& j) {
     if (j.contains("actions"))
         for (auto& a : j["actions"])
             s.actions.push_back({a.at("player").get<std::string>(), a.value("street", -1), a.at("kind").get<std::string>(),
-                                 a.value("to", 0.0)});
+                                 a.value("to", 0.0), a.value("add", -1.0), a.value("left", -1.0)});
     s.payouts = j.value("payouts", std::vector<double>{});
     return s;
 }
@@ -114,7 +114,9 @@ NMAdvice ninemax_decide(const Net& net, const NMSpot& sp) {
             return adv.error = "unknown action " + a.kind, adv;
         } else {
             // the platform's own amount: the table state the network reads is then exactly the platform's
-            double target = double(base[s]) + a.to * scale;
+            double target = a.add >= 0    ? double(T.contrib[s]) + a.add * scale
+                            : a.left >= 0 ? double(T.avail[s]) - a.left * scale
+                                          : double(base[s]) + a.to * scale;
             // all-in when the platform says so, or within half a platform chip of it (rounding)
             int64_t total = a.kind == "allin" || target >= double(T.avail[s]) - 0.5 * scale - 0.5 ? T.avail[s] : std::llround(target);
             bool on_menu = total == T.avail[s];

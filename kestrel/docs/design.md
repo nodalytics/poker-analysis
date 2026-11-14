@@ -142,6 +142,25 @@ behind read as all-in, so players were all-in in the replay while still acting o
 seated (a blind that cannot be covered is posted all-in), opponents may limp, and Kestrel's own move uses the model's
 rules and menu; its choice goes back at the same street total in the platform's chips.
 
+**Platforms that push (WebSocket).** With `transport: {websocket: wss://..., headers, rate_limit_per_s,
+reconnect_s}`, routes are message templates (`message: {...}`) and the platform's events build the table document
+that `fields` read. `events.type` says where an event's type is, and `events.apply.<type>` how it updates the
+document: `reset` and `unset` (paths), `set`, `append` (board cards), `push` (an action, read with the usual field
+syntax), `merge` (a map such as final stacks), `index` (a list of players into a seat-to-stack map), `copy` (the stacks
+at a hand's start); paths may name event fields in braces (`/stacks/{seat}`). An event marked `turn: true` gets an
+answer; `reject: true` (a refused move) is answered with a check, then a fold, and counts as a fallback; `send: join`
+sends a route (after busting or a closed table); `flow.start` is sent whenever the socket opens. `${nonce}` is new for
+every message (Open Poker's `client_action_id`). An action can give its size three ways: the street total (`to`),
+the chips it put in (`add`), or the stack left after it (`left`), so a platform's optional fields are not needed.
+The WebSocket uses IXWebSocket with TLS through the same OpenSSL as https, verifying the server's certificate.
+
+Tested against `testplatform/ws_platform.py`, the PokerKit platform speaking Open Poker's protocol (turn tokens,
+hand ids, `client_action_id`, `action_rejected` codes, busting and rejoining): 1,000 hands with 0 errors, 0 replay
+errors and 0 refused moves; 800 hands sizing every action from the stack left (no `add`), also clean; and a connector
+that sent fractional amounts had 69 of its moves refused in 100 hands, each answered by the fallback, with the session
+playing on. `connectors/openpoker.yaml` is the same mapping pointed at `wss://openpoker.ai/ws`: a draft until the
+account exists.
+
 Checked two ways: the self-test re-describes 1,922 self-played decisions at 2-9 players as a platform would (its own
 seat order and button, 40 chips a big blind) and must get the network's own probabilities and amounts exactly; and a
 PokerKit tournament platform (`testplatform/ninemax_platform.py`, rule bots that limp, min-raise and bet odd sizes,
@@ -169,7 +188,7 @@ Each port gets test vectors written by the Python code it replaces, and the C++ 
 | Connectors: user-written YAML/JSON, user-listed routes with request and response structure, HTTP(S) | done; Slumbot plays by itself |
 | `kestreld serve`: REST API and the live stream (server-sent events), tables side by side | done |
 | Web app: live tables, screens 1–N, grid, new table, light and dark themes, logo | done |
-| WebSocket, TCP and MCP interfaces | done: one JSON-RPC method table (health, list_connectors, list_engines, start/list/status/stop sessions, start_practice, practice_act, decide, icm_equity) over WebSocket `ws://127.0.0.1:8791/` (with `subscribe` for pushed events), TCP `127.0.0.1:8792` (a request per line) and MCP over stdio (`kestreld mcp`, which joins a running Kestrel or starts one quietly). Each is a front door to the REST API, so the same checks apply: the WebSocket refuses pages from other origins, TCP drops a connection whose first line is not JSON (a web page's HTTP request), and malformed requests get JSON-RPC errors. WebSocket, TCP and MCP as connector transports (towards platforms) are next |
+| WebSocket, TCP and MCP interfaces | done: one JSON-RPC method table (health, list_connectors, list_engines, start/list/status/stop sessions, start_practice, practice_act, decide, icm_equity) over WebSocket `ws://127.0.0.1:8791/` (with `subscribe` for pushed events), TCP `127.0.0.1:8792` (a request per line) and MCP over stdio (`kestreld mcp`, which joins a running Kestrel or starts one quietly). Each is a front door to the REST API, so the same checks apply: the WebSocket refuses pages from other origins, TCP drops a connection whose first line is not JSON (a web page's HTTP request), and malformed requests get JSON-RPC errors. WebSocket as a connector transport: done (see Table connectors); TCP and MCP as connector transports when a platform needs them |
 | `structured` codec: 9-max models at 2-9 handed platform tables | done 2026-11-14 (see Table connectors): `kestreld play FILE --model <9-max folder> --tournaments N`, sessions from the web app with the table drawn live (seats, stacks, ICM, the hand's log, Kestrel's options), and `POST /v1/decide` with `game: ninemax` for advice on any spot. A test platform, `testplatform/ninemax_platform.py` with `connectors/testplatform.yaml` |
 | Kestrel against Slumbot, with the defence floor (2026-11-14) | 3,000 hands: −1.9 bb/100 [−67, +56], even with Slumbot; no platform errors; 19 hands left the blueprint's tree (checked or called). The Python bot read +12.4 and +30.9 (with the floor) over 5,000 hands each; all within each other's intervals. Telling the versions apart needs tens of thousands of hands or luck adjustment (AIVAT) |
 | Defence floor in the heads-up engine | done: on 5,853 logged decisions it fires 36 times and agrees with Python on all but 5, river spots where the order of tied hands decides (Python's sort leaves it arbitrary) |
@@ -196,7 +215,7 @@ Platforms where a bot can play other bots or a strong bot through an API, beside
 | **Open Poker** (openpoker.ai) | 6-max NLHE cash, virtual chips, 14-day seasons, public leaderboard | WebSocket (`wss://openpoker.ai/ws`), API key from the dashboard | waiting on the account; reachable from the lab only (see below) |
 | **poker-pi** (github.com/ArtART241/poker-pi, MIT) | NLHE tournaments and practice tables for bots, 2-9 seats | REST long poll (`GET /api/v1/bot/turn`, `POST /api/v1/bot/action`), bearer token, self-hosted | **plays** (`connectors/pokerpi.yaml`), self-hosted on the lab (see below) |
 | **Kestrel test platform** (`testplatform/ninemax_platform.py`) | 9-max tournaments against rule bots, on PokerKit | REST polling | **plays** (`connectors/testplatform.yaml`) |
-| **Open Poker** (openpoker.ai) | 6-max NLHE cash, virtual chips, 14-day seasons, public leaderboard | WebSocket (`wss://openpoker.ai/ws`), API key from the dashboard | to do: WebSocket transport (in progress), the account, a 6-max cash model (see below) |
+| **Open Poker** (openpoker.ai) | 6-max NLHE cash, virtual chips, 14-day seasons, public leaderboard | WebSocket (`wss://openpoker.ai/ws`), API key from the dashboard | connector drafted (`connectors/openpoker.yaml`, WebSocket transport built and tested locally); waiting on the account and a 6-max cash model (see below) |
 | **GTO Wizard AI benchmark** | heads-up NLHE, 200bb, at least 2,500 hands | API access by application | to do: needs the user's application (see below) |
 | **pokbot** (github.com/baobabtr33/pokbot) | bot knockouts every 30 minutes, 6-seat tables | the bot is submitted and runs on their server (stdin/stdout JSON, 5 ms per decision); live play and an MCP server too | not planned (see below) |
 
@@ -239,14 +258,12 @@ Practice tables against its house bots (tight, calling station, random): at 75bb
 at 10-25bb); at 20bb it won 2 of 8, +111 bb/100 [+6, +234] over 166 hands. 0 replay errors and 0 refused moves over
 both. Results per table only give a place when the bot wins (the status says "your bot busted" otherwise).
 
-**Open Poker: what remains.** In order:
-1. A WebSocket transport for connectors (`transport: {websocket: wss://...}`), with the API key as a header, reconnects
-   within the limit of 10 connections a minute, and at most 20 messages a second.
-2. An event flow: the server pushes messages, so the connector names which message type opens our turn
-   (`your_turn`), which ones carry the hand (`hand_start`, `hole_cards`, `player_action`, `community_cards`,
-   `hand_result`), and the reply (`action` with `hand_id`, `turn_token` and a fresh `client_action_id`). The hand is
-   rebuilt from the events into the same spot the structured codec builds, and `resync_request` recovers it after a
-   reconnect.
+**Open Poker: what remains.** Done on 2026-11-14: the WebSocket transport (the key as a header, reconnects no
+faster than every 6 s against its 10 a minute, at most 20 messages a second) and the event flow, tested against a
+local platform that speaks its protocol; `connectors/openpoker.yaml` is the draft. Still to do:
+1. Resync: after a reconnect Kestrel joins the lobby again; it should send `resync_request` for a seat it still holds
+   (`already_seated`), and a turn pending during a disconnect is folded by the server after 45 s.
+2. Check the draft against the live protocol (the field names come from its documentation, not a session).
 3. A model for 6-max cash at 50-250bb: a 6-max run of the 9-max trainer with cash stacks and no ICM, checked like the
    tournament networks (sense, post-flop, duplicate matches, an exploiter) before it plays.
 4. The account: the user signs in by the magic link, creates a Self Host bot and puts its key on the lab as
