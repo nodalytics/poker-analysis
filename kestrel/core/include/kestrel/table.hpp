@@ -13,6 +13,7 @@ constexpr int64_t STACK = 100 * BB;
 struct Rules {
     double ante_bb = 0.0;
     bool open_limp = true;
+    bool short_stacks = false;  // platform replays: stacks under 2bb play, and a blind that cannot be covered is all-in
 };
 
 struct Menu {
@@ -40,6 +41,7 @@ class Table {
 
     std::vector<uint8_t> legal(std::vector<float>* targets = nullptr) const;
     void step(int action);
+    void step_to(int64_t total);  // a bet or raise of any size, to this hand total (platform replays)
     std::vector<double> payoffs(const std::vector<int>& ranks) const;
 
     std::vector<int64_t> stack, avail, contrib;
@@ -51,9 +53,11 @@ class Table {
     std::vector<float> targets() const;
     const Menu& menu() const { return menu_; }
     const Rules& rules() const { return rules_; }
+    void set_rules(const Rules& r) { rules_ = r; }
 
   private:
     void advance();
+    void commit(int i, bool fold, bool call, int64_t total);
     int P_;
     Menu menu_;
     Rules rules_;

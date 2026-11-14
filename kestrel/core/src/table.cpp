@@ -53,19 +53,20 @@ Table::Table(const std::vector<int64_t>& stacks, const Menu& menu, const Rules& 
     for (int j = 0; j < P_; ++j) {
         seated[j] = stack[j] > 0;
         n += seated[j];
-        if (seated[j] && stack[j] < 2 * BB) throw std::invalid_argument("every stack must be at least 2bb (0: empty)");
+        if (seated[j] && stack[j] < 2 * BB && !rules_.short_stacks) throw std::invalid_argument("every stack must be at least 2bb (0: empty)");
     }
     if (!seated[0] || !seated[1]) throw std::invalid_argument("the blinds must be seated");
     hu = n == 2;
     contrib.assign(P_, 0);
-    contrib[0] = SB, contrib[1] = BB;
+    contrib[0] = std::min<int64_t>(SB, stack[0]), contrib[1] = std::min<int64_t>(BB, stack[1]);
     folded.resize(P_);
     for (int j = 0; j < P_; ++j) folded[j] = !seated[j];
     allin.assign(P_, 0);
     acted.assign(P_, 0);
-    dead = std::min<int64_t>(stack[1] - BB, int64_t(std::llround(rules_.ante_bb * BB)));
+    dead = std::max<int64_t>(0, std::min<int64_t>(stack[1] - BB, int64_t(std::llround(rules_.ante_bb * BB))));
     avail = stack;
     avail[1] -= dead;
+    allin[0] = avail[0] <= contrib[0];
     allin[1] = avail[1] <= BB;
     advance();
 }
@@ -188,6 +189,19 @@ void Table::step(int a) {
     int64_t total = size ? int64_t(t[a - 2]) : stk;
     if (call) total = std::min(bet, stk);
     if (fold) total = contrib[i];
+    commit(i, fold, call, total);
+}
+
+void Table::step_to(int64_t total) {
+    if (actor_ < 0) throw std::invalid_argument("the hand is over");
+    const int i = actor_;
+    total = std::min(total, avail[i]);
+    if (total <= bet) return step(1);
+    commit(i, false, false, total);
+}
+
+void Table::commit(int i, bool fold, bool call, int64_t total) {
+    int64_t stk = avail[i];
     int64_t inc = total - bet;
     bool full = !fold && !call && inc >= last_raise;
     if (fold) folded[i] = 1;

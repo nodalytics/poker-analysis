@@ -188,6 +188,7 @@ select, input { width: 100%; padding: 9px 11px; border-radius: 10px; border: 1px
   <label>Model</label><select id="model"></select>
   <label>Solver</label><select id="solver"></select>
   <div class="reach" id="about"></div>
+  <div id="tourneyField" style="display:none"><label>Tournaments (within the hands below)</label><input id="tourneys" type="number" value="10" min="1"></div>
   </div>
   <div id="practiceFields" style="display:none">
     <label>Who plays</label><select id="pwho"><option value="watch">Kestrel in every seat (watch it decide)</option><option value="human">You against Kestrel</option></select>
@@ -378,7 +379,7 @@ function practiceTable(t, mini = false) {
       <div class="said">${done && r ? `<span class="${r.result_bb >= 0 ? "win" : "loss"}">${sign(r.result_bb)} bb</span>` : esc(last[st.name] || (st.in_bb ? `in ${(+st.in_bb).toFixed(1)}` : ""))}</div></div>`;
   }).join("");
   return `<div class="pt"><div class="oval"></div>
-    <div class="streetlabel">${done ? (e.showdown ? "Showdown" : "Hand over") : STREETS[e.street || 0]} · hand ${e.hand || "–"} · level ${e.level || 1}</div>
+    <div class="streetlabel">${done ? (e.showdown ? "Showdown" : "Hand over") : STREETS[e.street || 0]} · hand ${e.hand || "–"}${e.level ? ` · level ${e.level}` : ""}</div>
     <div class="center"><div class="board">${boardHTML}</div><div class="pot mono">${done ? "" : `pot <b>${(+(e.pot_bb || 0)).toFixed(1)}</b> bb`}</div></div>
     ${seatsHTML}</div>`;
 }
@@ -405,6 +406,31 @@ async function act(id, slot) {
   const r = await api(`/v1/practice/${id}/act`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ slot }) });
   if (r.error) toast(r.error);
   render();
+}
+// a session at a 2-9 handed platform table: the table as Kestrel replayed it, its decision, and the tournaments
+function table9View(t) {
+  const e = t.state || {}, d = t.lastDecision;
+  const bars = d ? d.options.map(o => `<div class="bar ${o.chosen ? "pick" : ""}"><span class="lab">${esc(o.label)}</span><div class="t"><div class="f" style="width:${(o.prob * 100).toFixed(1)}%"></div></div><span class="p mono">${(o.prob * 100).toFixed(0)}%</span></div>`).join("") : "";
+  const log = (e.log || []).map(x => `<div>${STREETS[x.street]} · ${esc(x.pos)} ${esc(x.name)} ${esc(x.action)}</div>`).join("");
+  const hands = t.hands || 0, total = won(t), places = t.places || [];
+  const mean = places.length ? places.reduce((a, b) => a + b, 0) / places.length : 0;
+  const recent = t.recent.slice(-30).reverse().map(h => `<div class="row"><span class="mono">#${h.hand}</span>
+      <span class="a mono">${esc((h.hole || []).join(" "))} · ${esc(h.action || "")}</span>
+      <span class="mono ${h.result_bb >= 0 ? "win" : "loss"}">${sign(h.result_bb)}</span></div>`).join("");
+  return `<div class="screen">
+    <div>${practiceTable(t)}<div class="panel" style="margin-top:18px"><h3>This hand</h3><div class="mono" style="font-size:13px;line-height:1.7">${log || "–"}</div></div></div>
+    <div class="side">
+      <div class="panel"><h3>Kestrel's decision${d ? ` · ${esc(d.pos)}` : ""}</h3>${bars ? `<div class="bars">${bars}</div><div class="why">${esc(t.model)} · ${STREETS[d.street]} · value ${sign(d.value_bb)} bb${d.translated ? ` · ${d.translated} bet${d.translated > 1 ? "s" : ""} off the model's sizes` : ""}${d.error ? ` · could not replay: ${esc(d.error)}` : ""}</div>` : `<div class="why">Waiting for Kestrel's turn…</div>`}</div>
+      <div class="panel"><h3>Session · ${esc(t.connector)}</h3><div class="engine mono">${esc(t.model || "")} · ${t.players || 9}-max tournament${t.tournament ? ` #${t.tournament}` : ""}</div>
+        <div class="stats">
+          <div class="stat"><div class="v mono">${hands}${t.target ? `<span style="color:var(--muted);font-size:13px"> / ${t.target}</span>` : ""}</div><div class="l">hands</div></div>
+          <div class="stat"><div class="v mono ${total >= 0 ? "win" : "loss"}">${sign(total)} bb</div><div class="l">won${hands ? ` · ${sign(t.bb100 || 0)} bb/100` : ""}</div></div>
+        </div>
+        <div class="engine mono" style="margin:10px 0 0">${places.length ? `places ${places.join(" · ")} · mean ${mean.toFixed(2)}` : "no tournament finished yet"}</div>${spark(t)}
+        <div class="row-end" style="margin-top:12px"><button class="btn" onclick="stopTable(${t.id})" ${t.status !== "playing" ? "disabled" : ""}>${t.status === "playing" ? "Stop" : esc(t.status)}</button></div>
+      </div>
+      <div class="panel"><h3>Hands</h3><div class="log">${recent || `<div class="why">No hands yet</div>`}</div></div>
+    </div></div>`;
 }
 function practiceView(t) {
   const e = t.state || {}, d = t.lastDecision;
@@ -440,13 +466,13 @@ function render() {
   if (view === "grid") {
     main.innerHTML = `<div class="grid">${[...tables.values()].map((t, i) => `<div class="panel mini" data-id="${t.id}">
       <div class="head"><span><span class="dot ${esc(t.status)}" style="display:inline-block;margin-right:8px"></span><b>${i + 1}</b> · ${esc(t.connector)}</span>
-      ${t.kind === "practice" ? `<span class="mono">${esc(t.model)} · ${t.hands || 0} hands</span></div>${practiceTable(t, true)}</div>` : `<span class="mono ${won(t) >= 0 ? "win" : "loss"}">${sign(won(t))} bb · ${t.hands || 0} hands</span></div>${miniView(t)}</div>`}`).join("")}</div>`;
+      ${t.kind === "practice" ? `<span class="mono">${esc(t.model)} · ${t.hands || 0} hands</span></div>${practiceTable(t, true)}</div>` : `<span class="mono ${won(t) >= 0 ? "win" : "loss"}">${sign(won(t))} bb · ${t.hands || 0} hands</span></div>${t.table9 ? practiceTable(t, true) : miniView(t)}</div>`}`).join("")}</div>`;
     document.querySelectorAll(".mini").forEach(m => m.onclick = () => { current = +m.dataset.id; setView("screen"); });
     return;
   }
   const t = tables.get(current) || tables.values().next().value;
   current = t.id;
-  main.innerHTML = t.kind === "practice" ? practiceView(t) : screenView(t);
+  main.innerHTML = t.kind === "practice" ? practiceView(t) : t.table9 ? table9View(t) : screenView(t);
 }
 let pending = false;
 function schedule() { if (!pending) { pending = true; requestAnimationFrame(() => { pending = false; render(); }); } }
@@ -459,6 +485,17 @@ function onEvent(e) {
   if (e.table == null) return;
   const t = upsert(e.table, e.connector);
   if (e.kind === "practice") t.kind = "practice";
+  if (e.table9) {
+    t.table9 = true;
+    if (e.type === "decision") { t.state = e; t.lastDecision = e; t.tournament = e.tournament; if (e.places) t.places = e.places; }
+    else if (e.type === "tournament") { (t.places = t.places || []).push(e.place); }
+    else if (e.type === "hand") {
+      t.recent.push(e); if (t.recent.length > 200) t.recent.shift();
+      t.hands = e.hands; t.bb100 = e.bb100; t.won = e.won_bb;
+      t.curve.push(t.curve[t.curve.length - 1] + e.result_bb);
+    }
+    return schedule();
+  }
   if (e.type === "practice_decision") { t.state = e; t.lastDecision = e; t.tournament = e.tournament; t.yourTurn = null; }
   else if (e.type === "practice_your_turn") { t.state = e; t.yourTurn = e; t.tournament = e.tournament; }
   else if (e.type === "practice_hand") { t.state = e; t.standings = e.standings; t.hands = e.hands; t.tournament = e.tournament; }
@@ -480,10 +517,13 @@ async function load() {
   for (const x of s.sessions) {
     const t = upsert(x.id, x.connector); Object.assign(t, { status: x.status, hands: x.hands, bb100: x.bb100, won: x.won_bb, luck: x.luck, target: x.hands_target, model: x.model, solver: x.solver, kind: x.kind, players: x.players, human: x.human });
     if (x.kind === "practice" && x.summary) t.standings = x.summary;
+    if (x.kind !== "practice" && x.players > 2) { t.table9 = true; if (x.summary?.tournaments) t.places = x.summary.tournaments.map(y => y.place); }
     const d = await api(`/v1/sessions/${x.id}`);
     t.state = d.state; t.recent = d.recent || [];
     let c = 0; t.curve = [0, ...t.recent.map(h => c += h.result_bb)];
     if (d.state?.type === "decision") t.lastDecision = d.state;
+    if (t.table9 && d.state?.type !== "decision") t.state = t.lastDecision || null;
+    if (t.table9 && d.state?.places) { t.places = d.state.places; t.tournament = d.state.tournament; }
     if (d.state?.type === "practice_decision") t.lastDecision = d.state;
     if (d.state?.type === "practice_your_turn") t.yourTurn = d.state;
     if (d.state?.standings) t.standings = d.state.standings;
@@ -508,8 +548,8 @@ function fillEngines() {
   const fits = engines.models.filter(m => m.players === c.players);
   $("#model").innerHTML = engines.models.map(m => `<option value="${esc(m.name)}" ${m.available && m.players === c.players ? "" : "disabled"}>${esc(m.name)} · ${esc(m.game)}</option>`).join("");
   const first = fits.find(m => m.available); if (first) $("#model").value = first.name;
-  $("#solver").innerHTML = engines.solvers.map(x => `<option value="${esc(x.name)}" ${x.available ? "" : "disabled"}>${esc(x.name)}</option>`).join("");
-  $("#solver").value = "none"; showAbout();
+  $("#solver").innerHTML = engines.solvers.map(x => `<option value="${esc(x.name)}" ${x.available && (c.players === 2 || x.name === "none") ? "" : "disabled"}>${esc(x.name)}</option>`).join("");
+  $("#solver").value = "none"; $("#tourneyField").style.display = c.players > 2 ? "" : "none"; showAbout();
 }
 function showAbout() {
   const m = engines.models.find(x => x.name === $("#model").value), v = engines.solvers.find(x => x.name === $("#solver").value);
@@ -550,7 +590,7 @@ $("#start").onclick = async () => {
     return;
   }
   const r = await api("/v1/sessions", { method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ connector: $("#conn").value, hands: +$("#hands").value, model: $("#model").value, solver: $("#solver").value }) });
+    body: JSON.stringify({ connector: $("#conn").value, hands: +$("#hands").value, model: $("#model").value, solver: $("#solver").value, tournaments: +$("#tourneys").value }) });
   $("#dlg").close();
   if (r.id) { const t = upsert(r.id, $("#conn").value); Object.assign(t, { target: +$("#hands").value, model: $("#model").value, solver: $("#solver").value }); current = r.id; setView("screen"); }
   else toast(r.error || "could not start");

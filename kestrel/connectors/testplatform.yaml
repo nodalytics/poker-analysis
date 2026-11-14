@@ -1,0 +1,49 @@
+# The 9-max test platform (testplatform/ninemax_platform.py): a tournament against rule bots on this computer.
+# A table connector (codec structured): Kestrel polls the table state and answers when it is its turn; any 9-max
+# model can play it. Start the platform first: uv run python kestrel/testplatform/ninemax_platform.py
+name: testplatform
+game: {variant: nlhe, players: 9, format: tournament}
+codec: structured
+
+transport:
+  base_url: http://127.0.0.1:8793/
+  rate_limit_per_s: 0          # no limit on this computer
+  poll_ms: 20                  # how often the table state is read while others act
+
+routes:
+  join:  {method: POST, path: join, request: {body: {name: kestrel}}}
+  state: {method: GET, path: state, request: {query: {token: "${token}"}}}
+  act:   {method: POST, path: act, request: {body: {token: "${token}", action: "${action}", amount: "${num:amount}"}}}
+
+flow:
+  start: join                  # joins a new tournament (again after each one, up to the tournaments asked for)
+  state: state
+  act: act
+
+session:
+  token_field: /token
+
+fields:                        # where each part of the table state is (JSON pointers)
+  me: /you                     # our player id; or {value: "${env:KESTREL_..._USER}"} when the state does not say
+  hand: /hand/id
+  players: {at: /hand/players, items: {id: /name, stack: /start_stack}}   # seat order, chips at the hand's start
+  button: /hand/button
+  sb: /hand/sb
+  bb: /hand/bb
+  ante: /hand/ante             # a big-blind ante
+  to_act: /hand/to_act         # the player to act (or true/false: whether it is us)
+  hole: /hand/hole
+  board: /hand/board
+  actions: {at: /hand/actions, items: {player: /player, street: /street, kind: /type, to: /to}}
+  # kinds: fold check call bet raise allin; map others with {at: /type, map: {"RAISE": raise}}; blinds are skipped
+  payouts: /payouts            # prize shares of the places still to be paid, first place first
+  finished: /finished
+  place: /place
+  prize: /prize
+  chips: /chips
+  error: /error
+
+answer:                        # how a move is sent: ${action} and ${amount}
+  actions: {fold: fold, check: check, call: call, raise: raise, allin: allin}
+  amount: to                   # to: the street total after the raise; add: the chips put in now
+  # scale: 1                   # amount in other units

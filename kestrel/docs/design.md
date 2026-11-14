@@ -109,7 +109,7 @@ platform: the user lists its routes, the request and response structure of each,
 | Section | What the user writes |
 |---|---|
 | `game` | variant (`nlhe`), players, blinds, stack |
-| `codec` | the platform's action notation: `acpc` (Slumbot's `b200c/kk/b400`) today; `structured` (JSON actions) next |
+| `codec` | `acpc`: heads-up action strings (Slumbot's `b200c/kk/b400`); `structured`: a 2-9 handed table described in JSON (below) |
 | `transport` | `base_url`, retries, a rate limit, headers sent with every route (e.g. an API key) |
 | `routes` | **every route, as the platform has it:** name, `method` (GET/POST/PUT/PATCH/DELETE), `path` (relative to the base URL or absolute), and its `request` (body of any shape, `query`, `headers`, `content_type`) and `response` (fields read from this route's answers) |
 | `flow` | which route plays each step: `start` (deal a hand), `act` (send our move), optionally `login` (once per session) |
@@ -121,6 +121,33 @@ a lone placeholder with nothing to fill in is left out of its object, so the fir
 
 The Slumbot file, [`connectors/slumbot.yaml`](../connectors/slumbot.yaml), is the worked example. It played its first
 hands by itself on 2026-11-14: 40 hands, no platform errors, no refused moves, no hands off the blueprint's tree.
+
+### Table connectors (`codec: structured`): 2 to 9 players, played by a 9-max model
+
+A platform that describes its table in JSON is played by polling: `flow.state` reads the table, and when it is our
+turn `flow.act` sends the move (`flow.start` joins a tournament, again after each one). `fields` say where each part
+of the table is: `me`, `hand` (an id), `players` (`{at, items: {id, stack}}`, seat order, chips at the hand's start),
+`button`, `sb`, `bb`, `ante` (a big-blind ante), `to_act`, `hole`, `board`, `actions` (`{at, items: {player, street,
+kind, to}}`, kinds fold/check/call/bet/raise/allin, others such as blinds skipped; `to` is the street total),
+`payouts` (the prizes still to play for), and at the end `finished`, `place`, `prize`, `chips`. A field can also be a
+constant: `{value: "${env:KESTREL_..._USER}"}`. `answer` says how a move is sent: `${action}` through a map of action
+names, and `${amount}` as the street total (`amount: to`) or the chips put in now (`add`); `"${num:amount}"` sends it
+as a number.
+
+The adapter (`core/ninemax_spot`) replays the hand into Kestrel's table: seats placed by position from the button,
+chips rescaled to the big blind, and every bet at **its own size**, since the network reads the table state (pot,
+stacks, contributions, raise count, aggressor) rather than menu slots. Mapping sizes to the nearest menu size broke on
+real tables: a 1bb flop bet nearer an all-in than the smallest menu bet became an all-in, and a raise leaving 3 chips
+behind read as all-in, so players were all-in in the replay while still acting on the platform. Stacks under 2bb are
+seated (a blind that cannot be covered is posted all-in), opponents may limp, and Kestrel's own move uses the model's
+rules and menu; its choice goes back at the same street total in the platform's chips.
+
+Checked two ways: the self-test re-describes 1,922 self-played decisions at 2-9 players as a platform would (its own
+seat order and button, 40 chips a big blind) and must get the network's own probabilities and amounts exactly; and a
+PokerKit tournament platform (`testplatform/ninemax_platform.py`, rule bots that limp, min-raise and bet odd sizes,
+rising blinds, short stacks, heads-up finishes) played 120 tournaments with nm17 on 2026-11-14: 4,488 decisions, 19%
+of the bets it replayed at sizes off the network's menu, 0 replay errors, 0 refused moves; mean prize 0.150 and 0.158
+of the pool on two seeds against an even share of 0.111 (rule bots, not a strength measure).
 
 ## Verified against the Python reference
 
@@ -142,8 +169,8 @@ Each port gets test vectors written by the Python code it replaces, and the C++ 
 | Connectors: user-written YAML/JSON, user-listed routes with request and response structure, HTTP(S) | done; Slumbot plays by itself |
 | `kestreld serve`: REST API and the live stream (server-sent events), tables side by side | done |
 | Web app: live tables, screens 1–N, grid, new table, light and dark themes, logo | done |
-| WebSocket, TCP and MCP interfaces | done: one JSON-RPC method table (health, list_connectors, list_engines, start/list/status/stop sessions, start_practice, practice_act, decide, icm_equity) over WebSocket `ws://127.0.0.1:8791/` (with `subscribe` for pushed events), TCP `127.0.0.1:8792` (a request per line) and MCP over stdio (`kestreld mcp`, which joins a running Kestrel or starts one quietly). Each is a front door to the REST API, so the same checks apply. WebSocket, TCP and MCP as connector transports (towards platforms) are next |
-| `structured` codec, 9-max tables through a connector, tournament simulator | next |
+| WebSocket, TCP and MCP interfaces | done: one JSON-RPC method table (health, list_connectors, list_engines, start/list/status/stop sessions, start_practice, practice_act, decide, icm_equity) over WebSocket `ws://127.0.0.1:8791/` (with `subscribe` for pushed events), TCP `127.0.0.1:8792` (a request per line) and MCP over stdio (`kestreld mcp`, which joins a running Kestrel or starts one quietly). Each is a front door to the REST API, so the same checks apply: the WebSocket refuses pages from other origins, TCP drops a connection whose first line is not JSON (a web page's HTTP request), and malformed requests get JSON-RPC errors. WebSocket, TCP and MCP as connector transports (towards platforms) are next |
+| `structured` codec: 9-max models at 2-9 handed platform tables | done 2026-11-14 (see Table connectors): `kestreld play FILE --model <9-max folder> --tournaments N`, sessions from the web app with the table drawn live (seats, stacks, ICM, the hand's log, Kestrel's options), and `POST /v1/decide` with `game: ninemax` for advice on any spot. A test platform, `testplatform/ninemax_platform.py` with `connectors/testplatform.yaml` |
 | Kestrel against Slumbot, with the defence floor (2026-11-14) | 3,000 hands: −1.9 bb/100 [−67, +56], even with Slumbot; no platform errors; 19 hands left the blueprint's tree (checked or called). The Python bot read +12.4 and +30.9 (with the floor) over 5,000 hands each; all within each other's intervals. Telling the versions apart needs tens of thousands of hands or luck adjustment (AIVAT) |
 | Defence floor in the heads-up engine | done: on 5,853 logged decisions it fires 36 times and agrees with Python on all but 5, river spots where the order of tied hands decides (Python's sort leaves it arbitrary) |
 | Practice tournaments (9-max models) | done: a final table from 2 to 9 players, every seat played by the chosen 9-max model (watch every decision with its probabilities) or you against it (your seat waits for your move; the model's cards and probabilities stay hidden; optional advice for your spot). Stacks carry over, blinds rise every 15 hands, busted players finish in places, ICM recomputed each hand. `POST /v1/practice`, `POST /v1/practice/{id}/act`. Practice games do not train the model: models are trained on the lab and shipped through the pipeline |

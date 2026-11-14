@@ -1,6 +1,8 @@
 #include <cmath>
 #include <cstdio>
 #include <fstream>
+#include <numeric>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -10,6 +12,8 @@
 #include "kestrel/headsup.hpp"
 #include "kestrel/icm.hpp"
 #include "kestrel/net.hpp"
+#include "kestrel/ninemax_spot.hpp"
+#include "kestrel/buckets.hpp"
 #include "kestrel/table.hpp"
 
 using namespace kestrel;
@@ -164,11 +168,94 @@ int main(int argc, char** argv) {
     HUBlueprint with_floor(pack, 0.05, 0.9);
     run_hu(vdir + "/vectors_headsup_floor.json", with_floor, false, fc);
 
+    // the platform adapter: self-played hands at 2-9 players, re-described as a platform would (its own seat order,
+    // button, chips at 40 a big blind, the prizes left) must give the network's own decision at every step
+    buckets_init(pack);
+    Check rturn{"9max replay: ok", 0}, rprob{"9max replay: probs", 1e-5}, rto{"9max replay: to", 1e-6};
+    std::mt19937_64 rng(7);
+    int rdec = 0;
+    const double cb = 40;  // platform chips per big blind
+    for (int hand = 0; hand < 300; ++hand) {
+        const int n = 2 + hand % 8;
+        std::vector<int> who(9, -1);  // Kestrel seat -> platform seat; the platform's button is seat b
+        const int b = int(rng() % n);
+        if (n == 2) {
+            who[0] = b, who[1] = (b + 1) % n;
+        } else {
+            who[0] = (b + 1) % n, who[1] = (b + 2) % n;
+            for (int k = 0; k < n - 2; ++k) who[9 - (n - 2) + k] = (b + 3 + k) % n;
+        }
+        std::vector<int64_t> stacks(9, 0);
+        NMSpot sp;
+        sp.players.resize(n);
+        for (int s = 0; s < 9; ++s)
+            if (who[s] >= 0) {
+                stacks[s] = BB * (2 + int64_t(rng() % 60));
+                sp.players[who[s]] = {"p" + std::to_string(who[s]), double(stacks[s]) / BB * cb};
+            }
+        sp.button = "p" + std::to_string(b), sp.sb = cb / 2, sp.bb = cb, sp.ante = info.rules.ante_bb * cb;
+        static const double prizes[9] = {0.30, 0.20, 0.145, 0.105, 0.08, 0.065, 0.05, 0.035, 0.02};
+        TourneyCtx ctx;
+        ctx.pay.assign(9, 0.0);
+        for (int k = 0; k < n; ++k) ctx.pay[k] = prizes[k], sp.payouts.push_back(prizes[k]);
+        ctx.eq0 = icm(std::vector<double>(stacks.begin(), stacks.end()), ctx.pay);
+        std::vector<int> deck(52);
+        std::iota(deck.begin(), deck.end(), 0);
+        std::shuffle(deck.begin(), deck.end(), rng);
+        std::vector<std::array<int, 4>> bk(9);
+        std::vector<std::array<int, 2>> hole(9);
+        int d = 10 * 2;
+        for (int s = 0; s < 9; ++s) {
+            if (who[s] < 0) continue;
+            hole[s] = {deck[2 * s], deck[2 * s + 1]};
+            int c[7] = {hole[s][0], hole[s][1], deck[d], deck[d + 1], deck[d + 2], deck[d + 3], deck[d + 4]};
+            bk[s] = {bucket_of(c, 2), bucket_of(c, 5), bucket_of(c, 6), bucket_of(c, 7)};
+        }
+        Table T(stacks, menu, info.rules);
+        const int nb[4] = {0, 3, 4, 5};
+        std::vector<int64_t> base(9, 0);
+        int cur = 0;
+        while (!T.done()) {
+            const int i = T.actor(), st = T.street();
+            if (st != cur) base = T.contrib, cur = st;
+            std::vector<float> t;
+            auto L = T.legal(&t);
+            auto f = features(T, info, &ctx);
+            std::vector<float> lg;
+            float v;
+            net.forward(f, bk[i], st, strength(info, st, bk[i][st]), lg, v);
+            auto p = net.policy(lg, L);
+            sp.me = "p" + std::to_string(who[i]);
+            sp.hole = {card_str(hole[i][0]), card_str(hole[i][1])};
+            sp.board.clear();
+            for (int k = 0; k < nb[st]; ++k) sp.board.push_back(card_str(deck[d + k]));
+            std::string w = "hand " + std::to_string(hand) + " decision " + std::to_string(rdec++);
+            auto adv = ninemax_decide(net, sp);
+            rturn.eq(adv.error.empty() && adv.translated == 0, 1, w + " " + adv.error);
+            std::vector<double> got(menu.A, 0.0);
+            for (auto& o : adv.options) {
+                got[o.slot] = o.prob;
+                if (o.slot >= 2)
+                    rto.cmp(o.to, double((o.slot == menu.A - 1 ? T.avail[i] : int64_t(t[o.slot - 2])) - base[i]) / BB * cb, w);
+            }
+            for (int a = 0; a < menu.A; ++a) rprob.cmp(got[a], L[a] ? p[a] : 0.0, w + " slot " + std::to_string(a));
+            const int act = std::discrete_distribution<int>(p.begin(), p.end())(rng);
+            const int64_t to_call = T.bet - T.contrib[i];
+            NMAction na{sp.me, st, "", 0};
+            if (act == 0) na.kind = "fold";
+            else if (act == 1) na.kind = to_call ? "call" : "check";
+            else if (act == menu.A - 1) na.kind = "allin", na.to = double(T.avail[i] - base[i]) / BB * cb;
+            else na.kind = "raise", na.to = double(int64_t(t[act - 2]) - base[i]) / BB * cb;
+            sp.actions.push_back(na);
+            T.step(act);
+        }
+    }
+
     bool ok = true;
     std::printf("kestrel self-test: %zu 9-max hands, %d ICM cases, %d heads-up decisions, %d with the defence floor "
-                "(%d floored)\n", V["hands"].size(), c, hc, fc, floored);
+                "(%d floored), %d replayed platform decisions\n", V["hands"].size(), c, hc, fc, floored, rdec);
     for (Check* k : {&actor, &street, &legal, &targets, &feat, &str, &logit, &value, &done, &pay, &eq0, &icmc, &hturn,
-                     &hnode, &hbk, &hn, &hkind, &hprob, &hto, &fagree}) {
+                     &hnode, &hbk, &hn, &hkind, &hprob, &hto, &fagree, &rturn, &rprob, &rto}) {
         std::printf("  %-6s %-10s %6ld checks, worst error %.2e (tolerance %.0e)%s\n", k->bad ? "FAIL" : "ok",
                     k->name.c_str(), k->n, k->worst, k->tol, k->bad ? "" : "");
         if (k->bad) {

@@ -13,6 +13,11 @@
 
 namespace kestrel {
 
+// position names by Kestrel seat for n players (0 small blind, 1 big blind, the last seat the button)
+std::vector<std::string> position_names(int n);
+// chips as big blinds, "2.5" or "3"
+std::string bb_str(double chips);
+
 struct PracticeConfig {
     int players = 9;                 // 2..9 at the start
     double avg_bb = 20;              // starting average stack, big blinds

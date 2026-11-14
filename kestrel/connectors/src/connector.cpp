@@ -136,6 +136,13 @@ std::vector<ConnectorSpec> load_connectors(const std::string& dir, std::vector<s
 json render(const json& t, const std::map<std::string, std::string>& vars) {
     if (t.is_string()) {
         std::string s = t.get<std::string>(), out;
+        // "${num:name}" alone: sent as a number
+        if (s.rfind("${num:", 0) == 0 && s.back() == '}' && s.find('}') == s.size() - 1) {
+            auto it = vars.find(s.substr(6, s.size() - 7));
+            if (it == vars.end() || it->second.empty()) return "";
+            json v = json::parse(it->second, nullptr, false);
+            return v.is_number() ? v : json(it->second);
+        }
         for (size_t k = 0; k < s.size();) {
             size_t a = s.find("${", k);
             if (a == std::string::npos) {
@@ -166,7 +173,8 @@ json render(const json& t, const std::map<std::string, std::string>& vars) {
             if (v.is_string()) {
                 std::string s = v.get<std::string>();
                 if (s.size() > 3 && s.rfind("${", 0) == 0 && s.back() == '}' && s.find("${", 2) == std::string::npos) {
-                    if (render(v, vars).get<std::string>().empty()) continue;
+                    json r = render(v, vars);
+                    if (r.is_string() && r.get<std::string>().empty()) continue;
                 }
             }
             o[k] = render(v, vars);
