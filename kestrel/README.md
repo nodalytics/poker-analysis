@@ -13,7 +13,14 @@ research that feeds it (training, the models, the Python reference) is in `llm-r
 kestreld check kestrel/connectors/slumbot.yaml        # what it talks to and which KESTREL_* variables it reads
 kestreld play kestrel/connectors/slumbot.yaml --hands 1000 --out sessions/slumbot --pack llm-research/blueprint/pack
 kestreld list                                          # every connector in ~/.config/kestrel/connectors
+kestreld serve --pack llm-research/blueprint/pack --connectors kestrel/connectors --web kestrel/web --assets kestrel/assets
+                                                       # the web app at http://127.0.0.1:8790/ with live tables
 ```
+
+The web app shows every running table live, each on its own screen. Switch screens with tabs or keys `1`–`9`, press `g` for a grid of all tables, `n` to start a new table and `t` to change theme. Each screen shows:
+- the cards, the pot and the betting as it happens;
+- Kestrel's decision, with its probabilities;
+- the session's results.
 
 ## Build and self-test
 

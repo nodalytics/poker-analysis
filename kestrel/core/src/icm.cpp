@@ -19,7 +19,6 @@ std::vector<double> icm(const std::vector<double>& stacks, const std::vector<dou
         msum[m] = msum[m & (m - 1)] + s[j];
     }
     prob[0] = 1.0;
-    // by number placed, as icm.py: place k+1 goes to a player not yet placed, in proportion to chips
     for (int k = 0; k < P; ++k) {
         double pay = k < int(payouts.size()) ? payouts[k] : 0.0;
         for (unsigned m = 0; m < M; ++m) {
@@ -45,4 +44,4 @@ std::vector<double> end_stacks(const std::vector<double>& start, const std::vect
     return r;
 }
 
-}  // namespace kestrel
+}

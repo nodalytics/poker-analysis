@@ -10,7 +10,7 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include <httplib.h>  // OpenSSL support comes from the httplib target (HTTPLIB_REQUIRE_OPENSSL)
+#include <httplib.h>
 
 namespace kestrel {
 
@@ -30,7 +30,7 @@ json from_yaml(const YAML::Node& n) {
         }
         case YAML::NodeType::Scalar: {
             const std::string& s = n.Scalar();
-            if (n.Tag() == "!") return s;  // quoted: a string, whatever it looks like
+            if (n.Tag() == "!") return s;
             if (s == "true" || s == "false") return s == "true";
             if (s == "null" || s == "~") return nullptr;
             try {
@@ -52,7 +52,7 @@ bool ends_with(const std::string& s, const std::string& e) {
     return s.size() >= e.size() && s.compare(s.size() - e.size(), e.size(), e) == 0;
 }
 
-}  // namespace
+}
 
 ConnectorSpec load_connector(const std::string& path) {
     ConnectorSpec c;
@@ -79,7 +79,6 @@ ConnectorSpec load_connector(const std::string& path) {
     if (c.variant != "nlhe") throw std::runtime_error(c.name + ": Texas hold'em (nlhe) only");
     for (const char* k : {"transport", "routes", "flow", "fields"})
         if (!r.contains(k)) throw std::runtime_error(c.name + ": no " + k);
-    // every step of the flow must name a route the file lists
     for (auto& [step, route] : r["flow"].items()) {
         if (!route.is_string() || !r["routes"].contains(route.get<std::string>()))
             throw std::runtime_error(c.name + ": flow." + step + " names no route in routes");
@@ -92,7 +91,6 @@ ConnectorSpec load_connector(const std::string& path) {
         if (m != "GET" && m != "POST" && m != "PUT" && m != "PATCH" && m != "DELETE")
             throw std::runtime_error(c.name + ": routes." + name + ": method " + m);
     }
-    // what the file reaches: the environment variables it reads and the hosts it talks to (kestreld check shows them)
     std::function<void(const json&)> scan = [&](const json& j) {
         if (j.is_string()) {
             const std::string s = j.get<std::string>();
@@ -146,8 +144,6 @@ json render(const json& t, const std::map<std::string, std::string>& vars) {
             out += s.substr(k, a - k);
             std::string key = s.substr(a + 2, b - a - 2), val;
             if (key.rfind("env:", 0) == 0) {
-                // only KESTREL_* variables: a connector file written by someone else must not be able to read
-                // (and send to its server) whatever else is in the environment, such as cloud keys
                 std::string name = key.substr(4);
                 if (name.rfind("KESTREL_", 0) != 0)
                     throw std::runtime_error("${env:" + name + "}: connectors may read KESTREL_* variables only");
@@ -164,7 +160,7 @@ json render(const json& t, const std::map<std::string, std::string>& vars) {
     if (t.is_object()) {
         json o = json::object();
         for (auto& [k, v] : t.items()) {
-            if (v.is_string()) {  // a lone placeholder with no value is left out
+            if (v.is_string()) {
                 std::string s = v.get<std::string>();
                 if (s.size() > 3 && s.rfind("${", 0) == 0 && s.back() == '}' && s.find("${", 2) == std::string::npos) {
                     if (render(v, vars).get<std::string>().empty()) continue;
@@ -198,7 +194,7 @@ class HttpTransport : public Transport {
         backoff_ = tr.contains("retry") ? tr["retry"].value("backoff_s", 2.0) : 2.0;
         double rate = tr.value("rate_limit_per_s", 2.0);
         gap_ = std::chrono::milliseconds(rate > 0 ? int(1000.0 / rate) : 0);
-        if (tr.contains("headers")) headers_ = tr["headers"];  // sent with every route (e.g. an API key)
+        if (tr.contains("headers")) headers_ = tr["headers"];
         content_type_ = tr.value("content_type", "application/json");
         cli_ = std::make_unique<httplib::Client>(origin_);
         cli_->set_connection_timeout(10);
@@ -207,12 +203,11 @@ class HttpTransport : public Transport {
     }
 
     json call(const json& route_in, const std::map<std::string, std::string>& vars) override {
-        // the request structure may sit under request: {body, query, headers, content_type}, or on the route itself
         json route = route_in;
         if (route_in.contains("request"))
             for (auto& [k, v] : route_in["request"].items()) route[k] = v;
         std::string path = render(route.at("path"), vars).get<std::string>();
-        if (path.empty() || path[0] != '/') path = prefix_ + path;  // relative to base_url, or absolute
+        if (path.empty() || path[0] != '/') path = prefix_ + path;
         std::string method = route.value("method", "POST");
         std::string body = route.contains("body") ? render(route["body"], vars).dump() : "";
         httplib::Headers headers;
@@ -237,7 +232,6 @@ class HttpTransport : public Transport {
             auto now = std::chrono::steady_clock::now();
             if (now < next_) std::this_thread::sleep_until(next_);
             next_ = std::chrono::steady_clock::now() + gap_;
-            // no "?" when the route has no query: some servers refuse "/path?"
             const std::string url = query.empty() ? path : httplib::append_query_params(path, query);
             httplib::Result res = method == "GET"      ? cli_->Get(url, headers)
                                   : method == "DELETE" ? cli_->Delete(url, headers, body, type)
@@ -270,7 +264,7 @@ class HttpTransport : public Transport {
     std::unique_ptr<httplib::Client> cli_;
 };
 
-}  // namespace
+}
 
 std::unique_ptr<Transport> make_transport(const ConnectorSpec& spec) {
     const json& tr = spec.raw.at("transport");
@@ -280,4 +274,4 @@ std::unique_ptr<Transport> make_transport(const ConnectorSpec& spec) {
     throw std::runtime_error(spec.name + ": transport needs base_url (http/https)");
 }
 
-}  // namespace kestrel
+}

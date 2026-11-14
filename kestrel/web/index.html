@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kestrel</title>
+<link rel="icon" href="/assets/logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root {
+  --bg: #0A0C11; --panel: #12151C; --panel-2: #181C25; --line: #232837; --text: #E6E8EE; --muted: #8A91A3;
+  --accent: #F97316; --accent-2: #FDBA74; --win: #22C55E; --loss: #EF4444; --felt: #0F1A17; --felt-line: #1C2B26;
+  --card: #F8FAFC; --card-text: #0F172A; --shadow: 0 10px 30px rgba(0,0,0,.35);
+  --s: #CBD5E1; --h: #EF4444; --d: #3B82F6; --c: #22C55E;
+}
+:root[data-theme="light"] {
+  --bg: #F5F6F8; --panel: #FFFFFF; --panel-2: #F0F2F6; --line: #E2E5EC; --text: #111827; --muted: #6B7280;
+  --felt: #EAF3EF; --felt-line: #D3E4DC; --shadow: 0 10px 30px rgba(15,23,42,.08); --s: #111827;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 Inter, system-ui, sans-serif; }
+.mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+button { font: inherit; color: inherit; cursor: pointer; }
+
+header { display: flex; align-items: center; gap: 14px; padding: 10px 18px; border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); z-index: 5; }
+.logo { width: 34px; height: 34px; flex: none; }
+.tabs { display: flex; gap: 6px; flex: 1; overflow-x: auto; scrollbar-width: none; }
+.tab { display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 10px; border: 1px solid transparent;
+  background: transparent; color: var(--muted); white-space: nowrap; transition: all .15s; }
+.tab:hover { background: var(--panel); color: var(--text); }
+.tab.on { background: var(--panel); border-color: var(--line); color: var(--text); }
+.tab .k { font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 5px; padding: 0 5px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+.dot.playing { background: var(--win); box-shadow: 0 0 0 3px color-mix(in srgb, var(--win) 25%, transparent); animation: pulse 1.6s infinite; }
+.dot.failed { background: var(--loss); }
+@keyframes pulse { 50% { box-shadow: 0 0 0 6px transparent; } }
+.btn { padding: 7px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); transition: all .15s; }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #1A0D04; font-weight: 600; }
+.btn.ghost { background: transparent; }
+.btn.icon { display: grid; place-items: center; padding: 7px; }
+.seg { display: flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; background: transparent; padding: 7px 11px; color: var(--muted); }
+.seg button.on { background: var(--panel-2); color: var(--text); }
+
+main { padding: 18px; max-width: 1400px; margin: 0 auto; }
+.screen { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 18px; }
+@media (max-width: 1000px) { .screen { grid-template-columns: 1fr; } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 16px; box-shadow: var(--shadow); }
+.panel h3 { margin: 0 0 12px; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.side { display: flex; flex-direction: column; gap: 18px; }
+
+.table { position: relative; aspect-ratio: 16 / 10; border-radius: 22px; background:
+  radial-gradient(120% 90% at 50% 40%, color-mix(in srgb, var(--felt) 70%, var(--panel)) 0%, var(--panel) 75%);
+  border: 1px solid var(--line); overflow: hidden; }
+.oval { position: absolute; inset: 16% 9%; border-radius: 999px; border: 1px solid var(--felt-line);
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--felt) 90%, transparent), transparent); }
+.center { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); text-align: center; }
+.board { display: flex; gap: 8px; justify-content: center; min-height: 76px; }
+.pot { margin-top: 10px; color: var(--muted); font-size: 13px; }
+.pot b { color: var(--text); font-size: 18px; }
+.seat { position: absolute; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.seat.top { top: 5%; } .seat.bottom { bottom: 5%; }
+.who { display: flex; align-items: center; gap: 10px; padding: 6px 12px 6px 6px; border-radius: 999px; background: var(--panel-2);
+  border: 1px solid var(--line); }
+.who .av { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--panel); overflow: hidden; }
+.who .name { font-weight: 600; }
+.who .stack { color: var(--muted); font-size: 12px; }
+.badge { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 6px; background: var(--accent); color: #1A0D04; }
+.bet { font-size: 12px; color: var(--accent-2); min-height: 18px; }
+.hole { display: flex; gap: 6px; }
+.card { width: 50px; height: 70px; border-radius: 9px; background: var(--card); color: var(--card-text); display: flex;
+  flex-direction: column; justify-content: space-between; padding: 5px 6px; box-shadow: 0 4px 12px rgba(0,0,0,.35);
+  font-family: "JetBrains Mono", monospace; font-weight: 600; }
+.card.new { animation: deal .25s ease-out; }
+.card .r { font-size: 20px; line-height: 1; } .card .u { font-size: 18px; align-self: flex-end; line-height: 1; }
+.card.s .r, .card.s .u { color: #0F172A; } .card.h .r, .card.h .u { color: var(--h); }
+.card.d .r, .card.d .u { color: var(--d); } .card.c .r, .card.c .u { color: var(--c); }
+.card.back { background: linear-gradient(135deg, #1F2433, #0B0D12); border: 1px solid #2A3042; display: grid; place-items: center; }
+.card.back svg { width: 30px; opacity: .85; }
+.card.ghost { background: transparent; border: 1px dashed var(--felt-line); box-shadow: none; animation: none; }
+@keyframes deal { from { transform: translateY(-8px) scale(.96); opacity: 0; } }
+.result { position: absolute; right: 18px; top: 16px; font-size: 22px; font-weight: 700; opacity: 0; transition: opacity .2s; }
+.result.show { opacity: 1; } .win { color: var(--win); } .loss { color: var(--loss); }
+.streetlabel { position: absolute; left: 18px; top: 16px; color: var(--muted); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+
+.bars { display: flex; flex-direction: column; gap: 9px; }
+.bar { display: grid; grid-template-columns: 92px 1fr 52px; gap: 10px; align-items: center; }
+.bar .t { height: 10px; border-radius: 6px; background: var(--panel-2); overflow: hidden; }
+.bar .f { height: 100%; border-radius: 6px; background: var(--muted); transition: width .25s; }
+.bar.pick .f { background: var(--accent); } .bar.pick .lab { color: var(--text); font-weight: 600; }
+.bar .lab { color: var(--muted); }
+.bar .p { text-align: right; }
+.why { margin-top: 10px; color: var(--muted); font-size: 12px; }
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.stat .v { font-size: 22px; font-weight: 600; } .stat .l { color: var(--muted); font-size: 12px; }
+.spark { width: 100%; height: 70px; margin-top: 12px; }
+.log { max-height: 260px; overflow: auto; display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+.log .row { display: flex; justify-content: space-between; gap: 10px; padding: 6px 8px; border-radius: 8px; background: var(--panel-2); }
+.log .row .a { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 16px; }
+.mini { cursor: pointer; transition: transform .15s, border-color .15s; }
+.mini:hover { transform: translateY(-2px); border-color: var(--accent); }
+.mini .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.mt { border-radius: 14px; border: 1px solid var(--line); padding: 12px; display: flex; flex-direction: column; gap: 10px;
+  background: radial-gradient(120% 120% at 50% 50%, color-mix(in srgb, var(--felt) 70%, var(--panel)) 0%, var(--panel) 80%); }
+.mt .r { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.mt .p { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.mt .p .av { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--panel-2); font-size: 11px; flex: none; }
+.mt .p .av svg { width: 20px; }
+.mt .p .n { font-weight: 600; font-size: 13px; } .mt .p .st { color: var(--muted); font-size: 11px; }
+.mt .cards { display: flex; gap: 4px; }
+.mt .card { width: 28px; height: 39px; border-radius: 6px; padding: 2px 3px; }
+.mt .card .r { font-size: 12px; } .mt .card .u { font-size: 10px; } .mt .card.back svg { width: 16px; }
+.mt .mid { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-top: 1px dashed var(--felt-line); border-bottom: 1px dashed var(--felt-line); }
+.mt .pot { margin: 0; font-size: 12px; }
+.mt .street { font-size: 11px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+
+.empty { display: grid; place-items: center; text-align: center; padding: 70px 20px; color: var(--muted); }
+.empty .big { width: 120px; height: 120px; margin: 0 auto 10px; }
+.empty h2 { color: var(--text); margin: 6px 0; font-weight: 600; }
+
+dialog { border: 1px solid var(--line); border-radius: 18px; background: var(--panel); color: var(--text); padding: 20px; width: min(420px, 92vw); box-shadow: var(--shadow); }
+dialog::backdrop { background: rgba(5,6,10,.6); backdrop-filter: blur(3px); }
+dialog h2 { margin: 0 0 14px; font-size: 18px; }
+label { display: block; color: var(--muted); font-size: 12px; margin: 12px 0 6px; }
+select, input { width: 100%; padding: 9px 11px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); font: inherit; }
+.reach { margin-top: 10px; font-size: 12px; color: var(--muted); }
+.row-end { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+.toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--panel); border: 1px solid var(--line);
+  padding: 10px 14px; border-radius: 12px; box-shadow: var(--shadow); opacity: 0; transition: opacity .2s; }
+.toast.show { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<header>
+  <span class="logo" id="logo" title="Kestrel"></span>
+  <nav class="tabs" id="tabs"></nav>
+  <div class="seg" id="view"><button data-v="screen" class="on">Screen</button><button data-v="grid">Grid</button></div>
+  <button class="btn primary" id="new">New table</button>
+  <button class="btn ghost icon" id="theme" title="Light or dark (t)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg></button>
+</header>
+<main id="main"></main>
+
+<dialog id="dlg">
+  <h2>New table</h2>
+  <label>Connector</label><select id="conn"></select>
+  <div class="reach mono" id="reach"></div>
+  <label>Hands</label><input id="hands" type="number" min="1" value="200">
+  <div class="row-end"><button class="btn ghost" id="cancel">Cancel</button><button class="btn primary" id="start">Start</button></div>
+</dialog>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (s, el = document) => el.querySelector(s);
+const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const CARD = /^[2-9TJQKA][cdhs]$/i;
+const SUIT = { s: "♠", h: "♥", d: "♦", c: "♣" };
+const STREETS = ["Pre-flop", "Flop", "Turn", "River"];
+let LOGO = "", LOGO_ANIM = "";
+const tables = new Map();
+let current = null, view = "screen";
+
+async function svg(path) { return (await fetch(path)).text(); }
+const api = (p, o) => fetch(p, o).then(r => r.json());
+
+let seenCards = new Set(), renderTable = null;
+function cardHTML(c, cls = "") {
+  if (!c || !CARD.test(c)) return `<div class="card ghost ${cls}"></div>`;
+  const r = c[0] === "T" ? "10" : c[0], u = c[1].toLowerCase();
+  const key = renderTable ? `${renderTable.id}:${renderTable.state?.hand}:${c}` : "";
+  const fresh = key && !seenCards.has(key);
+  if (fresh) seenCards.add(key);
+  return `<div class="card ${u} ${cls} ${fresh ? "new" : ""}"><span class="r">${r}</span><span class="u">${SUIT[u]}</span></div>`;
+}
+const back = () => `<div class="card back">${LOGO}</div>`;
+const bb = (chips, big) => { chips = +chips || 0; big = +big || 100; return (chips / big).toFixed(chips % big ? 1 : 0); };
+const sign = x => { x = +x || 0; return (x > 0 ? "+" : "") + x.toFixed(1); };
+
+function parse(action) {
+  const streets = String(action).split("/").map(s => s.match(/b\d+|[kcf]/g) || []);
+  return streets;
+}
+function describe(t) {
+  const e = t.state; if (!e || !e.action && e.type !== "hand") return "";
+  const st = parse(e.action || "");
+  const me = e.pos, names = p => (p === me ? "Kestrel" : esc(t.connector));
+  const out = [];
+  st.forEach((acts, si) => {
+    let actor = si === 0 ? 1 : 0, last = si === 0 ? 100 : 0;
+    const words = acts.map(a => {
+      const n = names(actor); let w;
+      if (a === "f") w = `${n} folds`; else if (a === "k") w = `${n} checks`;
+      else if (a === "c") w = `${n} calls`;
+      else { const to = +a.slice(1); w = `${n} ${last ? "raises to" : "bets"} ${bb(to, 100)}`; last = to; }
+      actor = 1 - actor; return w;
+    });
+    if (words.length) out.push(`<b>${STREETS[si]}</b> ${words.join(" · ")}`);
+  });
+  return out.join("<br>");
+}
+
+function miniView(t) {
+  renderTable = null;
+  const e = t.state || {}, big = e.big || 100, done = e.type === "hand";
+  const board = [0,1,2,3,4].map(i => cardHTML((e.board || [])[i])).join("");
+  const theirs = done && e.their_hole ? e.their_hole.map(c => cardHTML(c)).join("") : back() + back();
+  const mine = (e.hole || []).length ? e.hole.map(c => cardHTML(c)).join("") : cardHTML() + cardHTML();
+  const street = done ? "Showdown" : STREETS[Math.max(0, (e.action || "").split("/").length - 1)];
+  return `<div class="mt">
+    <div class="r"><div class="p"><span class="av mono">${esc(t.connector[0].toUpperCase())}</span><span><div class="n">${esc(t.connector)}</div>
+      <div class="st mono">${e.their_stack != null ? bb(e.their_stack, big) : 200} bb${e.pos === 0 ? " · BTN" : ""}</div></span></div><div class="cards">${theirs}</div></div>
+    <div class="mid"><div class="cards">${board}</div><div style="text-align:right"><div class="street">${street} · ${e.hand || "–"}</div>
+      ${done ? `<div class="mono ${e.result_bb >= 0 ? "win" : "loss"}" style="font-weight:700">${sign(e.result_bb)} bb</div>` : `<div class="pot mono">pot <b>${e.pot != null ? bb(e.pot, big) : "–"}</b></div>`}</div></div>
+    <div class="r"><div class="p"><span class="av">${LOGO}</span><span><div class="n">Kestrel</div>
+      <div class="st mono">${e.my_stack != null ? bb(e.my_stack, big) : 200} bb${e.pos === 1 ? " · BTN" : ""}</div></span></div><div class="cards">${mine}</div></div>
+  </div>`;
+}
+
+function tableView(t) {
+  renderTable = t;
+  const e = t.state || {}, big = e.big || 100;
+  const board = (e.board || []).slice(0, 5);
+  const boardHTML = [0,1,2,3,4].map(i => cardHTML(board[i])).join("");
+  const done = e.type === "hand";
+  const theirs = done && e.their_hole ? e.their_hole.map(c => cardHTML(c)).join("") : back() + back();
+  const mine = (e.hole || []).length ? e.hole.map(c => cardHTML(c)).join("") : cardHTML() + cardHTML();
+  const street = Math.max(0, (e.action || "").split("/").length - 1);
+  const res = done ? `<div class="result show ${e.result_bb >= 0 ? "win" : "loss"} mono">${sign(e.result_bb)} bb</div>` : `<div class="result"></div>`;
+  const btnMe = e.pos === 1 ? `<span class="badge">BTN</span>` : "";
+  const btnThem = e.pos === 0 ? `<span class="badge">BTN</span>` : "";
+  return `<div class="table">
+    <div class="oval"></div>
+    <div class="streetlabel">${done ? "Showdown" : STREETS[street] || ""} · hand ${e.hand || "–"}</div>${res}
+    <div class="seat top">
+      <div class="who"><span class="av mono">${esc(t.connector[0].toUpperCase())}</span><span><div class="name">${esc(t.connector)}</div>
+        <div class="stack mono">${e.their_stack != null ? bb(e.their_stack, big) + " bb" : "200 bb"}</div></span>${btnThem}</div>
+      <div class="hole">${theirs}</div><div class="bet mono">${e.their_bet ? bb(e.their_bet, big) + " bb" : ""}</div>
+    </div>
+    <div class="center"><div class="board">${boardHTML}</div>
+      <div class="pot mono">pot <b>${e.pot != null ? bb(e.pot, big) : "–"}</b> bb</div></div>
+    <div class="seat bottom">
+      <div class="bet mono">${e.my_bet ? bb(e.my_bet, big) + " bb" : ""}</div><div class="hole">${mine}</div>
+      <div class="who"><span class="av">${LOGO}</span><span><div class="name">Kestrel</div>
+        <div class="stack mono">${e.my_stack != null ? bb(e.my_stack, big) + " bb" : "200 bb"}</div></span>${btnMe}</div>
+    </div></div>`;
+}
+
+function decisionView(t) {
+  const d = t.lastDecision;
+  if (!d) return `<div class="why">Waiting for the first decision…</div>`;
+  const chose = d.chose[0];
+  const kindOf = { f: "fold", k: "check", c: "call", b: "raise" };
+  const picked = kindOf[chose];
+  const rows = d.options.map(o => {
+    const lab = o.kind === "raise" ? `raise ${bb(+o.to, d.big)}` : esc(o.kind);
+    const pick = (o.kind === picked) || (picked === "raise" && o.kind === "raise" && d.chose.slice(1) == o.to)
+              || (picked === "call" && o.kind === "call") || (picked === "check" && o.kind === "check");
+    return `<div class="bar ${pick ? "pick" : ""}"><span class="lab">${lab}</span><div class="t"><div class="f" style="width:${(o.prob*100).toFixed(1)}%"></div></div><span class="p mono">${(o.prob*100).toFixed(0)}%</span></div>`;
+  }).join("");
+  return `<div class="bars">${rows}</div><div class="why">${d.on_tree ? "Heads-up blueprint · " + STREETS[Math.max(0,(d.action||"").split("/").length-1)] : "Off the blueprint's tree: check or call"}</div>`;
+}
+
+function spark(t) {
+  const pts = t.curve; if (pts.length < 2) return `<svg class="spark"></svg>`;
+  const w = 320, h = 70, min = Math.min(0, ...pts), max = Math.max(0, ...pts), span = max - min || 1;
+  const xy = pts.map((v, i) => `${(i / (pts.length - 1) * w).toFixed(1)},${(h - (v - min) / span * h).toFixed(1)}`).join(" ");
+  const zero = h - (0 - min) / span * h, up = pts[pts.length - 1] >= 0;
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <line x1="0" x2="${w}" y1="${zero}" y2="${zero}" stroke="var(--line)" stroke-dasharray="3 3"/>
+    <polyline points="${xy}" fill="none" stroke="var(${up ? "--win" : "--loss"})" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`;
+}
+
+const won = t => t.won ?? (t.curve[t.curve.length - 1] || 0);
+function screenView(t) {
+  const hands = t.hands || 0, rate = t.bb100 || 0, total = won(t);
+  const recent = t.recent.slice(-30).reverse().map(h => `<div class="row"><span class="mono">#${h.hand}</span>
+      <span class="a mono">${esc((h.hole || []).join(" "))} · ${esc(h.action)}</span>
+      <span class="mono ${h.result_bb >= 0 ? "win" : "loss"}">${sign(h.result_bb)}</span></div>`).join("");
+  const cname = esc(t.connector);
+  return `<div class="screen">
+    <div>${tableView(t)}<div class="panel" style="margin-top:18px"><h3>This hand</h3><div class="mono" style="font-size:13px;line-height:1.7">${describe(t) || "–"}</div></div></div>
+    <div class="side">
+      <div class="panel"><h3>Kestrel's decision</h3>${decisionView(t)}</div>
+      <div class="panel"><h3>Session · ${cname}</h3>
+        <div class="stats">
+          <div class="stat"><div class="v mono">${hands}${t.target ? `<span style="color:var(--muted);font-size:13px"> / ${t.target}</span>` : ""}</div><div class="l">hands</div></div>
+          <div class="stat"><div class="v mono ${total >= 0 ? "win" : "loss"}">${sign(total)} bb</div><div class="l">won${hands ? ` · ${sign(rate)} bb/100` : ""}</div></div>
+        </div>${spark(t)}
+        <div class="row-end" style="margin-top:12px"><button class="btn" onclick="stopTable(${t.id})" ${t.status !== "playing" ? "disabled" : ""}>${t.status === "playing" ? "Stop after this hand" : esc(t.status)}</button></div>
+      </div>
+      <div class="panel"><h3>Hands</h3><div class="log">${recent || `<div class="why">No hands yet</div>`}</div></div>
+    </div></div>`;
+}
+
+function render() {
+  const tabs = [...tables.values()].map((t, i) => `<button class="tab ${t.id === current && view === "screen" ? "on" : ""}" data-id="${t.id}">
+      <span class="dot ${esc(t.status)}"></span>${esc(t.connector)}<span class="mono ${won(t) >= 0 ? "win" : "loss"}" style="font-size:12px">${t.hands ? sign(won(t)) : ""}</span><span class="k mono">${i + 1}</span></button>`).join("");
+  $("#tabs").innerHTML = tabs;
+  document.querySelectorAll(".tab").forEach(b => b.onclick = () => { current = +b.dataset.id; setView("screen"); });
+  const main = $("#main");
+  if (!tables.size) {
+    main.innerHTML = `<div class="empty"><div><div class="big">${LOGO_ANIM}</div><h2>No tables yet</h2>
+      <p>Start a table to watch Kestrel play live. Each table gets its own screen.</p>
+      <button class="btn primary" onclick="openNew()">New table</button></div></div>`;
+    return;
+  }
+  if (view === "grid") {
+    main.innerHTML = `<div class="grid">${[...tables.values()].map((t, i) => `<div class="panel mini" data-id="${t.id}">
+      <div class="head"><span><span class="dot ${esc(t.status)}" style="display:inline-block;margin-right:8px"></span><b>${i + 1}</b> · ${esc(t.connector)}</span>
+      <span class="mono ${won(t) >= 0 ? "win" : "loss"}">${sign(won(t))} bb · ${t.hands || 0} hands</span></div>${miniView(t)}</div>`).join("")}</div>`;
+    document.querySelectorAll(".mini").forEach(m => m.onclick = () => { current = +m.dataset.id; setView("screen"); });
+    return;
+  }
+  const t = tables.get(current) || tables.values().next().value;
+  current = t.id;
+  main.innerHTML = screenView(t);
+}
+let pending = false;
+function schedule() { if (!pending) { pending = true; requestAnimationFrame(() => { pending = false; render(); }); } }
+
+function upsert(id, connector) {
+  if (!tables.has(id)) tables.set(id, { id, connector, status: "starting", state: null, recent: [], curve: [0], hands: 0, bb100: 0 });
+  return tables.get(id);
+}
+function onEvent(e) {
+  if (e.table == null) return;
+  const t = upsert(e.table, e.connector);
+  if (e.type === "table") { t.status = e.status; if (current == null) current = t.id; }
+  else if (e.type === "decision") { t.state = e; t.lastDecision = e; }
+  else if (e.type === "deal") { t.state = { ...e, board: [], action: "" }; }
+  else if (e.type === "hand") {
+    t.state = { ...e, big: t.state?.big || 100, pot: t.state?.pot };
+    t.recent.push(e); if (t.recent.length > 200) t.recent.shift();
+    t.hands = e.hands; t.bb100 = e.bb100; t.won = e.won_bb;
+    t.curve.push(t.curve[t.curve.length - 1] + e.result_bb);
+  }
+  schedule();
+}
+
+async function load() {
+  const s = await api("/v1/sessions");
+  const from = s.seq;
+  for (const x of s.sessions) {
+    const t = upsert(x.id, x.connector); Object.assign(t, { status: x.status, hands: x.hands, bb100: x.bb100, won: x.won_bb, target: x.hands_target });
+    const d = await api(`/v1/sessions/${x.id}`);
+    t.state = d.state; t.recent = d.recent || [];
+    let c = 0; t.curve = [0, ...t.recent.map(h => c += h.result_bb)];
+    if (d.state?.type === "decision") t.lastDecision = d.state;
+    if (current == null) current = x.id;
+  }
+  render();
+  const es = new EventSource(`/v1/events?from=${from}`);
+  es.onmessage = m => onEvent(JSON.parse(m.data));
+}
+
+function setView(v) { view = v; document.querySelectorAll("#view button").forEach(b => b.classList.toggle("on", b.dataset.v === v)); render(); }
+$("#view").onclick = e => { if (e.target.dataset.v) setView(e.target.dataset.v); };
+
+let connectors = [];
+async function openNew() {
+  connectors = (await api("/v1/connectors")).connectors;
+  $("#conn").innerHTML = connectors.map(c => `<option>${esc(c.name)}</option>`).join("");
+  showReach(); $("#dlg").showModal();
+}
+function showReach() {
+  const c = connectors.find(x => x.name === $("#conn").value); if (!c) return;
+  $("#reach").innerHTML = `talks to ${esc(c.hosts.join(", "))}${c.env.length ? "<br>reads " + esc(c.env.join(", ")) : ""}`;
+}
+$("#conn").onchange = showReach;
+$("#new").onclick = openNew;
+$("#cancel").onclick = () => $("#dlg").close();
+$("#start").onclick = async () => {
+  const r = await api("/v1/sessions", { method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ connector: $("#conn").value, hands: +$("#hands").value }) });
+  $("#dlg").close();
+  if (r.id) { const t = upsert(r.id, $("#conn").value); t.target = +$("#hands").value; current = r.id; setView("screen"); }
+  else toast(r.error || "could not start");
+};
+async function stopTable(id) { await api(`/v1/sessions/${id}`, { method: "DELETE" }); toast("Stopping after this hand"); }
+function toast(msg) { const el = $("#toast"); el.textContent = msg; el.classList.add("show"); setTimeout(() => el.classList.remove("show"), 2200); }
+
+$("#theme").onclick = () => {
+  const r = document.documentElement, next = r.dataset.theme === "light" ? "dark" : "light";
+  r.dataset.theme = next; try { localStorage.setItem("kestrel-theme", next); } catch {}
+};
+try { const th = localStorage.getItem("kestrel-theme"); if (th) document.documentElement.dataset.theme = th; } catch {}
+
+document.addEventListener("keydown", e => {
+  if (e.target.matches("input, select") || $("#dlg").open) return;
+  const n = +e.key;
+  if (n >= 1 && n <= 9) { const t = [...tables.values()][n - 1]; if (t) { current = t.id; setView("screen"); } }
+  if (e.key === "g") setView(view === "grid" ? "screen" : "grid");
+  if (e.key === "n") openNew();
+  if (e.key === "t") $("#theme").click();
+});
+
+(async () => {
+  [LOGO, LOGO_ANIM] = await Promise.all([svg("/assets/logo-mark.svg"), svg("/assets/logo-animated.svg")]);
+  $("#logo").innerHTML = LOGO;
+  load();
+})();
+</script>
+</body>
+</html>

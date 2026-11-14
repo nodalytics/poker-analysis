@@ -114,7 +114,6 @@ void Table::advance() {
 }
 
 std::vector<float> Table::targets() const {
-    // float32 throughout, as the trainer's tensors, so the floor lands on the same chip
     const Menu& m = menu_;
     std::vector<float> t(m.S, NaN);
     int i = actor_;
@@ -222,7 +221,7 @@ std::vector<double> Table::payoffs(const std::vector<int>& ranks) const {
         std::vector<uint8_t> w(P_, 0);
         for (int j = 0; j < P_; ++j)
             if (!folded[j] && c[j] >= L && pot > 0 && ranks[j] == best) w[j] = 1, ++nw;
-        if (nw == 0 && pot > 0) {  // cannot happen in legal play: the best live hand takes it
+        if (nw == 0 && pot > 0) {
             int bl = big;
             for (int j = 0; j < P_; ++j)
                 if (!folded[j]) bl = std::min(bl, ranks[j]);
@@ -233,7 +232,7 @@ std::vector<double> Table::payoffs(const std::vector<int>& ranks) const {
             if (w[j]) win[j] += pot / std::max(nw, 1);
         prev = L;
     }
-    if (dead > 0) {  // the ante goes to the main pot
+    if (dead > 0) {
         int bl = big, n = 0;
         for (int j = 0; j < P_; ++j)
             if (!folded[j]) bl = std::min(bl, ranks[j]);
@@ -246,4 +245,4 @@ std::vector<double> Table::payoffs(const std::vector<int>& ranks) const {
     return win;
 }
 
-}  // namespace kestrel
+}

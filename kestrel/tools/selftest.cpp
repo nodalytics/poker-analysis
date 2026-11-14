@@ -1,10 +1,3 @@
-// kestrel_selftest --vectors DIR --model MODEL_DIR --pack PACK_DIR: checks Kestrel against the Python reference.
-//  9-max (vectors_nm17.json, llm-research/scripts/advisor_vectors.py): every decision of the reference hands through
-//    the C++ table, features and network (actor, street, legal actions, raise targets, features, strength, logits,
-//    value), every hand's payoffs and ICM equities, and the ICM cases.
-//  heads-up (vectors_headsup.json, llm-research/scripts/kestrel_hu_vectors.py): logged Slumbot decisions through the
-//    acpc codec and the blueprint (node, bucket, strategy, raise sizes).
-// Exit 0 only if all match.
 #include <cmath>
 #include <cstdio>
 #include <fstream>
@@ -41,7 +34,7 @@ struct Check {
     void eq(long got, long want, const std::string& where) { cmp(double(got), double(want), where); }
 };
 
-}  // namespace
+}
 
 int main(int argc, char** argv) {
     std::string vdir, model, pack;
@@ -96,7 +89,6 @@ int main(int argc, char** argv) {
             str.cmp(sv, St["strength"].get<double>(), w);
             std::vector<float> lg;
             float v;
-            // the network is checked on the reference features, so a feature error is not counted twice
             std::vector<float> rf(wf.begin(), wf.end());
             net.forward(rf, bk, T.street(), float(St["strength"].get<double>()), lg, v);
             auto wlg = St["logits"].get<std::vector<double>>();
@@ -117,7 +109,6 @@ int main(int argc, char** argv) {
         for (size_t j = 0; j < want.size(); ++j) icmc.cmp(e[j], want[j], "case " + std::to_string(c));
         ++c;
     }
-    // ---- heads-up: the blueprint through the Slumbot codec ----
     Check hturn{"hu: our turn", 0}, hnode{"hu: node", 0}, hbk{"hu: bucket", 0}, hn{"hu: options", 0},
         hkind{"hu: kinds", 0}, hprob{"hu: probs", 1e-5}, hto{"hu: raise to", 50};
     std::ifstream hf(vdir + "/vectors_headsup.json");

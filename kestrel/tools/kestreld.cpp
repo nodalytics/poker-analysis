@@ -1,8 +1,3 @@
-// kestreld: the Kestrel daemon. Today: play a session through a connector, or check a connector file.
-//   kestreld list [DIR]                      every connector in a folder (default: ~/.config/kestrel/connectors)
-//   kestreld check CONNECTOR                 load and validate a connector file (any file a user writes)
-//   kestreld play CONNECTOR --hands N --out DIR [--pack DIR] [--seed S] [--max-errors E]
-// The local API (REST, WebSocket, TCP, MCP) and the web page come next (docs/design.md).
 #include <atomic>
 #include <csignal>
 #include <cstdio>
@@ -13,6 +8,7 @@
 
 #include "kestrel/connector.hpp"
 #include "kestrel/headsup.hpp"
+#include "kestrel/server.hpp"
 #include "kestrel/session.hpp"
 
 using namespace kestrel;
@@ -25,10 +21,11 @@ int usage() {
     std::fprintf(stderr,
                  "usage: kestreld list [DIR]\n"
                  "       kestreld check CONNECTOR\n"
-                 "       kestreld play CONNECTOR --hands N --out DIR [--pack DIR] [--seed S] [--max-errors E]\n");
+                 "       kestreld play CONNECTOR --hands N --out DIR [--pack DIR] [--seed S] [--max-errors E]\n"
+                 "       kestreld serve [--port P] [--pack DIR] [--connectors DIR]... [--web DIR] [--assets DIR] [--out DIR]\n");
     return 2;
 }
-}  // namespace
+}
 
 std::string default_dir() {
     const char* x = std::getenv("XDG_CONFIG_HOME");
@@ -47,6 +44,27 @@ int main(int argc, char** argv) {
             std::printf("  %-20s codec %-8s %d players  %s\n", c.name.c_str(), c.codec.c_str(), c.players, c.path.c_str());
         for (auto& e : errors) std::printf("  not loaded: %s\n", e.c_str());
         return errors.empty() ? 0 : 1;
+    }
+    if (argc >= 2 && std::string(argv[1]) == "serve") {
+        ServeOptions o;
+        o.pack = "blueprint/pack";
+        for (int k = 2; k + 1 < argc; k += 2) {
+            std::string a = argv[k], v = argv[k + 1];
+            if (a == "--port") o.port = std::stoi(v);
+            else if (a == "--pack") o.pack = v;
+            else if (a == "--connectors") o.connectors.push_back(v);
+            else if (a == "--web") o.web = v;
+            else if (a == "--assets") o.assets = v;
+            else if (a == "--out") o.out = v;
+            else return usage();
+        }
+        o.connectors.push_back(default_dir());
+        try {
+            return serve(o);
+        } catch (const std::exception& e) {
+            std::fprintf(stderr, "kestreld: %s\n", e.what());
+            return 1;
+        }
     }
     if (argc < 3) return usage();
     std::string cmd = argv[1], file = argv[2];
