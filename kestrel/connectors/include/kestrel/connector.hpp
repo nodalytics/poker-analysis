@@ -23,6 +23,9 @@ struct ConnectorSpec {
     std::string variant = "nlhe";
     int players = 2;
     int64_t big = 100, stack = 20000;
+    // what the file reaches, for the user to see before running it
+    std::vector<std::string> env;    // environment variables it reads (KESTREL_* only)
+    std::vector<std::string> hosts;  // base URLs it talks to
 };
 
 // Reads a .yaml/.yml/.json connector file; throws with a reason when it is malformed or not allowed.

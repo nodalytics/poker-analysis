@@ -1,6 +1,7 @@
 #include "kestrel/session.hpp"
 
 #include <algorithm>
+#include <cctype>
 #include <filesystem>
 #include <fstream>
 #include <random>
@@ -18,16 +19,35 @@ json SessionSummary::to_json() const {
 
 namespace {
 
+// A field is a JSON pointer ("/hole_cards") or {at: pointer, scale: number, map: {platform value: ours}}.
 json at(const json& r, const json& fields, const char* key) {
     if (!fields.contains(key)) return nullptr;
-    json::json_pointer p(fields[key].get<std::string>());
-    return r.contains(p) ? r[p] : json(nullptr);
+    const json& f = fields[key];
+    std::string ptr = f.is_string() ? f.get<std::string>() : f.value("at", "");
+    json::json_pointer p(ptr);
+    if (!r.contains(p)) return nullptr;
+    json v = r[p];
+    if (f.is_object()) {
+        if (f.contains("map")) {  // e.g. my_seat: {at: /position, map: {BB: 0, SB: 1}}
+            std::string k = v.is_string() ? v.get<std::string>() : v.dump();
+            if (f["map"].contains(k)) v = f["map"][k];
+        }
+        if (f.contains("scale") && v.is_number()) v = v.get<double>() * f["scale"].get<double>();
+    }
+    return v;
 }
 
-std::vector<std::string> strings(const json& j) {
+// cards as a list ["As", "Kc"], or one string "AsKc", "As Kc" or "As,Kc"
+std::vector<std::string> cards(const json& j) {
     std::vector<std::string> v;
-    if (j.is_array())
+    if (j.is_array()) {
         for (auto& x : j) v.push_back(x.get<std::string>());
+    } else if (j.is_string()) {
+        std::string s;
+        for (char c : j.get<std::string>())
+            if (!std::isspace(static_cast<unsigned char>(c)) && c != ',') s += c;
+        for (size_t k = 0; k + 1 < s.size(); k += 2) v.push_back(s.substr(k, 2));
+    }
     return v;
 }
 
@@ -57,9 +77,17 @@ SessionSummary run_session(const ConnectorSpec& spec, const SessionPlan& plan, H
     auto tr = make_transport(spec);
     const json& routes = spec.raw["routes"];
     const json& flow = spec.raw["flow"];
-    const json& fields = spec.raw["fields"];
     const json& start = routes[flow["start"].get<std::string>()];
     const json& act = routes[flow["act"].get<std::string>()];
+    // the response structure: the connector's fields, overridden per route by routes.<name>.response.fields
+    auto fields_of = [&](const json& route) {
+        json f = spec.raw["fields"];
+        if (route.contains("response") && route["response"].contains("fields"))
+            for (auto& [k, v] : route["response"]["fields"].items()) f[k] = v;
+        return f;
+    };
+    const json start_fields = fields_of(start), act_fields = fields_of(act);
+    json fields = start_fields;  // the fields of the route that gave the current response
     std::string token_ptr;
     if (spec.raw.contains("session") && spec.raw["session"].contains("token_field"))
         token_ptr = spec.raw["session"]["token_field"].get<std::string>();
@@ -95,6 +123,7 @@ SessionSummary run_session(const ConnectorSpec& spec, const SessionPlan& plan, H
             break;
         }
         json r = tr->call(start, vars);
+        fields = start_fields;
         keep_token(r);
         int guard = 0;
         bool failed = false;
@@ -107,7 +136,7 @@ SessionSummary run_session(const ConnectorSpec& spec, const SessionPlan& plan, H
             HUSpot spot;
             std::string action = at(r, fields, "action").get<std::string>();
             int pos = at(r, fields, "my_seat").get<int>();
-            if (!acpc::spot(action, pos, strings(at(r, fields, "hole")), strings(at(r, fields, "board")), game, spot)) {
+            if (!acpc::spot(action, pos, cards(at(r, fields, "hole")), cards(at(r, fields, "board")), game, spot)) {
                 ++sum.errors;  // the platform says it is our turn and the action string says otherwise
                 failed = true;
                 break;
@@ -123,11 +152,13 @@ SessionSummary run_session(const ConnectorSpec& spec, const SessionPlan& plan, H
             }
             vars["action"] = acpc::encode(pick, spot);
             r = tr->call(act, vars);
+            fields = act_fields;
             keep_token(r);
             if (!platform_error(r).empty()) {  // our move was refused: check or call once instead
                 ++sum.fallbacks;
                 vars["action"] = spot.facing ? "c" : "k";
                 r = tr->call(act, vars);
+                fields = act_fields;
                 keep_token(r);
             }
         }

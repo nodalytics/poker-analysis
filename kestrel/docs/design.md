@@ -9,15 +9,16 @@ advisor **plays by itself** on platforms that offer a bot API, through **connect
 JSON) that are added after the build, without recompiling. You give it a connector file and a session plan, start
 it, and leave it: it plays, logs every hand, and reports results with confidence intervals.
 
-## Boundary: API platforms only
+## How it reaches platforms
 
-Connectors talk to a platform's **published API** (HTTP or WebSocket). That covers bot arenas such as Slumbot,
-our own lab simulators, and any site that invites bots.
-- **Real-money clients are out of scope.** ACR and similar sites ban bots and real-time assistance, and this project
-  never automates them (the standing rule since phase A).
-- A connector file has to declare `real_money: false` and `bots_permitted: true`, or the runner refuses to load it.
-- Capture-only screenshots stay as planned: they pause while a real-money client is running.
-- There is no screen reading and no clicking: a connector has no way to drive a desktop client.
+Kestrel plays through a platform's API (HTTP, WebSocket, TCP or MCP), described in a connector file. It has no
+screen reading and no clicking, so it cannot drive a desktop poker client. Connector files carry no declarations
+about money or bot policy (decided 2026-11-14); which platforms to connect is the user's call.
+
+**Connector files are untrusted input.** Anyone can write one and share it, so a file may only read environment
+variables named `KESTREL_*` (for example `KESTREL_SLUMBOT_USER`). Anything else is refused, so a shared file cannot
+read cloud keys and send them to its server. `kestreld check FILE` shows the hosts a file talks to and the variables
+it reads, before it runs.
 
 ## Layout
 
@@ -52,12 +53,22 @@ Connectors use the same set of transports towards a platform: `http`, `websocket
 - **Web:** `kestreld` serves a web page at `http://127.0.0.1:<port>/`, built on the REST and WebSocket interfaces.
   From it you can ask for advice on a spot, manage connectors, start and stop sessions, and watch them play live.
   Hands, bb/100 and errors stream over the WebSocket. Reach it from another machine through an SSH tunnel.
+- **Live tables, one screen each:** every running session is a table on its own screen. Screen 1 can play Slumbot
+  while screen 2 plays another platform, up to screen N. Each screen shows the table as it plays: seats, stacks,
+  cards, the pot, every action as it happens, Kestrel's decision with its probabilities, and the session's results.
+  Switch screens with tabs or keys 1–9, or see them all as a grid of live mini-tables. `kestreld` runs the sessions
+  side by side and streams each table's events over the WebSocket.
 - **The Poker AI Watch page** (`web/index.html`, served publicly) gets a **read-only** Kestrel tab: session
   progress and results. Controls (start, stop, connectors) stay on the local page, because the watch page is public
   and the backend is bound to `127.0.0.1` (decision of 2026-11-10). Remote controls would first need
   authentication.
 
 ### Look and feel (both GUIs)
+
+**Logo.** A kestrel, the small falcon that hovers in the wind before it strikes, drawn as a geometric mark: the
+GUIs show the mark, not the name (`assets/logo.svg`, `assets/logo-mark.svg`). An animated version
+(`assets/logo-animated.svg`), with the wings beating and the bird hovering, plays while Kestrel is thinking, connecting
+or starting a session; it stops when the GUI is idle and respects reduced-motion settings.
 
 Modern and sleek, as one design across the web page and the app:
 - **Dark first, with a light theme**, both from one set of colour tokens; a restrained palette, a single accent
@@ -91,51 +102,25 @@ The same boundary applies: an MCP connector is still an API connector, under the
 
 ## Connector files
 
-A connector describes the transport (endpoints, requests, response fields) and names the **codec** that turns the
-platform's notation into our game state. Transport is pure configuration. Notation needs a codec, because a platform's
-action strings carry rules (Slumbot's `b200c/kk/b400` is street totals in chips), and those cannot be guessed from
-an API spec. Built-in codecs cover the common notations: `acpc` (Slumbot and the ACPC servers), `structured` (JSON
-actions with type and amount fields, mapped by path), and more as platforms need them. A platform with a notation of
-its own needs one new codec. Everything else about it is a file.
+Any connector a user writes is accepted if it is complete. Load a file (`kestreld check FILE`, `kestreld play FILE`)
+or drop it into the connectors folder (`~/.config/kestrel/connectors`, `kestreld list`). Nothing is assumed about a
+platform: the user lists its routes, the request and response structure of each, and which route plays each step.
 
-```yaml
-# connectors/slumbot.yaml
-name: slumbot
-real_money: false
-bots_permitted: true          # slumbot.com publishes its API for bots
-game: {variant: nlhe, players: 2, blinds: [50, 100], stack: 20000, reset_every_hand: true}
-transport:
-  base_url: https://slumbot.com/api/
-  content_type: application/json
-  retry: {tries: 6, backoff_s: 2}
-  rate_limit_per_s: 2
-session:
-  login: null                  # optional: {path: login, body: {username: ${env:SLUMBOT_USER}, password: ${env:SLUMBOT_PASS}}, token: /token}
-  token_field: /token          # JSON pointer, carried into the next request
-hand:
-  start: {path: new_hand, body: {token: ${token}}}
-  act:   {path: act, body: {token: ${token}, incr: ${action}}}
-  fields:                      # JSON pointers into each response
-    action: /action
-    my_seat: /client_pos
-    hole: /hole_cards
-    board: /board
-    result: /winnings          # present when the hand is over
-    error: /error_msg
-codec: acpc                    # action strings: k c f b<street total>, streets separated by /
-seat_map: {0: big_blind, 1: small_blind}
-```
+| Section | What the user writes |
+|---|---|
+| `game` | variant (`nlhe`), players, blinds, stack |
+| `codec` | the platform's action notation: `acpc` (Slumbot's `b200c/kk/b400`) today; `structured` (JSON actions) next |
+| `transport` | `base_url`, retries, a rate limit, headers sent with every route (e.g. an API key) |
+| `routes` | **every route, as the platform has it:** name, `method` (GET/POST/PUT/PATCH/DELETE), `path` (relative to the base URL or absolute), and its `request` (body of any shape, `query`, `headers`, `content_type`) and `response` (fields read from this route's answers) |
+| `flow` | which route plays each step: `start` (deal a hand), `act` (send our move), optionally `login` (once per session) |
+| `session` | `token_field`: a value carried from each response into the next request as `${token}` |
+| `fields` | the response structure: where each answer is (JSON pointers), e.g. `hole: /hole_cards`. A field can be `{at, scale, map}`: amounts in other units, or the platform's values mapped to ours (`{BB: 0, SB: 1}`). Cards are read from a list (`["As","Kc"]`) or a string (`"AsKc"`, `"As Kc"`) |
 
-A session plan:
+Placeholders in requests: `${token}`, `${action}` (our move in the codec's notation), `${env:KESTREL_*}`. A value that is
+a lone placeholder with nothing to fill in is left out of its object, so the first request goes without a token.
 
-```yaml
-connector: slumbot
-engine: auto                   # or headsup-blueprint, nm17, pushfold
-hands: 10000
-workers: 1                     # parallel sessions; keep them few out of courtesy to free services
-stop: {max_errors: 20, until: "2026-11-15T08:00"}
-log: sessions/slumbot-{date}/  # hands.jsonl, summary.json (bb/100 with a bootstrap interval; luck-adjusted where possible)
-```
+The Slumbot file, [`connectors/slumbot.yaml`](../connectors/slumbot.yaml), is the worked example. It played its first
+hands by itself on 2026-11-14: 40 hands, no platform errors, no refused moves, no hands off the blueprint's tree.
 
 ## Verified against the Python reference
 

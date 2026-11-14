@@ -9,12 +9,25 @@ transport:
   base_url: https://slumbot.com/api/
   retry: {tries: 6, backoff_s: 2}
   rate_limit_per_s: 4          # a courtesy limit: keep the load on a free service small
-  # headers: {Authorization: "Bearer ${env:SLUMBOT_KEY}"}   # sent with every route, if a platform needs it
+  # headers: {Authorization: "Bearer ${env:KESTREL_SLUMBOT_KEY}"}   # sent with every route, if a platform needs it
 
-routes:                        # the platform's API, as you list it: method, path, query, headers, body
-  login:    {method: POST, path: login, body: {username: "${env:SLUMBOT_USER}", password: "${env:SLUMBOT_PASS}"}}
-  new_hand: {method: POST, path: new_hand, body: {token: "${token}"}}
-  act:      {method: POST, path: act, body: {token: "${token}", incr: "${action}"}}
+routes:                        # the platform's API, as you list it
+  login:
+    method: POST
+    path: login
+    request:                   # the request's structure: body (any shape), query, headers, content_type
+      body: {username: "${env:KESTREL_SLUMBOT_USER}", password: "${env:KESTREL_SLUMBOT_PASS}"}
+    response:
+      fields: {error: /error_msg}
+  new_hand:
+    method: POST
+    path: new_hand
+    request: {body: {token: "${token}"}}   # a lone placeholder with no value is left out (no token at first)
+  act:
+    method: POST
+    path: act
+    request: {body: {token: "${token}", incr: "${action}"}}
+    # response: {fields: {...}}  # a route may override any of the fields below
 
 flow:                          # which route plays each step; login is optional and runs once per session
   start: new_hand
@@ -24,11 +37,13 @@ flow:                          # which route plays each step; login is optional 
 session:
   token_field: /token          # carried into the next request as ${token}
 
-fields:                        # JSON pointers into each response
+fields:                        # the response's structure: where each answer is (JSON pointers)
   action: /action
   my_seat: /client_pos         # 0 big blind, 1 small blind
-  hole: /hole_cards
+  hole: /hole_cards            # cards: a list ["As", "Kc"] or a string "AsKc" / "As Kc"
   board: /board
   result: /winnings            # present when the hand is over (chips)
   their_hole: /bot_hole_cards
   error: /error_msg
+  # a field can also be {at: /pointer, scale: 0.01, map: {"BB": 0, "SB": 1}}: a scale for amounts in other units,
+  # a map from the platform's values to ours

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Kestrel">
+  <title>Kestrel</title>
+  <!-- the animated mark: the kestrel hovers, wings beating, as it does before a strike. For "thinking",
+       "connecting" and "starting"; static under prefers-reduced-motion. -->
+  <defs>
+    <linearGradient id="ka-a" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FDBA74"/><stop offset="0.55" stop-color="#F97316"/><stop offset="1" stop-color="#C2410C"/>
+    </linearGradient>
+    <linearGradient id="ka-b" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FB923C"/><stop offset="0.55" stop-color="#EA580C"/><stop offset="1" stop-color="#9A3412"/>
+    </linearGradient>
+  </defs>
+  <style>
+    .bird { animation: hover 1.6s ease-in-out infinite; transform-origin: 64px 64px; }
+    .wl, .wr { animation: beat 0.4s ease-in-out infinite alternate; transform-box: view-box; }
+    .wl { transform-origin: 56px 50px; }
+    .wr { transform-origin: 72px 50px; }
+    .shadow { animation: shadow 1.6s ease-in-out infinite; transform-origin: 64px 118px; }
+    @keyframes hover { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+    @keyframes beat { from { transform: scaleY(1) skewY(0deg); } to { transform: scaleY(0.55) skewY(0deg); } }
+    @keyframes shadow { 0%,100% { transform: scaleX(1); opacity: .35; } 50% { transform: scaleX(.8); opacity: .2; } }
+    @media (prefers-reduced-motion: reduce) { .bird, .wl, .wr, .shadow { animation: none; } }
+  </style>
+  <ellipse class="shadow" cx="64" cy="118" rx="22" ry="2.5" fill="#F97316" opacity=".35"/>
+  <g class="bird">
+    <g class="wl">
+      <path d="M56.5 41 L6 26 L16 38 L11 40 L25 47 L20 50 L36 56 L50 62 Z" fill="url(#ka-a)"/>
+      <path d="M6 26 L16 38 L11 40 L25 47 L27 40 Z" fill="#1E293B" fill-opacity="0.85"/>
+      <path d="M56.5 41 L36 56" stroke="#7C2D12" stroke-opacity="0.45" stroke-width="1.2" stroke-linecap="round"/>
+    </g>
+    <g class="wr">
+      <path d="M71.5 41 L122 26 L112 38 L117 40 L103 47 L108 50 L92 56 L78 62 Z" fill="url(#ka-b)"/>
+      <path d="M122 26 L112 38 L117 40 L103 47 L101 40 Z" fill="#1E293B" fill-opacity="0.85"/>
+      <path d="M71.5 41 L92 56" stroke="#7C2D12" stroke-opacity="0.45" stroke-width="1.2" stroke-linecap="round"/>
+    </g>
+    <path d="M64 24 L68.5 27 L70 33 L71.5 41 L78 62 L74.5 74 L84 104 L72 99 L64 106 L56 99 L44 104 L53.5 74 L50 62 L56.5 41 L58 33 L59.5 27 Z" fill="url(#ka-a)"/>
+    <path d="M64 24 L68.5 27 L70 33 L71.5 41 L78 62 L74.5 74 L84 104 L72 99 L64 106 Z" fill="url(#ka-b)"/>
+    <path d="M80.6 93.5 L84 104 L72 99 L64 106 L56 99 L44 104 L47.4 93.5 Z" fill="#1E293B" fill-opacity="0.85"/>
+    <path d="M60.2 31.4 L63 30.6 L62.2 33.2 Z M67.8 31.4 L65 30.6 L65.8 33.2 Z" fill="#0F172A"/>
+  </g>
+</svg>
