@@ -202,6 +202,34 @@ Next: find why self-play does not take the big blind's gain (the KL pull towards
 bound, the critic's estimate in this spot), with short fine-tuning runs that change one at a time and measure the
 defence with this script.
 
+#### One change at a time (`nm18`–`nm20`, 2026-11-14)
+
+Three 2-hour fine-tunes from `nm16`'s final checkpoint, `nm16`'s recipe otherwise
+(`results/ninemax/ft_nm18_20.sh`): `nm18` unchanged (the control), `nm19` with the KL pull at 0.05 instead of 0.3,
+`nm20` with NeuRD's logit bound at 6 instead of 2. Big-blind defence against the button's min-raise, ICM, against
+the same network (best response: 100% everywhere):
+
+| Network | averaged, 2h | live (`--part net`) | gives up per spot |
+|---|---|---|---|
+| `nm16` (start, 12h) | 35% | 34% | 1.05–1.08bb |
+| `nm17` (12h, short tables) | — | 42% | 1.05bb |
+| `nm18` control | 34% | 32% | 1.15–1.19bb |
+| `nm19` KL 0.05 | 35% | 37% | 1.15–1.25bb |
+| `nm20` NeuRD bound 6 | 28% | 28% | 1.09–1.13bb |
+
+- Neither the KL pull nor the logit bound is what holds the big blind back, and a restart is not either (the
+  poker-sense check's 46% after an hour, in chips, did not survive into the ICM measure).
+- The live network folds as much as the averaged one, so it is not the average lagging a moving policy.
+- A looser bound (`nm20`) makes the network more decisive (entropy 0.33 to 0.12): it all but stops shoving at 8bb
+  (2%) and defends less.
+- The poker-sense check (chips, winner-takes-all) reads 41–53% where the ICM check reads 28–42%: the network folds
+  more under tournament payouts, as it should, but further than the payouts justify.
+
+So the learning signal itself does not favour calling in this spot. Next: read the training signal there directly
+(the NeuRD update per action and hand class, from training-like batches) and the critic's value against the
+played-out result, and check the spot against each pool member and the exploiter, which may punish a wide
+defence after the flop.
+
 **Next:**
 - the checks now run by themselves on every new snapshot of a tournament run (`scripts/ninemax_autocheck.py` on the
   lab, results as `sense_<run>_<h>h.json` and `pushfold_check_<run>_<h>h.json`) and show on the watch page;

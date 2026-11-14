@@ -130,6 +130,7 @@ def main():
     ap.add_argument("--chunk", type=int, default=50000)
     ap.add_argument("--icm", action="store_true", help="tournament payouts and ICM results, as in training")
     ap.add_argument("--out")
+    ap.add_argument("--part", default="avg", help="checkpoint part: avg (the averaged policy) or net (the live one)")
     ap.add_argument("--lib", default=os.path.join(ROOT, "blueprint", "libbp5.so"))
     ap.add_argument("--abs", default=os.path.join(ROOT, "blueprint", "out"))
     a = ap.parse_args()
@@ -141,14 +142,17 @@ def main():
     pre_s = dealer.pre_strength[torch.tensor(bk0[:, :, 0].ravel(), device=dev)]
     dealer.pre_q = (torch.quantile(pre_s, 0.88).item(), torch.quantile(pre_s, 0.65).item())
     ICM["on"] = a.icm
-    net, hands = load(a.run, B, dev)
+    net, hands = load(a.run, B, dev, a.part)
     d = os.path.dirname(a.run) if a.run.endswith(".pt") else a.run
     menu = Menu(json.load(open(os.path.join(d, "config.json"))).get("menu", "medium"), dev)
     opp = net if a.opp == "self" else a.opp
     ALLIN, MIN = menu.A - 1, 2
     ante = RULES["ante"]
-    out = {"run": a.run, "opp": a.opp, "icm": a.icm, "ante_bb": ante, "deals": a.deals, "spots": {}}
-    print(f"{a.run} vs {a.opp}, {'ICM' if a.icm else 'chips'}, ante {ante:g}bb, {a.deals} deals per action", flush=True)
+    out = {"run": a.run, "part": a.part, "opp": a.opp, "icm": a.icm, "ante_bb": ante, "deals": a.deals, "spots": {}}
+    print(
+        f"{a.run} ({a.part}) vs {a.opp}, {'ICM' if a.icm else 'chips'}, ante {ante:g}bb, {a.deals} deals per action",
+        flush=True,
+    )
 
     for name, seat in (("UTG", 2), ("CO", 7)):
         ev, cnt, pol = measure(net, opp, dealer, menu, dev, a.deals, a.chunk, 8, (), seat, (0, MIN, ALLIN))
