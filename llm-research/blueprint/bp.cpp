@@ -161,6 +161,28 @@ extern "C" void bp_deal_fixed(int n, int players, uint64_t seed, const int32_t* 
   }
 }
 
+// Buckets and showdown ranks for given deals: cards[n][2P + 5] (hole cards by seat, then the board), as bp_deal_n
+// returns them. Lets networks trained on different abstractions play the same cards (ninemax_absmatch.py).
+extern "C" void bp_bucket_cards(int n, int players, const int32_t* cards, int32_t* bk, int32_t* rk) {
+  if (!IX) return;
+  const int need = 2 * players + 5;
+#pragma omp parallel for schedule(static)
+  for (int g = 0; g < n; ++g) {
+    const int32_t* h = cards + (size_t)g * need;
+    const int32_t* board = h + 2 * players;
+    for (int p = 0; p < players; ++p) {
+      uint8_t c[7] = {(uint8_t)h[2 * p], (uint8_t)h[2 * p + 1], (uint8_t)board[0], (uint8_t)board[1],
+                      (uint8_t)board[2], (uint8_t)board[3], (uint8_t)board[4]};
+      int32_t* b = bk + ((size_t)g * players + p) * 4;
+      b[0] = (int32_t)hand_index_last(&IX->pre, c);
+      b[1] = FB[hand_index_last(&IX->flop, c)];
+      b[2] = TB[hand_index_last(&IX->turn, c)];
+      b[3] = RB.empty() ? river_bucket_from_hs(c) : RB[hand_index_last(&IX->river, c)];
+      rk[(size_t)g * players + p] = evaluate_7cards(c[0], c[1], c[2], c[3], c[4], c[5], c[6]);
+    }
+  }
+}
+
 extern "C" void bp_deal(int n, uint64_t seed, int32_t* bk, int32_t* rk) {
   if (!IX) return;
 #pragma omp parallel for schedule(static)

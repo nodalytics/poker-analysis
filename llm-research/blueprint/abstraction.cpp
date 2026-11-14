@@ -4,12 +4,15 @@
 //   flop   EHS, EHS2 = means over the 47 turns of the turn values
 // Each street is cut into B equal-population buckets on EHS2 (flop, turn) or HS (river); pre-flop keeps its 169
 // classes. Writes OUT/{flop,turn,river}_buckets.u8, OUT/{turn,flop}_ehs.f32 and OUT/meta.txt.
-// Usage: abstraction OUTDIR [BUCKETS=200]
+// Usage: abstraction OUTDIR [BUCKETS=200]                       the same count on every street
+//        abstraction OUTDIR FLOP TURN RIVER [GAMMA=1]           a count per street; GAMMA > 1 puts the cuts closer
+//                                                                together at the strong end (non-uniform buckets)
 #include <omp.h>
 
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <limits>
 #include <fstream>
 
 #include "common.hpp"
@@ -23,11 +26,22 @@ static void write(const std::string& path, const void* data, size_t bytes) {
   fclose(f);
 }
 
-static std::vector<uint16_t> quantile_buckets(const std::vector<float>& v, int B) {
+// cut k at quantile g(k/B), g(u) = 1 - (1 - u)^gamma: gamma 1 gives equal-population buckets; above 1 the buckets
+// get narrower towards the strong end, where the most chips are decided
+static std::vector<uint16_t> quantile_buckets(const std::vector<float>& v, int B, double gamma = 1.0) {
   std::vector<float> s(v);
   std::sort(s.begin(), s.end());
   std::vector<float> cut(B - 1);
-  for (int k = 1; k < B; ++k) cut[k - 1] = s[(size_t)((double)k * s.size() / B)];
+  for (int k = 1; k < B; ++k) {
+    double q = 1.0 - std::pow(1.0 - (double)k / B, gamma);
+    cut[k - 1] = s[std::min(s.size() - 1, (size_t)(q * s.size()))];
+    // a tie cannot be split: when a cut lands on the previous cut's value, move it to the next distinct value, so no
+    // bucket is left empty while distinct strengths remain (only the leftovers past the strongest value stay empty)
+    if (k > 1 && cut[k - 1] <= cut[k - 2]) {
+      auto nx = std::upper_bound(s.begin(), s.end(), cut[k - 2]);
+      cut[k - 1] = nx == s.end() ? std::numeric_limits<float>::infinity() : *nx;
+    }
+  }
   std::vector<uint16_t> out(v.size());
 #pragma omp parallel for schedule(static)
   for (size_t i = 0; i < v.size(); ++i)
@@ -37,11 +51,15 @@ static std::vector<uint16_t> quantile_buckets(const std::vector<float>& v, int B
 
 int main(int argc, char** argv) {
   if (argc < 2) {
-    fprintf(stderr, "usage: abstraction OUTDIR [BUCKETS]\n");
+    fprintf(stderr, "usage: abstraction OUTDIR [BUCKETS] | OUTDIR FLOP TURN RIVER [GAMMA]\n");
     return 1;
   }
   std::string out = argv[1];
   int B = argc > 2 ? atoi(argv[2]) : 200;
+  int BF = B, BT = B, BR = B;
+  double gamma = 1.0;
+  if (argc >= 5) BF = atoi(argv[2]), BT = atoi(argv[3]), BR = atoi(argv[4]), B = std::max({BF, BT, BR});
+  if (argc >= 6) gamma = atof(argv[5]);
   Indexers ix;
   const uint64_t NR = ix.size(3), NT = ix.size(2), NF = ix.size(1);
   fprintf(stderr, "states: flop %lu turn %lu river %lu\n", NF, NT, NR);
@@ -113,9 +131,10 @@ int main(int argc, char** argv) {
     fehs2[i] = s2 / n;
   }
   fprintf(stderr, "metrics done %.0fs\n", omp_get_wtime() - t0);
-  auto fb = quantile_buckets(fehs2, B), tb = quantile_buckets(tehs2, B), rb = quantile_buckets(hs, B);
+  auto fb = quantile_buckets(fehs2, BF, gamma), tb = quantile_buckets(tehs2, BT, gamma),
+       rb = quantile_buckets(hs, BR, gamma);
   auto save = [&](const std::string& name, const std::vector<uint16_t>& v) {
-    if (B > 255) {
+    if (*std::max_element(v.begin(), v.end()) > 255) {
       write(out + "/" + name + "_buckets.u16", v.data(), v.size() * 2);
     } else {
       std::vector<uint8_t> n(v.begin(), v.end());
@@ -129,7 +148,8 @@ int main(int argc, char** argv) {
   write(out + "/turn_ehs.f32", tehs.data(), tehs.size() * 4);
   write(out + "/river_hs.f32", hs.data(), hs.size() * 4);
   std::ofstream m(out + "/meta.txt");
-  m << "buckets " << B << "\nflop_states " << NF << "\nturn_states " << NT << "\nriver_states " << NR
+  m << "buckets " << B << "\nbuckets_flop " << BF << "\nbuckets_turn " << BT << "\nbuckets_river " << BR
+    << "\ngamma " << gamma << "\nflop_states " << NF << "\nturn_states " << NT << "\nriver_states " << NR
     << "\nmetric flop,turn=EHS2 river=HS\nseconds " << omp_get_wtime() - t0 << "\n";
   fprintf(stderr, "done %.0fs\n", omp_get_wtime() - t0);
   return 0;
