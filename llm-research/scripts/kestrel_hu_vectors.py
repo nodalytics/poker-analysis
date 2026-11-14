@@ -74,6 +74,12 @@ def main():
     ap.add_argument(
         "--floor", action="store_true", help="keep the minimum-defence floor on (vectors_headsup_floor.json)"
     )
+    ap.add_argument(
+        "--resolve",
+        action="store_true",
+        help="river decisions only, with the safe re-solve's strategy at our hand (vectors_headsup_resolve.json; "
+        "needs a training run with avg.f32 and libresolve.so)",
+    )
     a = ap.parse_args()
     bb.Blueprint.map_raise = map_raise_det
     if not a.floor:
@@ -94,7 +100,16 @@ def main():
                 continue
             scale = 100 / max(state.blinds_or_straddles)
             w = bp.walk(state, scale)
+            if a.resolve and len(board) < 5:
+                continue
             dist = bp.distribution(state, i, scale) if w else None
+            res = None
+            if a.resolve and w:
+                all_s = bp.safe_strategies(state, i, scale)
+                deck = [r + s for r in "23456789TJQKA" for s in "cdhs"]
+                hole = sorted(r["hole"], key=deck.index)
+                mine = all_s.get(hole[0] + hole[1]) if all_s else None
+                res = [round(float(x), 6) for x in mine] if mine is not None else None
             lo, hi, facing, last = sc.legal_range(sc.tokens(text))
             cases.append({
                 "action": text, "pos": i, "hole": r["hole"], "board": board,
@@ -103,8 +118,11 @@ def main():
                 "bucket": bp.bucket(r["hole"] + board),
                 "dist": [[k, None if t is None else int(t * sc.SCALE), round(float(p), 6)] for k, t, p in dist]
                 if dist else None,
+                "resolve": res,
             })  # fmt: skip
     name = "vectors_headsup_floor.json" if a.floor else "vectors_headsup.json"
+    if a.resolve:
+        name = "vectors_headsup_resolve.json"
     out = os.path.join(ROOT, "..", "kestrel", "testdata", name)
     os.makedirs(os.path.dirname(out), exist_ok=True)
     json.dump({"source": a.run, "hands": len(rows), "cases": cases}, open(out, "w"))

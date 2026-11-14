@@ -21,8 +21,10 @@ int usage() {
     std::fprintf(stderr,
                  "usage: kestreld list [DIR]\n"
                  "       kestreld check CONNECTOR\n"
-                 "       kestreld play CONNECTOR --hands N --out DIR [--pack DIR] [--seed S] [--max-errors E]\n"
-                 "       kestreld serve [--port P] [--pack DIR] [--connectors DIR]... [--web DIR] [--assets DIR] [--out DIR]\n");
+                 "       kestreld play CONNECTOR --hands N --out DIR [--pack DIR] [--model M] [--solver none|kestrel-river]\n"
+                 "                     [--resolve-iters N] [--seed S] [--max-errors E]\n"
+                 "       kestreld serve [--port P] [--pack DIR] [--models DIR] [--connectors DIR]... [--web DIR] [--assets DIR]\n"
+                 "                      [--out DIR] [--resolve-iters N]\n");
     return 2;
 }
 }
@@ -56,6 +58,8 @@ int main(int argc, char** argv) {
             else if (a == "--web") o.web = v;
             else if (a == "--assets") o.assets = v;
             else if (a == "--out") o.out = v;
+            else if (a == "--models") o.models = v;
+            else if (a == "--resolve-iters") o.resolve_iters = std::stoi(v);
             else return usage();
         }
         o.connectors.push_back(default_dir());
@@ -80,6 +84,7 @@ int main(int argc, char** argv) {
         if (cmd != "play") return usage();
         SessionPlan plan;
         std::string pack = "blueprint/pack";
+        int iters = 500;
         for (int k = 3; k + 1 < argc; k += 2) {
             std::string a = argv[k], v = argv[k + 1];
             if (a == "--hands") plan.hands = std::stoi(v);
@@ -87,12 +92,19 @@ int main(int argc, char** argv) {
             else if (a == "--pack") pack = v;
             else if (a == "--seed") plan.seed = std::stoull(v);
             else if (a == "--max-errors") plan.max_errors = std::stoi(v);
+            else if (a == "--model") plan.model = v;
+            else if (a == "--solver") plan.solver = v;
+            else if (a == "--resolve-iters") iters = std::stoi(v);
             else return usage();
         }
         if (plan.out_dir.empty()) return usage();
         std::signal(SIGINT, on_signal);
         std::signal(SIGTERM, on_signal);
+        if (plan.model != "hu-blueprint") throw std::runtime_error("model " + plan.model + " cannot play this connector");
+        if (plan.solver != "none" && plan.solver != "kestrel-river")
+            throw std::runtime_error("solver " + plan.solver + " is not available");
         HUBlueprint engine(pack);
+        if (plan.solver == "kestrel-river") engine.set_resolve(iters);
         int n = 0;
         double total = 0;
         auto s = run_session(

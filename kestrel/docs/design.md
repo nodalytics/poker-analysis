@@ -147,7 +147,8 @@ Each port gets test vectors written by the Python code it replaces, and the C++ 
 | Defence floor in the heads-up engine | done: on 5,853 logged decisions it fires 36 times and agrees with Python on all but 5, river spots where the order of tied hands decides (Python's sort leaves it arbitrary) |
 | Qt 6 app | after the web app |
 | Open Poker (openpoker.ai, 6-max cash over WebSocket): an account, a 6-max cash model and a connector | waiting on the user's sign-in (magic link to the account's email); protocol read from the lab (see Platforms) |
-| Search at play time: the heads-up safe river re-solve, then 9-max search | heads-up next; 9-max once it beats the plain network (see Search) |
+| Search at play time: the heads-up safe river re-solve, then 9-max search | heads-up re-solve done: matches Python's `libresolve` on 121 logged river decisions (119 within 7e-4; one spot at 3e-3, float vs double normalisation through 500 CFR+ iterations); live, a median 13 s per river decision on the 8-bit pack, so opt-in until it is faster. 9-max once it beats the plain network |
+| Model and solver chosen per table | done for heads-up (`hu-blueprint` with `none` or `kestrel-river`) in the web app, the API (`GET /v1/engines`) and `kestreld play`; TexasSolver next |
 | CI: Linux, macOS, Windows builds, self-test, GitHub Releases on `kestrel-v*` tags | done |
 
 ## Platforms (searched 2026-11-14)
@@ -199,6 +200,29 @@ and that is where it pays. It belongs in Kestrel, not only in training.
 - **9-max tournaments:** search on top of the network (`llm-research/scripts/ninemax_search.py`) is still a
   research item. It goes into Kestrel when it beats the plain network in duplicate matches; until then Kestrel plays
   the network's policy.
+
+## Models and solvers, chosen per table
+
+A table plays with a **model** (what decides each spot) and, optionally, a **solver** (what re-solves a spot at
+decision time), chosen when the table starts. Any model goes with any solver that fits its game. A default for each
+is set in Kestrel's settings, and a connector may name its own (`engine: {model: ..., solver: ...}`).
+
+| Models | Game |
+|---|---|
+| `hu-blueprint` (the data pack, or a training run with `avg.f32`) | heads-up, 200bb |
+| `nm17`, `nm16`, … (`models/ninemax/<name>`) | 9-max tournaments, 10–25bb, ICM |
+| a 6-max cash network (to train) | 6-max cash, 50–250bb |
+
+| Solvers | Where | Notes |
+|---|---|---|
+| `none` | | the model's own policy |
+| `kestrel-river` | heads-up river | the safe re-solve built in (CFR+ with the gadget); iterations and minimum reach are settings |
+| `texassolver` | heads-up turn and river | TexasSolver as a separate program, as the Python bot ran it. It is AGPL-3.0, so Kestrel calls it and does not link it; its path is a setting, and the user installs it |
+| 9-max search | 9-max | once it beats the plain network (see Search) |
+
+The model and solver are chosen in the new-table dialog, the API (`POST /v1/sessions {connector, hands, model,
+solver}`) and `kestreld play --model --solver`. Each hand's log records which ones played it, so their results can be
+compared on the same platform.
 
 ## The trainer's dealer
 

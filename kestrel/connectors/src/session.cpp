@@ -161,7 +161,8 @@ SessionSummary run_session(const ConnectorSpec& spec, const SessionPlan& plan, H
                   {"hole", at(r, fields, "hole")}, {"board", at(r, fields, "board")}, {"pot", spot.pot},
                   {"my_bet", spot.my_bet}, {"their_bet", spot.their_bet}, {"my_stack", spot.my_stack},
                   {"their_stack", spot.their_stack}, {"facing", spot.facing}, {"options", opts},
-                  {"on_tree", ans.on_tree}, {"chose", vars["action"]}, {"big", spec.big}});
+                  {"on_tree", ans.on_tree}, {"resolved", ans.resolved}, {"floored", ans.floored},
+                  {"chose", vars["action"]}, {"big", spec.big}, {"model", plan.model}, {"solver", plan.solver}});
             r = tr->call(act, vars);
             fields = act_fields;
             keep_token(r);
@@ -183,6 +184,8 @@ SessionSummary run_session(const ConnectorSpec& spec, const SessionPlan& plan, H
         double won = at(r, fields, "result").get<double>() / double(spec.big);
         results.push_back(won);
         json line = {{"connector", spec.name},
+                     {"model", plan.model},
+                     {"solver", plan.solver},
                      {"pos", at(r, fields, "my_seat")},
                      {"hole", at(r, fields, "hole")},
                      {"board", at(r, fields, "board")},
