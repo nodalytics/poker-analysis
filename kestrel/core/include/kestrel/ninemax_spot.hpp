@@ -29,6 +29,7 @@ struct NMSpot {
     std::vector<NMPlayer> players;  // seated players, in seat order (clockwise)
     std::string button, me;
     double sb = 0, bb = 0, ante = 0;  // ante: a big-blind ante (posted by the big blind)
+    bool ante_each = false;           // the ante is posted by every player instead
     std::array<std::string, 2> hole;
     std::vector<std::string> board;
     std::vector<NMAction> actions;    // the hand so far, in order

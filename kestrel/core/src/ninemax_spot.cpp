@@ -19,6 +19,7 @@ NMSpot NMSpot::from_json(const json& j) {
     s.button = j.at("button").get<std::string>();
     s.me = j.at("me").get<std::string>();
     s.sb = j.at("sb").get<double>(), s.bb = j.at("bb").get<double>(), s.ante = j.value("ante", 0.0);
+    s.ante_each = j.value("ante_each", false);
     auto h = j.at("hole").get<std::vector<std::string>>();
     if (h.size() != 2) throw std::invalid_argument("two hole cards");
     s.hole = {h[0], h[1]};
@@ -67,6 +68,15 @@ NMAdvice ninemax_decide(const Net& net, const NMSpot& sp) {
         if (who[s] >= 0) stacks[s] = std::max<int64_t>(1, std::llround(sp.players[who[s]].stack * scale));
     Rules replay = net.info().rules;
     replay.ante_bb = sp.ante / sp.bb;
+    if (sp.ante_each) {  // every player has paid the ante: it leaves the stacks and lies in the pot as dead money
+        replay.ante_bb = 0;
+        const int64_t ante = std::llround(sp.ante * scale);
+        for (auto& st : stacks)
+            if (st > 0) {
+                int64_t paid = std::min(ante, st - 1);
+                st -= paid, replay.extra_dead += paid;
+            }
+    }
     replay.open_limp = true;  // opponents may limp on a platform; the model's own rule is restored for its move
     replay.short_stacks = true;
     Table T(stacks, Menu::named(net.info().menu), replay);
@@ -122,7 +132,7 @@ NMAdvice ninemax_decide(const Net& net, const NMSpot& sp) {
     if (T.done() || T.actor() != me) return adv.error = "it is not " + sp.me + "'s turn", adv;
     // the model's own rule for its move (e.g. no open-limping), so its legal moves are those it trained with
     Rules mine = net.info().rules;
-    mine.ante_bb = replay.ante_bb, mine.short_stacks = true;
+    mine.ante_bb = replay.ante_bb, mine.short_stacks = true, mine.extra_dead = replay.extra_dead;
     T.set_rules(mine);
     TourneyCtx ctx;
     ctx.pay.assign(9, 0.0);

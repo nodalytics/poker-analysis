@@ -1,0 +1,53 @@
+# poker-pi (github.com/ArtART241/poker-pi, MIT): a self-hosted NLHE tournament server for bots, played by a 9-max
+# model. Run it on a port of your choice (POKER_HOST=127.0.0.1 POKER_PORT=8794), create a bot with its admin CLI and
+# put the bot's token in KESTREL_POKERPI_TOKEN. This file plays practice tables against its house bots, one after
+# another; for a scheduled tournament, register the bot first (POST /api/v1/bot/tournaments/{id}/register) and
+# point flow.start at a route that does nothing.
+name: pokerpi
+game: {variant: nlhe, players: 9, format: tournament, ante: each}   # every player posts the ante
+codec: structured
+
+transport:
+  base_url: http://127.0.0.1:8794/api/v1/bot/
+  headers: {Authorization: "Bearer ${env:KESTREL_POKERPI_TOKEN}"}
+  rate_limit_per_s: 0
+  poll_ms: 0                   # GET turn waits on the server (long poll)
+
+routes:
+  practice:  {method: POST, path: practice, request: {body: {opponents: [tight, station, random, tight, station, random, tight, station], speed: fast, starting_stack: 400}}}
+  turn:      {method: GET, path: turn, request: {query: {wait: 25}}}       # 204 (nothing to do) reads as empty
+  action:    {method: POST, path: action, request: {body: {turn_id: "${turn_id}", action: "${action}", amount: "${num:amount}"}}}
+  status:
+    method: GET
+    path: practice
+    response:
+      fields:
+        finished: {at: /status, equals: finished}
+        place: {at: /finish_reason, map: {"your bot won": 1}}
+
+flow:
+  start: practice
+  state: turn
+  act: action
+  status: status               # asked when there is no turn: is the table over?
+
+session:
+  vars: {turn_id: /turn_id}    # each turn's id, sent back with the move
+
+fields:                        # players are named by seat, as the button is
+  me: /seat
+  hand: /hand_id
+  players: {at: /action_log/0/players, items: {id: /seat, stack: /stack}}   # hand_start: stacks before blinds and antes
+  button: /button
+  sb: /blinds/small
+  bb: /blinds/big
+  ante: /blinds/ante
+  to_act: /seat                # a turn is only ever ours
+  hole: /hole_cards
+  board: /board
+  actions: {at: /action_log, items: {player: /seat, street: {at: /street, map: {preflop: 0, flop: 1, turn: 2, river: 3}}, kind: /action, to: /bet}}
+  error: /detail
+
+answer:
+  actions: {fold: fold, check: check, call: call, raise: raise, allin: allin}
+  amount: to                   # raise TO a street total

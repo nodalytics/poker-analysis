@@ -66,6 +66,7 @@ Table::Table(const std::vector<int64_t>& stacks, const Menu& menu, const Rules& 
     dead = std::max<int64_t>(0, std::min<int64_t>(stack[1] - BB, int64_t(std::llround(rules_.ante_bb * BB))));
     avail = stack;
     avail[1] -= dead;
+    dead += rules_.extra_dead;  // payoffs() then treats it as the big blind's: platform replays never settle hands
     allin[0] = avail[0] <= contrib[0];
     allin[1] = avail[1] <= BB;
     advance();
