@@ -18,6 +18,9 @@
 #include <httplib.h>
 #ifndef _WIN32
 #include <arpa/inet.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <ifaddrs.h>
 #include <netinet/in.h>
 #endif
@@ -130,19 +133,45 @@ void on_signal(int) {
     if (g_srv) g_srv->stop();
 }
 
+// the access token for other devices: 40 hex digits in a file only its owner can read. Created atomically with mode
+// 0600 in a 0700 folder; a token file others could read is replaced, since the token may have leaked
 std::string access_token(const std::string& file) {
     namespace fs = std::filesystem;
-    std::ifstream in(file);
-    std::string t;
-    if (in >> t && t.size() >= 32) return t;
+    std::error_code ec;
+    fs::path dir = fs::path(file).parent_path();
+    fs::create_directories(dir, ec);
+#ifndef _WIN32
+    ::chmod(dir.c_str(), 0700);
+    struct stat st {};
+    if (::stat(file.c_str(), &st) == 0) {
+        if ((st.st_mode & 077) == 0) {
+            std::ifstream in(file);
+            std::string t;
+            if (in >> t && t.size() >= 32) return t;
+        }
+        fs::remove(file, ec);
+    }
+#else
+    {
+        std::ifstream in(file);
+        std::string t;
+        if (in >> t && t.size() >= 32) return t;
+    }
+#endif
     std::random_device rd;
     const char* hex = "0123456789abcdef";
-    t.clear();
+    std::string t;
     for (int k = 0; k < 40; ++k) t += hex[rd() & 15];
-    fs::create_directories(fs::path(file).parent_path());
+#ifndef _WIN32
+    int fd = ::open(file.c_str(), O_CREAT | O_EXCL | O_WRONLY, 0600);
+    if (fd < 0) throw std::runtime_error("cannot create the access token file " + file);
+    std::string line = t + "\n";
+    bool ok = ::write(fd, line.data(), line.size()) == ssize_t(line.size());
+    ::close(fd);
+    if (!ok) throw std::runtime_error("cannot write the access token file " + file);
+#else
     std::ofstream(file) << t << "\n";
-    std::error_code ec;
-    fs::permissions(file, fs::perms::owner_read | fs::perms::owner_write, fs::perm_options::replace, ec);
+#endif
     return t;
 }
 
