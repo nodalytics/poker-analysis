@@ -38,12 +38,13 @@ struct HUOption {
 struct HUAnswer {
     bool on_tree = false;
     int node = -1, bucket = -1;
+    bool floored = false;
     std::vector<HUOption> options;
 };
 
 class HUBlueprint {
   public:
-    explicit HUBlueprint(const std::string& dir, double purify = 0.05);
+    explicit HUBlueprint(const std::string& dir, double purify = 0.05, double floor_from = 0.9);
     HUAnswer decide(const HUSpot& spot, bool deterministic = false, int64_t round_to = 0);
     int bucket(const std::array<int, 2>& hole, const std::vector<int>& board) const;
 
@@ -58,6 +59,12 @@ class HUBlueprint {
     static double frac(double to, double their, double mine, double pot);
     int map_raise(int node, double x, bool deterministic);
     int child(int node, std::initializer_list<const char*> labels) const;
+    struct Step {
+        int node, child, player, board_n;
+    };
+    std::vector<double> reach(const std::vector<Step>& history, int player, const std::vector<int>& board) const;
+    bool defence_floor(const HUSpot& s, const std::vector<Step>& history, const Node& n, std::vector<double>& st) const;
+    double floor_from_;
     std::vector<Node> nodes_;
     std::vector<uint8_t> avg_;
     double purify_;

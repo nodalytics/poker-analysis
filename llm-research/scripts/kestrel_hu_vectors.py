@@ -7,7 +7,7 @@ action prefix, our position, cards, Slumbot's legal raise range (slumbot_client.
 walks to, our bucket, and the distribution [(kind, raise-to in chips, prob)]; null when the hand has left the tree.
 
 Made deterministic for comparison: an off-tree raise maps to the nearer abstract size by the pseudo-harmonic weight
-(the size with weight >= 0.5) instead of at random, and the minimum-defence floor is off (BLUEPRINT_MDF_FROM=0).
+(the size with weight >= 0.5) instead of at random, and the minimum-defence floor is off (BLUEPRINT_MDF_FROM=0), unless --floor.
 Kestrel's self-test does the same.
 
 Usage (lab, from llm-research, the CPU venv with pokerkit):
@@ -71,9 +71,13 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("run")
     ap.add_argument("--hands", type=int, default=400)
+    ap.add_argument(
+        "--floor", action="store_true", help="keep the minimum-defence floor on (vectors_headsup_floor.json)"
+    )
     a = ap.parse_args()
     bb.Blueprint.map_raise = map_raise_det
-    bb.Blueprint.MDF_FROM = 0.0
+    if not a.floor:
+        bb.Blueprint.MDF_FROM = 0.0
     bp = bb.get()
     rows = []
     for f in sorted(glob.glob(os.path.join(a.run, "hands_*.jsonl"))):
@@ -100,7 +104,8 @@ def main():
                 "dist": [[k, None if t is None else int(t * sc.SCALE), round(float(p), 6)] for k, t, p in dist]
                 if dist else None,
             })  # fmt: skip
-    out = os.path.join(ROOT, "..", "kestrel", "testdata", "vectors_headsup.json")
+    name = "vectors_headsup_floor.json" if a.floor else "vectors_headsup.json"
+    out = os.path.join(ROOT, "..", "kestrel", "testdata", name)
     os.makedirs(os.path.dirname(out), exist_ok=True)
     json.dump({"source": a.run, "hands": len(rows), "cases": cases}, open(out, "w"))
     off = sum(c["node"] is None for c in cases)

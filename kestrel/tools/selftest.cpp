@@ -110,44 +110,64 @@ int main(int argc, char** argv) {
         ++c;
     }
     Check hturn{"hu: our turn", 0}, hnode{"hu: node", 0}, hbk{"hu: bucket", 0}, hn{"hu: options", 0},
-        hkind{"hu: kinds", 0}, hprob{"hu: probs", 1e-5}, hto{"hu: raise to", 50};
-    std::ifstream hf(vdir + "/vectors_headsup.json");
-    json HV = json::parse(hf);
-    HUBlueprint bp(pack);
+        hkind{"hu: kinds", 0}, hprob{"hu: probs", 1e-5}, hto{"hu: raise to", 50}, fagree{"hu floor: agree", 0.005};
     acpc::Game g;
-    int hc = 0;
-    for (auto& C : HV["cases"]) {
-        std::string w = "case " + std::to_string(hc++) + " '" + C["action"].get<std::string>() + "'";
-        HUSpot sp;
-        bool mine = acpc::spot(C["action"], C["pos"], C["hole"].get<std::vector<std::string>>(),
-                               C["board"].get<std::vector<std::string>>(), g, sp);
-        hturn.eq(mine, 1, w);
-        if (!mine) continue;
-        hto.eq(sp.min_to, C["legal"]["min_to"].get<long>(), w + " min_to");
-        hto.eq(sp.max_to, C["legal"]["max_to"].get<long>(), w + " max_to");
-        auto ans = bp.decide(sp, true, 50);
-        if (C["node"].is_null()) {
-            hnode.eq(ans.on_tree, 0, w);
-            continue;
+    int hc = 0, fc = 0, floored = 0;
+    // one heads-up file through the codec and an engine; strict: every check counts, else only whole-case agreement
+    auto run_hu = [&](const std::string& file, HUBlueprint& bp, bool strict, int& n) {
+        std::ifstream hf(file);
+        if (!hf) return;
+        json HV = json::parse(hf);
+        long cases = 0, bad = 0;
+        for (auto& C : HV["cases"]) {
+            std::string w = "case " + std::to_string(n++) + " '" + C["action"].get<std::string>() + "'";
+            HUSpot sp;
+            bool mine = acpc::spot(C["action"], C["pos"], C["hole"].get<std::vector<std::string>>(),
+                                   C["board"].get<std::vector<std::string>>(), g, sp);
+            if (strict) hturn.eq(mine, 1, w);
+            if (!mine) continue;
+            if (strict) {
+                hto.eq(sp.min_to, C["legal"]["min_to"].get<long>(), w + " min_to");
+                hto.eq(sp.max_to, C["legal"]["max_to"].get<long>(), w + " max_to");
+            }
+            auto ans = bp.decide(sp, true, 50);
+            floored += !strict && ans.floored;
+            if (C["node"].is_null()) {
+                if (strict) hnode.eq(ans.on_tree, 0, w);
+                continue;
+            }
+            auto& d = C["dist"];
+            bool same = ans.node == C["node"].get<long>() && ans.options.size() == d.size();
+            for (size_t k = 0; same && k < d.size(); ++k)
+                same = std::fabs(ans.options[k].prob - d[k][2].get<double>()) <= 1e-5;
+            ++cases, bad += !same;
+            if (!strict) continue;
+            hnode.eq(ans.node, C["node"].get<long>(), w);
+            hbk.eq(ans.bucket, C["bucket"].get<long>(), w);
+            hn.eq(long(ans.options.size()), long(d.size()), w);
+            for (size_t k = 0; k < std::min(ans.options.size(), d.size()); ++k) {
+                const auto& o = ans.options[k];
+                std::string kind = d[k][0];
+                char want = kind == "fold" ? 'f' : kind == "call" ? 'k' : 'b';
+                hkind.eq(o.kind, want, w + " option " + std::to_string(k));
+                hprob.cmp(o.prob, d[k][2].get<double>(), w + " option " + std::to_string(k));
+                if (o.kind == 'b' && !d[k][1].is_null())
+                    hto.eq(o.to, d[k][1].get<long>(), w + " option " + std::to_string(k));
+            }
         }
-        hnode.eq(ans.node, C["node"].get<long>(), w);
-        hbk.eq(ans.bucket, C["bucket"].get<long>(), w);
-        auto& d = C["dist"];
-        hn.eq(long(ans.options.size()), long(d.size()), w);
-        for (size_t k = 0; k < std::min(ans.options.size(), d.size()); ++k) {
-            const auto& o = ans.options[k];
-            std::string kind = d[k][0];
-            char want = kind == "fold" ? 'f' : kind == "call" ? 'k' : 'b';
-            hkind.eq(o.kind, want, w + " option " + std::to_string(k));
-            hprob.cmp(o.prob, d[k][2].get<double>(), w + " option " + std::to_string(k));
-            if (o.kind == 'b' && !d[k][1].is_null()) hto.eq(o.to, d[k][1].get<long>(), w + " option " + std::to_string(k));
-        }
-    }
+        // the floor ranks tied hands by deck order where Python's sort is arbitrary, so a few cases may differ
+        if (!strict && cases) fagree.cmp(double(bad) / double(cases), 0.0, "share of cases that differ");
+    };
+    HUBlueprint plain(pack, 0.05, 0.0);
+    run_hu(vdir + "/vectors_headsup.json", plain, true, hc);
+    HUBlueprint with_floor(pack, 0.05, 0.9);
+    run_hu(vdir + "/vectors_headsup_floor.json", with_floor, false, fc);
 
     bool ok = true;
-    std::printf("kestrel self-test: %zu 9-max hands, %d ICM cases, %d heads-up decisions\n", V["hands"].size(), c, hc);
+    std::printf("kestrel self-test: %zu 9-max hands, %d ICM cases, %d heads-up decisions, %d with the defence floor "
+                "(%d floored)\n", V["hands"].size(), c, hc, fc, floored);
     for (Check* k : {&actor, &street, &legal, &targets, &feat, &str, &logit, &value, &done, &pay, &eq0, &icmc, &hturn,
-                     &hnode, &hbk, &hn, &hkind, &hprob, &hto}) {
+                     &hnode, &hbk, &hn, &hkind, &hprob, &hto, &fagree}) {
         std::printf("  %-6s %-10s %6ld checks, worst error %.2e (tolerance %.0e)%s\n", k->bad ? "FAIL" : "ok",
                     k->name.c_str(), k->n, k->worst, k->tol, k->bad ? "" : "");
         if (k->bad) {

@@ -144,7 +144,7 @@ Each port gets test vectors written by the Python code it replaces, and the C++ 
 | Web app: live tables, screens 1–N, grid, new table, light and dark themes, logo | done |
 | WebSocket, TCP and MCP interfaces and transports | next |
 | `structured` codec, 9-max tables through a connector, tournament simulator | next |
-| Defence floor in the heads-up engine | to port |
+| Defence floor in the heads-up engine | done: on 5,853 logged decisions it fires 36 times and agrees with Python on all but 5, river spots where the order of tied hands decides (Python's sort leaves it arbitrary) |
 | Qt 6 app | after the web app |
 | Open Poker (openpoker.ai, 6-max over WebSocket): sign up under an address the user chooses, then a connector | to do, waiting on the address |
 | CI: Linux, macOS, Windows builds, self-test, GitHub Releases on `kestrel-v*` tags | done |
