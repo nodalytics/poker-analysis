@@ -78,12 +78,14 @@ json rpc_methods() {
     return a;
 }
 
-json rpc_dispatch(int api_port, const json& req) {
-    json id = req.contains("id") ? req["id"] : json(nullptr);
+namespace {
+json dispatch(int api_port, const json& req) {
+    json id = req.is_object() && req.contains("id") ? req["id"] : json(nullptr);
     bool notify = !req.contains("id");
     if (!req.is_object() || !req.contains("method") || !req["method"].is_string()) return rpc_error(id, -32600, "invalid request");
     std::string name = req["method"];
     json params = req.value("params", json::object());
+    if (!params.is_object()) return rpc_error(id, -32602, "params must be an object");
     const Method* m = nullptr;
     for (auto& x : methods())
         if (name == x.name) m = &x;
@@ -91,7 +93,7 @@ json rpc_dispatch(int api_port, const json& req) {
     json result;
     if (name == "icm_equity") {
         try {
-            result = {{"equity", icm(params.at("stacks").get<std::vector<double>>(), params.at("payouts").get<std::vector<double>>())}};
+                result = {{"equity", icm(params.at("stacks").get<std::vector<double>>(), params.at("payouts").get<std::vector<double>>())}};
         } catch (const std::exception& e) {
             return rpc_error(id, -32602, e.what());
         }
@@ -99,7 +101,7 @@ json rpc_dispatch(int api_port, const json& req) {
         std::string path = m->path;
         auto k = path.find("{id}");
         if (k != std::string::npos) {
-            if (!params.contains("id")) return rpc_error(id, -32602, "needs id");
+            if (!params.contains("id") || !params["id"].is_number_integer()) return rpc_error(id, -32602, "needs an integer id");
             path.replace(k, 4, std::to_string(params["id"].get<long long>()));
         }
         httplib::Client c("127.0.0.1", api_port);
@@ -119,27 +121,60 @@ json rpc_dispatch(int api_port, const json& req) {
     return {{"jsonrpc", "2.0"}, {"id", id}, {"result", result}};
 }
 
+// a browser page may only use the gateway from Kestrel's own pages; programs send no Origin
+bool origin_ok(const std::string& origin, int api_port) {
+    if (origin.empty()) return true;
+    for (const char* h : {"127.0.0.1", "localhost", "[::1]"})
+        if (origin == std::string("http://") + h + ":" + std::to_string(api_port)) return true;
+    return false;
+}
+}  // namespace
+
+json rpc_dispatch(int api_port, const json& req) {
+    try {
+        return dispatch(api_port, req);
+    } catch (const std::exception& e) {
+        return rpc_error(nullptr, -32603, e.what());
+    }
+}
+
 // ---- WebSocket: JSON-RPC, plus {"method": "subscribe"} for the live events of every table ----
 void start_websocket(int api_port, int ws_port, const std::atomic<bool>& quit) {
     std::thread([api_port, ws_port, &quit] {
         ix::WebSocketServer server(ws_port, "127.0.0.1");
         std::mutex mu;
         std::set<std::shared_ptr<ix::WebSocket>> subscribers;
+        std::set<const ix::WebSocket*> accepted;
         server.setOnClientMessageCallback([&](std::shared_ptr<ix::ConnectionState>, ix::WebSocket& ws,
                                               const ix::WebSocketMessagePtr& msg) {
+            if (msg->type == ix::WebSocketMessageType::Open) {
+                auto it = msg->openInfo.headers.find("Origin");
+                if (origin_ok(it == msg->openInfo.headers.end() ? "" : it->second, api_port)) {
+                    std::lock_guard<std::mutex> lk(mu);
+                    accepted.insert(&ws);
+                } else {
+                    ws.close(1008, "this origin may not use Kestrel");
+                }
+                return;
+            }
             if (msg->type == ix::WebSocketMessageType::Close) {
                 std::lock_guard<std::mutex> lk(mu);
+                accepted.erase(&ws);
                 for (auto it = subscribers.begin(); it != subscribers.end();)
                     it = it->get() == &ws ? subscribers.erase(it) : std::next(it);
                 return;
             }
             if (msg->type != ix::WebSocketMessageType::Message) return;
+            {
+                std::lock_guard<std::mutex> lk(mu);
+                if (!accepted.count(&ws)) return;
+            }
             json req = json::parse(msg->str, nullptr, false);
             if (req.is_discarded()) {
                 ws.send(rpc_error(nullptr, -32700, "parse error").dump());
                 return;
             }
-            if (req.value("method", "") == "subscribe") {
+            if (req.is_object() && req.value("method", "") == "subscribe") {
                 for (auto& c : server.getClients())
                     if (c.get() == &ws) {
                         std::lock_guard<std::mutex> lk(mu);
@@ -207,6 +242,7 @@ void start_tcp(int api_port, int tcp_port, const std::atomic<bool>& quit) {
             if (c == INVALID_SOCKET) continue;
             std::thread([c, api_port] {
                 std::string buf;
+                bool first = true;
                 char tmp[4096];
                 while (true) {
                     auto n = ::recv(c, tmp, sizeof tmp, 0);
@@ -219,12 +255,18 @@ void start_tcp(int api_port, int tcp_port, const std::atomic<bool>& quit) {
                         buf.erase(0, k + 1);
                         if (line.empty()) continue;
                         json req = json::parse(line, nullptr, false);
+                        if (first && !req.is_object()) {
+                            buf.clear();
+                            goto done;
+                        }
+                        first = false;
                         json resp = req.is_discarded() ? rpc_error(nullptr, -32700, "parse error") : rpc_dispatch(api_port, req);
                         if (resp.is_null()) continue;
                         std::string out = resp.dump() + "\n";
                         ::send(c, out.data(), out.size(), 0);
                     }
                 }
+            done:
                 httplib::detail::close_socket(c);
             }).detach();
         }
@@ -242,10 +284,15 @@ int mcp_stdio(int api_port, const std::string& version) {
             std::cout << rpc_error(nullptr, -32700, "parse error").dump() << std::endl;
             continue;
         }
-        std::string m = req.value("method", "");
-        json id = req.contains("id") ? req["id"] : json(nullptr);
+        if (!req.is_object()) {
+            std::cout << rpc_error(nullptr, -32600, "invalid request").dump() << std::endl;
+            continue;
+        }
         if (!req.contains("id")) continue;  // notifications (initialized, cancelled): nothing to answer
+        std::string m = req.value("method", "");
+        json id = req["id"];
         json result;
+        try {
         if (m == "initialize") {
             std::string pv = req.contains("params") ? req["params"].value("protocolVersion", "2025-06-18") : "2025-06-18";
             result = {{"protocolVersion", pv},
@@ -266,6 +313,10 @@ int mcp_stdio(int api_port, const std::string& version) {
                       {"isError", err}};
         } else {
             std::cout << rpc_error(id, -32601, "no method " + m).dump() << std::endl;
+            continue;
+        }
+        } catch (const std::exception& e) {
+            std::cout << rpc_error(id, -32602, e.what()).dump() << std::endl;
             continue;
         }
         std::cout << json{{"jsonrpc", "2.0"}, {"id", id}, {"result", result}}.dump() << std::endl;
