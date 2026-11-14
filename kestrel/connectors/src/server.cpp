@@ -26,6 +26,8 @@
 #endif
 
 #include "kestrel/connector.hpp"
+#include "kestrel/codec_acpc.hpp"
+#include "kestrel/gateway.hpp"
 #include "kestrel/headsup.hpp"
 #include "kestrel/buckets.hpp"
 #include "kestrel/luck.hpp"
@@ -513,6 +515,33 @@ int serve(const ServeOptions& o) {
         reply(res, {{"ok", true}});
     });
 
+    // advice for one spot. Heads-up: {"game": "headsup", "action": ACPC string, "pos": 0|1, "hole": [..], "board": [..],
+    // "solver": none|kestrel-river|texassolver}
+    srv.Post("/v1/decide", [&](const httplib::Request& req, httplib::Response& res) {
+        json b = json::parse(req.body, nullptr, false);
+        if (b.is_discarded()) return reply(res, {{"error", "bad JSON"}}, 400);
+        std::string game = b.value("game", "");
+        if (game != "headsup") return reply(res, {{"error", "game must be headsup (ninemax: coming with the 9-max connector)"}}, 400);
+        if (!pack_problem.empty()) return reply(res, {{"error", pack_problem}}, 400);
+        try {
+            auto eng = engines.get(o, "hu-blueprint", b.value("solver", "none"));
+            HUSpot sp;
+            acpc::Game g{b.value("big", 100), b.value("stack", 20000)};
+            if (!acpc::spot(b.value("action", ""), b.value("pos", 0), b.value("hole", std::vector<std::string>{}),
+                            b.value("board", std::vector<std::string>{}), g, sp))
+                return reply(res, {{"error", "it is not this position's turn in that action string"}}, 400);
+            auto ans = eng->decide(sp);
+            json opts = json::array();
+            for (auto& x : ans.options)
+                opts.push_back({{"action", x.kind == 'f' ? "fold" : x.kind == 'k' ? (sp.facing ? "call" : "check") : "raise"},
+                                {"to", x.to}, {"prob", x.prob}, {"send", acpc::encode(x, sp)}});
+            reply(res, {{"on_tree", ans.on_tree}, {"resolved", ans.resolved}, {"floored", ans.floored},
+                        {"options", opts}});
+        } catch (const std::exception& e) {
+            reply(res, {{"error", e.what()}}, 400);
+        }
+    });
+
     srv.Get("/v1/sessions", [&](const httplib::Request&, httplib::Response& res) {
         std::lock_guard<std::mutex> lk(hub.mu);
         json a = json::array();
@@ -648,13 +677,16 @@ int serve(const ServeOptions& o) {
     });
     if (!srv.bind_to_port(o.lan ? "0.0.0.0" : "127.0.0.1", o.port))
         throw std::runtime_error("port " + std::to_string(o.port) + " is in use by another program");
-    std::printf("kestreld %s: %s  (Ctrl-C to stop)\n", VERSION, url.c_str());
-    if (!pack_problem.empty()) std::printf("  note: %s; heads-up tables are unavailable\n", pack_problem.c_str());
+    FILE* out = o.quiet ? stderr : stdout;
+    std::fprintf(out, "kestreld %s: %s  (Ctrl-C to stop)\n", VERSION, url.c_str());
+    if (o.ws_port) start_websocket(o.port, o.ws_port, hub.quit), std::fprintf(out, "  WebSocket ws://127.0.0.1:%d/\n", o.ws_port);
+    if (o.tcp_port) start_tcp(o.port, o.tcp_port, hub.quit), std::fprintf(out, "  TCP 127.0.0.1:%d (JSON-RPC, a line each)\n", o.tcp_port);
+    if (!pack_problem.empty()) std::fprintf(out, "  note: %s; heads-up tables are unavailable\n", pack_problem.c_str());
     if (o.lan) {
-        std::printf("  on your network (open once per device; the link carries the access token):\n");
-        for (auto& ip : addrs) std::printf("    http://%s:%d/?token=%s\n", ip.c_str(), o.port, token.c_str());
+        std::fprintf(out, "  on your network (open once per device; the link carries the access token):\n");
+        for (auto& ip : addrs) std::fprintf(out, "    http://%s:%d/?token=%s\n", ip.c_str(), o.port, token.c_str());
     }
-    std::fflush(stdout);
+    std::fflush(out);
     if (o.open_browser) open_url(url);
     bool ok = srv.listen_after_bind();
     hub.quit = true;

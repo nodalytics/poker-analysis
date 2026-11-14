@@ -15,6 +15,19 @@ It finds its web app, logo and connectors next to itself, and your own connector
 
 **From other devices on your network:** put `{"lan": true}` in `~/.config/kestrel/settings.json` and start Kestrel again. The "On your network" button shows the links to open on a phone or another PC. Each link carries an access token, and devices without it are refused.
 
+## Talk to it
+
+Kestrel serves the same methods on four interfaces, all on this computer:
+
+| Interface | Address |
+|---|---|
+| REST | `http://127.0.0.1:8790/v1/...` |
+| WebSocket | `ws://127.0.0.1:8791/`: JSON-RPC 2.0; send `{"method": "subscribe"}` for the live events |
+| TCP | `127.0.0.1:8792`: one JSON-RPC request per line |
+| MCP | `kestreld mcp`: for LLMs and agents |
+
+The methods are `health`, `list_connectors`, `list_engines`, `start_session`, `list_sessions`, `session_status`, `stop_session`, `start_practice`, `practice_act`, `decide` and `icm_equity`. To add Kestrel to Claude Code: `claude mcp add kestrel -- /path/to/kestreld mcp`.
+
 ## Play
 
 ```

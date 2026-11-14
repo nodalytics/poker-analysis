@@ -142,7 +142,7 @@ Each port gets test vectors written by the Python code it replaces, and the C++ 
 | Connectors: user-written YAML/JSON, user-listed routes with request and response structure, HTTP(S) | done; Slumbot plays by itself |
 | `kestreld serve`: REST API and the live stream (server-sent events), tables side by side | done |
 | Web app: live tables, screens 1–N, grid, new table, light and dark themes, logo | done |
-| WebSocket, TCP and MCP interfaces and transports | next |
+| WebSocket, TCP and MCP interfaces | done: one JSON-RPC method table (health, list_connectors, list_engines, start/list/status/stop sessions, start_practice, practice_act, decide, icm_equity) over WebSocket `ws://127.0.0.1:8791/` (with `subscribe` for pushed events), TCP `127.0.0.1:8792` (a request per line) and MCP over stdio (`kestreld mcp`, which joins a running Kestrel or starts one quietly). Each is a front door to the REST API, so the same checks apply. WebSocket, TCP and MCP as connector transports (towards platforms) are next |
 | `structured` codec, 9-max tables through a connector, tournament simulator | next |
 | Kestrel against Slumbot, with the defence floor (2026-11-14) | 3,000 hands: −1.9 bb/100 [−67, +56], even with Slumbot; no platform errors; 19 hands left the blueprint's tree (checked or called). The Python bot read +12.4 and +30.9 (with the floor) over 5,000 hands each; all within each other's intervals. Telling the versions apart needs tens of thousands of hands or luck adjustment (AIVAT) |
 | Defence floor in the heads-up engine | done: on 5,853 logged decisions it fires 36 times and agrees with Python on all but 5, river spots where the order of tied hands decides (Python's sort leaves it arbitrary) |
