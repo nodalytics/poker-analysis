@@ -126,6 +126,31 @@ main { padding: 18px; max-width: 1400px; margin: 0 auto; }
 .mt .pot { margin: 0; font-size: 12px; }
 .mt .street { font-size: 11px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
 
+.pt { position: relative; aspect-ratio: 16 / 11; border-radius: 22px; border: 1px solid var(--line); overflow: hidden;
+  background: radial-gradient(120% 90% at 50% 40%, color-mix(in srgb, var(--felt) 70%, var(--panel)) 0%, var(--panel) 75%); }
+.pt .oval { inset: 22% 17%; }
+.pseat { position: absolute; transform: translate(-50%, -50%); width: 128px; padding: 6px 8px; border-radius: 12px; text-align: center;
+  background: var(--panel-2); border: 1px solid var(--line); font-size: 12px; transition: border-color .15s, opacity .15s; }
+.pseat.act { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
+.pseat.out { opacity: .4; }
+.pseat.you { border-color: var(--d); box-shadow: 0 0 0 2px color-mix(in srgb, var(--d) 30%, transparent); }
+.mini .pt { aspect-ratio: 16 / 12; }
+.mini .pseat { width: 74px; padding: 3px 4px; font-size: 9px; border-radius: 8px; }
+.mini .pseat .m, .mini .pseat .said { font-size: 8px; min-height: 0; }
+.mini .pseat .card { width: 15px; height: 21px; padding: 1px 2px; border-radius: 3px; }
+.mini .pseat .card .r { font-size: 8px; } .mini .pseat .card .u { font-size: 7px; } .mini .pseat .card.back svg { width: 10px; }
+.mini .pt .board .card { width: 26px; height: 36px; } .mini .pt .board { min-height: 36px; gap: 4px; }
+.mini .pt .streetlabel { font-size: 9px; top: 8px; left: 10px; } .mini .pt .pot { font-size: 10px; } .mini .pt .pot b { font-size: 12px; }
+.moves { display: flex; flex-wrap: wrap; gap: 8px; }
+.moves .btn { flex: 1 1 auto; min-width: 92px; }
+.advice { margin-top: 12px; }
+.pseat .n { font-weight: 600; } .pseat .m { color: var(--muted); font-size: 11px; }
+.pseat .cards { display: flex; gap: 3px; justify-content: center; margin: 4px 0 2px; }
+.pseat .card { width: 26px; height: 36px; border-radius: 5px; padding: 2px 3px; } .pseat .card .r { font-size: 12px; } .pseat .card .u { font-size: 10px; }
+.pseat .said { color: var(--accent-2); min-height: 15px; font-family: "JetBrains Mono", monospace; font-size: 11px; }
+.pseat .btn-d { position: absolute; top: -8px; right: -8px; }
+.standings { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+.standings .row { display: flex; justify-content: space-between; padding: 5px 8px; border-radius: 8px; background: var(--panel-2); }
 .empty { display: grid; place-items: center; text-align: center; padding: 70px 20px; color: var(--muted); }
 .empty .big { width: 120px; height: 120px; margin: 0 auto 10px; }
 .empty h2 { color: var(--text); margin: 6px 0; font-weight: 600; }
@@ -156,11 +181,22 @@ select, input { width: 100%; padding: 9px 11px; border-radius: 10px; border: 1px
 
 <dialog id="dlg">
   <h2>New table</h2>
+  <div class="seg" id="kind" style="margin-bottom:6px"><button data-k="session" class="on">Play a platform</button><button data-k="practice">Practice tournament (9-max)</button></div>
+  <div id="sessionFields">
   <label>Connector</label><select id="conn"></select>
   <div class="reach mono" id="reach"></div>
   <label>Model</label><select id="model"></select>
   <label>Solver</label><select id="solver"></select>
   <div class="reach" id="about"></div>
+  </div>
+  <div id="practiceFields" style="display:none">
+    <label>Who plays</label><select id="pwho"><option value="watch">Kestrel in every seat (watch it decide)</option><option value="human">You against Kestrel</option></select>
+    <label>Model</label><select id="pmodel"></select>
+    <label>Players</label><select id="pplayers"><option>9</option><option>8</option><option>7</option><option>6</option><option>5</option><option>4</option><option>3</option><option>2</option></select>
+    <label>Starting stacks (average, big blinds)</label><input id="pavg" type="number" min="5" max="60" value="20">
+    <label>Pace</label><select id="ppace"><option value="1200">Slow</option><option value="700" selected>Normal</option><option value="250">Fast</option><option value="0">As fast as it can</option></select>
+    <div class="reach">Every seat is played by the model, with its cards face up, in a real final table: stacks carry over, blinds rise every 15 hands, busted players finish in places, and ICM prize equity is recomputed every hand, as in training.</div>
+  </div>
   <label>Hands</label><input id="hands" type="number" min="1" value="200">
   <div class="row-end"><button class="btn ghost" id="cancel">Cancel</button><button class="btn primary" id="start">Start</button></div>
 </dialog>
@@ -317,9 +353,81 @@ function screenView(t) {
     </div></div>`;
 }
 
+// the seated players spread evenly on an ellipse, the button at the bottom, the blinds clockwise from it
+function seatXY(seat, seated) {
+  const order = [...seated].sort((a, b) => a - b), n = order.length;
+  const k = (order.indexOf(seat) + 1) % n, a = Math.PI / 2 + k * 2 * Math.PI / n;
+  return [50 + 41 * Math.cos(a), 52 + 35 * Math.sin(a)];
+}
+function practiceTable(t, mini = false) {
+  const e = t.state || {}, seats = e.seats || [];
+  const last = {};
+  (e.log || []).forEach(x => { if (x.hand === undefined) last[x.name] = x.action; });
+  const done = e.type === "practice_hand";
+  const res = {};
+  (e.results || []).forEach(r => res[r.name] = r);
+  const list = done ? (e.results || []).map(r => ({ ...r, stack_bb: null, icm: null })) : seats;
+  const boardHTML = [0,1,2,3,4].map(i => cardHTML((e.board || [])[i])).join("");
+  const seated = list.map(x => x.seat);
+  const seatsHTML = list.map(st => {
+    const [x, y] = seatXY(st.seat, seated);
+    const r = res[st.name];
+    return `<div class="pseat ${!done && e.actor === st.seat ? "act" : ""} ${st.folded ? "out" : ""} ${st.you ? "you" : ""}" style="left:${x}%;top:${y}%">
+      <div class="n">${esc(st.name)}</div><div class="m">${esc(st.pos)}${st.stack_bb != null ? ` · ${(+st.stack_bb).toFixed(1)} bb` : ""}${st.icm != null ? ` · ICM ${(100 * st.icm).toFixed(1)}%` : ""}</div>
+      <div class="cards">${st.hole ? st.hole.map(c => cardHTML(c)).join("") : (st.folded ? "" : back() + back())}</div>
+      <div class="said">${done && r ? `<span class="${r.result_bb >= 0 ? "win" : "loss"}">${sign(r.result_bb)} bb</span>` : esc(last[st.name] || (st.in_bb ? `in ${(+st.in_bb).toFixed(1)}` : ""))}</div></div>`;
+  }).join("");
+  return `<div class="pt"><div class="oval"></div>
+    <div class="streetlabel">${done ? (e.showdown ? "Showdown" : "Hand over") : STREETS[e.street || 0]} · hand ${e.hand || "–"} · level ${e.level || 1}</div>
+    <div class="center"><div class="board">${boardHTML}</div><div class="pot mono">${done ? "" : `pot <b>${(+(e.pot_bb || 0)).toFixed(1)}</b> bb`}</div></div>
+    ${seatsHTML}</div>`;
+}
+let showAdvice = false;
+try { showAdvice = localStorage.getItem("kestrel-advice") === "1"; } catch {}
+function movesPanel(t) {
+  const q = t.yourTurn;
+  if (!q) return `<div class="panel"><h3>Your move</h3><div class="why">${t.status === "playing" ? "Waiting for the others…" : esc(t.status)}</div>${lastMove(t)}</div>`;
+  const best = Math.max(...q.choices.map(c => c.advice));
+  const adv = showAdvice ? `<div class="bars advice">${q.choices.map(c => `<div class="bar ${c.advice === best ? "pick" : ""}"><span class="lab">${esc(c.label)}</span><div class="t"><div class="f" style="width:${(c.advice * 100).toFixed(1)}%"></div></div><span class="p mono">${(c.advice * 100).toFixed(0)}%</span></div>`).join("")}</div>` : "";
+  return `<div class="panel"><h3>Your move · ${esc(q.pos)} · pot ${(+q.pot_bb).toFixed(1)} bb</h3>
+    <div class="moves">${q.choices.map(c => `<button class="btn ${c.slot === 0 ? "" : "primary"}" onclick="act(${t.id}, ${c.slot})">${esc(c.label)}</button>`).join("")}</div>
+    <label class="reach" style="display:flex;gap:6px;align-items:center;margin-top:12px"><input type="checkbox" ${showAdvice ? "checked" : ""} onchange="toggleAdvice(this.checked)" style="width:auto"> Kestrel's advice for this spot</label>${adv}</div>`;
+}
+function lastMove(t) {
+  const d = t.lastDecision;
+  if (!d) return "";
+  const o = (d.options || []).find(x => x.chosen);
+  return `<div class="why" style="margin-top:8px">Last: ${esc(d.pos)} ${esc(d.name)} ${o ? esc(o.label) : ""}</div>`;
+}
+function toggleAdvice(v) { showAdvice = v; try { localStorage.setItem("kestrel-advice", v ? "1" : "0"); } catch {} render(); }
+async function act(id, slot) {
+  const t = tables.get(id); if (t) t.yourTurn = null;
+  const r = await api(`/v1/practice/${id}/act`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ slot }) });
+  if (r.error) toast(r.error);
+  render();
+}
+function practiceView(t) {
+  const e = t.state || {}, d = t.lastDecision;
+  const bars = d && !d.hidden ? d.options.map(o => `<div class="bar ${o.chosen ? "pick" : ""}"><span class="lab">${esc(o.label)}</span><div class="t"><div class="f" style="width:${(o.prob * 100).toFixed(1)}%"></div></div><span class="p mono">${(o.prob * 100).toFixed(0)}%</span></div>`).join("") : "";
+  const st = t.standings || [];
+  const live = st.filter(x => !x.place).sort((a, b) => b.chips_bb - a.chips_bb);
+  const out = st.filter(x => x.place).sort((a, b) => a.place - b.place);
+  const rows = [...live.map(x => `<div class="row"><span>${esc(x.name)}</span><span class="mono">${(+x.chips_bb).toFixed(1)} bb</span></div>`),
+                ...out.map(x => `<div class="row" style="opacity:.6"><span>${x.place}. ${esc(x.name)}</span><span class="mono">${(100 * x.prize).toFixed(1)}%</span></div>`)].join("");
+  const log = (e.log || []).map(x => `<div>${STREETS[x.street]} · ${esc(x.pos)} ${esc(x.name)} ${esc(x.action)}</div>`).join("");
+  return `<div class="screen">
+    <div>${practiceTable(t)}<div class="panel" style="margin-top:18px"><h3>This hand</h3><div class="mono" style="font-size:13px;line-height:1.7">${log || "–"}</div></div></div>
+    <div class="side">
+      ${t.human ? movesPanel(t) : `<div class="panel"><h3>Last move${d ? ` · ${esc(d.pos)} ${esc(d.name)}` : ""}</h3>${bars ? `<div class="bars">${bars}</div><div class="why">${esc(t.model)} · ${STREETS[d.street]} · value ${sign(d.value_bb)} bb</div>` : `<div class="why">Waiting for the first decision…</div>`}</div>`}
+      <div class="panel"><h3>Practice tournament ${t.tournament || 1}</h3><div class="engine mono">${t.human ? `you against ${esc(t.model)}` : `${esc(t.model)} in every seat`} · ${t.players || 9}-handed start · ${t.hands || 0}${t.target ? ` / ${t.target}` : ""} hands</div>
+        <div class="standings">${rows || `<div class="why">Standings after the first hand</div>`}</div>
+        <div class="row-end" style="margin-top:12px"><button class="btn" onclick="stopTable(${t.id})" ${t.status !== "playing" ? "disabled" : ""}>${t.status === "playing" ? "Stop" : esc(t.status)}</button></div></div>
+    </div></div>`;
+}
+
 function render() {
   const tabs = [...tables.values()].map((t, i) => `<button class="tab ${t.id === current && view === "screen" ? "on" : ""}" data-id="${t.id}">
-      <span class="dot ${esc(t.status)}"></span>${esc(t.connector)}<span class="mono ${won(t) >= 0 ? "win" : "loss"}" style="font-size:12px">${t.hands ? sign(won(t)) : ""}</span><span class="k mono">${i + 1}</span></button>`).join("");
+      <span class="dot ${esc(t.status)}"></span>${t.kind === "practice" ? `${t.human ? "you vs" : "practice ·"} ${esc(t.model || "")} <span class="mono" style="font-size:12px;color:var(--muted)">${t.players || 9}-max #${t.tournament || 1}</span>${t.yourTurn ? ` <span class="badge">your turn</span>` : ""}` : `${esc(t.connector)}<span class="mono ${won(t) >= 0 ? "win" : "loss"}" style="font-size:12px">${t.hands ? sign(won(t)) : ""}</span>`}<span class="k mono">${i + 1}</span></button>`).join("");
   $("#tabs").innerHTML = tabs;
   document.querySelectorAll(".tab").forEach(b => b.onclick = () => { current = +b.dataset.id; setView("screen"); });
   const main = $("#main");
@@ -332,13 +440,13 @@ function render() {
   if (view === "grid") {
     main.innerHTML = `<div class="grid">${[...tables.values()].map((t, i) => `<div class="panel mini" data-id="${t.id}">
       <div class="head"><span><span class="dot ${esc(t.status)}" style="display:inline-block;margin-right:8px"></span><b>${i + 1}</b> · ${esc(t.connector)}</span>
-      <span class="mono ${won(t) >= 0 ? "win" : "loss"}">${sign(won(t))} bb · ${t.hands || 0} hands</span></div>${miniView(t)}</div>`).join("")}</div>`;
+      ${t.kind === "practice" ? `<span class="mono">${esc(t.model)} · ${t.hands || 0} hands</span></div>${practiceTable(t, true)}</div>` : `<span class="mono ${won(t) >= 0 ? "win" : "loss"}">${sign(won(t))} bb · ${t.hands || 0} hands</span></div>${miniView(t)}</div>`}`).join("")}</div>`;
     document.querySelectorAll(".mini").forEach(m => m.onclick = () => { current = +m.dataset.id; setView("screen"); });
     return;
   }
   const t = tables.get(current) || tables.values().next().value;
   current = t.id;
-  main.innerHTML = screenView(t);
+  main.innerHTML = t.kind === "practice" ? practiceView(t) : screenView(t);
 }
 let pending = false;
 function schedule() { if (!pending) { pending = true; requestAnimationFrame(() => { pending = false; render(); }); } }
@@ -350,7 +458,11 @@ function upsert(id, connector) {
 function onEvent(e) {
   if (e.table == null) return;
   const t = upsert(e.table, e.connector);
-  if (e.type === "table") { t.status = e.status; if (e.model) { t.model = e.model; t.solver = e.solver; } if (current == null) current = t.id; }
+  if (e.kind === "practice") t.kind = "practice";
+  if (e.type === "practice_decision") { t.state = e; t.lastDecision = e; t.tournament = e.tournament; t.yourTurn = null; }
+  else if (e.type === "practice_your_turn") { t.state = e; t.yourTurn = e; t.tournament = e.tournament; }
+  else if (e.type === "practice_hand") { t.state = e; t.standings = e.standings; t.hands = e.hands; t.tournament = e.tournament; }
+  if (e.type === "table") { if (e.players) t.players = e.players; if (e.human !== undefined) t.human = e.human; t.status = e.status; if (e.model) { t.model = e.model; t.solver = e.solver; } if (current == null) current = t.id; }
   else if (e.type === "decision") { t.state = e; t.lastDecision = e; }
   else if (e.type === "deal") { t.state = { ...e, board: [], action: "" }; }
   else if (e.type === "hand") {
@@ -366,11 +478,15 @@ async function load() {
   const s = await api("/v1/sessions");
   const from = s.seq;
   for (const x of s.sessions) {
-    const t = upsert(x.id, x.connector); Object.assign(t, { status: x.status, hands: x.hands, bb100: x.bb100, won: x.won_bb, luck: x.luck, target: x.hands_target, model: x.model, solver: x.solver });
+    const t = upsert(x.id, x.connector); Object.assign(t, { status: x.status, hands: x.hands, bb100: x.bb100, won: x.won_bb, luck: x.luck, target: x.hands_target, model: x.model, solver: x.solver, kind: x.kind, players: x.players, human: x.human });
+    if (x.kind === "practice" && x.summary) t.standings = x.summary;
     const d = await api(`/v1/sessions/${x.id}`);
     t.state = d.state; t.recent = d.recent || [];
     let c = 0; t.curve = [0, ...t.recent.map(h => c += h.result_bb)];
     if (d.state?.type === "decision") t.lastDecision = d.state;
+    if (d.state?.type === "practice_decision") t.lastDecision = d.state;
+    if (d.state?.type === "practice_your_turn") t.yourTurn = d.state;
+    if (d.state?.standings) t.standings = d.state.standings;
     if (current == null) current = x.id;
   }
   render();
@@ -400,6 +516,15 @@ function showAbout() {
   $("#about").innerHTML = `${esc(m?.about || "")}<br>${esc(v?.about || "")}`;
 }
 $("#model").onchange = showAbout; $("#solver").onchange = showAbout;
+let newKind = "session";
+$("#kind").onclick = ev => {
+  const k = ev.target.dataset.k; if (!k) return; newKind = k;
+  document.querySelectorAll("#kind button").forEach(b => b.classList.toggle("on", b.dataset.k === k));
+  $("#sessionFields").style.display = k === "session" ? "" : "none";
+  $("#practiceFields").style.display = k === "practice" ? "" : "none";
+  const pm = engines.models.filter(m => m.practice);
+  $("#pmodel").innerHTML = pm.map(m => `<option>${esc(m.name)}</option>`).join("") || `<option disabled>no 9-max model installed</option>`;
+};
 function showReach() {
   const c = connectors.find(x => x.name === $("#conn").value); if (!c) return;
   $("#reach").innerHTML = `talks to ${esc(c.hosts.join(", "))}${c.env.length ? "<br>reads " + esc(c.env.join(", ")) : ""}`;
@@ -416,6 +541,14 @@ api("/v1/network").then(n => {
 }).catch(() => {});
 $("#cancel").onclick = () => $("#dlg").close();
 $("#start").onclick = async () => {
+  if (newKind === "practice") {
+    const body = { model: $("#pmodel").value, players: +$("#pplayers").value, avg_bb: +$("#pavg").value, pace_ms: +$("#ppace").value, hands: +$("#hands").value, human: $("#pwho").value === "human" };
+    const r = await api("/v1/practice", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    $("#dlg").close();
+    if (r.id) { const t = upsert(r.id, "practice"); Object.assign(t, { kind: "practice", model: body.model, target: body.hands, status: "playing", players: body.players, human: body.human }); current = r.id; setView("screen"); }
+    else toast(r.error || "could not start");
+    return;
+  }
   const r = await api("/v1/sessions", { method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ connector: $("#conn").value, hands: +$("#hands").value, model: $("#model").value, solver: $("#solver").value }) });
   $("#dlg").close();

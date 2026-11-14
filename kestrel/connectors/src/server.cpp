@@ -27,7 +27,10 @@
 
 #include "kestrel/connector.hpp"
 #include "kestrel/headsup.hpp"
+#include "kestrel/buckets.hpp"
 #include "kestrel/luck.hpp"
+#include "kestrel/net.hpp"
+#include "kestrel/practice.hpp"
 #include "kestrel/models.hpp"
 #include "kestrel/session.hpp"
 
@@ -71,27 +74,39 @@ struct Engines {
     }
 };
 
+// the 9-max tournament networks: installed packages (verified) and plain model folders with net.json
+std::vector<std::pair<std::string, std::string>> nine_max_models(const ServeOptions& o) {
+    std::vector<std::pair<std::string, std::string>> out;
+    for (auto& m : list_models(o.models.empty() ? default_models_dir() : o.models))
+        if (m.verified && m.players == 9 && std::filesystem::exists(std::filesystem::path(m.dir) / "net.json"))
+            out.push_back({m.name, m.dir});
+    std::error_code ec;
+    if (!o.models.empty())
+        for (auto& d : std::filesystem::directory_iterator(o.models, ec))
+            if (std::filesystem::exists(d.path() / "net.json") && !std::filesystem::exists(d.path() / "model.json")) {
+                std::string n = d.path().filename().string();
+                if (std::none_of(out.begin(), out.end(), [&](auto& x) { return x.first == n; }))
+                    out.push_back({n, d.path().string()});
+            }
+    return out;
+}
+
 json models_json(const ServeOptions& o) {
     json a = json::array();
     bool pack = std::filesystem::exists(std::filesystem::path(o.pack) / "tree.tsv");
     a.push_back({{"name", "hu-blueprint"}, {"game", "heads-up"}, {"players", 2}, {"available", pack},
+                 {"practice", false},
                  {"about", pack ? "heads-up blueprint, 200bb (the data pack)"
                                 : "heads-up blueprint: the data pack is not installed (" + o.pack + ")"}});
-    for (auto& m : list_models(o.models.empty() ? default_models_dir() : o.models))
-        if (m.verified)
-            a.push_back({{"name", m.name}, {"version", m.version}, {"game", m.game}, {"players", m.players},
-                         {"available", false}, {"about", m.about + " (no connector for this game yet)"}});
-    std::error_code ec;
-    if (!o.models.empty())
-        for (auto& d : std::filesystem::directory_iterator(o.models, ec))
-            if (std::filesystem::exists(d.path() / "net.json"))
-                a.push_back({{"name", d.path().filename().string()}, {"game", "9-max tournament"}, {"players", 9},
-                             {"available", false}, {"about", "9-max tournament network; no 9-max connector yet"}});
+    for (auto& [name, dir] : nine_max_models(o))
+        a.push_back({{"name", name}, {"game", "9-max tournament"}, {"players", 9}, {"available", false},
+                     {"practice", pack}, {"about", "9-max tournament network: practice tournaments; no 9-max platform connector yet"}});
     return a;
 }
 
-struct Table {
+struct TableRun {
     int id = 0;
+    std::string kind = "session";  // or "practice"
     ConnectorSpec spec;
     std::string model, solver;
     int hands = 0;
@@ -104,6 +119,13 @@ struct Table {
     double total_bb = 0;
     json summary;
     std::vector<LuckHand> luck;
+    // practice with a human seat: the table waits on the user's move
+    std::mutex wait_mu;
+    std::condition_variable wait_cv;
+    json your_turn;       // the pending question, or null
+    int answer = -2;      // the chosen slot (-2: none yet)
+    int players = 9;
+    bool human = false;
 };
 
 struct Hub {
@@ -111,7 +133,7 @@ struct Hub {
     std::condition_variable cv;
     std::deque<std::pair<long, json>> events;
     long seq = 0;
-    std::map<int, std::shared_ptr<Table>> tables;
+    std::map<int, std::shared_ptr<TableRun>> tables;
     int next_id = 1;
     std::atomic<bool> quit{false};
 
@@ -218,9 +240,9 @@ void open_url(const std::string& url) {
     if (std::system(cmd.c_str()) != 0) std::printf("open %s in your browser\n", url.c_str());
 }
 
-json table_json(const Table& t) {
+json table_json(const TableRun& t) {
     double bb100 = t.done ? t.total_bb / t.done * 100 : 0;
-    json j = {{"id", t.id},           {"connector", t.spec.name}, {"status", t.status}, {"model", t.model},
+    json j = {{"id", t.id},           {"kind", t.kind}, {"players", t.players}, {"human", t.human}, {"connector", t.spec.name}, {"status", t.status}, {"model", t.model},
               {"solver", t.solver},
               {"hands_target", t.hands}, {"hands", t.done},       {"bb100", bb100},
               {"won_bb", t.total_bb}};
@@ -290,7 +312,7 @@ int serve(const ServeOptions& o) {
         auto cs = all_connectors(o, &errors);
         auto it = std::find_if(cs.begin(), cs.end(), [&](auto& c) { return c.name == name; });
         if (it == cs.end()) return reply(res, {{"error", "no connector " + name}}, 404);
-        auto t = std::make_shared<Table>();
+        auto t = std::make_shared<TableRun>();
         {
             std::lock_guard<std::mutex> lk(hub.mu);
             t->id = hub.next_id++;
@@ -369,6 +391,119 @@ int serve(const ServeOptions& o) {
         reply(res, {{"id", t->id}}, 201);
     });
 
+    // a practice tournament: a 9-max network in every seat, played at a watchable pace
+    srv.Post("/v1/practice", [&](const httplib::Request& req, httplib::Response& res) {
+        json body = json::parse(req.body, nullptr, false);
+        if (body.is_discarded()) return reply(res, {{"error", "bad JSON"}}, 400);
+        std::string model = body.value("model", "");
+        auto ms = nine_max_models(o);
+        auto it = std::find_if(ms.begin(), ms.end(), [&](auto& m) { return m.first == model; });
+        if (it == ms.end()) return reply(res, {{"error", "no 9-max model " + model}}, 404);
+        if (!pack_problem.empty()) return reply(res, {{"error", pack_problem}}, 400);
+        std::shared_ptr<Net> net;
+        try {
+            buckets_init(o.pack);
+            net = std::make_shared<Net>(it->second);
+        } catch (const std::exception& e) {
+            return reply(res, {{"error", e.what()}}, 400);
+        }
+        PracticeConfig pc;
+        pc.players = std::clamp(body.value("players", 9), 2, 9);
+        pc.avg_bb = std::clamp(body.value("avg_bb", 20.0), 5.0, 60.0);
+        int hands = std::clamp(body.value("hands", 300), 1, 100000);
+        int pace = std::clamp(body.value("pace_ms", 700), 0, 5000);
+        pc.human = body.value("human", false);
+        auto t = std::make_shared<TableRun>();
+        {
+            std::lock_guard<std::mutex> lk(hub.mu);
+            t->id = hub.next_id++;
+            t->kind = "practice", t->model = model, t->solver = "none", t->hands = hands;
+            t->players = pc.players, t->human = pc.human;
+            t->spec.name = "practice";
+            hub.tables[t->id] = t;
+        }
+        hub.publish({{"type", "table"}, {"table", t->id}, {"connector", "practice"}, {"kind", "practice"},
+                     {"status", "playing"}, {"model", model}, {"solver", "none"}, {"players", pc.players},
+                     {"human", pc.human}});
+        t->th = std::thread([&hub, t, net, pc, pace] {
+            {
+                std::lock_guard<std::mutex> lk(hub.mu);
+                t->status = "playing";
+            }
+            uint64_t round = 0;
+            while (!t->stop && t->done < t->hands) {
+                PracticeConfig c = pc;
+                c.seed = uint64_t(t->id) * 1000003 + round++;
+                PracticeTournament tour(*net, c, "Kestrel");
+                while (!tour.over() && !t->stop && t->done < t->hands) {
+                    auto ask = [&](const json& q) {
+                        json ev = q;
+                        ev["table"] = t->id, ev["connector"] = "practice", ev["kind"] = "practice";
+                        {
+                            std::lock_guard<std::mutex> lk(t->wait_mu);
+                            t->your_turn = ev;
+                            t->answer = -2;
+                        }
+                        {
+                            std::lock_guard<std::mutex> lk(hub.mu);
+                            t->state = ev;
+                        }
+                        hub.publish(ev);
+                        std::unique_lock<std::mutex> lk(t->wait_mu);
+                        t->wait_cv.wait(lk, [&] { return t->answer != -2 || t->stop; });
+                        t->your_turn = nullptr;
+                        return t->stop ? -1 : t->answer;
+                    };
+                    tour.play_hand([&](const json& e) {
+                        json ev = e;
+                        ev["table"] = t->id, ev["connector"] = "practice", ev["kind"] = "practice";
+                        ev["tournament"] = round;
+                        {
+                            std::lock_guard<std::mutex> lk(hub.mu);
+                            if (e["type"] == "practice_hand") ev["hands"] = ++t->done, t->summary = e["standings"];
+                            t->state = ev;
+                        }
+                        hub.publish(ev);
+                        if (pace && e["type"] == "practice_decision") std::this_thread::sleep_for(std::chrono::milliseconds(pace));
+                    }, pc.human ? std::function<int(const json&)>(ask) : nullptr);
+                    if (pace) std::this_thread::sleep_for(std::chrono::milliseconds(pace * 2));
+                }
+            }
+            {
+                std::lock_guard<std::mutex> lk(hub.mu);
+                t->status = t->stop ? "stopped" : "finished";
+            }
+            hub.publish({{"type", "table"}, {"table", t->id}, {"connector", "practice"}, {"kind", "practice"},
+                         {"status", t->stop ? "stopped" : "finished"}});
+        });
+        reply(res, {{"id", t->id}}, 201);
+    });
+
+    // the user's move at a practice table: {"slot": n}, one of the choices of the pending practice_your_turn
+    srv.Post(R"(/v1/practice/(\d+)/act)", [&](const httplib::Request& req, httplib::Response& res) {
+        std::shared_ptr<TableRun> t;
+        {
+            std::lock_guard<std::mutex> lk(hub.mu);
+            auto it = hub.tables.find(std::stoi(req.matches[1]));
+            if (it == hub.tables.end()) return reply(res, {{"error", "no such table"}}, 404);
+            t = it->second;
+        }
+        json body = json::parse(req.body, nullptr, false);
+        if (body.is_discarded() || !body.contains("slot") || !body["slot"].is_number_integer())
+            return reply(res, {{"error", "need slot"}}, 400);
+        int slot = body["slot"];
+        {
+            std::lock_guard<std::mutex> lk(t->wait_mu);
+            if (t->your_turn.is_null()) return reply(res, {{"error", "not your turn"}}, 409);
+            bool ok = false;
+            for (auto& c : t->your_turn["choices"]) ok = ok || c["slot"] == slot;
+            if (!ok) return reply(res, {{"error", "not a legal move"}}, 400);
+            t->answer = slot;
+        }
+        t->wait_cv.notify_all();
+        reply(res, {{"ok", true}});
+    });
+
     srv.Get("/v1/sessions", [&](const httplib::Request&, httplib::Response& res) {
         std::lock_guard<std::mutex> lk(hub.mu);
         json a = json::array();
@@ -391,6 +526,7 @@ int serve(const ServeOptions& o) {
         auto it = hub.tables.find(std::stoi(req.matches[1]));
         if (it == hub.tables.end()) return reply(res, {{"error", "no such table"}}, 404);
         it->second->stop = true;
+        it->second->wait_cv.notify_all();
         reply(res, {{"stopping", it->first}});
     });
 
@@ -514,10 +650,10 @@ int serve(const ServeOptions& o) {
     bool ok = srv.listen_after_bind();
     hub.quit = true;
     hub.cv.notify_all();
-    std::vector<std::shared_ptr<Table>> ts;
+    std::vector<std::shared_ptr<TableRun>> ts;
     {
         std::lock_guard<std::mutex> lk(hub.mu);
-        for (auto& [id, t] : hub.tables) t->stop = true, ts.push_back(t);
+        for (auto& [id, t] : hub.tables) t->stop = true, t->wait_cv.notify_all(), ts.push_back(t);
     }
     std::printf("kestreld: finishing the hands in play\n");
     for (auto& t : ts)
