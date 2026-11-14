@@ -146,8 +146,55 @@ Each port gets test vectors written by the Python code it replaces, and the C++ 
 | `structured` codec, 9-max tables through a connector, tournament simulator | next |
 | Defence floor in the heads-up engine | done: on 5,853 logged decisions it fires 36 times and agrees with Python on all but 5, river spots where the order of tied hands decides (Python's sort leaves it arbitrary) |
 | Qt 6 app | after the web app |
-| Open Poker (openpoker.ai, 6-max over WebSocket): sign up under an address the user chooses, then a connector | to do, waiting on the address |
+| Open Poker (openpoker.ai, 6-max over WebSocket): an account and a connector | waiting on a sign-up in the user's own browser (see Platforms) |
+| Search at play time: the heads-up safe river re-solve, then 9-max search | heads-up next; 9-max once it beats the plain network (see Search) |
 | CI: Linux, macOS, Windows builds, self-test, GitHub Releases on `kestrel-v*` tags | done |
+
+## Platforms (searched 2026-11-14)
+
+Platforms where a bot can play other bots or a strong bot through an API, besides Slumbot:
+
+| Platform | Game | How a bot plays | Status for Kestrel |
+|---|---|---|---|
+| **Slumbot** (slumbot.com) | heads-up NLHE, 200bb, reset each hand | HTTP JSON API, no account needed | **plays** (`connectors/slumbot.yaml`) |
+| **Open Poker** (openpoker.ai) | 6-max NLHE, 14-day seasons, public leaderboard | WebSocket (`wss://openpoker.ai/ws`), API key from a sign-up (name and email) | **blocked**: see below |
+| **pokbot** (github.com/baobabtr33/pokbot) | bot knockouts every 30 minutes, 6-seat tables | the bot is submitted and runs on their server (stdin/stdout JSON, 5 ms per decision); live play and an MCP server too | not started: their server would run our code, and the installer is a `curl \| sh` from a raw-IP domain |
+| **GTO Wizard AI benchmark** | heads-up NLHE, 200bb, at least 2,500 hands | API access by application | not started: needs an application |
+| **poker-pi** (github.com/ArtART241/poker-pi) | NLHE tournaments | REST (`/api/v1/bot/turn`, `/api/v1/bot/action`), self-hosted | a candidate for our own tournament test server |
+
+**Open Poker, 2026-11-14:** the user chose the account's email for the account. Its site and docs (openpoker.ai,
+docs.openpoker.ai) answer every automated request from this machine with Cloudflare's block page (HTTP 403), a
+real headless browser included, so neither the sign-up nor the protocol documentation can be reached from here. A
+retry from the lab's network was refused by the permission rules, rightly: going round a site's block by changing
+networks is circumvention.
+**Next step:**
+1. The user signs up at openpoker.ai in their own browser with that address.
+2. The user puts the API key in the environment as `KESTREL_OPENPOKER_KEY`. The key never goes into a file, a
+   commit or a message.
+3. The user saves the protocol page (docs.openpoker.ai) for the connector.
+
+The connector then needs three things: the WebSocket transport, a `structured` codec for JSON actions, and 6-max
+play (the 9-max network on six seats).
+
+## Search
+
+Search is a play-time technique: Libratus and Pluribus re-solved the spot in front of them when it was their turn,
+and that is where it pays. It belongs in Kestrel, not only in training.
+- **Heads-up:** the safe river re-solve (`llm-research/blueprint/resolve.cpp`, already C++) is linked into Kestrel
+  next. It is solved from the start of the river with both blueprint ranges, and its gadget keeps every opponent
+  hand at or below its blueprint value. It is off by default until it measures better than the blueprint against
+  Slumbot or LBR.
+- **9-max tournaments:** search on top of the network (`llm-research/scripts/ninemax_search.py`) is still a
+  research item. It goes into Kestrel when it beats the plain network in duplicate matches; until then Kestrel plays
+  the network's policy.
+
+## The trainer's dealer
+
+The networks train on deals from `bp_deal_n`: a partial Fisher–Yates with one seeded splitmix64 stream per deal, so
+deals are fast and reproducible. On 4,000,000 nine-handed deals it matched exact odds in every test: positions,
+repeated cards, starting-hand classes, seven-card categories, independence, and seeds (lowest p = 0.07;
+`llm-research/scripts/dealer_check.py`). Provably fair shuffles such as CoinPoker's prove a real-money deal to its
+players and add nothing to training. Kestrel itself never deals: the platform does.
 
 ## Order of work
 
