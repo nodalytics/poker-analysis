@@ -1,0 +1,106 @@
+# Kestrel (kestrel/): build and self-test on Linux, macOS and Windows on every change, and publish a GitHub Release
+# with the packaged builds when a tag kestrel-v<version> is pushed (e.g. git tag kestrel-v0.1.0 && git push
+# nodalytics kestrel-v0.1.0). The self-test replays the Python reference (9-max network, ICM, the heads-up
+# blueprint on 1,160 logged Slumbot decisions); a build that does not reproduce it is not packaged.
+name: kestrel
+on:
+  push:
+    branches: [main]
+    paths: ["kestrel/**", ".github/workflows/kestrel.yml"]
+    tags: ["kestrel-v*"]
+  pull_request:
+    paths: ["kestrel/**", ".github/workflows/kestrel.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: ubuntu-22.04, name: linux-x86_64, shell: bash}  # the older glibc, so the binary runs on more systems
+          - {os: macos-14, name: macos-arm64, shell: bash}
+          - {os: windows-latest, name: windows-x86_64, shell: "msys2 {0}"}
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          path-type: inherit  # gh (preinstalled on the runner) must be reachable
+          install: >-
+            mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-ninja
+            mingw-w64-ucrt-x86_64-openssl git zstd tar zip
+      - if: runner.os == 'macOS'
+        run: brew install zstd ninja
+      - if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y ninja-build zstd libssl-dev
+
+      - name: heads-up data pack (for the self-test)
+        run: |
+          gh release download headsup-pack-run2 --repo "$GITHUB_REPOSITORY" --pattern 'headsup-pack-run2.tar.zst' \
+            --dir pack-download
+          mkdir -p llm-research/blueprint
+          zstd -dc pack-download/headsup-pack-run2.tar.zst | tar -x -C llm-research/blueprint/
+
+      - name: version
+        id: v
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/kestrel-v* ]]; then echo "version=${GITHUB_REF#refs/tags/kestrel-v}" >> "$GITHUB_OUTPUT"
+          else echo "version=0.0.0-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"; fi
+
+      - name: configure
+        run: cmake -S kestrel -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DKESTREL_STATIC=ON
+      - name: build
+        run: cmake --build build -j 4
+      - name: self-test
+        run: ctest --test-dir build --output-on-failure
+
+      - name: package
+        run: |
+          pkg="kestrel-${{ steps.v.outputs.version }}-${{ matrix.name }}"
+          cmake --install build --prefix "dist/$pkg"
+          cd dist
+          if [ "$RUNNER_OS" = Windows ]; then zip -qr "$pkg.zip" "$pkg"; else tar -czf "$pkg.tar.gz" "$pkg"; fi
+          ls -la
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kestrel-${{ matrix.name }}
+          path: |
+            dist/*.tar.gz
+            dist/*.zip
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/kestrel-v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: checksums
+        run: cd dist && sha256sum * > SHA256SUMS && cat SHA256SUMS
+      - name: publish
+        run: |
+          tag="${GITHUB_REF#refs/tags/}"
+          notes="Kestrel ${tag#kestrel-v}: builds for Linux (x86_64), macOS (Apple silicon) and Windows (x86_64).
+          Each archive holds the binaries, the 9-max tournament network (nm17) and the self-test data; every build
+          passed the self-test before it was packaged. The heads-up data pack is the separate release
+          headsup-pack-run2. Check downloads against SHA256SUMS."
+          gh release create "$tag" dist/* --repo "$GITHUB_REPOSITORY" --title "Kestrel ${tag#kestrel-v}" --notes "$notes"

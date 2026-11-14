@@ -16,18 +16,11 @@ FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download
                      URL_HASH SHA256=d6c65aca6b1ed68e7a182f4757257b107ae403032760ed6ef121c9d55e81757d)
 # the same pinned commits as llm-research/blueprint/Makefile, so the buckets match the trainer's
 FetchContent_Declare(phe GIT_REPOSITORY https://github.com/HenryRLee/PokerHandEvaluator.git
-                     GIT_TAG 10be452e4c1ee40a6a56f06457f46bff27ca495a)
+                     GIT_TAG 10be452e4c1ee40a6a56f06457f46bff27ca495a SOURCE_SUBDIR no-cmake)
 FetchContent_Declare(iso GIT_REPOSITORY https://github.com/kdub0/hand-isomorphism.git
-                     GIT_TAG dabcee4a84c1d62ee6ded9b6ff02ece6823fcc0f)
-FetchContent_MakeAvailable(json)
-FetchContent_GetProperties(phe)
-if(NOT phe_POPULATED)
-  FetchContent_Populate(phe)
-endif()
-FetchContent_GetProperties(iso)
-if(NOT iso_POPULATED)
-  FetchContent_Populate(iso)
-endif()
+                     GIT_TAG dabcee4a84c1d62ee6ded9b6ff02ece6823fcc0f SOURCE_SUBDIR no-cmake)
+# (SOURCE_SUBDIR no-cmake: fetch the sources only; the files we need are compiled below)
+FetchContent_MakeAvailable(json phe iso)
 
 # third-party C: the 7-card evaluator and suit-isomorphic hand indexing (only the files the buckets need)
 add_library(kestrel_cards STATIC
@@ -62,3 +55,26 @@ enable_testing()
 add_test(NAME selftest
          COMMAND kestrel_selftest --vectors ${CMAKE_CURRENT_SOURCE_DIR}/testdata
                  --model ${KESTREL_DATA}/models/ninemax/nm17 --pack ${KESTREL_DATA}/blueprint/pack)
+
+# ---- install / package (the release archives: cmake --install build --prefix <dir>) ----
+include(GNUInstallDirs)
+install(TARGETS kestrel_selftest RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+foreach(t kestreld)  # the daemon, once it exists
+  if(TARGET ${t})
+    install(TARGETS ${t} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+  endif()
+endforeach()
+install(FILES README.md docs/design.md DESTINATION ${CMAKE_INSTALL_DATADIR}/kestrel)
+install(DIRECTORY testdata DESTINATION ${CMAKE_INSTALL_DATADIR}/kestrel)
+# the tournament network the router uses (4.5 MB); the heads-up pack (80 MB) ships as its own release asset
+install(FILES ${KESTREL_DATA}/models/ninemax/nm17/net.bin ${KESTREL_DATA}/models/ninemax/nm17/net.json
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/kestrel/models/ninemax/nm17 OPTIONAL)
+# third-party licences
+install(FILES ${phe_SOURCE_DIR}/LICENSE DESTINATION ${CMAKE_INSTALL_DATADIR}/kestrel/licenses RENAME PokerHandEvaluator.txt OPTIONAL)
+install(FILES ${iso_SOURCE_DIR}/LICENSE.txt DESTINATION ${CMAKE_INSTALL_DATADIR}/kestrel/licenses RENAME hand-isomorphism.txt OPTIONAL)
+install(FILES ${json_SOURCE_DIR}/LICENSE.MIT DESTINATION ${CMAKE_INSTALL_DATADIR}/kestrel/licenses RENAME nlohmann-json.txt OPTIONAL)
+
+option(KESTREL_STATIC "link the C and C++ runtimes statically (portable release binaries)" OFF)
+if(KESTREL_STATIC AND (MINGW OR CMAKE_SYSTEM_NAME STREQUAL "Linux"))
+  target_link_options(kestrel_selftest PRIVATE -static-libgcc -static-libstdc++ $<$<BOOL:${MINGW}>:-static>)
+endif()
