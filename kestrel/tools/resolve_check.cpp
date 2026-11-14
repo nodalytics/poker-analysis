@@ -2,6 +2,7 @@
 // the Python bot's (libresolve) on the same logged river decisions (llm-research/scripts/kestrel_hu_vectors.py
 // --resolve). Compares the re-solved strategy at our hand, action by action. Tolerance 5e-3: Kestrel normalises the
 // blueprint in double precision and libresolve in single, and 500 CFR+ iterations carry that into the third decimal.
+#include <chrono>
 #include <cmath>
 #include <cstdio>
 #include <fstream>
@@ -16,13 +17,15 @@ using namespace kestrel;
 
 int main(int argc, char** argv) {
     std::string vectors, run, abs;
-    int iters = 500;
+    int iters = 500, limit = 1 << 30;
+    double secs = 0;
     for (int k = 1; k + 1 < argc; k += 2) {
         std::string a = argv[k], v = argv[k + 1];
         if (a == "--vectors") vectors = v;
         else if (a == "--run") run = v;
         else if (a == "--abs") abs = v;
         else if (a == "--iters") iters = std::stoi(v);
+        else if (a == "--limit") limit = std::stoi(v);
     }
     if (vectors.empty() || run.empty()) {
         std::fprintf(stderr, "usage: kestrel_resolve_check --vectors FILE --run DIR [--abs DIR] [--iters N]\n");
@@ -36,7 +39,7 @@ int main(int argc, char** argv) {
     int cases = 0, resolved = 0, bad = 0, skipped = 0;
     double worst = 0;
     for (auto& C : V["cases"]) {
-        if (C["resolve"].is_null()) continue;
+        if (C["resolve"].is_null() || cases >= limit) continue;
         HUSpot sp;
         if (!acpc::spot(C["action"], C["pos"], C["hole"].get<std::vector<std::string>>(),
                         C["board"].get<std::vector<std::string>>(), g, sp)) {
@@ -44,7 +47,9 @@ int main(int argc, char** argv) {
             continue;
         }
         ++cases;
+        auto t0 = std::chrono::steady_clock::now();
         auto ans = bp.decide(sp, true, 50);
+        secs += std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
         if (!ans.resolved) {
             ++bad;
             std::printf("not re-solved: %s\n", C["action"].get<std::string>().c_str());
@@ -64,6 +69,7 @@ int main(int argc, char** argv) {
     }
     std::printf("%d river decisions, %d re-solved, %d differ by more than 5e-3, worst difference %.2e%s\n", cases,
                 resolved, bad, worst, skipped ? " (some skipped)" : "");
+    std::printf("mean %.2f s per decision (%d iterations)\n", cases ? secs / cases : 0.0, iters);
     std::printf(bad ? "FAIL\n" : "PASS\n");
     return bad ? 1 : 0;
 }

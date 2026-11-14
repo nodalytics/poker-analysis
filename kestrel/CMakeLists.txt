@@ -10,6 +10,7 @@ endif()
 set(KESTREL_DATA "${CMAKE_CURRENT_SOURCE_DIR}/../llm-research" CACHE PATH "directory holding models/ and blueprint/pack/")
 option(KESTREL_CORE_ONLY "the core and its checks only: no connectors, server or daemon (no OpenSSL needed)" OFF)
 option(KESTREL_STATIC "link the C and C++ runtimes statically (portable release binaries)" OFF)
+option(KESTREL_NATIVE "compile for this machine's CPU (faster re-solves; the binary may not run elsewhere)" OFF)
 
 include(FetchContent)
 FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
@@ -34,6 +35,10 @@ add_library(kestrel_core
   connectors/src/codec_acpc.cpp)
 target_include_directories(kestrel_core PUBLIC core/include connectors/include)
 target_link_libraries(kestrel_core PUBLIC nlohmann_json::nlohmann_json PRIVATE kestrel_cards)
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+  target_link_libraries(kestrel_core PRIVATE OpenMP::OpenMP_CXX)
+endif()
 
 add_executable(kestrel_selftest tools/selftest.cpp)
 target_link_libraries(kestrel_selftest PRIVATE kestrel_core)
@@ -71,6 +76,9 @@ endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   target_compile_options(kestrel_core PRIVATE -Wall -Wextra)
+endif()
+if(KESTREL_NATIVE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  target_compile_options(kestrel_core PRIVATE -march=native)
 endif()
 if(KESTREL_STATIC AND (MINGW OR CMAKE_SYSTEM_NAME STREQUAL "Linux"))
   foreach(t ${KESTREL_BINARIES})
