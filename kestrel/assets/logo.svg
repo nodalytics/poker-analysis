@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Kestrel">
+  <title>Kestrel</title>
+  <!-- the app icon: the mark on a dark rounded tile with a faint accent ring -->
+  <defs>
+    <radialGradient id="k-tile" cx="0.5" cy="0.3" r="0.8">
+      <stop offset="0" stop-color="#1E2230"/>
+      <stop offset="1" stop-color="#0A0C11"/>
+    </radialGradient>
+  </defs>
+  <rect x="2" y="2" width="124" height="124" rx="28" fill="url(#k-tile)"/>
+  <rect x="2.5" y="2.5" width="123" height="123" rx="27.5" fill="none" stroke="#F97316" stroke-opacity="0.28"/>
+  <g transform="translate(14 10) scale(0.78125)">
+  <defs>
+    <linearGradient id="k-a" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FDBA74"/>
+      <stop offset="0.55" stop-color="#F97316"/>
+      <stop offset="1" stop-color="#C2410C"/>
+    </linearGradient>
+    <linearGradient id="k-b" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FB923C"/>
+      <stop offset="0.55" stop-color="#EA580C"/>
+      <stop offset="1" stop-color="#9A3412"/>
+    </linearGradient>
+  </defs>
+  <g id="k-bird">
+    <path d="M64 24 L68.5 27 L70 33 L71.5 41 L122 26 L112 38 L117 40 L103 47 L108 50 L92 56 L78 62 L74.5 74 L84 104 L72 99 L64 106 L56 99 L44 104 L53.5 74 L50 62 L36 56 L20 50 L25 47 L11 40 L16 38 L6 26 L56.5 41 L58 33 L59.5 27 Z" fill="url(#k-a)"/>
+    <path d="M64 24 L68.5 27 L70 33 L71.5 41 L122 26 L112 38 L117 40 L103 47 L108 50 L92 56 L78 62 L74.5 74 L84 104 L72 99 L64 106 L64 106 Z" fill="url(#k-b)"/>
+    <!-- wing folds -->
+    <path d="M71.5 41 L92 56 M56.5 41 L36 56" stroke="#7C2D12" stroke-opacity="0.45" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+    <!-- dark primaries at the wing tips and the tail band -->
+    <path d="M122 26 L112 38 L117 40 L103 47 L101 40 Z M6 26 L16 38 L11 40 L25 47 L27 40 Z" fill="#1E293B" fill-opacity="0.85"/>
+    <path d="M80.6 93.5 L84 104 L72 99 L64 106 L56 99 L44 104 L47.4 93.5 Z" fill="#1E293B" fill-opacity="0.85"/>
+    <!-- the eye -->
+    <path d="M60.2 31.4 L63 30.6 L62.2 33.2 Z M67.8 31.4 L65 30.6 L65.8 33.2 Z" fill="#0F172A"/>
+  </g>
+  </g>
+</svg>

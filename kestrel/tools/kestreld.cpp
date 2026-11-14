@@ -55,6 +55,8 @@ int main(int argc, char** argv) {
         if (cmd == "check") {
             std::printf("%s: ok (codec %s, %d players, blinds %lld, stack %lld)\n", spec.name.c_str(),
                         spec.codec.c_str(), spec.players, (long long)spec.big, (long long)spec.stack);
+            for (auto& h : spec.hosts) std::printf("  talks to   %s\n", h.c_str());
+            for (auto& e : spec.env) std::printf("  reads env  %s\n", e.c_str());
             return 0;
         }
         if (cmd != "play") return usage();

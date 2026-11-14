@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <filesystem>
+#include <functional>
 #include <fstream>
 #include <stdexcept>
 #include <thread>
@@ -91,6 +92,27 @@ ConnectorSpec load_connector(const std::string& path) {
         if (m != "GET" && m != "POST" && m != "PUT" && m != "PATCH" && m != "DELETE")
             throw std::runtime_error(c.name + ": routes." + name + ": method " + m);
     }
+    // what the file reaches: the environment variables it reads and the hosts it talks to (kestreld check shows them)
+    std::function<void(const json&)> scan = [&](const json& j) {
+        if (j.is_string()) {
+            const std::string s = j.get<std::string>();
+            for (size_t a = s.find("${env:"); a != std::string::npos; a = s.find("${env:", a + 1)) {
+                size_t b = s.find('}', a);
+                std::string name = s.substr(a + 6, b == std::string::npos ? std::string::npos : b - a - 6);
+                if (name.rfind("KESTREL_", 0) != 0)
+                    throw std::runtime_error(c.name + ": ${env:" + name + "}: connectors may read KESTREL_* variables only");
+                if (std::find(c.env.begin(), c.env.end(), name) == c.env.end()) c.env.push_back(name);
+            }
+        } else if (j.is_object() || j.is_array()) {
+            for (auto& v : j) scan(v);
+        }
+    };
+    scan(r);
+    c.hosts.push_back(r["transport"].value("base_url", ""));
+    for (auto& [name, rt] : r["routes"].items()) {
+        std::string p = rt.value("path", "");
+        if (p.find("://") != std::string::npos) c.hosts.push_back(p);
+    }
     return c;
 }
 
@@ -124,7 +146,12 @@ json render(const json& t, const std::map<std::string, std::string>& vars) {
             out += s.substr(k, a - k);
             std::string key = s.substr(a + 2, b - a - 2), val;
             if (key.rfind("env:", 0) == 0) {
-                const char* e = std::getenv(key.substr(4).c_str());
+                // only KESTREL_* variables: a connector file written by someone else must not be able to read
+                // (and send to its server) whatever else is in the environment, such as cloud keys
+                std::string name = key.substr(4);
+                if (name.rfind("KESTREL_", 0) != 0)
+                    throw std::runtime_error("${env:" + name + "}: connectors may read KESTREL_* variables only");
+                const char* e = std::getenv(name.c_str());
                 val = e ? e : "";
             } else if (auto it = vars.find(key); it != vars.end()) {
                 val = it->second;
@@ -179,7 +206,11 @@ class HttpTransport : public Transport {
         cli_->set_follow_location(true);
     }
 
-    json call(const json& route, const std::map<std::string, std::string>& vars) override {
+    json call(const json& route_in, const std::map<std::string, std::string>& vars) override {
+        // the request structure may sit under request: {body, query, headers, content_type}, or on the route itself
+        json route = route_in;
+        if (route_in.contains("request"))
+            for (auto& [k, v] : route_in["request"].items()) route[k] = v;
         std::string path = render(route.at("path"), vars).get<std::string>();
         if (path.empty() || path[0] != '/') path = prefix_ + path;  // relative to base_url, or absolute
         std::string method = route.value("method", "POST");
