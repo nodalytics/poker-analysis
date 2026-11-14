@@ -250,6 +250,7 @@ class HttpTransport : public Transport {
                                   : method == "PATCH"  ? cli_->Patch(url, headers, body, type)
                                                        : cli_->Post(url, headers, body, type);
             if (res && res->status < 500) {
+                if (res->body.find_first_not_of(" \t\r\n") == std::string::npos) return json::object();  // 204: nothing yet
                 try {
                     return json::parse(res->body);
                 } catch (const std::exception& e) {

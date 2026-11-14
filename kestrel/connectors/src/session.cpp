@@ -1,6 +1,7 @@
 #include "kestrel/session.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <cctype>
 #include <filesystem>
 #include <fstream>
@@ -50,6 +51,7 @@ json at(const json& r, const json& fields, const char* key) {
             if (f["map"].contains(k)) v = f["map"][k];
         }
         if (f.contains("scale") && v.is_number()) v = v.get<double>() * f["scale"].get<double>();
+        if (f.contains("equals")) v = v == f["equals"];
     }
     return v;
 }
@@ -268,7 +270,16 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
     const json amap = answer.value("actions", json::object());
     const bool send_add = answer.value("amount", "to") == "add";
     const double ascale = answer.value("scale", 1.0);
+    const double unit = std::pow(10.0, -answer.value("decimals", 0));  // whole chips unless the platform says otherwise
     const auto poll = std::chrono::milliseconds(spec.raw["transport"].value("poll_ms", 250));
+    const bool ante_each = spec.raw.contains("game") && spec.raw["game"].value("ante", "big_blind") == "each";
+    // values carried from every response into the next requests, e.g. {turn_id: /turn_id} for ${turn_id}
+    const json carry = spec.raw.contains("session") ? spec.raw["session"].value("vars", json::object()) : json::object();
+    const json* status_route = flow.contains("status") ? &routes[flow["status"].get<std::string>()] : nullptr;
+    const json status_fields = status_route && status_route->contains("response") && (*status_route)["response"].contains("fields")
+                                   ? (*status_route)["response"]["fields"]
+                                   : fields;
+    auto last_status = std::chrono::steady_clock::now();
     std::string token_ptr;
     if (spec.raw.contains("session") && spec.raw["session"].contains("token_field"))
         token_ptr = spec.raw["session"]["token_field"].get<std::string>();
@@ -285,6 +296,10 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
         if (!token_ptr.empty()) {
             json::json_pointer p(token_ptr);
             if (r.contains(p) && r[p].is_string()) vars["token"] = r[p].get<std::string>();
+        }
+        for (auto& [name, ptr] : carry.items()) {
+            json::json_pointer p(ptr.get<std::string>());
+            if (r.contains(p) && !r[p].is_null()) vars[name] = id_of(r[p]);
         }
     };
     auto platform_error = [&](const json& r) {
@@ -340,9 +355,19 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
         }
         NMSpot sp;
         sp.me = id_of(at(r, fields, "me"));
-        if (truthy(at(r, fields, "finished"))) {
-            if (json c = at(r, fields, "chips"); !c.is_null()) close_hand(num(c), r);
-            json t = {{"place", int(num(at(r, fields, "place")))}, {"prize", num(at(r, fields, "prize"))},
+        sp.ante_each = ante_each;
+        if (status_route && at(r, fields, "hand").is_null() &&
+            std::chrono::steady_clock::now() - last_status > std::chrono::seconds(2)) {
+            last_status = std::chrono::steady_clock::now();
+            json st = tr->call(*status_route, vars);
+            for (const char* k : {"finished", "place", "prize", "chips"})
+                if (status_fields.contains(k)) r[k] = at(st, status_fields, k);
+        }
+        json fin = status_route ? r.value("finished", json()) : at(r, fields, "finished");
+        if (truthy(fin)) {
+            auto pick = [&](const char* k) { return status_route ? r.value(k, json()) : at(r, fields, k); };
+            if (json c = pick("chips"); !c.is_null()) close_hand(num(c), r);
+            json t = {{"place", int(num(pick("place")))}, {"prize", num(pick("prize"))},
                       {"hands", int(results.size()) - t_start}};
             t_start = int(results.size());
             cur_hand.clear(), acted_at.clear();  // a new tournament numbers its hands from 1 again
@@ -419,16 +444,20 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
         }
         auto send = [&](const NMOption& o) {
             vars["action"] = amap.contains(o.action) ? id_of(amap[o.action]) : o.action;
-            double amt = (send_add ? o.add : o.to) * ascale;
+            double amt = (send_add ? o.add : o.to) * ascale / unit;
+            amt = (o.action == "allin" ? std::floor(amt + 1e-6) : std::round(amt)) * unit;  // never past the stack
             vars["amount"] = o.action == "raise" || o.action == "allin" || answer.value("amount_always", false)
-                                 ? json(std::round(amt * 100) / 100).dump()
+                                 ? (unit >= 1 ? json(int64_t(amt)) : json(amt)).dump()
                                  : "";
             return tr->call(act_route, vars);
         };
         json ar = send(pick);
         keep_token(ar);
-        if (!platform_error(ar).empty()) {
+        if (auto why = platform_error(ar); !why.empty()) {
             ++sum.fallbacks;
+            std::ofstream(plan.out_dir + "/refused.jsonl", std::ios::app)
+                << json{{"sent", {{"action", vars["action"]}, {"amount", vars["amount"]}}}, {"why", why},
+                        {"options", adv.to_json()["options"]}, {"state", r}}.dump() << "\n";
             ar = send({"check", 0, 0, 1.0, 1, "check"});
             keep_token(ar);
             if (!platform_error(ar).empty()) ar = send({"fold", 0, 0, 1.0, 0, "fold"});

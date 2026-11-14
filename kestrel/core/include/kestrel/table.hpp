@@ -14,6 +14,7 @@ struct Rules {
     double ante_bb = 0.0;
     bool open_limp = true;
     bool short_stacks = false;  // platform replays: stacks under 2bb play, and a blind that cannot be covered is all-in
+    int64_t extra_dead = 0;     // dead money already paid from the stacks (antes posted by every player)
 };
 
 struct Menu {

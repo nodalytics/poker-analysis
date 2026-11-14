@@ -194,9 +194,11 @@ Platforms where a bot can play other bots or a strong bot through an API, beside
 |---|---|---|---|
 | **Slumbot** (slumbot.com) | heads-up NLHE, 200bb, reset each hand | HTTP JSON API, no account needed | **plays** (`connectors/slumbot.yaml`) |
 | **Open Poker** (openpoker.ai) | 6-max NLHE cash, virtual chips, 14-day seasons, public leaderboard | WebSocket (`wss://openpoker.ai/ws`), API key from the dashboard | waiting on the account; reachable from the lab only (see below) |
-| **pokbot** (github.com/baobabtr33/pokbot) | bot knockouts every 30 minutes, 6-seat tables | the bot is submitted and runs on their server (stdin/stdout JSON, 5 ms per decision); live play and an MCP server too | not started: their server would run our code, and the installer is a `curl \| sh` from a raw-IP domain |
-| **GTO Wizard AI benchmark** | heads-up NLHE, 200bb, at least 2,500 hands | API access by application | not started: needs an application |
-| **poker-pi** (github.com/ArtART241/poker-pi) | NLHE tournaments | REST (`/api/v1/bot/turn`, `/api/v1/bot/action`), self-hosted | a candidate for our own tournament test server |
+| **poker-pi** (github.com/ArtART241/poker-pi, MIT) | NLHE tournaments and practice tables for bots, 2-9 seats | REST long poll (`GET /api/v1/bot/turn`, `POST /api/v1/bot/action`), bearer token, self-hosted | **plays** (`connectors/pokerpi.yaml`), self-hosted on the lab (see below) |
+| **Kestrel test platform** (`testplatform/ninemax_platform.py`) | 9-max tournaments against rule bots, on PokerKit | REST polling | **plays** (`connectors/testplatform.yaml`) |
+| **Open Poker** (openpoker.ai) | 6-max NLHE cash, virtual chips, 14-day seasons, public leaderboard | WebSocket (`wss://openpoker.ai/ws`), API key from the dashboard | to do: WebSocket transport (in progress), the account, a 6-max cash model (see below) |
+| **GTO Wizard AI benchmark** | heads-up NLHE, 200bb, at least 2,500 hands | API access by application | to do: needs the user's application (see below) |
+| **pokbot** (github.com/baobabtr33/pokbot) | bot knockouts every 30 minutes, 6-seat tables | the bot is submitted and runs on their server (stdin/stdout JSON, 5 ms per decision); live play and an MCP server too | not planned (see below) |
 
 **Open Poker, 2026-11-14.** Its site answers this machine with Cloudflare's block page (HTTP 403) but serves the
 lab normally, so its documentation was read from the lab (`https://docs.openpoker.ai/llms-full.txt`, revision
@@ -223,6 +225,44 @@ empty seats. A competitive entry needs a short 6-max cash run of the 9-max train
 
 **The connector** needs the WebSocket transport, an event-stream flow (the server pushes `your_turn`, unlike Slumbot's
 request-response), a `structured` codec for its JSON actions, and the 6-max engine.
+
+**poker-pi, 2026-11-14.** A FastAPI tournament server for bots (MIT), cloned and run on the lab in its own venv at
+`127.0.0.1:8794` (its default port is 8000, the lab's another service tunnel, so `POKER_PORT` is always set), reached
+from this machine through the SSH connection. A bot long-polls `GET /turn?wait=25` (a 204 with no body when nothing is
+due), gets the whole table (seats, stacks, the hand's event log with stacks at its start, legal moves) and answers
+with the turn's id. Every player posts the ante. The connector needed four general features, now in the structured
+codec: an empty reply reads as "nothing yet", `session.vars` carries a value from each reply into the next request
+(`turn_id`), `game.ante: each` posts the ante from every stack as dead money, and `flow.status` asks whether a table
+is over when no turn comes (`{at: /status, equals: finished}`). Amounts go as whole chips (`answer.decimals` for
+others), and an all-in is rounded down, never past the stack; the first run sent 109.5 and had 10 moves refused.
+Practice tables against its house bots (tight, calling station, random): at 75bb nm17 busted all 8 tables (it trained
+at 10-25bb); at 20bb it won 2 of 8, +111 bb/100 [+6, +234] over 166 hands. 0 replay errors and 0 refused moves over
+both. Results per table only give a place when the bot wins (the status says "your bot busted" otherwise).
+
+**Open Poker: what remains.** In order:
+1. A WebSocket transport for connectors (`transport: {websocket: wss://...}`), with the API key as a header, reconnects
+   within the limit of 10 connections a minute, and at most 20 messages a second.
+2. An event flow: the server pushes messages, so the connector names which message type opens our turn
+   (`your_turn`), which ones carry the hand (`hand_start`, `hole_cards`, `player_action`, `community_cards`,
+   `hand_result`), and the reply (`action` with `hand_id`, `turn_token` and a fresh `client_action_id`). The hand is
+   rebuilt from the events into the same spot the structured codec builds, and `resync_request` recovers it after a
+   reconnect.
+3. A model for 6-max cash at 50-250bb: a 6-max run of the 9-max trainer with cash stacks and no ICM, checked like the
+   tournament networks (sense, post-flop, duplicate matches, an exploiter) before it plays.
+4. The account: the user signs in by the magic link, creates a Self Host bot and puts its key on the lab as
+   `KESTREL_OPENPOKER_KEY`. Kestrel plays from the lab, which Cloudflare serves (this machine gets a 403).
+One public bot per free account; same-owner bots may not sit together, so it is one table at a time.
+
+**GTO Wizard AI benchmark: what remains.** Heads-up NLHE at 200bb against GTO Wizard's AI, at least 2,500 hands,
+reported with its own variance reduction. It is the strongest measure available for the heads-up side (the blueprint
+alone, with the defence floor, and with each solver). Needs: the user applies for API access; then a connector for
+its API (unknown until access is granted) with the `acpc` codec or a structured one. Run it from the lab with the
+same settings as the Slumbot sessions, luck-adjusted, so the two results compare.
+
+**pokbot: not planned.** Bots are uploaded and run on the organiser's server within 5 ms a decision (stdin/stdout
+JSON), so Kestrel would have to be shipped to a third party and fit that budget (the river re-solve takes 310 ms),
+and its installer is a `curl | sh` from a domain that is a bare IP address. It is reconsidered if it gains a remote
+API like the others.
 
 ## Search
 
