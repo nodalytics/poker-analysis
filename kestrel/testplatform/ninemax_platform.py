@@ -56,7 +56,7 @@ def strength(hole, board):
 
 class Tournament:
     def __init__(self, name, players, rng, ante=True, outbox=None):
-        self.use_ante, self.outbox, self.board_seen = ante, outbox, 0
+        self.use_ante, self.outbox, self.board_seen, self.last = ante, outbox, 0, None
         self.rng = rng
         self.names = [name] + [f"{BOTS[k % len(BOTS)]}{k}" for k in range(1, players)]
         self.kind = {n: n.rstrip("0123456789") for n in self.names[1:]}
@@ -115,7 +115,19 @@ class Tournament:
     def finish_hand(self):
         for p, s in zip(self.order, self.state.stacks):
             self.chips[p] = s
-        self.out({"type": "hand_result", "final_stacks": {str(self.seat(p)): self.chips[p] for p in self.ring}})
+        # the finished hand's history, as platforms give it: every action, the board, and the cards shown down
+        board = [repr(c) for cs in self.state.board_cards for c in cs]
+        live = [p for p in self.order if not any(a["player"] == p and a["type"] == "fold" for a in self.actions)]
+        shown = (
+            {p: [repr(c) for c in self.state.hole_cards[self.order.index(p)]] for p in live} if len(live) > 1 else {}
+        )
+        self.last = {"id": self.hands, "actions": list(self.actions), "board": board,
+                     "shown": [{"id": p, "cards": c} for p, c in shown.items()]}  # fmt: skip
+        self.out({"type": "hand_result", "hand_id": f"h-{self.hands}",
+                  "final_stacks": {str(self.seat(p)): self.chips[p] for p in self.ring},
+                  "actions": [{"seat": self.seat(a["player"]), "action": {"allin": "all_in", "bet": "raise"}.get(a["type"], a["type"]),
+                               "street": STREETS[[0, 3, 4, 5][a["street"]]]} for a in self.actions],
+                  "shown_cards": {str(self.seat(p)): c for p, c in shown.items()}})  # fmt: skip
         self.button = (self.ring.index(self.order[-1]) + 1) % len(self.ring)
         self.state = None
 
@@ -223,6 +235,7 @@ class Tournament:
         return {
             "you": self.me,
             "finished": False,
+            "last_hand": self.last,
             "payouts": PAYOUTS[:alive],
             "chips": self.chips[self.me],
             "hand": {

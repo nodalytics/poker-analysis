@@ -71,7 +71,7 @@ if(NOT KESTREL_CORE_ONLY)
     target_compile_options(yaml-cpp PRIVATE -include cstdint)
   endif()
 
-  add_library(kestrel_connectors connectors/src/connector.cpp connectors/src/session.cpp connectors/src/server.cpp
+  add_library(kestrel_connectors connectors/src/connector.cpp connectors/src/session.cpp connectors/src/opponents.cpp connectors/src/server.cpp
     connectors/src/gateway.cpp)
   target_link_libraries(kestrel_connectors PUBLIC kestrel_core PRIVATE httplib::httplib yaml-cpp::yaml-cpp ixwebsocket)
   add_executable(kestreld tools/kestreld.cpp)

@@ -67,6 +67,7 @@ class Window : public QMainWindow {
     ReviewPage* review_ = nullptr;
     SpotPage* spot_ = nullptr;
     TrainerPage* trainer_ = nullptr;
+    OpponentsPage* opponents_ = nullptr;
     QLabel *status_ = nullptr, *dot_ = nullptr;
     QPushButton* serverBtn_ = nullptr;
     QListWidget* tableList_ = nullptr;

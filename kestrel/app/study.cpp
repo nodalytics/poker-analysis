@@ -19,7 +19,10 @@
 #include <QSpinBox>
 #include <QSplitter>
 #include <QStackedWidget>
+#include <QHeaderView>
+#include <QTableWidget>
 #include <QTextBrowser>
+#include <QUrl>
 #include <QVBoxLayout>
 #include <algorithm>
 #include <cmath>
@@ -596,6 +599,93 @@ void TrainerPage::answer(int k) {
                         .arg(agreed_)
                         .arg(int(100.0 * agreed_ / asked_ + 0.5))
                         .arg(int(100 * probSum_ / asked_ + 0.5)));
+}
+
+// ---- Opponents ----
+
+OpponentsPage::OpponentsPage(Client& c, QWidget* parent) : QWidget(parent), client_(c) {
+    setObjectName("page");
+    platform_ = new QComboBox;
+    platform_->setMinimumWidth(180);
+    connect(platform_, &QComboBox::currentTextChanged, this, [this] { showPlatform(); });
+    table_ = new QTableWidget(0, 8);
+    table_->setHorizontalHeaderLabels({"Player", "Hands", "VPIP %", "Pre-flop raise %", "3-bet %", "Fold to c-bet %", "Aggression", "Showdown %"});
+    table_->verticalHeader()->hide();
+    table_->setSelectionBehavior(QAbstractItemView::SelectRows);
+    table_->setSortingEnabled(true);
+    table_->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    shown_ = new QTextBrowser;
+    connect(table_, &QTableWidget::currentCellChanged, this, [this](int row) {
+        if (row < 0 || !table_->item(row, 0)) return;
+        const QString name = table_->item(row, 0)->text();
+        QString h = "<p><b>" + esc(name) + "</b>: the last hands shown</p>";
+        for (const auto& v : players_.value(name).toObject().value("shown").toArray()) {
+            QStringList c, b;
+            for (const auto& x : v.toObject().value("cards").toArray()) c << x.toString();
+            for (const auto& x : v.toObject().value("board").toArray()) b << x.toString();
+            h += "<div style='font-family:monospace'>" + esc(c.join(' ')) + " &nbsp;|&nbsp; " + esc(b.join(' ')) + "</div>";
+        }
+        shown_->setHtml(h);
+    });
+    auto reloadBtn = new QPushButton("Reload");
+    connect(reloadBtn, &QPushButton::clicked, this, &OpponentsPage::reload);
+    auto top = new QHBoxLayout;
+    top->addWidget(new QLabel("Platform"));
+    top->addWidget(platform_);
+    top->addWidget(plain("Every opponent Kestrel has met, kept across sessions. Statistics only: Kestrel does not yet change its play on them."), 1);
+    top->addWidget(reloadBtn);
+    auto split = new QSplitter(Qt::Vertical);
+    split->addWidget(card(table_, "Opponents"));
+    split->addWidget(card(shown_, "Hands shown"));
+    split->setSizes({500, 200});
+    auto l = new QVBoxLayout(this);
+    l->setContentsMargins(20, 18, 20, 18);
+    l->addLayout(top);
+    l->addWidget(split, 1);
+}
+
+void OpponentsPage::reload() {
+    client_.get("/v1/opponents", [this](const QJsonDocument& d, int, const QString& err) {
+        if (!err.isEmpty()) return;
+        const QString keep = platform_->currentText();
+        platform_->blockSignals(true);
+        platform_->clear();
+        for (const auto& v : d.object().value("platforms").toArray()) platform_->addItem(v.toObject().value("platform").toString());
+        if (!keep.isEmpty()) platform_->setCurrentText(keep);
+        platform_->blockSignals(false);
+        showPlatform();
+    });
+}
+
+void OpponentsPage::showPlatform() {
+    const QString plat = platform_->currentText();
+    if (plat.isEmpty()) return;
+    client_.get("/v1/opponents?platform=" + QUrl::toPercentEncoding(plat), [this](const QJsonDocument& d, int, const QString& err) {
+        if (!err.isEmpty()) return;
+        players_ = d.object().value("players").toObject();
+        table_->setSortingEnabled(false);
+        table_->setRowCount(0);
+        auto num = [](double x) {
+            auto i = new QTableWidgetItem;
+            i->setData(Qt::DisplayRole, x < 0 ? QVariant("–") : QVariant(x));  // -1: no chance yet
+            i->setFlags(i->flags() & ~Qt::ItemIsEditable);
+            return i;
+        };
+        for (auto it = players_.begin(); it != players_.end(); ++it) {
+            const QJsonObject s = it.value().toObject();
+            const int r = table_->rowCount();
+            table_->insertRow(r);
+            auto name = new QTableWidgetItem(it.key());
+            name->setFlags(name->flags() & ~Qt::ItemIsEditable);
+            table_->setItem(r, 0, name);
+            table_->setItem(r, 1, num(s.value("hands").toDouble()));
+            int c = 2;
+            for (const char* k : {"vpip", "pfr", "threebet", "fold_to_cbet", "aggression", "went_to_showdown"})
+                table_->setItem(r, c++, num(s.value(k).toDouble()));
+        }
+        table_->setSortingEnabled(true);
+        table_->sortItems(1, Qt::DescendingOrder);
+    });
 }
 
 }  // namespace kestrel_app

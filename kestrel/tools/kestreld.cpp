@@ -330,6 +330,8 @@ int main(int argc, char** argv) {
             else return usage();
         }
         if (plan.out_dir.empty()) return usage();
+        OpponentBook opponents(plan.out_dir + "/opponents.json");  // the opponents' statistics for this output folder
+        plan.opponents = &opponents;
         std::signal(SIGINT, on_signal);
         std::signal(SIGTERM, on_signal);
         int n = 0;
@@ -349,6 +351,7 @@ int main(int argc, char** argv) {
                     std::printf("tournament %zu: place %s\n", e["tournaments"].get<size_t>(), e["place"].dump().c_str()),
                         std::fflush(stdout);
             });
+            opponents.flush();
             std::printf("%s\n", s.to_json().dump().c_str());
             return 0;
         }
@@ -361,6 +364,7 @@ int main(int argc, char** argv) {
         if (plan.solver == "kestrel-river") engine.set_resolve(iters);
         if (plan.solver == "texassolver") engine.set_texassolver(ts);
         auto s = run_session(spec, plan, engine, progress, &g_stop);
+        opponents.flush();
         std::printf("%s\n", s.to_json().dump().c_str());
         return 0;
     } catch (const std::exception& e) {

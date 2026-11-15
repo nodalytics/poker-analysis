@@ -71,7 +71,7 @@ QString bbText(double x) {
 
 struct Seat {
     int seat = 0;
-    QString name, pos, said, result;
+    QString name, pos, said, result, hud;
     double stack = -1, icm = -1, in = 0, bounty = 0;
     QStringList hole;
     bool folded = false, you = false, acting = false, showHole = false, win = false;
@@ -144,6 +144,7 @@ void TableView::paintEvent(QPaintEvent*) {
             x.icm = s.contains("icm") && !s.value("icm").isNull() ? s.value("icm").toDouble() : -1;
             x.in = s.value("in_bb").toDouble();
             x.bounty = s.value("bounty").toDouble();
+            x.hud = s.value("hud").toString();
             x.folded = s.value("folded").toBool();
             x.you = s.value("you").toBool();
             x.acting = x.seat == actor;
@@ -183,7 +184,7 @@ void TableView::paintEvent(QPaintEvent*) {
         double a = M_PI / 2 + k * 2 * M_PI / std::max(n, 1);
         if (n == 2) a = s.you ? M_PI / 2 : -M_PI / 2;  // heads-up: us at the bottom
         QPointF c(R.left() + R.width() * (0.5 + 0.41 * std::cos(a)), R.top() + R.height() * (0.52 + 0.38 * std::sin(a)));
-        const double w = 150 * u + 30, h = (compact_ ? 70 : 104) * u + 26;
+        const double w = 150 * u + 30, h = (compact_ ? 70 : s.hud.isEmpty() ? 104 : 116) * u + 26;
         QRectF box(c.x() - w / 2, c.y() - h / 2, w, h);
         // inside the frame, below the label
         const double top = R.top() + 22 * u + 8;
@@ -211,9 +212,14 @@ void TableView::paintEvent(QPaintEvent*) {
         if (s.icm >= 0 && !compact_) meta += " · ICM " + QString::number(100 * s.icm, 'f', 1) + "%";
         if (s.bounty > 0) meta += " · bounty " + QString::number(100 * s.bounty, 'f', 1) + "%";
         p.drawText(line.adjusted(0, 17 * u + 4, 0, 0), Qt::AlignHCenter | Qt::AlignTop, meta);
+        if (!s.hud.isEmpty() && !compact_) {  // VPIP / pre-flop raise / 3-bet, % · hands seen
+            p.setPen(QColor(pal.accent2));
+            p.drawText(line.adjusted(0, 31 * u + 6, 0, 0), Qt::AlignHCenter | Qt::AlignTop, s.hud);
+            p.setPen(QColor(pal.muted));
+        }
         if (!compact_) {
             const double ch = 38 * u + 8, cw = ch * 0.7;
-            QRectF c1(box.center().x() - cw - 2, box.top() + 40 * u + 12, cw, ch), c2 = c1.translated(cw + 4, 0);
+            QRectF c1(box.center().x() - cw - 2, box.top() + (s.hud.isEmpty() ? 40 : 52) * u + 12, cw, ch), c2 = c1.translated(cw + 4, 0);
             if (!s.hole.isEmpty()) {
                 drawCard(p, c1, s.hole.value(0), dark_), drawCard(p, c2, s.hole.value(1), dark_);
             } else if (!s.folded) {

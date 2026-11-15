@@ -42,6 +42,11 @@ fields:                        # where each part of the table state is (JSON poi
   prize: /prize
   chips: /chips
   error: /error
+  # the previous hand's whole history (for the opponents' statistics; what Kestrel sees stops at its own last move)
+  last_hand: /last_hand/id
+  last_actions: {at: /last_hand/actions, items: {player: /player, street: /street, kind: /type}}
+  last_shown: {at: /last_hand/shown, items: {id: /id, cards: /cards}}
+  last_board: /last_hand/board
 
 answer:                        # how a move is sent: ${action} and ${amount}
   actions: {fold: fold, check: check, call: call, raise: raise, allin: allin}

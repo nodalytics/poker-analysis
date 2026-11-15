@@ -33,6 +33,7 @@
 #include "kestrel/luck.hpp"
 #include "kestrel/net.hpp"
 #include "kestrel/icm.hpp"
+#include "kestrel/opponents.hpp"
 #include "kestrel/ninemax_spot.hpp"
 #include "kestrel/practice.hpp"
 #include "kestrel/models.hpp"
@@ -303,6 +304,14 @@ int serve(const ServeOptions& o) {
         reply(res, {{"ok", true}, {"version", VERSION}, {"tables", hub.tables.size()}, {"playing", running}});
     });
 
+    // the opponents' statistics, by platform and username, kept in the sessions folder across sessions
+    static OpponentBook opponents(o.out + "/opponents.json");
+    srv.Get("/v1/opponents", [&](const httplib::Request& req, httplib::Response& res) {
+        if (req.has_param("platform")) return reply(res, {{"platform", req.get_param_value("platform")},
+                                                          {"players", opponents.platform(req.get_param_value("platform"))}});
+        reply(res, {{"platforms", opponents.platforms()}});
+    });
+
     // the desktop app restarts the server after changing settings; only from this computer
     srv.Post("/v1/admin/shutdown", [&](const httplib::Request& req, httplib::Response& res) {
         if (req.remote_addr != "127.0.0.1" && req.remote_addr != "::1")
@@ -384,6 +393,7 @@ int serve(const ServeOptions& o) {
             plan.model = t->model, plan.solver = t->solver;
             plan.hands = t->hands;
             plan.tournaments = tournaments;
+            plan.opponents = &opponents;
             plan.out_dir = o.out + "/" + std::to_string(t->id) + "-" + t->spec.name;
             plan.seed = uint64_t(t->id) * 7919;
             auto set_status = [&](const std::string& s) {
@@ -769,6 +779,7 @@ int serve(const ServeOptions& o) {
     std::fflush(out);
     if (o.open_browser) open_url(url);
     bool ok = srv.listen_after_bind();
+    opponents.flush();
     hub.quit = true;
     hub.cv.notify_all();
     std::vector<std::shared_ptr<TableRun>> ts;

@@ -48,7 +48,9 @@ events:
     your_turn: {turn: true}
     action_ack: {accept: true}
     action_rejected: {reject: true}   # our move refused: Kestrel checks, then folds
-    hand_result: {merge: {/stacks: /final_stacks}}
+    hand_result:               # also the hand's whole history, for the opponents' statistics
+      merge: {/stacks: /final_stacks}
+      set: {/last_hand/id: /hand_id, /last_hand/actions: /actions, /last_hand/shown: /shown_cards}
     busted: {send: join}
     table_closed: {send: join}
 
@@ -63,6 +65,9 @@ fields:                        # read from the table document
   board: /board
   actions: {at: /actions, items: {player: /player, street: /street, kind: /kind, add: /add, left: /left}}
   error: /code                 # error and action_rejected carry a code
+  last_hand: /last_hand/id
+  last_actions: {at: /last_hand/actions, items: {player: /seat, street: {at: /street, map: {preflop: 0, flop: 1, turn: 2, river: 3}}, kind: {at: /action, map: {all_in: allin}}}}
+  last_shown: {at: /last_hand/shown, entries: {id: "$key", cards: "$value"}}
 
 answer:
   actions: {fold: fold, check: check, call: call, raise: raise, allin: all_in}

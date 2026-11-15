@@ -6,6 +6,7 @@
 #include "kestrel/connector.hpp"
 #include "kestrel/headsup.hpp"
 #include "kestrel/net.hpp"
+#include "kestrel/opponents.hpp"
 
 namespace kestrel {
 
@@ -16,6 +17,7 @@ struct SessionPlan {
     uint64_t seed = 1;
     std::string model = "hu-blueprint", solver = "none";
     int tournaments = 1;  // structured connectors: tournaments to play (the hands cap still applies)
+    OpponentBook* opponents = nullptr;  // where the opponents' statistics are kept (none: not tracked)
 };
 
 struct SessionSummary {
