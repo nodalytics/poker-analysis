@@ -52,15 +52,21 @@ int usage() {
 }
 }
 
+// an environment variable that is unset or empty (the XDG spec treats both alike)
+const char* env(const char* name) {
+    const char* v = std::getenv(name);
+    return v && *v ? v : nullptr;
+}
+
 std::string config_dir() {
-    const char* x = std::getenv("XDG_CONFIG_HOME");
+    const char* x = env("XDG_CONFIG_HOME");
     const char* h = std::getenv("HOME");
     if (!h) h = std::getenv("USERPROFILE");
     return x ? std::string(x) + "/kestrel" : std::string(h ? h : ".") + "/.config/kestrel";
 }
 
 std::string default_dir() {
-    const char* x = std::getenv("XDG_CONFIG_HOME");
+    const char* x = env("XDG_CONFIG_HOME");
     const char* h = std::getenv("HOME");
     if (!h) h = std::getenv("USERPROFILE");
     return x ? std::string(x) + "/kestrel/connectors" : std::string(h ? h : ".") + "/.config/kestrel/connectors";
@@ -157,7 +163,7 @@ ServeOptions defaults(const char* argv0) {
     namespace fs = std::filesystem;
     fs::path share = exe_dir(argv0).parent_path() / "share" / "kestrel";
     std::string home = std::getenv("HOME") ? std::getenv("HOME") : (std::getenv("USERPROFILE") ? std::getenv("USERPROFILE") : ".");
-    fs::path data = std::getenv("XDG_DATA_HOME") ? fs::path(std::getenv("XDG_DATA_HOME")) / "kestrel"
+    fs::path data = env("XDG_DATA_HOME") ? fs::path(env("XDG_DATA_HOME")) / "kestrel"
                                                   : fs::path(home) / ".local" / "share" / "kestrel";
     ServeOptions o;
     o.web = (share / "web").string(), o.assets = (share / "assets").string();
@@ -171,6 +177,7 @@ ServeOptions defaults(const char* argv0) {
     if (const char* b = std::getenv("TEXASSOLVER_BIN")) o.ts_bin = b;
     if (const char* r = std::getenv("TEXASSOLVER_RESOURCES")) o.ts_resources = r;
     o.token_file = config_dir() + "/token";
+    o.lan = true;  // the app listens on the network (0.0.0.0); other devices need the access link, {"lan": false} turns it off
     {  // settings.json, written by the desktop app's Settings page (or by hand): every key is optional
         std::ifstream sf(config_dir() + "/settings.json");
         auto st = nlohmann::json::parse(sf, nullptr, false);
@@ -181,7 +188,7 @@ ServeOptions defaults(const char* argv0) {
             auto num = [&](const char* k, int& v) {
                 if (st.contains(k) && st[k].is_number_integer()) v = st[k].get<int>();
             };
-            o.lan = st.value("lan", false);
+            o.lan = st.value("lan", true);
             num("port", o.port), num("ws_port", o.ws_port), num("tcp_port", o.tcp_port);
             num("resolve_iters", o.resolve_iters), num("texassolver_threads", o.ts_threads);
             str("default_model", o.nine_max_default);

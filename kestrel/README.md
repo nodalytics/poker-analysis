@@ -13,7 +13,7 @@ Double-click `kestreld` (`kestreld.exe` on Windows) in the release's `bin/` fold
 
 It finds its web app, logo and connectors next to itself, and your own connectors and models in `~/.config/kestrel/connectors` and `~/.local/share/kestrel/models`. The heads-up data pack goes in `~/.local/share/kestrel/pack`, or set `KESTREL_PACK`.
 
-**From other devices on your network:** put `{"lan": true}` in `~/.config/kestrel/settings.json` and start Kestrel again. The "On your network" button shows the links to open on a phone or another PC. Each link carries an access token, and devices without it are refused.
+**From other devices on your network:** Kestrel listens on all interfaces (0.0.0.0) when started by a double-click, `kestreld start` or the desktop app. The "On your network" button shows the links to open on a phone or another PC. Each link carries an access token, and devices without it are refused. The WebSocket and TCP interfaces stay on this computer. For this computer only, put `{"lan": false}` in `~/.config/kestrel/settings.json` (or untick it in the desktop app's Settings); `kestreld serve` listens on the network only with `--lan on`.
 
 ## Talk to it
 
