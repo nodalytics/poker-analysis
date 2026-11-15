@@ -77,6 +77,13 @@ bool ask(QWidget* w, const QString& t) {
     return box(w, QMessageBox::Question, t, QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes;
 }
 
+QStringList names(const QJsonArray& a, std::function<bool(const QJsonObject&)> keep) {
+    QStringList out;
+    for (const auto& v : a)
+        if (keep(v.toObject())) out << v.toObject().value("name").toString();
+    return out;
+}
+
 const char* kStreetNames[] = {"Pre-flop", "Flop", "Turn", "River"};
 
 QString sign(double x) { return (x >= 0 ? "+" : "") + QString::number(x, 'f', 1); }
@@ -107,6 +114,10 @@ Window::Window(QWidget* parent) : QMainWindow(parent) {
     auto tabs = tabs_ = new QTabWidget;
     tabs->setDocumentMode(true);
     tabs->addTab(tablesPage(), "Tables");
+    auto isDark = [this] { return dark_; };
+    tabs->addTab(review_ = new ReviewPage(client_, isDark), "Review");
+    tabs->addTab(spot_ = new SpotPage(client_, isDark), "Spot study");
+    tabs->addTab(trainer_ = new TrainerPage(client_, isDark), "Trainer");
     tabs->addTab(modelsPage(), "Models");
     tabs->addTab(connectorsPage(), "Connectors");
     tabs->addTab(settingsPage(), "Settings");
@@ -496,12 +507,6 @@ void Window::showTable() {
     tableView_->setHtml(h);
 }
 
-QStringList names(const QJsonArray& a, std::function<bool(const QJsonObject&)> keep) {
-    QStringList out;
-    for (const auto& v : a)
-        if (keep(v.toObject())) out << v.toObject().value("name").toString();
-    return out;
-}
 
 void Window::newTable() {
     QDialog d(this);
@@ -648,6 +653,9 @@ void Window::refreshModels() {
         solverTable_->resizeColumnsToContents();
         solverTable_->horizontalHeader()->setSectionResizeMode(solverTable_->columnCount() - 1, QHeaderView::Stretch);
         loadSettings();  // the default-model choices
+        const QStringList nine = names(engines_models_, [](const QJsonObject& m) { return m.value("players").toInt() == 9; });
+        spot_->setModels(nine);
+        trainer_->setModels(nine);
     });
 }
 

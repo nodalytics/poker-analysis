@@ -77,7 +77,7 @@ jobs:
       - name: package
         run: |
           pkg="kestrel-${{ steps.v.outputs.version }}-${{ matrix.name }}"
-          cmake --install build --prefix "dist/$pkg"
+          cmake --install build --prefix "$PWD/dist/$pkg"  # absolute: Qt's deployer refuses a relative prefix
           cd dist
           if [ "$RUNNER_OS" = Windows ]; then zip -qr "$pkg.zip" "$pkg"; else tar -czf "$pkg.tar.gz" "$pkg"; fi
           ls -la

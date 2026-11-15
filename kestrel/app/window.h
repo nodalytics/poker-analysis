@@ -7,6 +7,7 @@
 #include <QMap>
 
 #include "client.h"
+#include "study.h"
 #include "tableview.h"
 
 class QCheckBox;
@@ -63,6 +64,9 @@ class Window : public QMainWindow {
     QMap<int, QJsonObject> state_;   // id -> its latest event
 
     QTabWidget* tabs_ = nullptr;
+    ReviewPage* review_ = nullptr;
+    SpotPage* spot_ = nullptr;
+    TrainerPage* trainer_ = nullptr;
     QLabel *status_ = nullptr, *dot_ = nullptr;
     QPushButton* serverBtn_ = nullptr;
     QListWidget* tableList_ = nullptr;
