@@ -67,6 +67,41 @@ def icm_np(stacks, payouts):
     return eq
 
 
+def icm_mw_np(stacks, payouts):
+    """Malmuth-Weitzman: places are given from the bottom; among the players left, the next to bust is drawn with
+    probability proportional to 1 / stack (a short stack busts first; a stack of 0 has already busted). The same
+    shapes as icm_np."""
+    s = np.asarray(stacks, dtype=float).clip(min=0)
+    N, P = s.shape
+    pay = np.zeros(P)
+    pay[: min(P, len(payouts))] = payouts[:P]
+    # a busted player (stack ~0) takes the lowest place left: 1/stack capped at a billionth of the table's chips, so
+    # it dominates without overflowing
+    inv = 1.0 / np.maximum(s, 1e-9 * s.sum(1, keepdims=True))
+    M = 1 << P
+    bits = ((np.arange(M)[:, None] >> np.arange(P)[None, :]) & 1).astype(bool)  # who has busted
+    pop = bits.sum(1)
+    isum = inv @ bits.T.astype(float)
+    total = inv.sum(1, keepdims=True)
+    prob = np.zeros((N, M))
+    prob[:, 0] = 1.0
+    eq = np.zeros((N, P))
+    one = 1 << np.arange(P)
+    for k in range(P):  # the next bust takes place P - k
+        ms = np.nonzero(pop == k)[0]
+        rem = np.maximum(total - isum[:, ms], 1e-300)
+        p = inv[:, None, :] * (~bits[ms])[None] / rem[:, :, None]
+        w = prob[:, ms, None] * p
+        eq += w.sum(1) * pay[P - 1 - k]
+        if k + 1 < P:
+            nxt = (ms[:, None] | one[None, :]).reshape(-1)
+            np.add.at(prob, (slice(None), nxt), w.reshape(N, -1))
+    return eq
+
+
+EQUITY = {"mh": icm_np, "mw": icm_mw_np}  # Malmuth-Harville (the default) and Malmuth-Weitzman
+
+
 def _icm_brute(stacks, payouts):
     P = len(stacks)
     pay = list(payouts) + [0.0] * (P - len(payouts))
@@ -78,6 +113,21 @@ def _icm_brute(stacks, payouts):
             left -= stacks[j]
         for place, j in enumerate(order):
             eq[j] += pr * pay[place]
+    return eq
+
+
+def _mw_brute(stacks, payouts):
+    """Malmuth-Weitzman by enumeration: orders of busting, each bust drawn with probability 1/stack among those left."""
+    P = len(stacks)
+    pay = list(payouts) + [0.0] * (P - len(payouts))
+    eq = [0.0] * P
+    for order in itertools.permutations(range(P)):  # order[0] busts first (place P)
+        pr, left = 1.0, list(range(P))
+        for j in order:
+            pr *= (1 / stacks[j]) / sum(1 / stacks[i] for i in left)
+            left.remove(j)
+        for k, j in enumerate(order):
+            eq[j] += pr * pay[P - 1 - k]
     return eq
 
 
@@ -94,7 +144,7 @@ def names_for(n):
     return [f"pos{i}" for i in range(n - 3)] + ["button", "small blind", "big blind"]
 
 
-def solve(stacks, payouts, ante=0.0, iters=2000, matrix=None, bb_ante=0.0):
+def solve(stacks, payouts, ante=0.0, iters=2000, matrix=None, bb_ante=0.0, model="mh"):
     """Push/fold equilibrium. stacks: big blinds in action order (last two are the blinds). ante: every player's
     ante; bb_ante: the big-blind ante (the big blind alone posts it, as in the engine's RULES["ante"]). Antes are dead
     money: they are in the pot but no part of a player's all-in that the caller has to match. Returns the chart."""
@@ -136,7 +186,7 @@ def solve(stacks, payouts, ante=0.0, iters=2000, matrix=None, bb_ante=0.0):
                 v[q] = live[q] - e
                 v[winner] += pot
                 add(("allin", p, q, winner), v)
-    U = icm_np(np.array(rows), payouts)  # [results, players]
+    U = EQUITY[model](np.array(rows), payouts)  # [results, players]
     u = lambda *key: U[index[key]]  # noqa: E731
 
     push = np.ones((n - 1, k))
@@ -239,6 +289,15 @@ def selftest():
             ref = _icm_brute(list(st[g]), pay)
             assert max(abs(a - b) for a, b in zip(got[g], ref)) < 1e-9
     print("ICM matches brute force (3, 5, 7 players)")
+    for P in (3, 5, 7):
+        st = rng.random((3, P)) * 100 + 1
+        pay = sorted(rng.random(P), reverse=True)[: P - 1]
+        got = icm_mw_np(st, pay)
+        for g in range(3):
+            ref = _mw_brute(list(st[g]), pay)
+            assert max(abs(a - b) for a, b in zip(got[g], ref)) < 1e-9
+        assert np.allclose(got.sum(1), sum(pay))  # every prize is paid out
+    print("Malmuth-Weitzman matches brute force (3, 5, 7 players)")
     m = load_matrix()
     import poker_math
 
@@ -262,26 +321,28 @@ def main():
     ap.add_argument("--bb-ante", type=float, default=0.0, help="big-blind ante (bb), for every scenario with --charts")
     ap.add_argument("--iters", type=int, default=2000)
     ap.add_argument("--charts")
+    ap.add_argument("--model", choices=("mh", "mw"), default="mh", help="ICM: Malmuth-Harville or Malmuth-Weitzman")
     a = ap.parse_args()
     if a.selftest:
         selftest()
         return
     if a.stacks:
         c = solve([float(x) for x in a.stacks.split(",")], [float(x) for x in a.payouts.split(",")], a.ante, a.iters,
-                  bb_ante=a.bb_ante)  # fmt: skip
+                  bb_ante=a.bb_ante, model=a.model)  # fmt: skip
         print(json.dumps({k: v for k, v in c.items() if k != "call"}, indent=1))
         return
     if a.charts:
         m = load_matrix()
         out = []
         for name, st, pay, ante in SCENARIOS:
-            c = solve(st, pay, 0.0 if a.bb_ante else ante, a.iters, matrix=m, bb_ante=a.bb_ante)
+            c = solve(st, pay, 0.0 if a.bb_ante else ante, a.iters, matrix=m, bb_ante=a.bb_ante, model=a.model)
             c["name"] = name + (f", big-blind ante {a.bb_ante:g}bb" if a.bb_ante else "")
             out.append(c)
             sh = " ".join(f"{v['share']:.0%}" for v in c["shove"].values())
             bb = c["call"][f"big blind vs {names_for(len(st))[-2]}"]["share"]
             print(f"{name:45s} shove by position: {sh} | BB calls SB {bb:.0%} | max gain {c['max_gain_bb']} bb")
-        json.dump({"method": "push/fold under ICM, at most one caller, fictitious play", "charts": out},
+        method = "Malmuth-Weitzman" if a.model == "mw" else "Malmuth-Harville"
+        json.dump({"method": f"push/fold under ICM ({method}), at most one caller, fictitious play", "charts": out},
                   open(a.charts, "w"), indent=1)  # fmt: skip
 
 

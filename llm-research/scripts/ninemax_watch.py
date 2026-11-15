@@ -228,6 +228,7 @@ class Lab:
             cfg.get("ante", 0.0),
             cfg.get("short", 0.0),
             cfg.get("seats"),
+            cfg.get("bounty", 0.0),
         )
         menu = self.menus.setdefault(cfg.get("menu", "medium"), Menu(cfg.get("menu", "medium"), "cpu"))
         net = NineNet(cfg["nfeat"], cfg["actions"], cfg.get("buckets", self.B))
