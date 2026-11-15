@@ -63,3 +63,24 @@ PRO 6000).
 **Next:** a paired comparison (the same deals scored hand by hand) over more deals, and an exploiter test against the
 robust searcher, since robustness is what it is for. Into Kestrel only if it beats the plain network in duplicate
 matches; at 80 ms a decision it fits a platform's time limit easily.
+
+## Local best response for 9-max (2026-11-15)
+
+`scripts/ninemax_lbr.py`: one seat is LBR (Lisý & Bowling 2017), the other eight the network. LBR plays the network
+except after the flop in a pot it contests alone against one network opponent, where it keeps the opponent's range
+over all 1,326 holdings (each weighted by the network's own probability of every action it took with that holding)
+and plays the action with the best value assuming a check-down, over 48 sampled run-outs. Scored against the network
+in the same seats on the same deals (paired), 20,000 deals each:
+
+| | LBR's gain, bb/100 (ICM equity) | LBR decisions | 30-minute exploiter, for comparison |
+|---|---|---|---|
+| nm25 | +0.26 [−0.43, +0.95] | 6,941 | +0.2 |
+| nm20 | +0.09 [−0.40, +0.58] | 5,550 | +2.2 |
+| nm17 | −0.55 [−1.39, +0.29] | 5,966 | +1.5 |
+
+LBR finds no hole in any of them, and does not rank them as the exploiter does (nm20 most exploitable). The two look in
+different places: LBR only heads-up after the flop, with a check-down assumption; the exploiter the whole game. So the
+leaks the exploiter finds are before the flop or in multiway pots, where most decisions at 10-25bb are. LBR as written
+is not the exploitability test for short-stack tournaments; the exploiter stays the main one. A pre-flop LBR
+(push/fold against the network's ranges, scored in ICM) would test where the leaks are.
+
