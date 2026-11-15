@@ -94,7 +94,7 @@
   <!-- 1 + 2: on by default -->
   <section id="train" class="on">
     <h2>The runs <span class="muted">(what each one tests and where it stands; bb/100)</span></h2>
-    <p class="muted">Target: <b>9-max tournaments (MTT)</b>, with ICM. nm17 is the champion (10–25bb, a big-blind ante, half the final tables short-handed), shipped to Kestrel as mtt9. nm10–nm20 are tournament runs; nm1–nm9 and nm11 are earlier cash runs, kept for reference. Tournament results are in ICM-equity chips, not comparable with cash.</p>
+    <p class="muted">Target: <b>9-max tournaments (MTT)</b>, with ICM. nm25 is the champion (nm20 fine-tuned: 10–25bb, a big-blind ante, half the final tables short-handed), shipped to Kestrel as mtt9 version 2; nm17 was the champion before it. nm10–nm20 are tournament runs; nm1–nm9 and nm11 are earlier cash runs, kept for reference. Tournament results are in ICM-equity chips, not comparable with cash.</p>
     <div class="totals" id="totals"></div>
     <div class="runs-wrap"><table class="runs" id="runsTable"></table></div>
     <h2>How it is learning <span class="muted">(1-vs-8 duplicate results, bb/100; x = hands trained)</span></h2>
@@ -110,6 +110,10 @@
   </section>
   <!-- results: search, poker sense, ICM -->
   <section id="results">
+    <h2>Are the versions improving? <span class="muted">(the version ladder: every version against every other, in today's game; bb/100 in ICM equity above or below the anchor)</span></h2>
+    <p class="muted">Each pair plays a duplicate match both ways (one network in every seat in turn against 8 copies of the other, on the same deals). One rating per version is fitted to all the pairs, with a 95% range. Older versions are judged on today's game (big-blind ante, short-handed final tables), which some of them never trained on.</p>
+    <div class="charts" id="ladderChart"></div>
+    <div class="runs-wrap"><table class="runs" id="ladderTable"></table></div>
     <h2>Search at play time <span class="muted">(the thinking bot vs 8 copies of the same network playing on instinct; bb/100 over the deals, all 9 seats)</span></h2>
     <p class="muted">Before each decision after the flop (pots of up to 3 players), and with "before the flop too" before every preflop decision, the bot imagines thousands of possible opponent hands consistent with how they played, tries every action and plays each out. "Effective" = how many of the imagined hands really count. Tournament networks are scored in ICM prize equity (converted to big blinds), the same unit they train in; cash networks in chips.</p>
     <div class="runs-wrap"><table class="runs" id="searchTable"></table></div>
@@ -261,6 +265,27 @@ async function refreshResults() {
       <td class="num">${s.ess_median ?? "–"}</td><td class="num"><b>${sgn(s.bb100, 1)}</b></td>
       <td class="num">${s.ci95 ? sgn(s.ci95[0], 1) + " to " + sgn(s.ci95[1], 1) : "–"}</td>
       <td class="num">${s.searched_decisions ?? "–"}</td><td class="num">${s.seconds ? Math.round(s.seconds / 60) + " min" : "–"}</td></tr>`).join("");
+    const L = r.ladder;
+    if (L && L.ratings) {
+      const vnum = (n) => parseInt(n.replace(/\D/g, ""), 10) || 0;
+      const rows = Object.entries(L.ratings).sort((a, b) => vnum(a[0]) - vnum(b[0]));
+      const W = 640, H = 240, pad = 36;
+      const ys = rows.flatMap(([, v]) => [v.rating - v.ci95, v.rating + v.ci95]);
+      const lo = Math.min(0, ...ys) - 0.5, hi = Math.max(0, ...ys) + 0.5;
+      const X = (k) => pad + (rows.length > 1 ? k / (rows.length - 1) : 0.5) * (W - 2 * pad), Y = (v) => H - pad - (v - lo) / (hi - lo) * (H - 2 * pad);
+      let g = `<line x1="${pad}" x2="${W - pad}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--line)" stroke-dasharray="4 4"/>`;
+      g += `<polyline fill="none" stroke="var(--accent)" stroke-width="2" points="${rows.map(([, v], k) => X(k) + "," + Y(v.rating)).join(" ")}"/>`;
+      rows.forEach(([n, v], k) => {
+        g += `<line x1="${X(k)}" x2="${X(k)}" y1="${Y(v.rating - v.ci95)}" y2="${Y(v.rating + v.ci95)}" stroke="var(--accent)" opacity=".45" stroke-width="6"/>`;
+        g += `<circle cx="${X(k)}" cy="${Y(v.rating)}" r="4" fill="var(--accent)"/><text x="${X(k)}" y="${H - 12}" text-anchor="middle">${n}</text>`;
+      });
+      g += `<text x="4" y="${Y(0) - 4}">${L.anchor} = 0</text>`;
+      $("ladderChart").innerHTML = `<div class="chart"><h3>Rating by version</h3><p>bb/100 vs ${L.anchor}, 95% range; game: ${L.game}; updated ${L.updated || ""}</p><svg viewBox="0 0 ${W} ${H}" width="100%">${g}</svg></div>`;
+      let prev = null;
+      $("ladderTable").innerHTML = `<tr><th>Version</th><th class="num">Rating, bb/100</th><th class="num">95% range</th><th class="num">vs the previous version</th><th class="num">Hands trained</th></tr>` +
+        rows.map(([n, v]) => { const d = prev === null ? "–" : sgn(v.rating - prev, 1); prev = v.rating;
+          const h = (L.hands_trained || {})[n]; return `<tr><td>${n}</td><td class="num"><b>${sgn(v.rating, 1)}</b></td><td class="num">± ${v.ci95.toFixed(1)}</td><td class="num">${d}</td><td class="num">${h ? (h / 1e9).toFixed(1) + " B" : "–"}</td></tr>`; }).join("");
+    }
     $("senseBox").innerHTML = Object.entries(r.sense).reverse().map(([run, v]) => {
       const ok = v.checks.filter((c) => c.ok).length;
       return `<h3>${run} <span class="muted">(${(v.hands_trained / 1e6).toFixed(0)} M hands): ${ok} of ${v.checks.length} within the reference band</span></h3>

@@ -99,7 +99,11 @@ def results():
     """The evaluation results kept in results/ninemax: search at play time (search*_*.json), the poker-sense
     checks (sense_*.json) and the ICM push/fold agreement (pushfold_check*.json)."""
     res = os.path.join(ROOT, "results", "ninemax")
-    out = {"search": [], "sense": {}, "pushfold": []}
+    out = {"search": [], "sense": {}, "pushfold": [], "ladder": None}
+    try:  # the version ladder (ninemax_ladder.py): every version against every other, one rating each
+        out["ladder"] = json.load(open(os.path.join(res, "ladder.json")))
+    except (OSError, ValueError):
+        pass
     for f in sorted(glob.glob(os.path.join(res, "search*_*.json"))):
         try:
             r = json.load(open(f))
