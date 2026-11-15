@@ -44,6 +44,7 @@ int usage() {
                  "                     [--texassolver BIN --texassolver-resources DIR] [--seed S] [--max-errors E]\n"
                  "                     table connectors (codec structured): --model <9-max model folder> [--tournaments N]\n"
                  "       kestreld                         (no arguments: start the app and open it, as a double-click does)\n"
+                 "       kestreld start                   the same without opening the browser (the desktop app runs it)\n"
                  "       kestreld serve [--port P] [--lan on|off] [--pack DIR] [--models DIR] [--connectors DIR]...\n"
                  "                      [--web DIR] [--assets DIR] [--default-model nm25]\n"
                  "                      [--out DIR] [--resolve-iters N] [--texassolver BIN --texassolver-resources DIR]\n");
@@ -170,12 +171,22 @@ ServeOptions defaults(const char* argv0) {
     if (const char* b = std::getenv("TEXASSOLVER_BIN")) o.ts_bin = b;
     if (const char* r = std::getenv("TEXASSOLVER_RESOURCES")) o.ts_resources = r;
     o.token_file = config_dir() + "/token";
-    {  // settings.json: {"lan": true} to reach the app from other devices on the network
+    {  // settings.json, written by the desktop app's Settings page (or by hand): every key is optional
         std::ifstream sf(config_dir() + "/settings.json");
         auto st = nlohmann::json::parse(sf, nullptr, false);
         if (!st.is_discarded() && st.is_object()) {
-            o.lan = st.value("lan", false), o.port = st.value("port", 8790);
-            o.nine_max_default = st.value("default_model", o.nine_max_default);  // e.g. {"default_model": "nm17"}
+            auto str = [&](const char* k, std::string& v) {
+                if (st.contains(k) && st[k].is_string() && !st[k].get<std::string>().empty()) v = st[k].get<std::string>();
+            };
+            auto num = [&](const char* k, int& v) {
+                if (st.contains(k) && st[k].is_number_integer()) v = st[k].get<int>();
+            };
+            o.lan = st.value("lan", false);
+            num("port", o.port), num("ws_port", o.ws_port), num("tcp_port", o.tcp_port);
+            num("resolve_iters", o.resolve_iters), num("texassolver_threads", o.ts_threads);
+            str("default_model", o.nine_max_default);
+            str("texassolver_bin", o.ts_bin), str("texassolver_resources", o.ts_resources);
+            str("sessions_dir", o.out), str("pack", o.pack);
         }
     }
     return o;
@@ -222,8 +233,20 @@ int mcp_command(int argc, char** argv) {
     return mcp_stdio(o.port, "0.3.0");
 }
 
+// the desktop app's server: as a double-click, without opening the browser
+int start_command(const char* argv0) {
+    ServeOptions o = defaults(argv0);
+    try {
+        return serve(o);
+    } catch (const std::exception& e) {
+        std::fprintf(stderr, "kestreld: %s\n", e.what());
+        return 1;
+    }
+}
+
 int main(int argc, char** argv) {
     if (argc == 1) return launch(argv[0]);
+    if (std::string(argv[1]) == "start") return start_command(argv[0]);
     if (std::string(argv[1]) == "mcp") return mcp_command(argc, argv);
     if (argc >= 2 && std::string(argv[1]) == "luck") return luck_command(argc, argv);
     if (argc >= 2 && std::string(argv[1]) == "models") return models_command(argc, argv);
