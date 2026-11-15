@@ -1,0 +1,23 @@
+{
+ "run": "blueprint/nm25",
+ "hands_trained": 3833413632,
+ "hands": 2000,
+ "samples": 2048,
+ "mode": "greedy",
+ "tau": 1.0,
+ "robust": false,
+ "bias": 5.0,
+ "opp_bias": "net",
+ "max_live": 3,
+ "preflop": true,
+ "tourney": true,
+ "searched_decisions": 18230,
+ "bb100": 0.8,
+ "ci95": [
+  -2.5,
+  4.2
+ ],
+ "seconds": 484,
+ "ess_median": 613.8,
+ "ess_p10": 79.5
+}

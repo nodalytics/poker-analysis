@@ -35,9 +35,31 @@ Later work along the same line: **ReBeL** (2020) and **Student of Games** (2023)
 with search. Our 9-max networks (NeuRD with a "magnet" pull) are closer to that self-play line than to Pluribus.
 Adding Pluribus-style search on top of nm25 is the most promising next step for strength.
 
-## Next: search on top of nm25
+## Search on top of nm25 (2026-11-15)
 
-Pluribus's idea, applied to our network: at a decision, look a street or two ahead, assume each opponent may switch
-between a few continuation strategies (the network's policy, and versions biased towards folding, calling and
-raising), solve that small game, and play its answer instead of the network's raw policy. It only goes into Kestrel
-if it beats the plain network in duplicate matches; `scripts/ninemax_search.py` holds the earlier attempt.
+`scripts/ninemax_search.py` on nm25, before and after the flop, 2,048 samples, greedy, 2,000 deals, the hero in every
+seat against 8 copies of nm25. Version 1 rolls every sample out with the network for everyone. **Robust** (after
+Pluribus) rolls each sample out four times, the opponents continuing with the network or the network biased ×5
+towards folding, calling or raising, and values an action by its worst case. The opponents in the match play the
+network or one of the biased versions (`--opp-bias`). Result, bb/100 in ICM equity (the plain row is nm25 without
+search on the same deals, so the gain is the difference):
+
+| Opponents play | Plain nm25 | Version 1 search | Robust search |
+|---|---|---|---|
+| the network | +1.9 [+0.4, +3.4] | +0.8 [−2.5, +4.2] | +3.2 [+0.8, +5.6] |
+| fold-biased | −1.3 [−2.7, +0.1] | −2.0 [−5.3, +1.2] | −0.8 [−3.3, +1.6] |
+| call-biased | +1.0 [−0.7, +2.6] | +3.5 [+0.2, +6.9] | +3.5 [+1.0, +6.0] |
+| raise-biased | +0.6 [−1.1, +2.3] | **+6.6** [+3.6, +9.7] | +3.8 [+1.4, +6.2] |
+
+About 17,000-18,500 searched decisions per row; version 1 took about 27 ms a decision, robust about 80 ms (shared
+PRO 6000).
+- **Robust is never below plain** (+1.3, +0.5, +2.5, +3.2 over the four kinds of opponent); version 1 is below plain
+  against the network and against fold-biased opponents (−1.1, −0.7) and gains most against raise-biased ones (+6.0).
+- The trade-off Pluribus's design aims at: robust gives up some of version 1's gain against an opponent it could
+  exploit (raise-biased: +3.2 against +6.0) and never loses.
+- The intervals are about ±2.5-3.5 per row and not paired, so most single differences are not significant at 2,000
+  deals; version 1 against raise-biased opponents is the clearest.
+
+**Next:** a paired comparison (the same deals scored hand by hand) over more deals, and an exploiter test against the
+robust searcher, since robustness is what it is for. Into Kestrel only if it beats the plain network in duplicate
+matches; at 80 ms a decision it fits a platform's time limit easily.
