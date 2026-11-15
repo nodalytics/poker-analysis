@@ -45,7 +45,7 @@ int usage() {
                  "                     table connectors (codec structured): --model <9-max model folder> [--tournaments N]\n"
                  "       kestreld                         (no arguments: start the app and open it, as a double-click does)\n"
                  "       kestreld serve [--port P] [--lan on|off] [--pack DIR] [--models DIR] [--connectors DIR]...\n"
-                 "                      [--web DIR] [--assets DIR]\n"
+                 "                      [--web DIR] [--assets DIR] [--default-model nm25]\n"
                  "                      [--out DIR] [--resolve-iters N] [--texassolver BIN --texassolver-resources DIR]\n");
     return 2;
 }
@@ -173,7 +173,10 @@ ServeOptions defaults(const char* argv0) {
     {  // settings.json: {"lan": true} to reach the app from other devices on the network
         std::ifstream sf(config_dir() + "/settings.json");
         auto st = nlohmann::json::parse(sf, nullptr, false);
-        if (!st.is_discarded() && st.is_object()) o.lan = st.value("lan", false), o.port = st.value("port", 8790);
+        if (!st.is_discarded() && st.is_object()) {
+            o.lan = st.value("lan", false), o.port = st.value("port", 8790);
+            o.nine_max_default = st.value("default_model", o.nine_max_default);  // e.g. {"default_model": "nm17"}
+        }
     }
     return o;
 }
@@ -251,6 +254,7 @@ int main(int argc, char** argv) {
             else if (a == "--texassolver-resources") o.ts_resources = v;
             else if (a == "--lan") o.lan = v == "on" || v == "1" || v == "true";
             else if (a == "--ws-port") o.ws_port = std::stoi(v);
+            else if (a == "--default-model") o.nine_max_default = v;
             else if (a == "--tcp-port") o.tcp_port = std::stoi(v);
             else return usage();
         }

@@ -110,8 +110,10 @@ install(FILES connectors/slumbot.yaml DESTINATION ${CMAKE_INSTALL_DATADIR}/kestr
 install(DIRECTORY web/ DESTINATION ${CMAKE_INSTALL_DATADIR}/kestrel/web)
 install(DIRECTORY assets/ DESTINATION ${CMAKE_INSTALL_DATADIR}/kestrel/assets)
 install(DIRECTORY testdata DESTINATION ${CMAKE_INSTALL_DATADIR}/kestrel)
-install(FILES ${KESTREL_DATA}/models/ninemax/nm17/net.bin ${KESTREL_DATA}/models/ninemax/nm17/net.json
-        DESTINATION ${CMAKE_INSTALL_DATADIR}/kestrel/models/ninemax/nm17 OPTIONAL)
+foreach(m nm25 nm17)  # nm25 is the default (ServeOptions::nine_max_default); nm17 the previous champion
+  install(FILES ${KESTREL_DATA}/models/ninemax/${m}/net.bin ${KESTREL_DATA}/models/ninemax/${m}/net.json
+          DESTINATION ${CMAKE_INSTALL_DATADIR}/kestrel/models/ninemax/${m} OPTIONAL)
+endforeach()
 option(KESTREL_SHIP_PACK "include the heads-up data pack (about 80 MB) in the install, so heads-up tables work out of the box" OFF)
 if(KESTREL_SHIP_PACK)
   foreach(f tree.tsv avg.u8 flop_buckets.u8 turn_buckets.u8 river_cuts.f32 meta.txt)

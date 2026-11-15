@@ -316,3 +316,45 @@ whether spending the buckets differently helps.
 3. The poker-sense checks.
 
 The trainer, network and tools take per-street counts from the abstraction's `meta.txt`, and a run's config records its counts as `buckets`. Abstractions with one count work as before.
+
+**Result (2026-11-15): no layout beat the control.** After 6 hours (365-376 M hands each), every measure ties within
+noise:
+
+| Run | Flop / turn / river | vs tag | vs reg | vs station | Head-to-head vs the other three | Sense (of 14) | Post-flop (of 8) |
+|---|---|---|---|---|---|---|---|
+| `nm21` | 200 / 200 / 200 | +29.9 | +23.1 | +19.1 | −0.2, +0.2, +0.0 | 7 | 7 |
+| `nm22` | 100 / 200 / 500 | +28.8 | +26.9 | +20.2 | +0.1, −0.2, −0.2 | 8 | 7 |
+| `nm23` | 1,000 / 500 / 200 | +28.5 | +24.4 | +20.0 | +0.5 [−0.1, +1.1], −0.2, −0.3 | 8 | 8 |
+| `nm24` | 200 / 200 / 200, gamma 2 | +24.1 | +24.4 | +21.8 | −0.3, +0.4, −0.0 | 7 | 6 |
+
+1-vs-8 duplicate bb/100; intervals about ±1.4 against tag, ±2.4 against reg and ±0.6 head-to-head (20,000 deals ×
+9 seatings a pairing). nm24 trails against tag by about 5; nm22 and nm24 open too often from the small blind (83-84%);
+nm23 shoves few of the hands it plays at 8bb. Two of nm24's post-flop warnings come from the check, which reads
+strength as bucket / (B − 1): that is a percentile only for equal-population cuts, and the gamma warp leaves the top
+buckets empty. **Decision: keep 200 / 200 / 200**, the cheapest. nm23 is the only candidate for a longer test.
+
+A measurement bug found on the way: the sense and post-flop scripts ran all runs in one process, and the bucket
+library keeps the first abstraction it loads, so nm22-24 were first scored with nm20's buckets (nm23 read 4/8).
+Both scripts now load each run's own abstraction through its own copy of the library (`run_dealer`), as the
+head-to-head already did; the numbers above are the corrected ones.
+
+### nm25: nm20 fine-tuned, and the new champion (2026-11-15)
+
+nm20 over-bet after the flop: it c-bet 90% and bet 91% of its weakest river hands, and defended small c-bets only
+48%. nm25 is nm20 trained 6 more hours with a tighter NeuRD bound (4, was 6), twice the entropy (0.04) and calling
+stations in the rule pool (they pay off value bets and punish bluffs), half the final tables short-handed
+(`pipeline/recipes/mtt9-nm25.yaml`).
+
+| | nm25 | nm17 | nm20 |
+|---|---|---|---|
+| Exploiter after 30 min (lower is harder to exploit) | **+0.2 [−0.4, +0.7]** | +1.5 [+1.0, +2.0] | +2.2 [+1.5, +2.9] |
+| Head-to-head, 1 vs 8 nm17 | **+1.0 [+0.4, +1.5]** | | |
+| vs tag / reg / station | +31.9 / +27.0 / +128.8 | | |
+| Sense / post-flop checks | 10 of 14 / 8 of 8 | 8 / 8 | 8 / 6 |
+| Push/fold agreement with the ICM chart | 0.89 | | |
+
+The station result says the pool change worked: nm21-24, trained without stations, beat them by about +20. nm25
+passed every gate of the model pipeline (results/models/nm25_gate.json), Kestrel's C++ self-test included, and is
+packaged as `mtt9` version 2. Its remaining sense warnings are shared by every model: trash folds 95-96% under the
+gun (band 97%), hands played at 8bb are rarely all-ins, and the small blind plays 66% first in heads-up at 10bb
+(band 75%).
