@@ -53,7 +53,29 @@ from ninemax_engine import BB, RULES, STACK, Dealer, Menu, Tables, read_buckets,
 #   short    the share of tournament final tables played short-handed, 2-8 players (icm.scenarios; empty seats).
 #   seats    cash tables seat at most this many players (the blinds and the last seats; the early seats stay empty),
 #            so a 9-seat network learns 6-max; with short, that share of tables seats 2 to seats-1 players.
-FEAT = {"stacks": None, "tourney": False, "depths": None, "short": 0.0, "seats": None}
+#   bounty   progressive knockout (PKO) tournaments: this share of the money at stake is in bounties on the players'
+#            heads. Knocking a player out pays half their bounty in cash and adds the other half to your own; the
+#            payouts tensor then carries both, [G, 2P] (split_pay). 0: no bounties.
+FEAT = {"stacks": None, "tourney": False, "depths": None, "short": 0.0, "seats": None, "bounty": 0.0}
+
+
+def split_pay(pay):
+    """The regular prizes [G, P] and the bounties [G, P] (None without bounties) from a payouts tensor."""
+    if pay is None or not FEAT["bounty"] or pay.shape[1] % 2:
+        return pay, None
+    P = pay.shape[1] // 2
+    return pay[:, :P], pay[:, P:]
+
+
+def start_equity(stacks, pay):
+    """Each player's equity at the start of a hand, in prize-money shares: ICM on the regular prizes and, with
+    bounties, the player's own bounty times its chance of winning the tournament (its chip share), since the winner
+    collects its own."""
+    reg, bty = split_pay(pay)
+    eq = icm(stacks.float(), reg).float()
+    if bty is not None:
+        eq = eq + bty * (stacks.float() / stacks.float().sum(1, keepdim=True).clamp(min=1))
+    return eq
 
 
 def features(T, g, i):
@@ -92,7 +114,11 @@ def features(T, g, i):
         opp = torch.where(live & (F.one_hot(i, P) == 0), behind, torch.zeros_like(behind)).max(1).values
         f.append((torch.minimum(left.float(), opp) / STACK).clamp(0, 3)[:, None])
     if FEAT["tourney"]:  # the payout ladder (places 1..P) and every player's ICM equity at the start of the hand
-        f.append(T.pay[g] * P)
+        reg, bty = split_pay(T.pay[g])
+        f.append(reg * P)
+        if bty is not None:  # every seat's bounty, mine first
+            f.append((bty * P).gather(1, i[:, None]))
+            f.append((bty * P).gather(1, rel))
         eq = T.eq0[g] * P
         f.append(eq.gather(1, i[:, None]))
         f.append(eq.gather(1, rel))
@@ -287,7 +313,7 @@ def n_features(P, menu, dev):
     st, pay = context(1, P, dev)
     T = Tables(1, P, menu, dev, stacks=st)
     if pay is not None:
-        T.pay, T.eq0 = pay.float(), icm(T.stack.float(), pay).float()
+        T.pay, T.eq0 = pay.float(), start_equity(T.stack, pay)
     return features(T, torch.zeros(1, dtype=torch.long, device=dev), T.actor[:1])[0].shape[1]
 
 
@@ -295,6 +321,12 @@ def context(G, P, dev):
     """Starting stacks [G, P] and payouts (or None) for G tables in the run's mode (FEAT); None, None = 100bb cash."""
     if FEAT["tourney"]:
         st, pay, _ = scenarios(G, P, dev, avg_bb=FEAT["depths"] or (10, 60), short=FEAT["short"])
+        beta = FEAT["bounty"]
+        if beta:  # bounties: bigger stacks have usually collected more; empty seats have none
+            share = st.float() / st.float().mean(1, keepdim=True).clamp(min=1)
+            b = share.sqrt() * torch.exp(0.4 * torch.randn(G, P, device=dev)) * (st > 0).float()
+            b = beta * b / b.sum(1, keepdim=True).clamp(min=1e-9)
+            pay = torch.cat([pay * (1 - beta), b], 1)
         return st, pay
     st = None
     if FEAT["stacks"]:
@@ -332,7 +364,7 @@ def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None,
     stacks, pay = ctx if ctx is not None else context(G, P, dev)
     T = Tables(G, P, menu, dev, stacks=stacks)
     if pay is not None:
-        T.pay, T.eq0 = pay.float(), icm(T.stack.float(), pay).float()
+        T.pay, T.eq0 = pay.float(), start_equity(T.stack, pay)
     rec = []
     if assign is None:
         uniq = list({id(p): p for p in policies}.values())  # each distinct policy once; seat -> its index
@@ -375,7 +407,16 @@ def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None,
         T.step(g, a)
     u = T.payoffs(rk)
     if pay is not None:  # tournament: the change in prize equity, in chips at the table's average chip value
-        eq1 = icm(end_stacks(T.stack, u), pay).float()
+        reg, bty = split_pay(T.pay)
+        end = end_stacks(T.stack, u)
+        eq1 = icm(end, reg).float()
+        if bty is not None:  # knockouts: the hand's biggest winner collects every bust's bounty, half in cash
+            busted = (T.stack > 0) & (T.stack.double() + u <= 0.5)
+            won = (bty * busted.float()).sum(1)
+            k = F.one_hot(u.argmax(1), T.P).float() * won[:, None] / 2
+            left = torch.where(busted, torch.zeros_like(bty), bty) + k
+            alive = torch.where(busted, torch.zeros_like(end), end).float()
+            eq1 = eq1 + k + left * alive / alive.sum(1, keepdim=True).clamp(min=1)
         u = (eq1 - T.eq0) * T.stack.sum(1, keepdim=True).float()
     return u, rec
 
@@ -396,7 +437,7 @@ def duplicate(dealer, menu, hero, villain, n, dev):
     return m, m - 1.96 * se, m + 1.96 * se
 
 
-def set_mode(stacks="100", tourney=False, depths=None, open_limp=True, ante=0.0, short=0.0, seats=None):
+def set_mode(stacks="100", tourney=False, depths=None, open_limp=True, ante=0.0, short=0.0, seats=None, bounty=0.0):
     """Set FEAT from a run's options (also used by the tools that load a run, from its config.json). depths: the
     tournament tables' average-stack ranges, "LO,HI;LO,HI" (None: icm.scenarios' default, 10-60bb)."""
     RULES["open_limp"] = bool(open_limp)
@@ -406,6 +447,7 @@ def set_mode(stacks="100", tourney=False, depths=None, open_limp=True, ante=0.0,
     FEAT["tourney"] = bool(tourney)
     FEAT["short"] = float(short or 0.0)
     FEAT["seats"] = int(seats) if seats else None
+    FEAT["bounty"] = float(bounty or 0.0)
 
 
 def main():
@@ -458,10 +500,13 @@ def main():
                     help="share of tables played short-handed: tournament final tables 2-8 handed, or cash tables "
                          "2 to --seats - 1 handed")  # fmt: skip
     ap.add_argument("--seats", type=int, default=None, help="cash tables seat at most this many players (6: 6-max)")
+    ap.add_argument("--bounty", type=float, default=0.0,
+                    help="--tourney: this share of the money at stake in knockout bounties (PKO; 0.5 is usual)")  # fmt: skip
     ap.add_argument("--init", help="warm start from a checkpoint.pt or avg_<h>h.pt when out has no checkpoint")
     ap.add_argument("--depths", help='tournament average-stack ranges in bb, "LO,HI;LO,HI" (default 10,60)')
     args = ap.parse_args()
-    set_mode(args.stacks, args.tourney, args.depths, not args.no_open_limp, args.ante, args.short, args.seats)
+    set_mode(args.stacks, args.tourney, args.depths, not args.no_open_limp, args.ante, args.short, args.seats,
+             args.bounty)  # fmt: skip
     dev = "cuda"
     torch.manual_seed(0)
     os.makedirs(args.out, exist_ok=True)
