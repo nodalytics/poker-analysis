@@ -65,6 +65,10 @@ The web app shows every running table live, each on its own screen. Switch scree
 - Kestrel's decision, with its probabilities;
 - the session's results.
 
+## The desktop app
+
+`Kestrel` (built beside `kestreld` when Qt 6 is installed: `qt6-base-dev` on Debian) shows the same tables as the web app, drawn live, with a grid of all of them and your moves at a practice seat. It installs models, checks and adds connectors, and is the admin for Kestrel's settings: ports, LAN access and its token, the default model, TexasSolver and folders, saved to `settings.json` and applied by restarting the server. It starts Kestrel itself when it isn't running. `Kestrel --tab settings` opens on a tab.
+
 ## Build and self-test
 
 ```

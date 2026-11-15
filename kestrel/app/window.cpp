@@ -26,7 +26,10 @@
 #include <QSettings>
 #include <QSpinBox>
 #include <QSplitter>
+#include <QShortcut>
+#include <QStackedWidget>
 #include <QStyleHints>
+#include <QGridLayout>
 #include <QTabWidget>
 #include <QTableWidget>
 #include <QTextBrowser>
@@ -61,6 +64,20 @@ QWidget* page(QLayout* l) {
     l->setContentsMargins(20, 18, 20, 18);
     return w;
 }
+
+// message boxes always show plain text: output from kestreld, connector files or the server is never read as HTML
+int box(QWidget* parent, QMessageBox::Icon icon, const QString& text, QMessageBox::StandardButtons buttons = QMessageBox::Ok) {
+    QMessageBox m(icon, "Kestrel", text, buttons, parent);
+    m.setTextFormat(Qt::PlainText);
+    return m.exec();
+}
+void info(QWidget* w, const QString& t) { box(w, QMessageBox::Information, t); }
+void warn(QWidget* w, const QString& t) { box(w, QMessageBox::Warning, t); }
+bool ask(QWidget* w, const QString& t) {
+    return box(w, QMessageBox::Question, t, QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes;
+}
+
+const char* kStreetNames[] = {"Pre-flop", "Flop", "Turn", "River"};
 
 QString sign(double x) { return (x >= 0 ? "+" : "") + QString::number(x, 'f', 1); }
 
@@ -125,9 +142,13 @@ QWidget* Window::header() {
     status_ = new QLabel;
     status_->setObjectName("muted");
     serverBtn_ = new QPushButton;
+    serverBtn_->setFocusPolicy(Qt::NoFocus);  // never pressed by a stray key
     connect(serverBtn_, &QPushButton::clicked, this, [this] {
-        if (client_.online()) client_.stopServer();
-        else client_.ensureServer();
+        if (!client_.online()) return client_.ensureServer();
+        int playing = 0;
+        for (const auto& t : tables_) playing += t.value("status").toString() == "playing";
+        if (playing && !ask(this, QString("%1 table(s) are playing. Stopping Kestrel stops them. Stop?").arg(playing))) return;
+        client_.stopServer();
     });
     auto web = new QPushButton("Open web app");
     connect(web, &QPushButton::clicked, this, [this] { QDesktopServices::openUrl(QUrl(client_.base() + "/")); });
@@ -178,10 +199,11 @@ void Window::log(const QString& line) {
 
 QWidget* Window::tablesPage() {
     tableList_ = new QListWidget;
-    tableList_->setMinimumWidth(300);
+    tableList_->setMinimumWidth(260);
     connect(tableList_, &QListWidget::currentRowChanged, this, [this] { showTable(); });
     tableView_ = new QTextBrowser;
-    tableView_->setOpenExternalLinks(true);
+    handLog_ = new QTextBrowser;
+    drawn_ = new TableView;
 
     auto newT = new QPushButton("New table");
     newT->setObjectName("primary");
@@ -194,12 +216,18 @@ QWidget* Window::tablesPage() {
         if (!it) return;
         int id = it->data(Qt::UserRole).toInt();
         client_.del(QString("/v1/sessions/%1").arg(id), [this](const QJsonDocument&, int, const QString& err) {
-            if (!err.isEmpty()) QMessageBox::warning(this, "Kestrel", err);
+            if (!err.isEmpty()) warn(this, err);
             refreshTables();
         });
     });
-    auto watch = new QPushButton("Watch in the browser");
-    connect(watch, &QPushButton::clicked, this, [this] { QDesktopServices::openUrl(QUrl(client_.base() + "/")); });
+    auto screenBtn = new QPushButton("Screen"), gridBtn = new QPushButton("Grid");
+    connect(screenBtn, &QPushButton::clicked, this, [this] { showGrid(false); });
+    connect(gridBtn, &QPushButton::clicked, this, [this] { showGrid(true); });
+
+    // your move at a practice table where you play a seat
+    moves_ = new QWidget;
+    advice_ = new QCheckBox("Kestrel's advice");
+    connect(advice_, &QCheckBox::toggled, this, [this] { showTable(); });
 
     auto left = new QWidget;
     auto lv = new QVBoxLayout(left);
@@ -209,22 +237,113 @@ QWidget* Window::tablesPage() {
     buttons->addWidget(newP);
     lv->addLayout(buttons);
     lv->addWidget(card(tableList_, "Tables"), 1);
+
+    // one table: drawn, with this hand's log and Kestrel's decision beside it
+    auto screen = new QWidget;
+    auto sv = new QVBoxLayout(screen);
+    sv->setContentsMargins(0, 0, 0, 0);
+    sv->setSpacing(12);
+    auto felt = card(drawn_);
+    sv->addWidget(felt, 3);
+    sv->addWidget(moves_);
+    auto lower = new QHBoxLayout;
+    lower->addWidget(card(handLog_, "This hand"), 1);
+    lower->addWidget(card(tableView_, "Kestrel's decision"), 1);
+    sv->addLayout(lower, 2);
+
+    // every table at once
+    auto gridHost = new QWidget;
+    grid_ = new QGridLayout(gridHost);
+    grid_->setSpacing(12);
+    auto gridScroll = new QScrollArea;
+    gridScroll->setWidget(gridHost);
+    gridScroll->setWidgetResizable(true);
+    gridScroll->setFrameShape(QFrame::NoFrame);
+
+    views_ = new QStackedWidget;
+    views_->addWidget(screen);
+    views_->addWidget(gridScroll);
+
     auto right = new QWidget;
     auto rv = new QVBoxLayout(right);
     rv->setContentsMargins(0, 0, 0, 0);
     auto rb = new QHBoxLayout;
+    rb->addWidget(screenBtn);
+    rb->addWidget(gridBtn);
     rb->addStretch();
     rb->addWidget(stop);
-    rb->addWidget(watch);
     rv->addLayout(rb);
-    rv->addWidget(card(tableView_, "This table"), 1);
+    rv->addWidget(views_, 1);
+
     auto split = new QSplitter;
     split->addWidget(left);
     split->addWidget(right);
     split->setStretchFactor(1, 1);
+    split->setSizes({280, 1000});
     auto l = new QVBoxLayout;
     l->addWidget(split);
+
+    // the web app's keys: 1-9 a table, g the grid, n a new table, t the theme
+    for (int k = 1; k <= 9; ++k)
+        connect(new QShortcut(QKeySequence(QString::number(k)), this), &QShortcut::activated, this, [this, k] {
+            if (k <= tableList_->count()) tableList_->setCurrentRow(k - 1), showGrid(false);
+        });
+    connect(new QShortcut(QKeySequence("G"), this), &QShortcut::activated, this, [this] { showGrid(views_->currentIndex() == 0); });
+    connect(new QShortcut(QKeySequence("N"), this), &QShortcut::activated, this, &Window::newTable);
+    connect(new QShortcut(QKeySequence("T"), this), &QShortcut::activated, this, [this] {
+        dark_ = !dark_;
+        QSettings().setValue("dark", dark_);
+        applyTheme();
+    });
     return page(l);
+}
+
+void Window::showGrid(bool grid) {
+    views_->setCurrentIndex(grid ? 1 : 0);
+    if (!grid) return showTable();
+    gridViews_.clear();
+    while (auto it = grid_->takeAt(0)) {
+        if (it->widget()) it->widget()->deleteLater();
+        delete it;
+    }
+    int k = 0;
+    const int cols = tables_.size() > 4 ? 3 : 2;
+    for (auto it = tables_.cbegin(); it != tables_.cend(); ++it, ++k) {
+        const int id = it.key();
+        auto tv = new TableView;
+        tv->setCompact(true);
+        tv->setMinimumSize(380, 240);
+        tv->setCursor(Qt::PointingHandCursor);
+        tv->setState(state_.value(id), it.value(), dark_);
+        gridViews_[id] = tv;
+        connect(tv, &TableView::clicked, this, [this, id] { selectTable(id), showGrid(false); });
+        auto title = new QLabel(QString("#%1 · %2 · %3 hands").arg(id).arg(
+            it.value().value("kind").toString() == "practice" ? "practice " + it.value().value("model").toString()
+                                                              : it.value().value("connector").toString())
+                                    .arg(it.value().value("hands").toInt()));
+        auto box = new QWidget;
+        auto bl = new QVBoxLayout(box);
+        bl->setContentsMargins(0, 0, 0, 0);
+        bl->addWidget(title);
+        bl->addWidget(card(tv), 1);
+        grid_->addWidget(box, k / cols, k % cols);
+    }
+}
+
+void Window::selectTable(int id) {
+    for (int r = 0; r < tableList_->count(); ++r)
+        if (tableList_->item(r)->data(Qt::UserRole).toInt() == id) tableList_->setCurrentRow(r);
+}
+
+void Window::act(int slot) {
+    auto it = tableList_->currentItem();
+    if (!it) return;
+    const int id = it->data(Qt::UserRole).toInt();
+    state_[id]["type"] = "practice_waiting";  // the buttons go until the next turn
+    showTable();
+    client_.post(QString("/v1/practice/%1/act").arg(id), {{"slot", slot}}, [this](const QJsonDocument&, int, const QString& err) {
+        if (!err.isEmpty()) warn(this, err);
+    });
 }
 
 void Window::refreshTables() {
@@ -232,7 +351,14 @@ void Window::refreshTables() {
         if (!err.isEmpty()) return;
         for (const auto& v : d.object().value("sessions").toArray()) {
             QJsonObject t = v.toObject();
-            tables_[t.value("id").toInt()] = t;
+            const int id = t.value("id").toInt();
+            tables_[id] = t;
+            if (!state_.contains(id))  // a table that started before this window: its current state, as the web app loads it
+                client_.get(QString("/v1/sessions/%1").arg(id), [this, id](const QJsonDocument& sd, int, const QString& e2) {
+                    if (!e2.isEmpty() || state_.contains(id)) return;
+                    state_[id] = sd.object().value("state").toObject();
+                    if (tableList_->currentItem() && tableList_->currentItem()->data(Qt::UserRole).toInt() == id) showTable();
+                });
         }
         const int keep = tableList_->currentItem() ? tableList_->currentItem()->data(Qt::UserRole).toInt() : -1;
         tableList_->clear();
@@ -262,6 +388,10 @@ void Window::onEvent(const QJsonObject& e) {
     const QString type = e.value("type").toString();
     if (type == "table") return refreshTables();
     state_[id] = e;
+    if (views_->currentIndex() == 1) {
+        if (auto* tv = gridViews_.value(id)) tv->setState(e, tables_.value(id), dark_);
+        else showGrid(true);  // a new table
+    }
     if (type == "hand" || type == "practice_hand" || type == "tournament") {
         QJsonObject& t = tables_[id];
         if (e.contains("hands")) t["hands"] = e.value("hands");
@@ -272,45 +402,80 @@ void Window::onEvent(const QJsonObject& e) {
     if (tableList_->currentItem() && tableList_->currentItem()->data(Qt::UserRole).toInt() == id) showTable();
 }
 
-// the selected table: what it is, and its latest decision with Kestrel's probabilities
+// the selected table: drawn, its hand so far, and its latest decision with Kestrel's probabilities
 void Window::showTable() {
     auto it = tableList_->currentItem();
+    const Palette& p = kestrel_app::palette(dark_);
+    delete moves_->layout();
+    for (auto* w : moves_->findChildren<QWidget*>(Qt::FindDirectChildrenOnly)) if (w != advice_) w->deleteLater();
+    moves_->hide();
     if (!it) {
+        drawn_->setState({}, {}, dark_);
+        handLog_->setHtml("");
         tableView_->setHtml("<p style='color:gray'>No table yet. Start one with <b>New table</b> or a practice tournament.</p>");
         return;
     }
     const int id = it->data(Qt::UserRole).toInt();
     const QJsonObject t = tables_.value(id), e = state_.value(id);
-    const Palette& p = kestrel_app::palette(dark_);
-    QString h = QString("<h2 style='margin:0'>#%1 %2</h2><p style='color:%3'>%4 · model %5 · solver %6 · %7 hands</p>")
+    drawn_->setState(e, t, dark_);
+
+    // the hand so far
+    QString log;
+    for (const auto& v : e.value("log").toArray()) {
+        QJsonObject x = v.toObject();
+        log += QString("<div>%1 · %2 %3 <b>%4</b></div>")
+                   .arg(kStreetNames[std::clamp(x.value("street").toInt(), 0, 3)], esc(x.value("pos").toString()),
+                        esc(x.value("name").toString()), esc(x.value("action").toString()));
+    }
+    if (log.isEmpty() && e.contains("action")) log = "<div style='font-family:monospace'>" + esc(e.value("action").toString()) + "</div>";
+    handLog_->setHtml(log.isEmpty() ? "<p style='color:gray'>–</p>" : log);
+
+    // your move (practice, your seat)
+    if (e.value("type").toString() == "practice_your_turn") {
+        auto ml = new QHBoxLayout(moves_);
+        ml->setContentsMargins(0, 0, 0, 0);
+        auto lbl = new QLabel(QString("Your move · %1 · pot %2 bb").arg(e.value("pos").toString()).arg(e.value("pot_bb").toDouble(), 0, 'f', 1));
+        ml->addWidget(lbl);
+        double best = 0;
+        for (const auto& v : e.value("choices").toArray()) best = std::max(best, v.toObject().value("advice").toDouble());
+        for (const auto& v : e.value("choices").toArray()) {
+            QJsonObject c = v.toObject();
+            QString text = c.value("label").toString();
+            if (advice_->isChecked()) text += QString("  %1%").arg(int(c.value("advice").toDouble() * 100 + 0.5));
+            auto b = new QPushButton(text);
+            if (c.value("slot").toInt() != 0) b->setObjectName("primary");
+            if (advice_->isChecked() && c.value("advice").toDouble() == best) b->setStyleSheet(QString("border: 2px solid %1;").arg(p.accent2));
+            const int slot = c.value("slot").toInt();
+            connect(b, &QPushButton::clicked, this, [this, slot] { act(slot); });
+            ml->addWidget(b);
+        }
+        ml->addStretch();
+        ml->addWidget(advice_);
+        moves_->show();
+    }
+
+    // the session, and the last decision
+    QString h = QString("<p style='margin:0'><b>#%1 %2</b> <span style='color:%3'>· %4 · %5 + %6 · %7 hands</span></p>")
                     .arg(id)
                     .arg(esc(t.value("connector").toString(t.value("kind").toString())), p.muted,
                          esc(t.value("status").toString()), esc(t.value("model").toString()),
                          esc(t.value("solver").toString("none")))
                     .arg(t.value("hands").toInt());
     if (t.contains("bb100") && t.value("kind").toString() != "practice")
-        h += QString("<p><b style='font-size:20px;color:%1'>%2 bb/100</b></p>")
+        h += QString("<p style='margin:4px 0'><b style='font-size:18px;color:%1'>%2 bb/100</b></p>")
                  .arg(t.value("bb100").toDouble() >= 0 ? p.win : p.loss, sign(t.value("bb100").toDouble()));
     const QJsonArray opts = e.value("options").toArray();
-    if (!opts.isEmpty()) {
-        QStringList board;
-        for (const auto& c : e.value("board").toArray()) board << c.toString();
-        QStringList hole;
-        for (const auto& c : e.value("hole").toArray()) hole << c.toString();
-        if (hole.isEmpty())  // practice tables: the cards are with the seat that acts
-            for (const auto& sv : e.value("seats").toArray())
-                if (sv.toObject().value("seat").toInt() == e.value("actor").toInt(-1))
-                    for (const auto& c : sv.toObject().value("hole").toArray()) hole << c.toString();
-        h += QString("<h3 style='color:%1'>LAST DECISION%2</h3>").arg(p.muted, e.value("pos").isString() ? " · " + esc(e.value("pos").toString()) : "");
-        if (!hole.isEmpty() || !board.isEmpty())
-            h += QString("<p style='font-family:monospace;font-size:15px'>%1 &nbsp;|&nbsp; %2</p>").arg(esc(hole.join(' ')), esc(board.join(' ')));
-        h += "<table cellspacing=6 width='100%'>";
+    if (!opts.isEmpty() && !e.value("hidden").toBool()) {
+        h += QString("<p style='color:%1;margin:8px 0 2px'>%2%3</p>")
+                 .arg(p.muted, esc(e.value("name").toString(e.value("pos").toString())),
+                      e.value("pos").isString() && e.contains("name") ? " · " + esc(e.value("pos").toString()) : "");
+        h += "<table cellspacing=5 width='100%'>";
         for (const auto& v : opts) {
             const QJsonObject o = v.toObject();
             const double pr = o.value("prob").toDouble();
             const QString label = o.value("label").toString(o.value("kind").toString(o.value("action").toString()));
-            const bool chosen = o.value("chosen").toBool();
-            h += QString("<tr><td width='30%'>%1</td><td><table cellspacing=0 cellpadding=0 width='100%'><tr>"
+            const bool chosen = o.value("chosen").toBool() || (e.contains("chose") && o.value("action").toString() == e.value("chose").toString());
+            h += QString("<tr><td width='34%'>%1</td><td><table cellspacing=0 cellpadding=0 width='100%'><tr>"
                          "<td width='%2%' style='background:%3;height:8px'></td><td style='background:%4'></td></tr></table></td>"
                          "<td width='12%' align='right' style='font-family:monospace'>%5%</td></tr>")
                      .arg(chosen ? "<b>" + esc(label) + "</b>" : esc(label))
@@ -320,8 +485,8 @@ void Window::showTable() {
         }
         h += "</table>";
         if (e.contains("value_bb")) h += QString("<p style='color:%1'>value %2 bb</p>").arg(p.muted, sign(e.value("value_bb").toDouble()));
-    } else if (e.value("type").toString() == "practice_your_turn") {
-        h += "<p>It is your turn: play your seat in the web app (<b>Watch in the browser</b>).</p>";
+    } else if (e.value("hidden").toBool()) {
+        h += "<p style='color:gray'>You play this table: Kestrel's probabilities stay hidden.</p>";
     }
     tableView_->setHtml(h);
 }
@@ -369,7 +534,7 @@ void Window::newTable() {
     QJsonObject body{{"connector", conn->currentText()}, {"model", model->currentText()}, {"solver", solver->currentText()},
                      {"hands", hands->value()}, {"tournaments", tours->value()}};
     client_.post("/v1/sessions", body, [this](const QJsonDocument&, int, const QString& err) {
-        if (!err.isEmpty()) QMessageBox::warning(this, "Kestrel", err);
+        if (!err.isEmpty()) warn(this, err);
         refreshTables();
     });
 }
@@ -401,7 +566,7 @@ void Window::newPractice() {
     QJsonObject body{{"model", model->currentText()}, {"players", players->value()}, {"avg_bb", avg->value()},
                      {"hands", hands->value()}, {"pace_ms", pace->value()}, {"human", human->isChecked()}};
     client_.post("/v1/practice", body, [this, h = human->isChecked()](const QJsonDocument&, int, const QString& err) {
-        if (!err.isEmpty()) QMessageBox::warning(this, "Kestrel", err);
+        if (!err.isEmpty()) warn(this, err);
         else if (h) QDesktopServices::openUrl(QUrl(client_.base() + "/"));
         refreshTables();
     });
@@ -424,12 +589,11 @@ QWidget* Window::modelsPage() {
         QString f = QFileDialog::getOpenFileName(this, "Model package", QDir::homePath(), "Model packages (*.tar.gz)");
         if (f.isEmpty()) return;
         if (!QFileInfo::exists(f + ".sha256") &&
-            QMessageBox::question(this, "Kestrel", "There is no .sha256 beside the package to check it against. Install anyway?") !=
-                QMessageBox::Yes)
+            !ask(this, "There is no .sha256 beside the package to check it against. Install anyway?"))
             return;
         runKestreld({"models", "install", f}, [this](int code, const QString& out) {
-            if (code == 0) QMessageBox::information(this, "Kestrel", out.trimmed());
-            else QMessageBox::warning(this, "Kestrel", out.trimmed());
+            if (code == 0) info(this, out.trimmed());
+            else warn(this, out.trimmed());
             refreshModels();
         });
     });
@@ -497,15 +661,15 @@ QWidget* Window::connectorsPage() {
         if (f.isEmpty()) return;
         // checked before it is copied: a broken file never reaches the folder
         runKestreld({"check", f}, [this, f](int code, const QString& out) {
-            if (code != 0) return void(QMessageBox::warning(this, "Kestrel", "This connector has a problem:\n\n" + out.trimmed()));
-            if (QMessageBox::question(this, "Kestrel", out.trimmed() + "\n\nAdd it?") != QMessageBox::Yes) return;
+            if (code != 0) return void(warn(this, "This connector has a problem:\n\n" + out.trimmed()));
+            if (!ask(this, out.trimmed() + "\n\nAdd it?")) return;
             QDir().mkpath(connectorsDir());
             QString to = QDir(connectorsDir()).filePath(QFileInfo(f).fileName());
             if (QFileInfo::exists(to) &&
-                QMessageBox::question(this, "Kestrel", QFileInfo(to).fileName() + " is already there. Replace it?") != QMessageBox::Yes)
+                !ask(this, QFileInfo(to).fileName() + " is already there. Replace it?"))
                 return;
             QFile::remove(to);
-            if (!QFile::copy(f, to)) QMessageBox::warning(this, "Kestrel", "Could not copy it to " + to);
+            if (!QFile::copy(f, to)) warn(this, "Could not copy it to " + to);
             refreshConnectors();
         });
     });
@@ -514,8 +678,8 @@ QWidget* Window::connectorsPage() {
         int r = connTable_->currentRow();
         if (r < 0) return;
         runKestreld({"check", connTable_->item(r, 4)->text()}, [this](int code, const QString& out) {
-            if (code == 0) QMessageBox::information(this, "Kestrel", out.trimmed());
-            else QMessageBox::warning(this, "Kestrel", out.trimmed());
+            if (code == 0) info(this, out.trimmed());
+            else warn(this, out.trimmed());
         });
     });
     auto folder = new QPushButton("Open your connectors folder");
@@ -606,8 +770,7 @@ QWidget* Window::settingsPage() {
     auto rotate = new QPushButton("New access token");
     rotate->setToolTip("Every device has to open the new link again");
     connect(rotate, &QPushButton::clicked, this, [this] {
-        if (QMessageBox::question(this, "Kestrel", "Make a new access token? Devices on the network will need the new link.") !=
-            QMessageBox::Yes)
+        if (!ask(this, "Make a new access token? Devices on the network will need the new link."))
             return;
         QFile::remove(configDir() + "/token");
         client_.restartServer();
@@ -702,19 +865,15 @@ void Window::saveSettings() {
     };
     put("texassolver_bin", tsBin_), put("texassolver_resources", tsRes_), put("sessions_dir", sessionsDir_), put("pack", packDir_);
     if (lan_->isChecked() && !readSettings().value("lan").toBool() &&
-        QMessageBox::question(this, "Kestrel",
-                              "Other devices on your network will be able to reach Kestrel with the access link. Continue?") !=
-            QMessageBox::Yes)
+        !ask(this, "Other devices on your network will be able to reach Kestrel with the access link. Continue?"))
         return;
     QString err;
-    if (!writeSettings(s, &err)) return void(QMessageBox::warning(this, "Kestrel", "Could not save: " + err));
+    if (!writeSettings(s, &err)) return void(warn(this, "Could not save: " + err));
     log("settings saved: " + settingsPath());
     if (client_.online()) {
         int playing = 0;
         for (const auto& t : tables_) playing += t.value("status").toString() == "playing";
-        if (playing && QMessageBox::question(this, "Kestrel",
-                                             QString("%1 table(s) are playing. Restarting stops them. Restart now?").arg(playing)) !=
-                           QMessageBox::Yes)
+        if (playing && !ask(this, QString("%1 table(s) are playing. Restarting stops them. Restart now?").arg(playing)))
             return;
         client_.restartServer();
     } else {

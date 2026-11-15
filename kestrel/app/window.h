@@ -7,6 +7,7 @@
 #include <QMap>
 
 #include "client.h"
+#include "tableview.h"
 
 class QCheckBox;
 class QComboBox;
@@ -19,6 +20,8 @@ class QSpinBox;
 class QTableWidget;
 class QTabWidget;
 class QTextBrowser;
+class QStackedWidget;
+class QGridLayout;
 
 namespace kestrel_app {
 
@@ -45,6 +48,9 @@ class Window : public QMainWindow {
     void refreshConnectors();
     void loadSettings();
     void saveSettings();
+    void showGrid(bool grid);
+    void selectTable(int id);
+    void act(int slot);
     void newTable();
     void newPractice();
     void runKestreld(const QStringList& args, std::function<void(int, QString)> done);
@@ -60,7 +66,14 @@ class Window : public QMainWindow {
     QLabel *status_ = nullptr, *dot_ = nullptr;
     QPushButton* serverBtn_ = nullptr;
     QListWidget* tableList_ = nullptr;
-    QTextBrowser* tableView_ = nullptr;
+    QTextBrowser* tableView_ = nullptr;  // the decision and the session
+    QTextBrowser* handLog_ = nullptr;
+    TableView* drawn_ = nullptr;
+    QWidget* moves_ = nullptr;
+    QStackedWidget* views_ = nullptr;
+    QGridLayout* grid_ = nullptr;
+    QMap<int, TableView*> gridViews_;  // the grid's tables, updated live
+    QCheckBox* advice_ = nullptr;
     QTableWidget *modelTable_ = nullptr, *solverTable_ = nullptr, *connTable_ = nullptr;
     QPlainTextEdit* log_ = nullptr;
 
