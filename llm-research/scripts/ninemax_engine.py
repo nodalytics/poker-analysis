@@ -27,6 +27,7 @@ fixed: 0 fold, 1 check/call, 2..2+S-1 the menu sizes, last all-in; illegal slots
 """
 
 import ctypes
+import json
 import os
 
 import numpy as np
@@ -304,6 +305,22 @@ class Tables:
             c = c.clone()
             c[:, 1] += self.dead.float()
         return win - c
+
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def run_dealer(run, lib, absdir, players, B, dev, seed, tmp):
+    """A Dealer for one run, through its own copy of the bucket library: the library keeps the first abstraction it
+    loads for the whole process, so runs with different abstractions in one process need one copy each."""
+    import shutil
+
+    d = os.path.dirname(run) if run.endswith(".pt") else run
+    if absdir is None:
+        absdir = os.path.join(ROOT, json.load(open(os.path.join(d, "config.json"))).get("abs", "blueprint/out"))
+    copy = os.path.join(tmp, f"libbp_{len(os.listdir(tmp))}.so")
+    shutil.copy(lib, copy)
+    return Dealer(copy, absdir, players, B, dev, seed=seed)
 
 
 def strength(dealer, bk, street):

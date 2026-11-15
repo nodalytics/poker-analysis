@@ -25,11 +25,13 @@ Usage (lab, GPU venv, from llm-research):
 import argparse
 import json
 import os
+import shutil
+import tempfile
 
 import torch
 
 from icm import icm
-from ninemax_engine import BB, Dealer, Menu, Tables, strength
+from ninemax_engine import BB, Menu, Tables, run_dealer, strength
 from ninemax_eval import load
 from ninemax_pushfold_check import policy
 
@@ -115,12 +117,9 @@ def main():
     a = ap.parse_args()
     dev = "cuda" if torch.cuda.is_available() else "cpu"
     out = {}
+    tmp = tempfile.mkdtemp(prefix="postflop-")
     for run in a.runs:
-        d = os.path.dirname(run) if run.endswith(".pt") else run
-        absdir = a.abs or os.path.join(
-            ROOT, json.load(open(os.path.join(d, "config.json"))).get("abs", "blueprint/out")
-        )
-        dealer = Dealer(a.lib, absdir, 9, 0, dev, seed=41)
+        dealer = run_dealer(run, a.lib, a.abs, 9, 0, dev, 41, tmp)
         hands, res = check(run, dealer, dev, a.hands)
         tag = run.rstrip("/").split("blueprint/")[-1].removesuffix(".pt")
         out[tag] = {"hands_trained": hands, "checks": res}
@@ -129,6 +128,7 @@ def main():
         for r in res:
             print(f"  {'ok  ' if r['ok'] else 'WARN'} {r['check']:58s} {r['value']:.0%}  "
                   f"(band {r['band'][0]:.0%}-{r['band'][1]:.0%})  {r['detail']}", flush=True)  # fmt: skip
+    shutil.rmtree(tmp, ignore_errors=True)
     if a.out:
         json.dump(out, open(a.out, "w"), indent=1)
 

@@ -27,11 +27,13 @@ Usage (lab, GPU venv, from llm-research):
 import argparse
 import json
 import os
+import shutil
+import tempfile
 
 import torch
 
 from icm import icm
-from ninemax_engine import BB, RULES, Dealer, Menu, Tables
+from ninemax_engine import BB, RULES, Menu, Tables, run_dealer
 from ninemax_eval import load
 from ninemax_pushfold_check import class_name, policy, seat_of
 
@@ -147,13 +149,13 @@ def main():
     ap.add_argument("--hands", type=int, default=100000)
     ap.add_argument("--out")
     ap.add_argument("--lib", default=os.path.join(ROOT, "blueprint", "libbp5.so"))
-    ap.add_argument("--abs", default=os.path.join(ROOT, "blueprint", "out"))
+    ap.add_argument("--abs", default=None, help="the card abstraction (default: each run's own, else blueprint/out)")
     a = ap.parse_args()
     dev = "cuda" if torch.cuda.is_available() else "cpu"
-    B = int(open(os.path.join(a.abs, "meta.txt")).read().split()[1])
-    dealer = Dealer(a.lib, a.abs, 9, B, dev, seed=31)
     out = {}
+    tmp = tempfile.mkdtemp(prefix="sense-")
     for run in a.runs:
+        dealer = run_dealer(run, a.lib, a.abs, 9, 0, dev, 31, tmp)
         hands, res = check(run, dealer, dev, a.hands)
         tag = run.rstrip("/").split("blueprint/")[-1].removesuffix(".pt")
         out[tag] = {"hands_trained": hands, "checks": res}
@@ -162,6 +164,7 @@ def main():
         for r in res:
             print(f"  {'ok  ' if r['ok'] else 'WARN'} {r['check']:52s} {r['value']:.0%}  "
                   f"(band {r['band'][0]:.0%}-{r['band'][1]:.0%})  {r['detail']}", flush=True)  # fmt: skip
+    shutil.rmtree(tmp, ignore_errors=True)
     if a.out:
         json.dump(out, open(a.out, "w"), indent=1)
 
