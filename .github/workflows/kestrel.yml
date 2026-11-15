@@ -40,11 +40,17 @@ jobs:
           path-type: inherit  # gh (preinstalled on the runner) must be reachable
           install: >-
             mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-ninja
-            mingw-w64-ucrt-x86_64-openssl git zstd tar zip
+            mingw-w64-ucrt-x86_64-openssl mingw-w64-ucrt-x86_64-qt6-base mingw-w64-ucrt-x86_64-qt6-tools
+            git zstd tar zip
       - if: runner.os == 'macOS'
         run: brew install zstd ninja
       - if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y ninja-build zstd libssl-dev
+        run: sudo apt-get update && sudo apt-get install -y ninja-build zstd libssl-dev libgl1-mesa-dev libxkbcommon-dev
+      - if: runner.os != 'Windows'  # the desktop app; Windows takes Qt from MSYS2, built with the same compiler
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.8.3"
+          cache: true
 
       - name: heads-up data pack (for the self-test)
         run: |
@@ -60,11 +66,13 @@ jobs:
           else echo "version=0.0.0-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"; fi
 
       - name: configure
-        run: cmake -S kestrel -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DKESTREL_STATIC=ON -DKESTREL_SHIP_PACK=ON
+        run: cmake -S kestrel -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DKESTREL_STATIC=ON -DKESTREL_SHIP_PACK=ON -DKESTREL_DEPLOY_QT=ON
       - name: build
         run: cmake --build build -j 4
       - name: self-test
         run: ctest --test-dir build --output-on-failure
+      - name: the desktop app was built
+        run: ls build/Kestrel* || ls -d build/Kestrel.app
 
       - name: package
         run: |
@@ -102,6 +110,7 @@ jobs:
           notes="Kestrel ${tag#kestrel-v}: builds for Linux (x86_64), macOS (Apple silicon) and Windows (x86_64).
           Each archive holds the binaries, the web app, the heads-up data pack, the 9-max tournament networks (nm25, the default, and nm17)
           and the self-test data; every build passed the self-test before it was packaged. Unpack it and
-          double-click bin/kestreld (kestreld.exe on Windows): the app opens in your browser. Check downloads
-          against SHA256SUMS."
+          double-click bin/kestreld (kestreld.exe on Windows): the app opens in your browser. Or open the
+          desktop app, bin/Kestrel (Kestrel.app on macOS, Kestrel.exe on Windows): the same tables, models,
+          connectors and settings, with Qt's libraries included. Check downloads against SHA256SUMS."
           gh release create "$tag" dist/* --repo "$GITHUB_REPOSITORY" --title "Kestrel ${tag#kestrel-v}" --notes "$notes"

@@ -36,6 +36,9 @@ QString kestreldPath() {
 #endif
     QString beside = QDir(QCoreApplication::applicationDirPath()).filePath(exe);
     if (QFileInfo::exists(beside)) return beside;
+    // macOS: Kestrel.app/Contents/MacOS/Kestrel, with kestreld in bin/ beside the bundle
+    QString bundled = QDir(QCoreApplication::applicationDirPath()).filePath("../../../bin/" + exe);
+    if (QFileInfo::exists(bundled)) return QFileInfo(bundled).canonicalFilePath();
     QString onPath = QStandardPaths::findExecutable(exe);
     return onPath.isEmpty() ? beside : onPath;
 }
