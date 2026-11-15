@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="/">
+    <file alias="logo-mark-256.png">../assets/logo-mark-256.png</file>
+  </qresource>
+</RCC>

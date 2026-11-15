@@ -302,6 +302,17 @@ int serve(const ServeOptions& o) {
         reply(res, {{"ok", true}, {"version", VERSION}, {"tables", hub.tables.size()}, {"playing", running}});
     });
 
+    // the desktop app restarts the server after changing settings; only from this computer
+    srv.Post("/v1/admin/shutdown", [&](const httplib::Request& req, httplib::Response& res) {
+        if (req.remote_addr != "127.0.0.1" && req.remote_addr != "::1")
+            return reply(res, {{"error", "only from this computer"}}, 403);
+        reply(res, {{"stopping", true}});
+        std::thread([&srv] {
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+            srv.stop();
+        }).detach();
+    });
+
     srv.Get("/v1/connectors", [&](const httplib::Request&, httplib::Response& res) {
         std::vector<std::string> errors;
         json a = json::array();
