@@ -140,6 +140,7 @@ QWidget* Window::header() {
     title->setObjectName("title");
     dot_ = new QLabel("●");
     status_ = new QLabel;
+    status_->setTextFormat(Qt::PlainText);
     status_->setObjectName("muted");
     serverBtn_ = new QPushButton;
     serverBtn_->setFocusPolicy(Qt::NoFocus);  // never pressed by a stray key
@@ -317,7 +318,9 @@ void Window::showGrid(bool grid) {
         tv->setState(state_.value(id), it.value(), dark_);
         gridViews_[id] = tv;
         connect(tv, &TableView::clicked, this, [this, id] { selectTable(id), showGrid(false); });
-        auto title = new QLabel(QString("#%1 · %2 · %3 hands").arg(id).arg(
+        auto title = new QLabel;
+        title->setTextFormat(Qt::PlainText);
+        title->setText(QString("#%1 · %2 · %3 hands").arg(id).arg(
             it.value().value("kind").toString() == "practice" ? "practice " + it.value().value("model").toString()
                                                               : it.value().value("connector").toString())
                                     .arg(it.value().value("hands").toInt()));
@@ -434,7 +437,9 @@ void Window::showTable() {
     if (e.value("type").toString() == "practice_your_turn") {
         auto ml = new QHBoxLayout(moves_);
         ml->setContentsMargins(0, 0, 0, 0);
-        auto lbl = new QLabel(QString("Your move · %1 · pot %2 bb").arg(e.value("pos").toString()).arg(e.value("pot_bb").toDouble(), 0, 'f', 1));
+        auto lbl = new QLabel;
+        lbl->setTextFormat(Qt::PlainText);
+        lbl->setText(QString("Your move · %1 · pot %2 bb").arg(e.value("pos").toString()).arg(e.value("pot_bb").toDouble(), 0, 'f', 1));
         ml->addWidget(lbl);
         double best = 0;
         for (const auto& v : e.value("choices").toArray()) best = std::max(best, v.toObject().value("advice").toDouble());
@@ -764,6 +769,7 @@ QWidget* Window::settingsPage() {
     fs->addRow("TCP port (0: off)", tcpPort_);
     fs->addRow("", lan_);
     lanLinks_ = new QLabel;
+    lanLinks_->setTextFormat(Qt::PlainText);
     lanLinks_->setWordWrap(true);
     lanLinks_->setTextInteractionFlags(Qt::TextSelectableByMouse);
     fs->addRow("Access links", lanLinks_);
@@ -828,7 +834,7 @@ void Window::loadSettings() {
     port_->setValue(s.value("port").toInt(8790));
     wsPort_->setValue(s.value("ws_port").toInt(8791));
     tcpPort_->setValue(s.value("tcp_port").toInt(8792));
-    lan_->setChecked(s.value("lan").toBool(false));
+    lan_->setChecked(s.value("lan").toBool(true));
     resolveIters_->setValue(s.value("resolve_iters").toInt(500));
     tsThreads_->setValue(s.value("texassolver_threads").toInt(8));
     tsBin_->setText(s.value("texassolver_bin").toString());
@@ -864,7 +870,7 @@ void Window::saveSettings() {
         else s[k] = e->text().trimmed();
     };
     put("texassolver_bin", tsBin_), put("texassolver_resources", tsRes_), put("sessions_dir", sessionsDir_), put("pack", packDir_);
-    if (lan_->isChecked() && !readSettings().value("lan").toBool() &&
+    if (lan_->isChecked() && !readSettings().value("lan").toBool(true) &&
         !ask(this, "Other devices on your network will be able to reach Kestrel with the access link. Continue?"))
         return;
     QString err;

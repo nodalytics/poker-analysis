@@ -103,7 +103,7 @@ std::string sha256_file(const std::string& path) {
 }
 
 std::string default_models_dir() {
-    if (const char* x = std::getenv("XDG_DATA_HOME")) return std::string(x) + "/kestrel/models";
+    if (const char* x = std::getenv("XDG_DATA_HOME"); x && *x) return std::string(x) + "/kestrel/models";  // empty: unset
     const char* h = std::getenv("HOME");
     if (!h) h = std::getenv("USERPROFILE");
     return std::string(h ? h : ".") + "/.local/share/kestrel/models";
