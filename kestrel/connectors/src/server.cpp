@@ -41,7 +41,7 @@ namespace kestrel {
 
 namespace {
 
-constexpr const char* VERSION = "0.2.0";
+constexpr const char* VERSION = "0.3.0";
 
 // the models and solvers a table can play with; heads-up connectors take the heads-up blueprint
 TexasSolverConfig ts_config(const ServeOptions& o) {
