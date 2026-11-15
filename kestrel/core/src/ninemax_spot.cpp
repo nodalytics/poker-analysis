@@ -34,9 +34,11 @@ NMSpot NMSpot::from_json(const json& j) {
 
 json NMAdvice::to_json() const {
     json o = json::array();
-    for (auto& x : options) o.push_back({{"action", x.action}, {"to", x.to}, {"add", x.add}, {"prob", x.prob}, {"slot", x.slot}});
+    for (auto& x : options)
+        o.push_back({{"action", x.action}, {"to", x.to}, {"add", x.add}, {"prob", x.prob}, {"slot", x.slot}, {"label", x.label}});
     json j = {{"options", o}, {"value_bb", value_bb}, {"translated", translated}};
     if (!error.empty()) j["error"] = error;
+    if (!view.is_null()) j["view"] = view;
     return j;
 }
 
@@ -168,7 +170,7 @@ NMAdvice ninemax_decide(const Net& net, const NMSpot& sp) {
                 {"pot_bb", pot}, {"board", sp.board}, {"log", log}, {"players_left", n}};
     const int64_t to_call = T.bet - T.contrib[me];
     for (int a = 0; a < A; ++a) {
-        if (!L[a] || p[a] <= 0) continue;
+        if (!L[a]) continue;  // every legal move, those the model never plays included (probability 0)
         NMOption o;
         o.slot = a, o.prob = p[a];
         int64_t total = T.contrib[me];
