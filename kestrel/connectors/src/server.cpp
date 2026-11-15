@@ -102,6 +102,11 @@ std::vector<std::pair<std::string, std::string>> nine_max_models(const ServeOpti
                 out.push_back({n, d.path().string()});
         }
     }
+    // the default first (new tables, practice and advice take the first), the others by name
+    std::sort(out.begin(), out.end(), [&](auto& a, auto& b) {
+        bool da = a.first == o.nine_max_default, db = b.first == o.nine_max_default;
+        return da != db ? da : a.first < b.first;
+    });
     return out;
 }
 

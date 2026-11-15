@@ -100,7 +100,7 @@ jobs:
         run: |
           tag="${GITHUB_REF#refs/tags/}"
           notes="Kestrel ${tag#kestrel-v}: builds for Linux (x86_64), macOS (Apple silicon) and Windows (x86_64).
-          Each archive holds the binaries, the web app, the heads-up data pack, the 9-max tournament network (nm17)
+          Each archive holds the binaries, the web app, the heads-up data pack, the 9-max tournament networks (nm25, the default, and nm17)
           and the self-test data; every build passed the self-test before it was packaged. Unpack it and
           double-click bin/kestreld (kestreld.exe on Windows): the app opens in your browser. Check downloads
           against SHA256SUMS."

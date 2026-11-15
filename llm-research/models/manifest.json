@@ -1,6 +1,6 @@
 {
  "champions": {
-  "9max-mtt": "nm17"
+  "9max-mtt": "nm25"
  },
  "headsup_pack": {
   "archive_sha256": "736f292eae7e91bf18b12e899fdc0fedf58db00881d204a0fe866db610fc12e6",
@@ -112,6 +112,19 @@
    "source": "blueprint/nm17",
    "vs_tag_bb100": 29.2
   },
+  "nm25": {
+   "bytes": 4516705,
+   "hands_trained": 3833413632,
+   "minutes_trained": 360.0,
+   "note": "nm20 fine-tuned 6h: NeuRD bound 4, entropy 0.04, calling stations in the pool; MTT 10-25bb, big-blind ante, half the final tables 2-8 handed. Beats nm17 +1.0 [+0.4, +1.5] 1-vs-8, exploiter +0.2 after 30 min (nm17 +1.5)",
+   "path": "ninemax/nm25/avg_fp16.pt",
+   "sha256": {
+    "avg_fp16.pt": "2aa62dd020dc5eff39796bc7822fb275fb5300f77fe00a86af93ae64744cc1d5",
+    "config.json": "3a16370f5745494a6e550b7865dc25d44188ea1ccaf1153e6bd70a8abfc941fc"
+   },
+   "source": "blueprint/nm25 (pipeline/recipes/mtt9-nm25.yaml)",
+   "vs_tag_bb100": 31.9
+  },
   "nm4": {
    "bytes": 4487009,
    "hands_trained": 1191608320,
@@ -134,6 +147,14 @@
    "name": "mtt9",
    "sha256": "3665b5b46c4e8c06acd1e41fc21be92b8edc0f00e4c8369e89862c73bb4a40d3",
    "version": "1"
+  },
+  "model-mtt9-v2": {
+   "asset": "mtt9-2.tar.gz",
+   "game": "9max-mtt",
+   "gates_passed": true,
+   "name": "mtt9",
+   "sha256": "9c74b91e0783cb15f7467b8e922af43a57846f532973d892d5809b0b4029de42",
+   "version": "2"
   }
  }
 }

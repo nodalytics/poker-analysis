@@ -1,0 +1,36 @@
+# nm25: nm20 fine-tuned to stop over-betting after the flop (nm20 c-bet 90% and bet 91% of its weakest rivers).
+# Against nm20's recipe: a tighter NeuRD bound (4, was 6), twice the entropy, calling stations in the rule pool (they
+# punish bets without value), from nm20's checkpoint for 6 hours. nm20 itself: nm17's recipe from
+# blueprint/init/nm16_12h.pt with kl 0.3 and neurd-beta 6 for 2 hours.
+name: mtt9
+game: 9max-mtt
+about: 9-max tournaments at 10-25bb with ICM, a big-blind ante, no open-limping, half the final tables 2-8 handed
+init: blueprint/nm20/checkpoint.pt   # on the lab
+train:
+  minutes: 360
+  batch: 16384
+  menu: mtt
+  pg: neurd
+  neurd-beta: 4
+  kl: 0.3
+  entropy: 0.04
+  keep-hours: 2
+  eval-minutes: 30
+  pool: reg,reg,tag,maniac,station
+  pool-share: 0.5
+  chunks: 4
+  exploit-share: 0.25
+  exploit-reset: 60
+  tourney: true
+  no-open-limp: true
+  depths: "10,25"
+  ante: 1
+  short: 0.5
+  lib: blueprint/libbp7.so
+  abs: blueprint/out
+gates:
+  sense_min_ok: 7              # of the 14 poker-sense checks (nm17: 8, nm25: 10)
+  pushfold_agree_min: 0.85     # agreement with the ICM push/fold chart at 10bb, chip EV
+  not_worse_than_champion: true
+  champion_margin: 1.0          # bb/100: the upper end of the interval may not fall below -1
+  champion_hands: 20000        # deals per duplicate match (x 9 seatings)

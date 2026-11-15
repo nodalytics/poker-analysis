@@ -45,7 +45,7 @@ kestreld serve --pack llm-research/blueprint/pack --connectors kestrel/connector
 
 ```
 uv --project llm-research run python kestrel/testplatform/ninemax_platform.py &       # 127.0.0.1:8793
-kestreld play kestrel/connectors/testplatform.yaml --model llm-research/models/ninemax/nm17 \
+kestreld play kestrel/connectors/testplatform.yaml --model llm-research/models/ninemax/nm25 \
     --tournaments 20 --hands 100000 --out sessions/test9 --pack llm-research/blueprint/pack
 ```
 
