@@ -32,6 +32,7 @@
 #include "kestrel/buckets.hpp"
 #include "kestrel/luck.hpp"
 #include "kestrel/net.hpp"
+#include "kestrel/icm.hpp"
 #include "kestrel/ninemax_spot.hpp"
 #include "kestrel/practice.hpp"
 #include "kestrel/models.hpp"
@@ -561,6 +562,23 @@ int serve(const ServeOptions& o) {
 
     // advice for one spot. Heads-up: {"game": "headsup", "action": ACPC string, "pos": 0|1, "hole": [..], "board": [..],
     // "solver": none|kestrel-river|texassolver}
+    // prize equity for stacks and payouts (place 1 first): model mh (Malmuth-Harville, what the networks read) or mw
+    // (Malmuth-Weitzman), for analysis
+    srv.Post("/v1/icm", [&](const httplib::Request& req, httplib::Response& res) {
+        json b = json::parse(req.body, nullptr, false);
+        if (!b.is_object()) return reply(res, {{"error", "bad JSON"}}, 400);
+        try {
+            auto st = b.at("stacks").get<std::vector<double>>();
+            auto pay = b.at("payouts").get<std::vector<double>>();
+            if (st.empty() || st.size() > 20) return reply(res, {{"error", "1 to 20 stacks"}}, 400);
+            std::string model = b.value("model", "mh");
+            if (model != "mh" && model != "mw") return reply(res, {{"error", "model is mh or mw"}}, 400);
+            reply(res, {{"equity", model == "mw" ? icm_mw(st, pay) : icm(st, pay)}, {"model", model}});
+        } catch (const std::exception& e) {
+            reply(res, {{"error", e.what()}}, 400);
+        }
+    });
+
     srv.Post("/v1/decide", [&](const httplib::Request& req, httplib::Response& res) {
         json b = json::parse(req.body, nullptr, false);
         if (b.is_discarded()) return reply(res, {{"error", "bad JSON"}}, 400);

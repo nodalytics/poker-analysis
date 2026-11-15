@@ -58,9 +58,10 @@ const std::vector<Method>& methods() {
          "/v1/practice/{id}/act", obj_schema({{"id", {{"type", "integer"}}}, {"slot", {{"type", "integer"}}}}, {"id", "slot"})},
         {"decide", "Kestrel's advice for a spot: game headsup (ACPC action string) or ninemax (table state)", "POST",
          "/v1/decide", obj_schema({{"game", {{"type", "string"}}}}, {"game"})},
-        {"icm_equity", "ICM prize equity for stacks and payouts (place 1 first)", "", "",
+        {"icm_equity", "ICM prize equity for stacks and payouts (place 1 first); model mh (Malmuth-Harville, default) or mw (Malmuth-Weitzman)", "", "",
          obj_schema({{"stacks", {{"type", "array"}, {"items", {{"type", "number"}}}}},
-                     {"payouts", {{"type", "array"}, {"items", {{"type", "number"}}}}}},
+                     {"payouts", {{"type", "array"}, {"items", {{"type", "number"}}}}},
+                     {"model", {{"type", "string"}, {"enum", {"mh", "mw"}}}}},
                     {"stacks", "payouts"})},
     };
     return m;
@@ -93,7 +94,12 @@ json dispatch(int api_port, const json& req) {
     json result;
     if (name == "icm_equity") {
         try {
-                result = {{"equity", icm(params.at("stacks").get<std::vector<double>>(), params.at("payouts").get<std::vector<double>>())}};
+                auto st = params.at("stacks").get<std::vector<double>>();
+            auto pay = params.at("payouts").get<std::vector<double>>();
+            if (st.empty() || st.size() > 20) return rpc_error(id, -32602, "1 to 20 stacks");
+            const std::string model = params.value("model", "mh");
+            if (model != "mh" && model != "mw") return rpc_error(id, -32602, "model is mh or mw");
+            result = {{"equity", model == "mw" ? icm_mw(st, pay) : icm(st, pay)}, {"model", model}};
         } catch (const std::exception& e) {
             return rpc_error(id, -32602, e.what());
         }

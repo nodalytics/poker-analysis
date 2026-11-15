@@ -26,7 +26,7 @@ Kestrel serves the same methods on four interfaces, all on this computer:
 | TCP | `127.0.0.1:8792`: one JSON-RPC request per line |
 | MCP | `kestreld mcp`: for LLMs and agents |
 
-The methods are `health`, `list_connectors`, `list_engines`, `start_session`, `list_sessions`, `session_status`, `stop_session`, `start_practice`, `practice_act`, `decide` and `icm_equity`. To add Kestrel to Claude Code: `claude mcp add kestrel -- /path/to/kestreld mcp`.
+`POST /v1/icm {stacks, payouts, model}` gives prize equity under ICM (`mh`, Malmuth-Harville, what the networks read) or Malmuth-Weitzman (`mw`), for analysis. The methods are `health`, `list_connectors`, `list_engines`, `start_session`, `list_sessions`, `session_status`, `stop_session`, `start_practice`, `practice_act`, `decide` and `icm_equity`. To add Kestrel to Claude Code: `claude mcp add kestrel -- /path/to/kestreld mcp`.
 
 ## Play
 
