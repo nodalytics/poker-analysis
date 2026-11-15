@@ -11,9 +11,16 @@ At a decision after the flop in a pot of at most three players, the network's ow
 3. Policy. "greedy": the action with the highest Q. "mix": the network's own probabilities times exp(Q / tau), a
    one-step policy improvement that keeps the network's mixing when the values are close (tau in big blinds).
 
-This is a one-step improvement against opponents who play the network's strategy, not a re-solve of the subgame
-(Pluribus's search also lets the opponents' strategies respond, with four continuation strategies at the leaves).
-It is the first measurable step: does looking ahead beat the network's instinct?
+This is a one-step improvement against opponents who play the network's strategy, not a re-solve of the subgame.
+
+--robust (version 2, after Pluribus): the opponents may respond. Every sample is rolled out four times, the
+opponents continuing with the network or with the network biased towards folding, calling or raising (that
+action type's probabilities times --bias, renormalised; the hero always continues with the network), and an
+action is worth its worst case over the four: Q(a) = min_k Q_k(a). The hero then plays greedy or mix on that value,
+so its choice holds up when the opponents adapt instead of only against the network's own play.
+
+--opp-bias tests that: the eight opponents in the match play one of the biased strategies (fold, call, raise)
+instead of the network; compare with --samples 0 under the same --opp-bias, the plain network's result there.
 
 Evaluation (match): the searching hero in each of the nine seats in turn against eight copies of the plain network,
 on the same deals. Without search the hero is the network itself and wins 0 by symmetry, so the result is the gain
@@ -86,6 +93,20 @@ def net_probs(net, dealer, T, g, bk):
     return F.softmax(masked(lg, legal), 1), legal
 
 
+BIASES = ("net", "fold", "call", "raise")
+
+
+def biased(pr, kind, factor):
+    """The network's probabilities pr [n, A] tilted towards one action type (fold slot 0, call slot 1, raise slots
+    2+), renormalised; kind [n] indexes BIASES (0: unchanged)."""
+    m = torch.ones_like(pr)
+    m[kind == 1, 0] = factor
+    m[kind == 2, 1] = factor
+    m[kind == 3, 2:] = factor
+    q = pr * m
+    return q / q.sum(1, keepdim=True).clamp(min=1e-12)
+
+
 def deal_fixed(dealer, n, fixed):
     """n deals keeping the cards of fixed (np.int32 [2P + 5], -1 = deal): buckets [n, P, 4] and ranks [n, P]."""
     P = dealer.P
@@ -99,9 +120,10 @@ def deal_fixed(dealer, n, fixed):
 
 
 class Search:
-    def __init__(self, net, dealer, menu, samples=256, mode="greedy", tau=1.0, chunk=16):
+    def __init__(self, net, dealer, menu, samples=256, mode="greedy", tau=1.0, chunk=16, robust=False, bias=5.0):
         self.net, self.dealer, self.menu = net, dealer, menu
         self.N, self.mode, self.tau, self.chunk = samples, mode, tau, chunk
+        self.robust, self.bias = robust, bias
         self.ess = []
         import ctypes
 
@@ -154,15 +176,21 @@ class Search:
         # 2. every legal action on every sample, then rollouts with the network
         pairs = legal.nonzero()  # [K, 2]: (decision, action)
         idx = (pairs[:, 0:1] * N + torch.arange(N, device=dev)).reshape(-1)
+        C = len(BIASES) if self.robust else 1  # the opponents' continuation strategies
+        idx = idx.repeat(C)  # block c of the rows: continuation c
+        kind = torch.arange(C, device=dev).repeat_interleave(len(idx) // C)
         U = take(R, idx)
         BU, RU = BK[idx], RK[idx]
-        U.step(torch.arange(len(idx), device=dev), pairs[:, 1].repeat_interleave(N))
+        U.step(torch.arange(len(idx), device=dev), pairs[:, 1].repeat_interleave(N).repeat(C))
         while not bool(U.done.all()):
             g = (~U.done).nonzero().squeeze(1)
             pr, _ = net_probs(self.net, self.dealer, U, g, BU)
+            if self.robust:
+                opp = U.actor[g] != hero
+                pr[opp] = biased(pr[opp], kind[g][opp], self.bias)
             U.step(g, torch.multinomial(pr, 1).squeeze(1))
-        u = result(U, RU)[:, hero].view(-1, N)  # [K, N] in big blinds (ICM equity for a tournament)
-        q = (u * w[pairs[:, 0]]).sum(1)
+        u = result(U, RU)[:, hero].view(C, -1, N)  # [C, K, N] in big blinds (ICM equity for a tournament)
+        q = (u * w[pairs[:, 0]][None]).sum(2).min(0).values  # the worst continuation for the hero
         Q = torch.full(legal.shape, -1e9, device=dev)
         Q[pairs[:, 0], pairs[:, 1]] = q
         if self.mode == "greedy":
@@ -171,7 +199,7 @@ class Search:
         return torch.softmax(masked(z, legal), 1)
 
 
-def match(net, search, dealer, menu, n, dev, max_live=3, first_street=1):
+def match(net, search, dealer, menu, n, dev, max_live=3, first_street=1, opp_bias=0, bias=5.0):
     """Hero (search, or the network when search is None) in each seat against P-1 copies of the network, same deals.
     Returns hero's bb/100 per deal (mean over seats), and the number of searched decisions."""
     P = dealer.P
@@ -187,6 +215,9 @@ def match(net, search, dealer, menu, n, dev, max_live=3, first_street=1):
             i = T.actor[g]
             with torch.no_grad():
                 probs, _ = net_probs(net, dealer, T, g, bk)
+            if opp_bias:  # the opponents play a biased version of the network
+                o = i != h
+                probs[o] = biased(probs[o], torch.full((int(o.sum()),), opp_bias, device=dev), bias)
             if search is not None:
                 small = ((~T.folded[g]).sum(1) <= max_live) | (T.street[g] == 0)
                 el = (i == h) & (T.street[g] >= first_street) & small
@@ -220,6 +251,9 @@ def main():
     ap.add_argument("--preflop", action="store_true", help="also search before the flop")
     ap.add_argument("--chunk", type=int, default=16, help="decisions searched at once")
     ap.add_argument("--seed", type=int, default=4242)
+    ap.add_argument("--robust", action="store_true", help="the opponents may switch continuation strategy (Pluribus)")
+    ap.add_argument("--bias", type=float, default=5.0, help="how strongly a continuation strategy is biased")
+    ap.add_argument("--opp-bias", choices=BIASES, default="net", help="the match's opponents play this strategy")
     ap.add_argument("--out")
     ap.add_argument("--lib", default=os.path.join(ROOT, "blueprint", "libbp6.so"))
     ap.add_argument("--abs", default=os.path.join(ROOT, "blueprint", "out"))
@@ -230,13 +264,14 @@ def main():
     d = os.path.dirname(a.run) if a.run.endswith(".pt") else a.run
     menu = Menu(json.load(open(os.path.join(d, "config.json"))).get("menu", "medium"), dev)
     dealer = Dealer(a.lib, a.abs, 9, B, dev, seed=a.seed)
-    search = Search(net, dealer, menu, a.samples, a.mode, a.tau, a.chunk) if a.samples else None
+    search = Search(net, dealer, menu, a.samples, a.mode, a.tau, a.chunk, a.robust, a.bias) if a.samples else None
     t0 = time.time()
-    per, searched = match(net, search, dealer, menu, a.hands, dev, a.max_live, 0 if a.preflop else 1)
+    per, searched = match(net, search, dealer, menu, a.hands, dev, a.max_live, 0 if a.preflop else 1,
+                          BIASES.index(a.opp_bias), a.bias)  # fmt: skip
     m, sd = float(per.mean()), float(per.std())
     lo, hi = m - 1.96 * sd / math.sqrt(len(per)), m + 1.96 * sd / math.sqrt(len(per))
     res = {"run": a.run, "hands_trained": hands, "hands": a.hands, "samples": a.samples, "mode": a.mode,
-           "tau": a.tau, "max_live": a.max_live, "preflop": a.preflop, "tourney": FEAT["tourney"], "searched_decisions": searched, "bb100": round(m, 1),
+           "tau": a.tau, "robust": a.robust, "bias": a.bias, "opp_bias": a.opp_bias, "max_live": a.max_live, "preflop": a.preflop, "tourney": FEAT["tourney"], "searched_decisions": searched, "bb100": round(m, 1),
            "ci95": [round(lo, 1), round(hi, 1)], "seconds": round(time.time() - t0)}  # fmt: skip
     if search is not None and search.ess:
         e = torch.tensor(search.ess)
