@@ -24,6 +24,10 @@ namespace kestrel_app {
 
 QString sessionsDir();  // where kestreld writes session logs (settings sessions_dir, else the data folder)
 
+// every player's prize equity under both models (Malmuth-Harville, Malmuth-Weitzman), as a table: done(html)
+void equityTable(Client& c, const QJsonArray& players, const QJsonArray& payouts, const QString& me, bool dark,
+                 std::function<void(const QString&)> done);
+
 class ReviewPage : public QWidget {
     Q_OBJECT
   public:
@@ -83,7 +87,8 @@ class TrainerPage : public QWidget {
     TableView* drawn_;
     QWidget* choices_;
     QTextBrowser* verdict_;
-    QJsonObject advice_;
+    QJsonObject advice_, spot_;
+    QString equity_;  // your equity under both models, shown with the verdict
     int asked_ = 0, agreed_ = 0;
     double probSum_ = 0;
     bool open_ = false;

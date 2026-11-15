@@ -23,6 +23,7 @@
 #include <QVBoxLayout>
 #include <algorithm>
 #include <cmath>
+#include <memory>
 
 #include "theme.h"
 
@@ -105,6 +106,37 @@ QString sessionsDir() {
     QString x = qEnvironmentVariable("XDG_DATA_HOME");
     QString home = qEnvironmentVariable("HOME", qEnvironmentVariable("USERPROFILE", "."));
     return (x.isEmpty() ? home + "/.local/share" : x) + "/kestrel/sessions";
+}
+
+void equityTable(Client& c, const QJsonArray& players, const QJsonArray& payouts, const QString& me, bool dark,
+                 std::function<void(const QString&)> done) {
+    QJsonArray stacks;
+    for (const auto& v : players) stacks.append(v.toObject().value("stack").toDouble());
+    auto mh = std::make_shared<QJsonArray>(), mw = std::make_shared<QJsonArray>();
+    auto finish = [=] {
+        if (mh->isEmpty() || mw->isEmpty()) return;
+        const Palette& p = palette(dark);
+        QString h = QString("<table cellspacing=4><tr style='color:%1'><td>player</td><td align='right'>chips</td>"
+                            "<td align='right'>ICM (Malmuth-Harville)</td><td align='right'>Malmuth-Weitzman</td></tr>")
+                        .arg(p.muted);
+        for (int k = 0; k < players.size(); ++k) {
+            const QString id = players[k].toObject().value("id").toString();
+            const double a = (*mh)[k].toDouble() * 100, b = (*mw)[k].toDouble() * 100;
+            h += QString("<tr><td>%1</td><td align='right'>%2</td><td align='right'>%3%</td><td align='right'>%4%</td></tr>")
+                     .arg(id == me ? "<b>" + esc(id) + " (you)</b>" : esc(id))
+                     .arg(stacks[k].toDouble(), 0, 'f', 0)
+                     .arg(a, 0, 'f', 1)
+                     .arg(b, 0, 'f', 1);
+        }
+        done(h + "</table>");
+    };
+    for (auto [model, out] : {std::pair{QString("mh"), mh}, std::pair{QString("mw"), mw}})
+        c.post("/v1/icm", {{"stacks", stacks}, {"payouts", payouts}, {"model", model}},
+               [out, finish](const QJsonDocument& d, int, const QString& err) {
+                   if (!err.isEmpty()) return;
+                   *out = d.object().value("equity").toArray();
+                   finish();
+               });
 }
 
 // ---- Review: the hands of finished and running sessions, from their logs ----
@@ -392,7 +424,7 @@ void SpotPage::ask() {
                 {"actions", acts}, {"payouts", pay}};
     }
     answer_->setHtml("<p style='color:gray'>Asking…</p>");
-    client_.post("/v1/decide", body, [this](const QJsonDocument& d, int, const QString& err) {
+    client_.post("/v1/decide", body, [this, body](const QJsonDocument& d, int, const QString& err) {
         const Palette& p = kestrel_app::palette(dark_());
         QJsonObject r = d.object();
         if (!err.isEmpty() || r.contains("error") && !r.value("error").toString().isEmpty()) {
@@ -405,6 +437,13 @@ void SpotPage::ask() {
         if (r.value("translated").toInt()) h += QString("<p style='color:%1'>%2 bet(s) at sizes the model does not use</p>").arg(p.muted).arg(r.value("translated").toInt());
         answer_->setHtml(h);
         drawn_->setState(r.value("view").toObject(), {}, dark_());
+        if (body.value("game").toString() == "ninemax" && !body.value("payouts").toArray().isEmpty())
+            equityTable(client_, body.value("players").toArray(), body.value("payouts").toArray(), body.value("me").toString(),
+                        dark_(), [this, h](const QString& t) {
+                            answer_->setHtml(h + "<p style='margin-top:10px'><b>Prize equity at the start of the hand</b></p>" + t +
+                                             "<p style='color:gray'>The model reads Malmuth-Harville; Malmuth-Weitzman is shown "
+                                             "for comparison (llm-research/docs/2026-11-15-tournament-equity-models.md).</p>");
+                        });
     });
 }
 
@@ -502,6 +541,9 @@ void TrainerPage::deal() {
                      {"actions", acts}, {"payouts", pay}};
     open_ = false;
     verdict_->setHtml("");
+    spot_ = body;
+    equity_.clear();
+    equityTable(client_, players, pay, body.value("me").toString(), dark_(), [this](const QString& t) { equity_ = t; });
     client_.post("/v1/decide", body, [this](const QJsonDocument& d, int, const QString& err) {
         advice_ = d.object();
         if (!err.isEmpty() || advice_.value("options").toArray().isEmpty()) {
@@ -547,7 +589,8 @@ void TrainerPage::answer(int k) {
     verdict_->setHtml(QString("<p style='font-size:15px;color:%1'><b>%2</b></p>")
                           .arg(agree ? p.win : p.loss,
                                agree ? "The model plays this too." : QString("The model plays this %1% of the time.").arg(int(mine * 100 + 0.5))) +
-                      bars(opts, p, k));
+                      bars(opts, p, k) +
+                      (equity_.isEmpty() ? QString() : "<p style='margin-top:10px'><b>Prize equity at the start of the hand</b></p>" + equity_));
     score_->setText(QString("%1 spots\n%2 agreed (%3%)\naverage model probability of your moves: %4%")
                         .arg(asked_)
                         .arg(agreed_)

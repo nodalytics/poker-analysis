@@ -39,6 +39,11 @@ models (`results/ninemax/icm_pushfold_ante.json`, `icm_pushfold_ante_mw.json`), 
 - So the chart check cannot say which equity model is right, only how far the network is from each. That needs a
   model of what happens after the hand: FGS (below).
 
+**In Kestrel** (analysis only, since the networks were trained on Malmuth-Harville equities and read them as inputs):
+`icm_mw` in the core (checked against enumeration in the self-test), `POST /v1/icm {stacks, payouts, model: mh|mw}`,
+the JSON-RPC `icm_equity` with `model`, and both equities for every player in the desktop app's Spot study and
+Trainer.
+
 ## Done: progressive knockouts (PKO) in the trainer
 
 **The format.** A share of every buy-in (usually half) is a bounty on the player's head. Knocking a player out pays

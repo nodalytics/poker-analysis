@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <fstream>
@@ -113,6 +114,34 @@ int main(int argc, char** argv) {
         auto want = C["eq"].get<std::vector<double>>();
         for (size_t j = 0; j < want.size(); ++j) icmc.cmp(e[j], want[j], "case " + std::to_string(c));
         ++c;
+    }
+    // Malmuth-Weitzman against enumeration of every bust order (the Python check, icm_pushfold.py --selftest)
+    Check mwc{"ICM Malmuth-Weitzman", 1e-9};
+    {
+        std::mt19937 g(5);
+        std::uniform_real_distribution<double> u(1, 100);
+        for (int P : {3, 4, 5, 6}) {
+            std::vector<double> st(P), pay(P - 1);
+            for (auto& x : st) x = u(g);
+            for (auto& x : pay) x = u(g);
+            std::sort(pay.rbegin(), pay.rend());
+            std::vector<int> order(P);
+            std::iota(order.begin(), order.end(), 0);
+            std::vector<double> ref(P, 0.0);
+            do {  // order[0] busts first and takes place P
+                double pr = 1;
+                std::vector<int> left(order.begin(), order.end());
+                for (int j : order) {
+                    double sum = 0;
+                    for (int i : left) sum += 1 / st[i];
+                    pr *= (1 / st[j]) / sum;
+                    left.erase(std::find(left.begin(), left.end(), j));
+                }
+                for (int k = 0; k < P; ++k) ref[order[k]] += pr * (P - 1 - k < int(pay.size()) ? pay[P - 1 - k] : 0.0);
+            } while (std::next_permutation(order.begin(), order.end()));
+            auto got = icm_mw(st, pay);
+            for (int j = 0; j < P; ++j) mwc.cmp(got[j], ref[j], "MW " + std::to_string(P) + " players, seat " + std::to_string(j));
+        }
     }
     Check hturn{"hu: our turn", 0}, hnode{"hu: node", 0}, hbk{"hu: bucket", 0}, hn{"hu: options", 0},
         hkind{"hu: kinds", 0}, hprob{"hu: probs", 1e-5}, hto{"hu: raise to", 50}, fagree{"hu floor: agree", 0.005};
@@ -255,7 +284,7 @@ int main(int argc, char** argv) {
     std::printf("kestrel self-test: %zu 9-max hands, %d ICM cases, %d heads-up decisions, %d with the defence floor "
                 "(%d floored), %d replayed platform decisions\n", V["hands"].size(), c, hc, fc, floored, rdec);
     for (Check* k : {&actor, &street, &legal, &targets, &feat, &str, &logit, &value, &done, &pay, &eq0, &icmc, &hturn,
-                     &hnode, &hbk, &hn, &hkind, &hprob, &hto, &fagree, &rturn, &rprob, &rto}) {
+                     &hnode, &hbk, &hn, &hkind, &hprob, &hto, &fagree, &rturn, &rprob, &rto, &mwc}) {
         std::printf("  %-6s %-10s %6ld checks, worst error %.2e (tolerance %.0e)%s\n", k->bad ? "FAIL" : "ok",
                     k->name.c_str(), k->n, k->worst, k->tol, k->bad ? "" : "");
         if (k->bad) {

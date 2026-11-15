@@ -35,6 +35,35 @@ std::vector<double> icm(const std::vector<double>& stacks, const std::vector<dou
     return eq;
 }
 
+std::vector<double> icm_mw(const std::vector<double>& stacks, const std::vector<double>& payouts) {
+    const int P = int(stacks.size());
+    if (P > 20) throw std::invalid_argument("icm: at most 20 players");
+    const unsigned M = 1u << P;
+    double chips = 0;
+    for (double x : stacks) chips += std::max(x, 0.0);
+    std::vector<double> inv(P);
+    double total = 0;
+    for (int j = 0; j < P; ++j) total += inv[j] = 1.0 / std::max(stacks[j], 1e-9 * std::max(chips, 1.0));
+    std::vector<double> isum(M, 0.0), prob(M, 0.0), eq(P, 0.0);
+    for (unsigned m = 1; m < M; ++m) isum[m] = isum[m & (m - 1)] + inv[std::countr_zero(m)];
+    prob[0] = 1.0;
+    for (int k = 0; k < P; ++k) {  // the next bust takes place P - k
+        const int place = P - 1 - k;
+        double pay = place < int(payouts.size()) ? payouts[place] : 0.0;
+        for (unsigned m = 0; m < M; ++m) {
+            if (std::popcount(m) != k || prob[m] == 0.0) continue;
+            double rem = std::max(total - isum[m], 1e-300);
+            for (int j = 0; j < P; ++j) {
+                if (m >> j & 1u) continue;
+                double w = prob[m] * inv[j] / rem;
+                eq[j] += w * pay;
+                if (k + 1 < P) prob[m | (1u << j)] += w;
+            }
+        }
+    }
+    return eq;
+}
+
 std::vector<double> end_stacks(const std::vector<double>& start, const std::vector<double>& payoff) {
     std::vector<double> r(start.size());
     for (size_t j = 0; j < start.size(); ++j) {
