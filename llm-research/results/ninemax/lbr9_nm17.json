@@ -1,0 +1,19 @@
+{
+ "run": "blueprint/nm17",
+ "hands_trained": 10904567808,
+ "hands": 20000,
+ "runouts": 48,
+ "lbr_gain_bb100": -0.55,
+ "ci95": [
+  -1.39,
+  0.29
+ ],
+ "lbr_decisions": 5966,
+ "lbr_bets_by_street": {
+  "1": 2133,
+  "2": 342,
+  "3": 144
+ },
+ "net_self_bb100": -0.07,
+ "seconds": 495
+}
