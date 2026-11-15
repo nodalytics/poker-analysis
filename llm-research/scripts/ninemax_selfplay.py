@@ -51,7 +51,9 @@ from ninemax_engine import BB, RULES, STACK, Dealer, Menu, Tables, read_buckets,
 #   tourney  False: chips. True: tournament tables (icm.scenarios: stacks, payout ladder); the inputs gain the
 #            payouts and every player's ICM equity, and the reward is the change in ICM equity (bb equivalents).
 #   short    the share of tournament final tables played short-handed, 2-8 players (icm.scenarios; empty seats).
-FEAT = {"stacks": None, "tourney": False, "depths": None, "short": 0.0}
+#   seats    cash tables seat at most this many players (the blinds and the last seats; the early seats stay empty),
+#            so a 9-seat network learns 6-max; with short, that share of tables seats 2 to seats-1 players.
+FEAT = {"stacks": None, "tourney": False, "depths": None, "short": 0.0, "seats": None}
 
 
 def features(T, g, i):
@@ -294,11 +296,22 @@ def context(G, P, dev):
     if FEAT["tourney"]:
         st, pay, _ = scenarios(G, P, dev, avg_bb=FEAT["depths"] or (10, 60), short=FEAT["short"])
         return st, pay
+    st = None
     if FEAT["stacks"]:
         lo, hi = FEAT["stacks"]
         bb = lo * (hi / lo) ** torch.rand(G, P, device=dev)
-        return (bb * BB).round().long().clamp(min=2 * BB), None
-    return None, None
+        st = (bb * BB).round().long().clamp(min=2 * BB)
+    k = FEAT["seats"]
+    if k and (k < P or FEAT["short"] > 0):  # short-handed cash tables: the blinds and the last n-2 seats play
+        if st is None:
+            st = torch.full((G, P), 100 * BB, dtype=torch.long, device=dev)
+        n = torch.full((G, 1), min(k, P), dtype=torch.long, device=dev)
+        if FEAT["short"] > 0 and k > 2:
+            fewer = torch.randint(2, min(k, P), (G, 1), device=dev)
+            n = torch.where(torch.rand(G, 1, device=dev) < FEAT["short"], fewer, n)
+        seat = torch.arange(P, device=dev)[None]
+        st = torch.where((seat < 2) | (seat >= P - (n - 2)), st, torch.zeros_like(st))
+    return st, None
 
 
 def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None, assign=None, ctx=None, views=None):
@@ -383,7 +396,7 @@ def duplicate(dealer, menu, hero, villain, n, dev):
     return m, m - 1.96 * se, m + 1.96 * se
 
 
-def set_mode(stacks="100", tourney=False, depths=None, open_limp=True, ante=0.0, short=0.0):
+def set_mode(stacks="100", tourney=False, depths=None, open_limp=True, ante=0.0, short=0.0, seats=None):
     """Set FEAT from a run's options (also used by the tools that load a run, from its config.json). depths: the
     tournament tables' average-stack ranges, "LO,HI;LO,HI" (None: icm.scenarios' default, 10-60bb)."""
     RULES["open_limp"] = bool(open_limp)
@@ -392,6 +405,7 @@ def set_mode(stacks="100", tourney=False, depths=None, open_limp=True, ante=0.0,
     FEAT["stacks"] = None if str(stacks) == "100" else tuple(float(x) for x in str(stacks).split(","))
     FEAT["tourney"] = bool(tourney)
     FEAT["short"] = float(short or 0.0)
+    FEAT["seats"] = int(seats) if seats else None
 
 
 def main():
@@ -440,11 +454,14 @@ def main():
     ap.add_argument("--tourney", action="store_true", help="tournament tables: ICM payouts, reward = ICM equity")
     ap.add_argument("--no-open-limp", action="store_true", help="first in from UTG to the button: fold, open or shove")
     ap.add_argument("--ante", type=float, default=0.0, help="big-blind ante in big blinds (1.0 = the usual MTT ante)")
-    ap.add_argument("--short", type=float, default=0.0, help="share of final tables played 2-8 handed (--tourney)")
+    ap.add_argument("--short", type=float, default=0.0,
+                    help="share of tables played short-handed: tournament final tables 2-8 handed, or cash tables "
+                         "2 to --seats - 1 handed")  # fmt: skip
+    ap.add_argument("--seats", type=int, default=None, help="cash tables seat at most this many players (6: 6-max)")
     ap.add_argument("--init", help="warm start from a checkpoint.pt or avg_<h>h.pt when out has no checkpoint")
     ap.add_argument("--depths", help='tournament average-stack ranges in bb, "LO,HI;LO,HI" (default 10,60)')
     args = ap.parse_args()
-    set_mode(args.stacks, args.tourney, args.depths, not args.no_open_limp, args.ante, args.short)
+    set_mode(args.stacks, args.tourney, args.depths, not args.no_open_limp, args.ante, args.short, args.seats)
     dev = "cuda"
     torch.manual_seed(0)
     os.makedirs(args.out, exist_ok=True)

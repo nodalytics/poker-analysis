@@ -53,6 +53,7 @@ class Seat:
             not cfg.get("no_open_limp", False),
             cfg.get("ante", 0.0),
             cfg.get("short", 0.0),
+            cfg.get("seats"),
         )
         self.menu = Menu(cfg.get("menu", "medium"), "cpu")
         self.net = NineNet(cfg["nfeat"], cfg["actions"], cfg.get("buckets", self.B))

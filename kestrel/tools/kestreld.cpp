@@ -228,6 +228,7 @@ int mcp_command(int argc, char** argv) {
     };
     if (!running()) {
         o.quiet = true, o.open_browser = false;
+        o.lan = false;  // a background server for an MCP client never listens on the network
         std::thread([o] {
             try {
                 serve(o);

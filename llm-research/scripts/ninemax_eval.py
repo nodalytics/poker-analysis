@@ -54,6 +54,7 @@ def load(run, B, dev, part="avg"):
         not cfg.get("no_open_limp", False),
         cfg.get("ante", 0.0),
         cfg.get("short", 0.0),
+        cfg.get("seats"),
     )  # the runs compared must share a mode
     net = NineNet(cfg["nfeat"], cfg["actions"], cfg.get("buckets", B)).to(dev)
     st = torch.load(ck, map_location=dev, weights_only=True)
