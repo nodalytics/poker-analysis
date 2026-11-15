@@ -358,3 +358,21 @@ passed every gate of the model pipeline (results/models/nm25_gate.json), Kestrel
 packaged as `mtt9` version 2. Its remaining sense warnings are shared by every model: trash folds 95-96% under the
 gun (band 97%), hands played at 8bb are rarely all-ins, and the small blind plays 66% first in heads-up at 10bb
 (band 75%).
+
+### The version ladder (2026-11-15)
+
+Every version from nm12 against every other in today's game (nm25's: big-blind ante, half the final tables
+short-handed, 10-25bb), duplicate both ways at 20,000 deals a direction, one rating each by weighted least squares
+(`scripts/ninemax_ladder.py`, `results/ninemax/ladder.json`, on the dashboard's Results tab). bb/100 in ICM equity
+against nm17:
+
+| nm12 | nm13 | nm14 | nm15 | nm16 | **nm17** | nm18 | nm19 | nm20 | nm21 | **nm25** |
+|---|---|---|---|---|---|---|---|---|---|---|
+| −1.11 | −1.09 | −1.11 | −0.36 | −0.26 | 0 | −0.46 | −0.35 | +1.01 | −0.59 | +0.98 |
+
+(each ±0.17). Improvement comes in steps, about +0.7 when the ante arrived (nm14 to nm15), +0.3 to nm17, +1.0 to
+nm20: steady and small, neither faster over time nor exponential. nm20 and nm25 rate the same head-to-head; what
+nm25 added is robustness, not winnings against its own family: an exploiter wins +0.2 against nm25 and +2.2 against
+nm20, and nm25 passes all 8 post-flop checks (nm20 6). nm21, the same recipe trained fresh for 6 hours, sits at
+−0.6: the champions' strength is the accumulated training (10.9 billion hands for nm17), not the recipe alone.
+
