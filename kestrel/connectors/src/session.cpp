@@ -114,6 +114,36 @@ void bootstrap(const std::vector<double>& x, double& mean, double& lo, double& h
 
 }
 
+// an ACPC action string (k c f b<total>, streets split by /) as actions by name: the small blind acts first before the
+// flop, the big blind after it; pos 1: we are the small blind
+std::vector<SeenAction> acpc_actions(const std::string& action, int pos, const std::string& me, const std::string& them) {
+    std::vector<SeenAction> out;
+    const std::string sb = pos == 1 ? me : them, bb = pos == 1 ? them : me;
+    int street = 0;
+    bool bet = true;  // before the flop the big blind is a bet
+    std::string actor = sb;
+    for (size_t k = 0; k < action.size(); ++k) {
+        char c = action[k];
+        if (c == '/') {
+            ++street, bet = false, actor = bb;
+            continue;
+        }
+        std::string kind;
+        if (c == 'k') kind = "check";
+        else if (c == 'c') kind = bet ? "call" : "check";
+        else if (c == 'f') kind = "fold";
+        else if (c == 'b') {
+            kind = bet ? "raise" : "bet", bet = true;
+            while (k + 1 < action.size() && std::isdigit(static_cast<unsigned char>(action[k + 1]))) ++k;
+        } else {
+            continue;
+        }
+        out.push_back({actor, street, kind});
+        actor = actor == sb ? bb : sb;
+    }
+    return out;
+}
+
 std::string id_of(const json& v) { return v.is_string() ? v.get<std::string>() : v.is_null() ? "" : v.dump(); }
 
 double num(const json& v, double dflt = 0) {
@@ -254,6 +284,14 @@ SessionSummary run_session(const ConnectorSpec& spec, const SessionPlan& plan, H
                      {"action", at(r, fields, "action")},
                      {"result_bb", won}};
         if (fields.contains("their_hole")) line["their_hole"] = at(r, fields, "their_hole");
+        if (plan.opponents) {  // a heads-up platform's opponent: the username its responses give, else the platform
+            json who = at(r, fields, "opponent");
+            const std::string them = who.is_null() ? spec.name : id_of(who), me = "kestrel";
+            std::map<std::string, std::vector<std::string>> shown;
+            if (line.contains("their_hole") && !line["their_hole"].is_null()) shown[them] = cards(line["their_hole"]);
+            plan.opponents->record(spec.name, {me, them}, acpc_actions(id_of(line["action"]), line["pos"].is_number() ? line["pos"].get<int>() : 0, me, them),
+                                   shown, cards(line["board"]), me);
+        }
         if (spec.codec == "acpc") {
             try {
                 LuckHand lh;
@@ -351,8 +389,33 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
             if (p.id == sp.me) return p.stack;
         return 0.0;
     };
+    std::vector<std::string> seen_names, seen_board;  // the current hand as last seen: players by username, actions
+    std::vector<SeenAction> seen_acts;
+    std::string seen_me;
+    std::map<std::string, std::string> seen_name_of;  // player id -> username, for the hand being closed
     auto close_hand = [&](double now_chips, const json& r) {
         if (cur_hand.empty() || cur_bb <= 0) return;
+        if (plan.opponents && !seen_names.empty()) {
+            // the finished hand's whole history, when the platform gives it (last_actions): what Kestrel saw stops at
+            // its own last move, and folds after it, to a continuation bet say, would be missed
+            std::map<std::string, std::vector<std::string>> shown;
+            json la = at(r, fields, "last_actions");
+            if (la.is_array() && (!fields.contains("last_hand") || id_of(at(r, fields, "last_hand")) == cur_hand)) {
+                auto user = [&](const std::string& id) { return seen_name_of.count(id) ? seen_name_of[id] : id; };
+                seen_acts.clear();
+                for (auto& a : la) {
+                    const std::string kind = id_of(a["kind"]);
+                    if (kind != "fold" && kind != "check" && kind != "call" && kind != "bet" && kind != "raise" && kind != "allin")
+                        continue;
+                    seen_acts.push_back({user(id_of(a["player"])), a.contains("street") && !a["street"].is_null() ? int(num(a["street"])) : 0, kind});
+                }
+                if (json ls = at(r, fields, "last_shown"); ls.is_array())
+                    for (auto& x : ls) shown[user(id_of(x["id"]))] = cards(x["cards"]);
+                if (json lb = at(r, fields, "last_board"); !lb.is_null()) seen_board = cards(lb);
+            }
+            plan.opponents->record(spec.name, seen_names, seen_acts, shown, seen_board, seen_me);
+        }
+        seen_names.clear(), seen_acts.clear(), seen_board.clear();
         double won = (now_chips - cur_start) / cur_bb;
         results.push_back(won);
         cur_line["result_bb"] = won;
@@ -608,6 +671,15 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
             }
         if (json pay = at(r, fields, "payouts"); pay.is_array())
             for (auto& x : pay) sp.payouts.push_back(num(x));
+        // usernames: a connector's players may name a `name` field; else the player id is the name
+        std::map<std::string, std::string> name_of;
+        for (auto& p : players) name_of[id_of(p["id"])] = p.contains("name") && !p["name"].is_null() ? id_of(p["name"]) : id_of(p["id"]);
+        auto username = [&](const std::string& id) { return name_of.count(id) ? name_of[id] : id; };
+        seen_names.clear();
+        for (auto& p : sp.players) seen_names.push_back(username(p.id));
+        seen_acts.clear();
+        for (auto& a : sp.actions) seen_acts.push_back({username(a.player), std::max(a.street, 0), a.kind});
+        seen_board = sp.board, seen_me = username(sp.me), seen_name_of = name_of;
         // a state the platform has not yet updated after our move: wait, never answer twice
         std::string key = hand + "/" + std::to_string(sp.actions.size()) + (stream ? "/" + std::to_string(nonce) : "");
         if (key == acted_at) {
@@ -662,6 +734,12 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
         for (auto& d : cur_line["decisions"]) summary += (summary.empty() ? "" : ", ") + d["chose"].get<std::string>();
         cur_line["action"] = summary;
         json ev = adv.view.is_object() ? adv.view : json::object();
+        if (plan.opponents && ev.contains("seats"))  // each seat's statistics so far, and its username
+            for (auto& seat : ev["seats"]) {
+                const std::string u = name_of.count(id_of(seat["name"])) ? name_of[id_of(seat["name"])] : id_of(seat["name"]);
+                seat["name"] = u;
+                if (u != seen_me) seat["hud"] = plan.opponents->hud(spec.name, u);
+            }
         ev.update({{"type", "decision"}, {"table9", true}, {"hand", hand}, {"hole", hole}, {"options", opts},
                    {"chose", chose}, {"to", pick.to}, {"translated", adv.translated}, {"value_bb", adv.value_bb},
                    {"model", plan.model}, {"error", adv.error}, {"street", street}, {"board", sp.board},

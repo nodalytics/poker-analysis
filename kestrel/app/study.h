@@ -19,6 +19,7 @@ class QPlainTextEdit;
 class QSpinBox;
 class QTextBrowser;
 class QHBoxLayout;
+class QTableWidget;
 
 namespace kestrel_app {
 
@@ -92,6 +93,22 @@ class TrainerPage : public QWidget {
     int asked_ = 0, agreed_ = 0;
     double probSum_ = 0;
     bool open_ = false;
+};
+
+// the opponents Kestrel has met, by platform and username, with their statistics and the hands they showed
+class OpponentsPage : public QWidget {
+    Q_OBJECT
+  public:
+    OpponentsPage(Client& c, QWidget* parent = nullptr);
+    void reload();
+
+  private:
+    void showPlatform();
+    Client& client_;
+    QComboBox* platform_;
+    class QTableWidget* table_;
+    QTextBrowser* shown_;
+    QJsonObject players_;
 };
 
 }  // namespace kestrel_app

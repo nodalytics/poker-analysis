@@ -118,6 +118,7 @@ Window::Window(QWidget* parent) : QMainWindow(parent) {
     tabs->addTab(review_ = new ReviewPage(client_, isDark), "Review");
     tabs->addTab(spot_ = new SpotPage(client_, isDark), "Spot study");
     tabs->addTab(trainer_ = new TrainerPage(client_, isDark), "Trainer");
+    tabs->addTab(opponents_ = new OpponentsPage(client_), "Opponents");
     tabs->addTab(modelsPage(), "Models");
     tabs->addTab(connectorsPage(), "Connectors");
     tabs->addTab(settingsPage(), "Settings");
@@ -200,6 +201,7 @@ void Window::setOnline(bool online) {
         refreshModels();
         refreshConnectors();
         loadSettings();
+        opponents_->reload();
     }
 }
 
