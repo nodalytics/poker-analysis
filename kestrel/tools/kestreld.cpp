@@ -219,7 +219,7 @@ int mcp_command(int argc, char** argv) {
         }).detach();
         for (int k = 0; k < 100 && !running(); ++k) std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-    return mcp_stdio(o.port, "0.2.0");
+    return mcp_stdio(o.port, "0.3.0");
 }
 
 int main(int argc, char** argv) {
