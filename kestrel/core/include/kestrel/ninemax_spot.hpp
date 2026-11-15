@@ -16,6 +16,7 @@ namespace kestrel {
 struct NMPlayer {
     std::string id;
     double stack = 0;  // chips at the start of the hand, before blinds and antes
+    double bounty = 0;  // knockout tournaments: the bounty on this player's head, in the same money as payouts
 };
 
 struct NMAction {
@@ -35,7 +36,8 @@ struct NMSpot {
     std::array<std::string, 2> hole;
     std::vector<std::string> board;
     std::vector<NMAction> actions;    // the hand so far, in order
-    std::vector<double> payouts;      // prize shares for places 1..; empty: chips (winner takes all)
+    std::vector<double> payouts;      // prize shares for places 1..; empty: chips (winner takes all). With bounties,
+                                      // payouts and bounties are in the same money and are scaled together
 
     static NMSpot from_json(const nlohmann::json& j);
 };

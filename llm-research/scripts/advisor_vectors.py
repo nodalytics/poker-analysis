@@ -30,7 +30,7 @@ import torch.nn.functional as F
 from icm import icm
 from ninemax_engine import BB, MENUS, RULES, Dealer, Menu, Tables, strength
 from ninemax_eval import load
-from ninemax_selfplay import FEAT, context, features, masked
+from ninemax_selfplay import FEAT, context, features, masked, split_pay, start_equity
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 P = 9
@@ -73,7 +73,7 @@ def main():
         "nfeat": cfg["nfeat"], "actions": cfg["actions"], "buckets": B, "players": P,
         "menu": cfg.get("menu", "medium"), "menu_def": MENUS[cfg.get("menu", "medium")],
         "ante_bb": RULES["ante"], "open_limp": RULES["open_limp"],
-        "features": {"stacks": FEAT["stacks"] is not None, "tourney": FEAT["tourney"]},
+        "features": {"stacks": FEAT["stacks"] is not None, "tourney": FEAT["tourney"], "bounty": FEAT["bounty"]},
         "pre_strength": r6(dealer.pre_strength.tolist()),
         "source": a.model,
     }  # fmt: skip
@@ -86,7 +86,8 @@ def main():
         bk, rk, cd = dealer.deal(1, cards=True)
         T = Tables(1, P, menu, dev, stacks=stacks)
         if pay is not None:
-            T.pay, T.eq0 = pay.float(), icm(T.stack.float(), pay).float()
+            T.pay, T.eq0 = pay.float(), start_equity(T.stack, pay)
+        reg, bty = split_pay(pay)
         g = torch.zeros(1, dtype=torch.long)
         steps = []
         while not bool(T.done.all()):
@@ -109,7 +110,8 @@ def main():
             T.step(g, torch.tensor([act]))
         u = T.payoffs(rk)
         hands.append({
-            "stacks": [int(x) for x in T.stack[0]], "pay": r6(pay[0]) if pay is not None else None,
+            "stacks": [int(x) for x in T.stack[0]], "pay": r6(reg[0]) if pay is not None else None,
+            "bounty": r6(bty[0]) if bty is not None else None,
             "eq0": r6(T.eq0[0]) if pay is not None else None,
             "buckets": [[int(x) for x in bk[0, j]] for j in range(P)], "ranks": [int(x) for x in rk[0]],
             "cards": [int(x) for x in cd[0]], "steps": steps, "payoffs": r6(u[0]),

@@ -27,6 +27,7 @@ struct PracticeConfig {
     std::vector<double> payouts{0.30, 0.20, 0.145, 0.105, 0.08, 0.065, 0.05, 0.035, 0.02};
     uint64_t seed = 1;
     bool human = false;  // the first player is the user ("You"); the model plays the others, and hides its cards
+    double bounty = 0;   // progressive knockouts: this share of the prize money is bounties (a PKO model only)
 };
 
 class PracticeTournament {
@@ -44,7 +45,9 @@ class PracticeTournament {
     struct Player {
         std::string name;
         int64_t chips = 0;
-        int place = 0;  // 0 while playing
+        int place = 0;      // 0 while playing
+        double bounty = 0;  // on this player's head, as a share of the prize money
+        double won = 0;     // bounty cash collected
     };
     const Net& net_;
     PracticeConfig cfg_;

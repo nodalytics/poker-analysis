@@ -45,7 +45,8 @@ PracticeTournament::PracticeTournament(const Net& net, const PracticeConfig& c, 
     std::uniform_real_distribution<double> u(-cfg_.spread, cfg_.spread);
     for (int k = 0; k < n; ++k) {
         double bb = std::max(4.0, cfg_.avg_bb * std::exp(u(rng_)));
-        players_.push_back({label_ + " " + std::to_string(k + 1), int64_t(std::llround(bb * BB)), 0});
+        players_.push_back({label_ + " " + std::to_string(k + 1), int64_t(std::llround(bb * BB)), 0,
+                            std::clamp(cfg_.bounty, 0.0, 0.9) / n, 0.0});
     }
     if (cfg_.human) players_[0].name = "You";
     button_ = int(rng_() % uint64_t(n));
@@ -61,7 +62,8 @@ json PracticeTournament::standings() const {
     json a = json::array();
     for (auto& p : players_)
         a.push_back({{"name", p.name}, {"chips_bb", double(p.chips) / BB}, {"place", p.place},
-                     {"prize", p.place ? cfg_.payouts[p.place - 1] : 0.0}});
+                     {"prize", (p.place ? (1 - std::clamp(cfg_.bounty, 0.0, 0.9)) * cfg_.payouts[p.place - 1] : 0.0) + p.won},
+                     {"bounty", p.bounty}, {"bounty_won", p.won}});
     return a;
 }
 
@@ -92,6 +94,16 @@ void PracticeTournament::play_hand(const std::function<void(const json&)>& emit,
         for (int k : alive())
             if (players_[k].chips < 2 * BB) short_.push_back(k);
         if (!short_.empty()) {
+            // a retired short stack's bounty goes to the chip leader, as a knockout would (the money stays in play)
+            int lead = -1;
+            for (int k : alive())
+                if (std::find(short_.begin(), short_.end(), k) == short_.end() && (lead < 0 || players_[k].chips > players_[lead].chips))
+                    lead = k;
+            for (int k : short_)
+                if (lead >= 0) {
+                    players_[lead].won += players_[k].bounty / 2, players_[lead].bounty += players_[k].bounty / 2;
+                    players_[k].bounty = 0;
+                }
             finish(short_);
             for (int k : short_) players_[k].chips = 0;
         }
@@ -99,7 +111,7 @@ void PracticeTournament::play_hand(const std::function<void(const json&)>& emit,
     auto ring = alive();
     const int n = int(ring.size());
     if (n < 2) {
-        if (n == 1) players_[ring[0]].place = 1;
+        if (n == 1) players_[ring[0]].place = 1, players_[ring[0]].won += players_[ring[0]].bounty, players_[ring[0]].bounty = 0;
         return;
     }
     while (players_[button_].place != 0) button_ = (button_ + 1) % N;
@@ -118,8 +130,18 @@ void PracticeTournament::play_hand(const std::function<void(const json&)>& emit,
     Table T(stacks, Menu::named(net_.info().menu), net_.info().rules);
     TourneyCtx ctx;
     ctx.pay.assign(9, 0.0);
-    for (int k = 0; k < n && k < int(cfg_.payouts.size()); ++k) ctx.pay[k] = cfg_.payouts[k];
-    ctx.eq0 = icm(std::vector<double>(stacks.begin(), stacks.end()), ctx.pay);
+    const double beta = std::clamp(cfg_.bounty, 0.0, 0.9);
+    for (int k = 0; k < n && k < int(cfg_.payouts.size()); ++k) ctx.pay[k] = (1 - beta) * cfg_.payouts[k];
+    if (beta > 0) {  // the prizes still to play for and the bounties, as shares of all the money at stake
+        ctx.bounty.assign(9, 0.0);
+        double total = 0;
+        for (double x : ctx.pay) total += x;
+        for (int s = 0; s < 9; ++s)
+            if (who[s] >= 0) total += ctx.bounty[s] = players_[who[s]].bounty;
+        for (auto& x : ctx.pay) x /= total;
+        for (auto& x : ctx.bounty) x /= total;
+    }
+    ctx.eq0 = start_equity(std::vector<double>(stacks.begin(), stacks.end()), ctx);
     // the deal
     std::vector<int> deck(52);
     std::iota(deck.begin(), deck.end(), 0);
@@ -154,7 +176,8 @@ void PracticeTournament::play_hand(const std::function<void(const json&)>& emit,
             a.push_back({{"seat", s}, {"pos", pos[s]}, {"name", players_[who[s]].name},
                          {"stack_bb", double(T.stack[s]) / BB}, {"in_bb", double(T.contrib[s]) / BB},
                          {"folded", bool(T.folded[s])}, {"allin", bool(T.allin[s])},
-                         {"hole", hole_json(s, false)}, {"icm", ctx.eq0[s]}, {"you", cfg_.human && who[s] == 0}});
+                         {"hole", hole_json(s, false)}, {"icm", ctx.eq0[s]}, {"you", cfg_.human && who[s] == 0},
+                         {"bounty", s < int(ctx.bounty.size()) ? ctx.bounty[s] : 0.0}});
         }
         return a;
     };
@@ -238,6 +261,13 @@ void PracticeTournament::play_hand(const std::function<void(const json&)>& emit,
         players_[who[s]].chips = std::max<int64_t>(0, after[s]);
         if (players_[who[s]].chips == 0) busted.push_back(who[s]);
     }
+    if (!busted.empty() && beta > 0) {  // knockouts: the hand's biggest winner takes each bounty, half in cash
+        Player& k = players_[who[best]];
+        for (int b : busted) {
+            k.won += players_[b].bounty / 2, k.bounty += players_[b].bounty / 2;
+            players_[b].bounty = 0;
+        }
+    }
     if (!busted.empty()) {
         // busted together: the bigger starting stack places higher
         std::vector<int64_t> start(N);
@@ -249,7 +279,7 @@ void PracticeTournament::play_hand(const std::function<void(const json&)>& emit,
     }
     if (over())
         for (auto& p : players_)
-            if (p.place == 0) p.place = 1;
+            if (p.place == 0) p.place = 1, p.won += p.bounty, p.bounty = 0;  // the winner collects its own bounty
     button_ = (button_ + 1) % N;
     // the board as far as it was dealt: everything at a showdown, else up to the street the hand ended on
     emit({{"type", "practice_hand"},  {"hand", hands_},  {"level", level_},

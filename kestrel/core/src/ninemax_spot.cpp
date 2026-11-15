@@ -15,7 +15,8 @@ using json = nlohmann::json;
 
 NMSpot NMSpot::from_json(const json& j) {
     NMSpot s;
-    for (auto& p : j.at("players")) s.players.push_back({p.at("id").get<std::string>(), p.at("stack").get<double>()});
+    for (auto& p : j.at("players"))
+        s.players.push_back({p.at("id").get<std::string>(), p.at("stack").get<double>(), p.value("bounty", 0.0)});
     s.button = j.at("button").get<std::string>();
     s.me = j.at("me").get<std::string>();
     s.sb = j.at("sb").get<double>(), s.bb = j.at("bb").get<double>(), s.ante = j.value("ante", 0.0);
@@ -142,7 +143,17 @@ NMAdvice ninemax_decide(const Net& net, const NMSpot& sp) {
     ctx.pay.assign(9, 0.0);
     if (sp.payouts.empty()) ctx.pay[0] = 1.0;
     for (size_t k = 0; k < sp.payouts.size() && k < 9; ++k) ctx.pay[k] = sp.payouts[k];
-    ctx.eq0 = icm(std::vector<double>(stacks.begin(), stacks.end()), ctx.pay);
+    double bounties = 0;
+    for (auto& p : sp.players) bounties += std::max(p.bounty, 0.0);
+    if (bounties > 0) {  // knockouts: the prizes and the bounties as shares of all the money at stake
+        double total = bounties;
+        for (double x : ctx.pay) total += x;
+        for (auto& x : ctx.pay) x /= total;
+        ctx.bounty.assign(9, 0.0);
+        for (int s = 0; s < 9; ++s)
+            if (who[s] >= 0) ctx.bounty[s] = std::max(sp.players[who[s]].bounty, 0.0) / total;
+    }
+    ctx.eq0 = start_equity(std::vector<double>(stacks.begin(), stacks.end()), ctx);
     std::vector<int> cards{card_from(sp.hole[0]), card_from(sp.hole[1])};
     for (auto& c : sp.board) cards.push_back(card_from(c));
     const int st = T.street(), nb[4] = {0, 3, 4, 5};
@@ -163,6 +174,7 @@ NMAdvice ninemax_decide(const Net& net, const NMSpot& sp) {
         seats.push_back({{"seat", s}, {"pos", pos[s]}, {"name", sp.players[who[s]].id},
                          {"stack_bb", double(T.avail[s] - T.contrib[s]) / BB}, {"in_bb", double(T.contrib[s]) / BB},
                          {"folded", bool(T.folded[s])}, {"allin", bool(T.allin[s])}, {"icm", ctx.eq0[s]},
+                         {"bounty", s < int(ctx.bounty.size()) ? ctx.bounty[s] : 0.0},
                          {"hole", s == me ? json{sp.hole[0], sp.hole[1]} : json(nullptr)}, {"you", s == me}});
     }
     const double pot = double(std::accumulate(T.contrib.begin(), T.contrib.end(), int64_t(0)) + T.dead) / BB;
