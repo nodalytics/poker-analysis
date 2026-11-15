@@ -72,7 +72,7 @@ QString bbText(double x) {
 struct Seat {
     int seat = 0;
     QString name, pos, said, result;
-    double stack = -1, icm = -1, in = 0;
+    double stack = -1, icm = -1, in = 0, bounty = 0;
     QStringList hole;
     bool folded = false, you = false, acting = false, showHole = false, win = false;
 };
@@ -143,6 +143,7 @@ void TableView::paintEvent(QPaintEvent*) {
             x.stack = s.contains("stack_bb") && !s.value("stack_bb").isNull() ? s.value("stack_bb").toDouble() : -1;
             x.icm = s.contains("icm") && !s.value("icm").isNull() ? s.value("icm").toDouble() : -1;
             x.in = s.value("in_bb").toDouble();
+            x.bounty = s.value("bounty").toDouble();
             x.folded = s.value("folded").toBool();
             x.you = s.value("you").toBool();
             x.acting = x.seat == actor;
@@ -208,6 +209,7 @@ void TableView::paintEvent(QPaintEvent*) {
         QString meta = s.pos;
         if (s.stack >= 0) meta += " · " + bbText(s.stack) + " bb";
         if (s.icm >= 0 && !compact_) meta += " · ICM " + QString::number(100 * s.icm, 'f', 1) + "%";
+        if (s.bounty > 0) meta += " · bounty " + QString::number(100 * s.bounty, 'f', 1) + "%";
         p.drawText(line.adjusted(0, 17 * u + 4, 0, 0), Qt::AlignHCenter | Qt::AlignTop, meta);
         if (!compact_) {
             const double ch = 38 * u + 8, cw = ch * 0.7;

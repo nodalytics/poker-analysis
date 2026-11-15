@@ -374,7 +374,7 @@ function practiceTable(t, mini = false) {
     const [x, y] = seatXY(st.seat, seated);
     const r = res[st.name];
     return `<div class="pseat ${!done && e.actor === st.seat ? "act" : ""} ${st.folded ? "out" : ""} ${st.you ? "you" : ""}" style="left:${x}%;top:${y}%">
-      <div class="n">${esc(st.name)}</div><div class="m">${esc(st.pos)}${st.stack_bb != null ? ` · ${(+st.stack_bb).toFixed(1)} bb` : ""}${st.icm != null ? ` · ICM ${(100 * st.icm).toFixed(1)}%` : ""}</div>
+      <div class="n">${esc(st.name)}</div><div class="m">${esc(st.pos)}${st.stack_bb != null ? ` · ${(+st.stack_bb).toFixed(1)} bb` : ""}${st.icm != null ? ` · ICM ${(100 * st.icm).toFixed(1)}%` : ""}${st.bounty > 0 ? ` · bounty ${(100 * st.bounty).toFixed(1)}%` : ""}</div>
       <div class="cards">${st.hole ? st.hole.map(c => cardHTML(c)).join("") : (st.folded ? "" : back() + back())}</div>
       <div class="said">${done && r ? `<span class="${r.result_bb >= 0 ? "win" : "loss"}">${sign(r.result_bb)} bb</span>` : esc(last[st.name] || (st.in_bb ? `in ${(+st.in_bb).toFixed(1)}` : ""))}</div></div>`;
   }).join("");

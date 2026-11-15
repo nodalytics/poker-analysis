@@ -464,6 +464,8 @@ int serve(const ServeOptions& o) {
         int hands = std::clamp(body.value("hands", 300), 1, 100000);
         int pace = std::clamp(body.value("pace_ms", 700), 0, 5000);
         pc.human = body.value("human", false);
+        // knockout bounties: a PKO model plays with the share it trained with unless told otherwise; others never
+        pc.bounty = net->info().feat_bounty > 0 ? std::clamp(body.value("bounty", net->info().feat_bounty), 0.0, 0.9) : 0.0;
         auto t = std::make_shared<TableRun>();
         {
             std::lock_guard<std::mutex> lk(hub.mu);

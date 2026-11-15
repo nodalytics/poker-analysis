@@ -62,9 +62,17 @@ change play: calling wider against shorter stacks you cover, and covering a stac
 - **Smoke test** (2 minutes on the lab): it trains and evaluates; the run itself waits for a free GPU (nm26, nm27,
   nm28 and the search experiment hold all three until about 19:00 WAT on 2026-11-15).
 
-**Before a PKO model ships:** Kestrel's C++ features (`kestrel/core/src/net.cpp`) need the bounty inputs, its
-platform adapter a `bounties` field per player, and the self-test vectors (`advisor_vectors.py`) a bounty run; a
-sense check of PKO spots (calling wider when covering) like `ninemax_sense.py`.
+**In Kestrel (2026-11-15, built ahead of nm29):** the bounty inputs in the C++ features, read from `net.json`
+(`features.bounty`), and the starting equity with the own bounty (`start_equity`); a `bounty` per player in the
+platform adapter and `/v1/decide`, in the same money as `payouts` and scaled with them; knockout bounties in practice
+tournaments (a PKO model plays with the share it trained with; a knockout pays the hand's biggest winner half in cash
+and half onto its own bounty; a player retired below 2bb counts as knocked out by the chip leader; the winner
+collects its own; a whole tournament accounts for exactly all the money); each seat's bounty in the web and desktop
+apps. Checked against a 2-minute PKO model (`kestrel/testdata/pko_smoke`, vectors from `advisor_vectors.py`, which now
+records bounties): every feature, logit and starting equity matches Python (`ctest`: `selftest_pko`). The feature
+check is now relative above 1, as the equity-per-chip input (up to 5) differs from Python's float32 by 9 parts in a
+million. **Still to do when nm29 is ready:** its own vectors in place of the smoke model's, and a sense check of PKO
+spots (calling wider when covering a stack) like `ninemax_sense.py`.
 
 ## Later
 

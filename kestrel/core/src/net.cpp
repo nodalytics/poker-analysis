@@ -1,5 +1,7 @@
 #include "kestrel/net.hpp"
 
+#include "kestrel/icm.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -109,6 +111,11 @@ std::vector<float> features(const Table& T, const NetInfo& info, const TourneyCt
     if (info.feat_tourney) {
         if (!ctx) throw std::invalid_argument("features: a tournament network needs payouts and ICM equities");
         for (int j = 0; j < P; ++j) push(float(ctx->pay[j]) * P);
+        if (info.feat_bounty > 0) {  // every seat's bounty, mine first
+            auto b = [&](int j) { return j < int(ctx->bounty.size()) ? float(ctx->bounty[j]) * P : 0.0f; };
+            push(b(i));
+            for (int r : rel) push(b(r));
+        }
         push(float(ctx->eq0[i]) * P);
         for (int r : rel) push(float(ctx->eq0[r]) * P);
         float tot = 0;
@@ -139,6 +146,7 @@ Net::Net(const std::string& dir) {
     info_.rules.open_limp = j.value("open_limp", true);
     info_.feat_stacks = j["features"].value("stacks", false);
     info_.feat_tourney = j["features"].value("tourney", false);
+    info_.feat_bounty = j["features"].value("bounty", 0.0);
     info_.pre_strength = j["pre_strength"].get<std::vector<float>>();
 
     std::ifstream bf(dir + "/net.bin", std::ios::binary);
@@ -236,6 +244,14 @@ std::vector<float> Net::policy(const std::vector<float>& logits, const std::vect
         if (legal[k]) z += p[k] = std::exp(logits[k] - mx);
     for (auto& q : p) q = float(q / z);
     return p;
+}
+
+std::vector<double> start_equity(const std::vector<double>& stacks, const TourneyCtx& ctx) {
+    auto eq = icm(stacks, ctx.pay);
+    double total = 0;
+    for (double x : stacks) total += x;
+    for (size_t j = 0; j < eq.size() && j < ctx.bounty.size(); ++j) eq[j] += ctx.bounty[j] * stacks[j] / std::max(total, 1.0);
+    return eq;
 }
 
 }

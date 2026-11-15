@@ -25,10 +25,11 @@ namespace {
 struct Check {
     std::string name;
     double tol, worst = 0;
+    bool relative = false;  // the tolerance scales with the value's size above 1 (float32 against double)
     long n = 0, bad = 0;
     std::string first;
     void cmp(double got, double want, const std::string& where) {
-        double e = std::fabs(got - want);
+        double e = std::fabs(got - want) / (relative ? std::max(1.0, std::fabs(want)) : 1.0);
         worst = std::max(worst, e);
         ++n;
         if (!(e <= tol)) {
@@ -58,7 +59,7 @@ int main(int argc, char** argv) {
     const NetInfo& info = net.info();
     Menu menu = Menu::named(info.menu);
 
-    Check actor{"actor", 0}, street{"street", 0}, legal{"legal", 0}, targets{"targets", 0}, feat{"features", 2e-5},
+    Check actor{"actor", 0}, street{"street", 0}, legal{"legal", 0}, targets{"targets", 0}, feat{"features", 2e-5, 0, true},
         str{"strength", 1e-5}, logit{"logits", 2e-3}, value{"value", 2e-3}, pay{"payoffs", 1e-2},
         eq0{"start ICM", 1e-5}, done{"hand over", 0}, icmc{"ICM cases", 1e-5};
     int h = 0;
@@ -69,7 +70,8 @@ int main(int argc, char** argv) {
         TourneyCtx ctx;
         if (!H["pay"].is_null()) {
             ctx.pay = H["pay"].get<std::vector<double>>();
-            ctx.eq0 = icm(std::vector<double>(stacks.begin(), stacks.end()), ctx.pay);
+            if (H.contains("bounty") && !H["bounty"].is_null()) ctx.bounty = H["bounty"].get<std::vector<double>>();
+            ctx.eq0 = start_equity(std::vector<double>(stacks.begin(), stacks.end()), ctx);
             auto want = H["eq0"].get<std::vector<double>>();
             for (size_t j = 0; j < want.size(); ++j) eq0.cmp(ctx.eq0[j], want[j], w0 + " seat " + std::to_string(j));
         }

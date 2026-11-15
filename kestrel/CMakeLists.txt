@@ -117,6 +117,10 @@ enable_testing()
 add_test(NAME selftest
          COMMAND kestrel_selftest --vectors ${CMAKE_CURRENT_SOURCE_DIR}/testdata
                  --model ${KESTREL_DATA}/models/ninemax/nm17 --pack ${KESTREL_DATA}/blueprint/pack)
+add_test(NAME selftest_pko  # progressive knockouts: bounty features and equity, against a small PKO model's vectors
+         COMMAND kestrel_selftest --vectors ${CMAKE_CURRENT_SOURCE_DIR}/testdata
+                 --nine-max ${CMAKE_CURRENT_SOURCE_DIR}/testdata/vectors_pko.json
+                 --model ${CMAKE_CURRENT_SOURCE_DIR}/testdata/pko_smoke --pack ${KESTREL_DATA}/blueprint/pack)
 
 include(GNUInstallDirs)
 install(TARGETS ${KESTREL_BINARIES} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

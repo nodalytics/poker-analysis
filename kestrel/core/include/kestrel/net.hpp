@@ -12,13 +12,19 @@ struct NetInfo {
     std::string menu;
     Rules rules;
     bool feat_stacks = false, feat_tourney = false;
+    double feat_bounty = 0;  // progressive knockouts: the share of the money in bounties the network trained with (0: none)
     std::vector<float> pre_strength;
 };
 
 struct TourneyCtx {
-    std::vector<double> pay;
-    std::vector<double> eq0;
+    std::vector<double> pay;     // the regular prizes for places 1..P, as shares of the money at stake
+    std::vector<double> bounty;  // each seat's bounty, as a share of the same money (empty: none, read as zeros)
+    std::vector<double> eq0;     // start_equity
 };
+
+// each seat's equity at the start of a hand: ICM on the regular prizes, plus its own bounty times its chip share (the
+// chance of winning it back by winning the tournament), as the trainer values it (ninemax_selfplay.start_equity)
+std::vector<double> start_equity(const std::vector<double>& stacks, const TourneyCtx& ctx);
 
 std::vector<float> features(const Table& T, const NetInfo& info, const TourneyCtx* ctx);
 

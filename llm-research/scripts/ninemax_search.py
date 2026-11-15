@@ -255,6 +255,9 @@ def main():
     ap.add_argument("--bias", type=float, default=5.0, help="how strongly a continuation strategy is biased")
     ap.add_argument("--opp-bias", choices=BIASES, default="net", help="the match's opponents play this strategy")
     ap.add_argument("--out")
+    ap.add_argument(
+        "--per-deal", help="save each deal's result (bb/100, .npy) for paired comparisons on the same deals"
+    )
     ap.add_argument("--lib", default=os.path.join(ROOT, "blueprint", "libbp6.so"))
     ap.add_argument("--abs", default=os.path.join(ROOT, "blueprint", "out"))
     a = ap.parse_args()
@@ -268,6 +271,8 @@ def main():
     t0 = time.time()
     per, searched = match(net, search, dealer, menu, a.hands, dev, a.max_live, 0 if a.preflop else 1,
                           BIASES.index(a.opp_bias), a.bias)  # fmt: skip
+    if a.per_deal:
+        np.save(a.per_deal, per.cpu().numpy())
     m, sd = float(per.mean()), float(per.std())
     lo, hi = m - 1.96 * sd / math.sqrt(len(per)), m + 1.96 * sd / math.sqrt(len(per))
     res = {"run": a.run, "hands_trained": hands, "hands": a.hands, "samples": a.samples, "mode": a.mode,
