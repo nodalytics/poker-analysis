@@ -32,7 +32,7 @@ target_include_directories(kestrel_cards PUBLIC ${phe_SOURCE_DIR}/cpp/include ${
 
 add_library(kestrel_core
   core/src/table.cpp core/src/icm.cpp core/src/net.cpp core/src/buckets.cpp core/src/headsup.cpp core/src/resolve.cpp
-  core/src/texassolver.cpp core/src/luck.cpp core/src/models.cpp core/src/practice.cpp core/src/ninemax_spot.cpp
+  core/src/texassolver.cpp core/src/luck.cpp core/src/models.cpp core/src/practice.cpp core/src/ninemax_spot.cpp core/src/ninemax_search.cpp
   connectors/src/codec_acpc.cpp)
 target_include_directories(kestrel_core PUBLIC core/include connectors/include)
 target_link_libraries(kestrel_core PUBLIC nlohmann_json::nlohmann_json PRIVATE kestrel_cards)
@@ -45,6 +45,10 @@ add_executable(kestrel_selftest tools/selftest.cpp)
 target_link_libraries(kestrel_selftest PRIVATE kestrel_core)
 add_executable(kestrel_resolve_check tools/resolve_check.cpp)
 target_link_libraries(kestrel_resolve_check PRIVATE kestrel_core)
+if(OpenMP_CXX_FOUND)  # search against the network alone, paired (a research check, not shipped)
+  add_executable(kestrel_search_match tools/search_match.cpp)
+  target_link_libraries(kestrel_search_match PRIVATE kestrel_core OpenMP::OpenMP_CXX)
+endif()
 set(KESTREL_BINARIES kestrel_selftest)
 
 if(NOT KESTREL_CORE_ONLY)
@@ -71,9 +75,19 @@ if(NOT KESTREL_CORE_ONLY)
     target_compile_options(yaml-cpp PRIVATE -include cstdint)
   endif()
 
-  add_library(kestrel_connectors connectors/src/connector.cpp connectors/src/session.cpp connectors/src/opponents.cpp connectors/src/server.cpp
+  # SQLite, built in (the amalgamation, 3.54.1: SHA3-256 checked against sqlite.org's download page), for kestrel.db
+  FetchContent_Declare(sqlite URL https://www.sqlite.org/2026/sqlite-amalgamation-3540100.zip
+                       URL_HASH SHA256=0a9c8e34352dad46006aa82836d5383bff9dc6bc9ce5a60553c05aa30e6ad1f9)
+  FetchContent_MakeAvailable(sqlite)
+  add_library(kestrel_sqlite STATIC ${sqlite_SOURCE_DIR}/sqlite3.c)
+  target_include_directories(kestrel_sqlite PUBLIC ${sqlite_SOURCE_DIR})
+  target_compile_definitions(kestrel_sqlite PRIVATE SQLITE_THREADSAFE=1 SQLITE_OMIT_LOAD_EXTENSION SQLITE_DQS=0
+                             SQLITE_DEFAULT_WAL_SYNCHRONOUS=1)
+  find_package(Threads REQUIRED)
+  target_link_libraries(kestrel_sqlite PRIVATE Threads::Threads)
+  add_library(kestrel_connectors connectors/src/connector.cpp connectors/src/store.cpp connectors/src/session.cpp connectors/src/opponents.cpp connectors/src/server.cpp
     connectors/src/gateway.cpp)
-  target_link_libraries(kestrel_connectors PUBLIC kestrel_core PRIVATE httplib::httplib yaml-cpp::yaml-cpp ixwebsocket)
+  target_link_libraries(kestrel_connectors PUBLIC kestrel_core PRIVATE httplib::httplib yaml-cpp::yaml-cpp ixwebsocket kestrel_sqlite)
   add_executable(kestreld tools/kestreld.cpp)
   target_link_libraries(kestreld PRIVATE kestrel_core kestrel_connectors httplib::httplib)
   if(OpenMP_CXX_FOUND)

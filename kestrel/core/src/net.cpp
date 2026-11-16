@@ -209,6 +209,86 @@ Net::Net(const std::string& dir) {
     if (inp_.in != info_.nfeat + 4 * emb_dim_ + 1) throw std::runtime_error("net.json: input size mismatch");
 }
 
+namespace {
+// y[i][o] = b[o] + w[o] . x[i] for B inputs at once: tiles of 4 weight rows by 4 inputs, each weight and input value
+// loaded once per tile and the sums vectorised (omp simd), so the batch runs several times faster than B single
+// passes. The sums are taken in a different order from linear(), so results differ from it in the last bits.
+// on x86-64 Linux the kernel is built twice, for AVX2 with FMA and for the baseline, and the loader picks the one the
+// CPU runs (released binaries target the baseline, so they would otherwise never use the wider registers)
+#if defined(__x86_64__) && defined(__linux__) && defined(__GNUC__) && !defined(__clang__)
+__attribute__((target_clones("arch=haswell", "default")))
+#endif
+void linear_batch(const std::vector<float>& w, const std::vector<float>& b, int out, int in, const float* X, float* Y,
+                  int B) {
+    const int O4 = out / 4 * 4, B4 = B / 4 * 4;
+#pragma omp parallel for schedule(static) if (size_t(B) * size_t(out) * size_t(in) > 4000000)
+    for (int o = 0; o < O4; o += 4) {
+        const float *r0 = w.data() + size_t(o) * in, *r1 = r0 + in, *r2 = r1 + in, *r3 = r2 + in;
+        for (int i = 0; i < B4; i += 4) {
+            const float *x0 = X + size_t(i) * in, *x1 = x0 + in, *x2 = x1 + in, *x3 = x2 + in;
+            float s00 = 0, s01 = 0, s02 = 0, s03 = 0, s10 = 0, s11 = 0, s12 = 0, s13 = 0;
+            float s20 = 0, s21 = 0, s22 = 0, s23 = 0, s30 = 0, s31 = 0, s32 = 0, s33 = 0;
+#pragma omp simd reduction(+ : s00, s01, s02, s03, s10, s11, s12, s13, s20, s21, s22, s23, s30, s31, s32, s33)
+            for (int k = 0; k < in; ++k) {
+                const float a0 = x0[k], a1 = x1[k], a2 = x2[k], a3 = x3[k];
+                s00 += r0[k] * a0, s01 += r0[k] * a1, s02 += r0[k] * a2, s03 += r0[k] * a3;
+                s10 += r1[k] * a0, s11 += r1[k] * a1, s12 += r1[k] * a2, s13 += r1[k] * a3;
+                s20 += r2[k] * a0, s21 += r2[k] * a1, s22 += r2[k] * a2, s23 += r2[k] * a3;
+                s30 += r3[k] * a0, s31 += r3[k] * a1, s32 += r3[k] * a2, s33 += r3[k] * a3;
+            }
+            float* y0 = Y + size_t(i) * out + o;
+            const size_t st = size_t(out);
+            y0[0] = s00 + b[o], y0[1] = s10 + b[o + 1], y0[2] = s20 + b[o + 2], y0[3] = s30 + b[o + 3];
+            y0[st] = s01 + b[o], y0[st + 1] = s11 + b[o + 1], y0[st + 2] = s21 + b[o + 2], y0[st + 3] = s31 + b[o + 3];
+            y0[2 * st] = s02 + b[o], y0[2 * st + 1] = s12 + b[o + 1], y0[2 * st + 2] = s22 + b[o + 2],
+                    y0[2 * st + 3] = s32 + b[o + 3];
+            y0[3 * st] = s03 + b[o], y0[3 * st + 1] = s13 + b[o + 1], y0[3 * st + 2] = s23 + b[o + 2],
+                    y0[3 * st + 3] = s33 + b[o + 3];
+        }
+    }
+    // the edges: inputs past the last full tile, outputs past the last full tile
+    auto one = [&](int o, int i) {
+        const float *r = w.data() + size_t(o) * in, *x = X + size_t(i) * in;
+        float s = 0;
+#pragma omp simd reduction(+ : s)
+        for (int k = 0; k < in; ++k) s += r[k] * x[k];
+        Y[size_t(i) * out + o] = s + b[o];
+    };
+    for (int o = 0; o < O4; ++o)
+        for (int i = B4; i < B; ++i) one(o, i);
+    for (int o = O4; o < out; ++o)
+        for (int i = 0; i < B; ++i) one(o, i);
+}
+}  // namespace
+
+void Net::forward_batch(int B, const float* feat, const int* bk, const int* street, const float* st, float* logits,
+                        float* value) const {
+    const int nf = info_.nfeat, nin = inp_.in, H = hidden_;
+    std::vector<float> X(size_t(B) * nin), h(size_t(B) * H), a(size_t(B) * H), b(size_t(B) * H);
+    for (int i = 0; i < B; ++i) {
+        float* x = X.data() + size_t(i) * nin;
+        std::copy(feat + size_t(i) * nf, feat + size_t(i + 1) * nf, x);
+        int at = nf;
+        for (int s = 0; s < 4; ++s) {
+            int row = std::min(bk[i * 4 + s], emb_rows_[s] - 1);
+            float on = street[i] >= s ? 1.0f : 0.0f;
+            for (int k = 0; k < emb_dim_; ++k) x[at++] = emb_[s][size_t(row) * emb_dim_ + k] * on;
+        }
+        x[at] = st[i];
+    }
+    linear_batch(inp_.w, inp_.b, H, nin, X.data(), h.data(), B);
+    for (size_t k = 0; k < b1_.size(); ++k) {
+        for (int i = 0; i < B; ++i) layernorm(bln_[k].w, bln_[k].b, h.data() + size_t(i) * H, a.data() + size_t(i) * H, H);
+        linear_batch(b1_[k].w, b1_[k].b, H, H, a.data(), b.data(), B);
+        for (auto& z : b) z = 0.5f * z * (1.0f + std::erf(z * 0.70710678118654752f));
+        linear_batch(b2_[k].w, b2_[k].b, H, H, b.data(), a.data(), B);
+        for (size_t q = 0; q < h.size(); ++q) h[q] += a[q];
+    }
+    for (int i = 0; i < B; ++i) layernorm(norm_.w, norm_.b, h.data() + size_t(i) * H, a.data() + size_t(i) * H, H);
+    linear_batch(pi_.w, pi_.b, pi_.out, H, a.data(), logits, B);
+    if (value) linear_batch(v_.w, v_.b, 1, H, a.data(), value, B);
+}
+
 void Net::forward(const std::vector<float>& feat, const std::array<int, 4>& bk, int street, float st,
                   std::vector<float>& logits, float& value) const {
     std::vector<float> x(feat);

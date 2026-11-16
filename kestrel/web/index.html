@@ -548,7 +548,7 @@ function fillEngines() {
   const fits = engines.models.filter(m => m.players === c.players);
   $("#model").innerHTML = engines.models.map(m => `<option value="${esc(m.name)}" ${m.available && m.players === c.players ? "" : "disabled"}>${esc(m.name)} · ${esc(m.game)}</option>`).join("");
   const first = fits.find(m => m.available); if (first) $("#model").value = first.name;
-  $("#solver").innerHTML = engines.solvers.map(x => `<option value="${esc(x.name)}" ${x.available && (c.players === 2 || x.name === "none") ? "" : "disabled"}>${esc(x.name)}</option>`).join("");
+  $("#solver").innerHTML = engines.solvers.map(x => `<option value="${esc(x.name)}" ${x.available && (x.name === "none" || (x.players || 2) === (c.players > 2 ? 9 : 2)) ? "" : "disabled"}>${esc(x.name)}</option>`).join("");
   $("#solver").value = "none"; $("#tourneyField").style.display = c.players > 2 ? "" : "none"; showAbout();
 }
 function showAbout() {

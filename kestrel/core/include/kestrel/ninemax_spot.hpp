@@ -4,12 +4,14 @@
 // the platform's chips.
 #pragma once
 #include <array>
+#include <cmath>
 #include <string>
 #include <vector>
 
 #include <nlohmann/json.hpp>
 
 #include "kestrel/net.hpp"
+#include "kestrel/ninemax_search.hpp"
 
 namespace kestrel {
 
@@ -49,17 +51,23 @@ struct NMOption {
     double prob = 0;
     int slot = 0;
     std::string label;  // "raise to 6 bb", in big blinds
+    double q = std::nan("");  // searched: the move's value in big blinds (ICM equity)
 };
 
 struct NMAdvice {
     std::vector<NMOption> options;
     double value_bb = 0;
     int translated = 0;  // bets and raises replayed at a size the network's menu does not have
+    bool searched = false;  // the advice came from search (a SearchConfig was given and the spot qualifies)
+    int samples = 0;
+    double ess = 0;      // search: the effective number of deals after weighting by the opponents' actions
     std::string error;   // set when the spot could not be replayed
     nlohmann::json view;  // the table as replayed: seats, positions, stacks and the pot in big blinds, the hand's log
     nlohmann::json to_json() const;
 };
 
-NMAdvice ninemax_decide(const Net& net, const NMSpot& spot);
+// search: when given, search at decision time (ninemax_search.hpp) before the flop and in pots of at most three
+// players after it, as tested; elsewhere, and without it, the network's own policy
+NMAdvice ninemax_decide(const Net& net, const NMSpot& spot, const SearchConfig* search = nullptr);
 
 }  // namespace kestrel

@@ -33,6 +33,7 @@
 #include "kestrel/luck.hpp"
 #include "kestrel/net.hpp"
 #include "kestrel/icm.hpp"
+#include "kestrel/store.hpp"
 #include "kestrel/opponents.hpp"
 #include "kestrel/ninemax_spot.hpp"
 #include "kestrel/practice.hpp"
@@ -61,8 +62,19 @@ json solvers_json(const ServeOptions& o) {
                         {{"name", "texassolver"},
                          {"about", ts ? "TexasSolver on the turn and river from the blueprint's ranges, heads-up"
                                       : "TexasSolver: " + why},
-                         {"available", ts}}});
+                         {"available", ts}},
+                        {{"name", "search"},
+                         {"about", "9-max: search at decision time, " + std::to_string(o.search_samples) +
+                                       " deals each, opponents' ranges from their actions (+2 to +6 bb/100 over the network alone)"},
+                         {"available", true}, {"players", 9}},
+                        {{"name", "search-robust"},
+                         {"about", "9-max: search that assumes the opponents may play tighter, looser or more aggressive "
+                                   "(after Pluribus); never below the network in tests, about 3x slower than search"},
+                         {"available", true}, {"players", 9}}});
 }
+
+// 9-max solvers: none, search or search-robust; false for anything else
+bool nine_max_solver(const std::string& s) { return s == "none" || s == "search" || s == "search-robust"; }
 
 struct Engines {
     std::mutex mu;
@@ -306,6 +318,56 @@ int serve(const ServeOptions& o) {
 
     // the opponents' statistics, by platform and username, kept in the sessions folder across sessions
     static OpponentBook opponents(o.out + "/opponents.json");
+    // the database: every session's and practice table's hands, and the opponents (the files are still written)
+    static std::unique_ptr<Store> store;
+    if (!o.db.empty()) {
+        try {
+            store = std::make_unique<Store>(o.db);
+            opponents.set_store(store.get());
+        } catch (const std::exception& e) {
+            std::fprintf(stderr, "kestreld: %s; continuing with files only\n", e.what());
+        }
+    }
+    Store* db = store.get();
+    auto int_param = [](const httplib::Request& req, const char* k, int dflt, int lo, int hi) {
+        if (!req.has_param(k)) return dflt;
+        try {
+            return std::clamp(std::stoi(req.get_param_value(k)), lo, hi);
+        } catch (const std::exception&) {
+            return dflt;
+        }
+    };
+    // GET /v1/db: where the database is and how much it holds
+    srv.Get("/v1/db", [&](const httplib::Request&, httplib::Response& res) {
+        if (!db) return reply(res, {{"enabled", false}});
+        try {
+            json j = db->stats();
+            j["enabled"] = true;
+            reply(res, j);
+        } catch (const std::exception& e) {
+            reply(res, {{"error", e.what()}}, 500);
+        }
+    });
+    // GET /v1/db/sessions?limit=&offset=: sessions newest first, with their hands and result
+    srv.Get("/v1/db/sessions", [&](const httplib::Request& req, httplib::Response& res) {
+        if (!db) return reply(res, {{"error", "no database"}}, 404);
+        try {
+            reply(res, {{"sessions", db->sessions(int_param(req, "limit", 100, 1, 1000), int_param(req, "offset", 0, 0, 1 << 30))}});
+        } catch (const std::exception& e) {
+            reply(res, {{"error", e.what()}}, 500);
+        }
+    });
+    // GET /v1/hands?session=&connector=&limit=&offset=: hands newest first, each with its whole record
+    srv.Get("/v1/hands", [&](const httplib::Request& req, httplib::Response& res) {
+        if (!db) return reply(res, {{"error", "no database"}}, 404);
+        try {
+            reply(res, {{"hands", db->hands(int_param(req, "session", 0, 0, 1 << 30),
+                                            req.has_param("connector") ? req.get_param_value("connector") : "",
+                                            int_param(req, "limit", 100, 1, 1000), int_param(req, "offset", 0, 0, 1 << 30))}});
+        } catch (const std::exception& e) {
+            reply(res, {{"error", e.what()}}, 500);
+        }
+    });
     srv.Get("/v1/opponents", [&](const httplib::Request& req, httplib::Response& res) {
         if (req.has_param("platform")) return reply(res, {{"platform", req.get_param_value("platform")},
                                                           {"players", opponents.platform(req.get_param_value("platform"))}});
@@ -354,10 +416,13 @@ int serve(const ServeOptions& o) {
         if (table9) {
             auto m = std::find_if(ms.begin(), ms.end(), [&](auto& x) { return x.first == model; });
             if (m == ms.end()) return reply(res, {{"error", "no 9-max model " + model + " for this connector"}}, 400);
-            if (solver != "none") return reply(res, {{"error", "9-max tables play the model alone (solver none)"}}, 400);
+            if (!nine_max_solver(solver))
+                return reply(res, {{"error", "9-max tables take solver none, search or search-robust"}}, 400);
             net_dir = m->second;
         } else {
             if (model != "hu-blueprint") return reply(res, {{"error", "model " + model + " cannot play this connector"}}, 400);
+            if (solver == "search" || solver == "search-robust")
+                return reply(res, {{"error", "search is for 9-max tables"}}, 400);
             bool known = false;
             for (auto& x : solvers_json(o))
                 if (x["name"] == solver && x["available"] == true) known = true;
@@ -388,12 +453,15 @@ int serve(const ServeOptions& o) {
         } catch (const std::exception& e) {
             return reply(res, {{"error", e.what()}}, 400);
         }
-        t->th = std::thread([&hub, engine, net, tournaments, &o, t] {
+        t->th = std::thread([&hub, engine, net, tournaments, &o, t, db] {
             SessionPlan plan;
             plan.model = t->model, plan.solver = t->solver;
             plan.hands = t->hands;
             plan.tournaments = tournaments;
             plan.opponents = &opponents;
+            plan.store = db;
+            if (t->solver == "search" || t->solver == "search-robust")
+                plan.search_samples = o.search_samples, plan.search_robust = t->solver == "search-robust";
             plan.out_dir = o.out + "/" + std::to_string(t->id) + "-" + t->spec.name;
             plan.seed = uint64_t(t->id) * 7919;
             auto set_status = [&](const std::string& s) {
@@ -489,7 +557,7 @@ int serve(const ServeOptions& o) {
                      {"status", "playing"}, {"model", model}, {"solver", "none"}, {"players", pc.players},
                      {"human", pc.human}});
         const std::string logdir = o.out + "/" + std::to_string(t->id) + "-practice";
-        t->th = std::thread([&hub, t, net, pc, pace, logdir] {
+        t->th = std::thread([&hub, t, net, pc, pace, logdir, db, model] {
             {
                 std::lock_guard<std::mutex> lk(hub.mu);
                 t->status = "playing";
@@ -497,6 +565,15 @@ int serve(const ServeOptions& o) {
             std::error_code ec;
             std::filesystem::create_directories(logdir, ec);
             std::ofstream log(logdir + "/hands.jsonl", std::ios::app);  // every hand, for study afterwards
+            int64_t sid = 0;
+            auto in_db = [&](auto f) {  // the database is a copy of the file: an error never stops the table
+                if (!db) return;
+                try {
+                    f();
+                } catch (const std::exception&) {
+                }
+            };
+            in_db([&] { sid = db->begin_session("practice", "practice", model, "none", logdir); });
             uint64_t round = 0;
             while (!t->stop && t->done < t->hands) {
                 PracticeConfig c = pc;
@@ -532,6 +609,11 @@ int serve(const ServeOptions& o) {
                         }
                         hub.publish(ev);
                         if (e["type"] == "practice_hand" && log) log << ev.dump() << "\n" << std::flush;
+                        if (e["type"] == "practice_hand" && sid) {
+                            json row = ev;
+                            row["model"] = model;
+                            in_db([&] { db->add_hand(sid, row); });
+                        }
                         if (pace && e["type"] == "practice_decision") std::this_thread::sleep_for(std::chrono::milliseconds(pace));
                     }, pc.human ? std::function<int(const json&)>(ask) : nullptr);
                     if (pace) std::this_thread::sleep_for(std::chrono::milliseconds(pace * 2));
@@ -540,6 +622,14 @@ int serve(const ServeOptions& o) {
             {
                 std::lock_guard<std::mutex> lk(hub.mu);
                 t->status = t->stop ? "stopped" : "finished";
+            }
+            if (sid) {
+                json standings;
+                {
+                    std::lock_guard<std::mutex> lk(hub.mu);
+                    standings = t->summary;
+                }
+                in_db([&] { db->end_session(sid, standings); });
             }
             hub.publish({{"type", "table"}, {"table", t->id}, {"connector", "practice"}, {"kind", "practice"},
                          {"status", t->stop ? "stopped" : "finished"}});
@@ -604,10 +694,15 @@ int serve(const ServeOptions& o) {
             auto it = std::find_if(ms.begin(), ms.end(), [&](auto& m) { return m.first == model; });
             if (it == ms.end()) return reply(res, {{"error", "no 9-max model " + model}}, 404);
             try {
+                const std::string solver = b.value("solver", "none");
+                if (!nine_max_solver(solver)) return reply(res, {{"error", "solver is none, search or search-robust"}}, 400);
+                SearchConfig sc;
+                sc.samples = std::clamp(b.value("samples", o.search_samples), 16, 4096), sc.robust = solver == "search-robust";
+                sc.seed = std::random_device{}();
                 buckets_init(o.pack);
-                auto adv = ninemax_decide(*engines.net(it->second), NMSpot::from_json(b));
+                auto adv = ninemax_decide(*engines.net(it->second), NMSpot::from_json(b), solver == "none" ? nullptr : &sc);
                 json j = adv.to_json();
-                j["model"] = model;
+                j["model"] = model, j["solver"] = solver;
                 return reply(res, j, adv.error.empty() ? 200 : 400);
             } catch (const std::exception& e) {
                 return reply(res, {{"error", e.what()}}, 400);

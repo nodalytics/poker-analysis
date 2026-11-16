@@ -13,6 +13,7 @@
 #include "kestrel/codec_acpc.hpp"
 #include "kestrel/luck.hpp"
 #include "kestrel/ninemax_spot.hpp"
+#include "kestrel/store.hpp"
 
 namespace kestrel {
 
@@ -25,6 +26,27 @@ json SessionSummary::to_json() const {
 }
 
 namespace {
+// the session's rows in the database, when there is one; a database error is reported once and never stops play
+struct DbLog {
+    Store* st = nullptr;
+    int64_t id = 0;
+    bool warned = false;
+    DbLog(const SessionPlan& plan, const std::string& connector) : st(plan.store) {
+        guard([&] { id = st->begin_session("session", connector, plan.model, plan.solver, plan.out_dir); });
+    }
+    template <class F> void guard(F f) {
+        if (!st) return;
+        try {
+            f();
+        } catch (const std::exception& e) {
+            if (!warned) std::fprintf(stderr, "kestrel: database: %s (the session's files are still written)\n", e.what());
+            warned = true;
+        }
+    }
+    void hand(const json& h) { guard([&] { if (id) st->add_hand(id, h); }); }
+    void end(const json& summary) { guard([&] { if (id) st->end_session(id, summary); }); }
+};
+
 
 json at(const json& r, const json& fields, const char* key) {
     if (!fields.contains(key)) return nullptr;
@@ -187,6 +209,7 @@ SessionSummary run_session(const ConnectorSpec& spec, const SessionPlan& plan, H
 
     std::filesystem::create_directories(plan.out_dir);
     std::ofstream log(plan.out_dir + "/hands.jsonl", std::ios::app);
+    DbLog db(plan, spec.name);
     std::mt19937_64 rng(plan.seed);
     SessionSummary sum;
     sum.connector = spec.name;
@@ -300,6 +323,7 @@ SessionSummary run_session(const ConnectorSpec& spec, const SessionPlan& plan, H
             }
         }
         log << line.dump() << "\n" << std::flush;
+        db.hand(line);
         if (on_hand) on_hand(line);
         json ev = line;
         ev["type"] = "hand";
@@ -312,8 +336,10 @@ SessionSummary run_session(const ConnectorSpec& spec, const SessionPlan& plan, H
     sum.bb100 = m * 100, sum.ci_lo = lo * 100, sum.ci_hi = hi * 100;
     if (luck.size() >= 2) sum.luck = luck_estimate(luck).to_json();
     std::ofstream(plan.out_dir + "/summary.json") << sum.to_json().dump(1) << "\n";
+    db.end(sum.to_json());
     return sum;
 }
+
 
 // ---- 2 to 9 handed tables (the structured codec): poll the table state, answer when it is our turn ----
 SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan& plan, const Net& net,
@@ -352,6 +378,7 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
 
     std::filesystem::create_directories(plan.out_dir);
     std::ofstream log(plan.out_dir + "/hands.jsonl", std::ios::app);
+    DbLog db(plan, spec.name);
     std::mt19937_64 rng(plan.seed);
     SessionSummary sum;
     sum.connector = spec.name;
@@ -421,6 +448,7 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
         cur_line["result_bb"] = won;
         if (json b = at(r, fields, "last_board"); !b.is_null()) cur_line["board"] = cards(b);
         log << cur_line.dump() << "\n" << std::flush;
+        db.hand(cur_line);
         if (on_hand) on_hand(cur_line);
         json ev = cur_line;
         ev["type"] = "hand";
@@ -643,7 +671,7 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
             close_hand(my_start(sp), r);
             if (int(results.size()) >= plan.hands) break;
             cur_hand = hand, cur_start = my_start(sp), cur_bb = sp.bb;
-            cur_line = {{"connector", spec.name}, {"model", plan.model}, {"hand_id", hand}, {"players", sp.players.size()},
+            cur_line = {{"connector", spec.name}, {"model", plan.model}, {"solver", plan.solver}, {"hand_id", hand}, {"players", sp.players.size()},
                         {"start_bb", sp.bb > 0 ? cur_start / sp.bb : 0.0}, {"decisions", json::array()}};
         }
         if (stream ? !turn_event
@@ -686,7 +714,9 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
             std::this_thread::sleep_for(poll);
             continue;
         }
-        NMAdvice adv = ninemax_decide(net, sp);
+        SearchConfig sc;
+        sc.samples = plan.search_samples, sc.robust = plan.search_robust, sc.seed = plan.seed * 1000003 + rng();
+        NMAdvice adv = ninemax_decide(net, sp, plan.search_samples > 0 ? &sc : nullptr);
         NMOption pick{"check", 0, 0, 1.0, 1, "check"};
         if (!adv.error.empty() || adv.options.empty()) {
             ++sum.off_tree;
@@ -755,6 +785,7 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
     json j = sum.to_json();
     j["decisions"] = decisions, j["translated_sizes"] = translated;
     std::ofstream(plan.out_dir + "/summary.json") << j.dump(1) << "\n";
+    db.end(j);
     return sum;
 }
 
