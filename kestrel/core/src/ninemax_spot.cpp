@@ -170,8 +170,12 @@ NMAdvice ninemax_decide(const Net& net, const NMSpot& sp, const SearchConfig* se
     Rules mine = net.info().rules;
     mine.ante_bb = replay.ante_bb, mine.short_stacks = true, mine.extra_dead = replay.extra_dead;
     T.set_rules(mine);
+    if (sp.board.size() > 5) return adv.error = "a board has at most 5 cards", adv;
     std::vector<int> cards{card_from(sp.hole[0]), card_from(sp.hole[1])};
     for (auto& c : sp.board) cards.push_back(card_from(c));
+    for (size_t a = 0; a < cards.size(); ++a)
+        for (size_t b = a + 1; b < cards.size(); ++b)
+            if (cards[a] == cards[b]) return adv.error = "a card appears twice in the hole cards and board", adv;
     const int st = T.street(), nb[4] = {0, 3, 4, 5};
     if (int(sp.board.size()) < nb[st]) return adv.error = "the board is shorter than the street needs", adv;
     std::array<int, 4> bk{0, 0, 0, 0};
@@ -188,11 +192,13 @@ NMAdvice ninemax_decide(const Net& net, const NMSpot& sp, const SearchConfig* se
     for (int s = 0; s < 9; ++s) live += who[s] >= 0 && !T.folded[s];
     std::vector<double> q(A, std::nan(""));
     if (search && search->samples > 0 && (st == 0 || live <= 3)) {
-        std::vector<int> bd;
-        for (auto& c : sp.board) bd.push_back(card_from(c));
-        auto r = ninemax_search(net, T, ctx, hist, me, {cards[0], cards[1]}, bd, *search);
-        p = r.policy, q = r.q;
-        adv.searched = true, adv.samples = r.samples, adv.ess = r.ess;
+        std::vector<int> bd(cards.begin() + 2, cards.begin() + 2 + nb[st]);  // the street's board only
+        try {
+            auto r = ninemax_search(net, T, ctx, hist, me, {cards[0], cards[1]}, bd, *search);
+            p = r.policy, q = r.q;
+            adv.searched = true, adv.samples = r.samples, adv.ess = r.ess;
+        } catch (const std::invalid_argument&) {  // a spot search cannot deal: the network's own policy
+        }
     }
     json seats = json::array();
     for (int s = 0; s < 9; ++s) {

@@ -5,6 +5,7 @@
 #include <limits>
 #include <numeric>
 #include <random>
+#include <stdexcept>
 
 #include "kestrel/buckets.hpp"
 #include "kestrel/icm.hpp"
@@ -60,6 +61,19 @@ SearchResult ninemax_search(const Net& net, const Table& T, const TourneyCtx& ct
     std::vector<int> deck;
     for (int c = 0; c < 52; ++c)
         if (c != hole[0] && c != hole[1] && std::find(board.begin(), board.end(), c) == board.end()) deck.push_back(c);
+    // the cards must be distinct and the deck must hold every unknown card (the caller checks; this is the last guard)
+    std::vector<int> known{hole[0], hole[1]};
+    known.insert(known.end(), board.begin(), board.end());
+    for (size_t a = 0; a < known.size(); ++a) {
+        if (known[a] < 0 || known[a] > 51) throw std::invalid_argument("search: a card out of range");
+        for (size_t b = a + 1; b < known.size(); ++b)
+            if (known[a] == known[b]) throw std::invalid_argument("search: a card appears twice");
+    }
+    int seated = 0;
+    for (int s = 0; s < P; ++s) seated += T.seated[s] != 0;
+    if (board.size() > 5 || hero < 0 || hero >= P || !T.seated[hero] ||
+        deck.size() < (5 - board.size()) + 2 * size_t(std::max(seated - 1, 0)))
+        throw std::invalid_argument("search: the spot cannot be dealt");
     std::vector<Deal> deals(N);
     for (int n = 0; n < N; ++n) {
         std::vector<int> d = deck;
