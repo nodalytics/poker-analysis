@@ -40,6 +40,7 @@ struct SearchResult {
     int samples = 0;
 };
 
+// throws std::invalid_argument when the cards cannot be dealt (repeated cards, a board over 5, the hero not seated)
 SearchResult ninemax_search(const Net& net, const Table& T, const TourneyCtx& ctx, const std::vector<OppDecision>& hist,
                             int hero, const std::array<int, 2>& hole, const std::vector<int>& board,
                             const SearchConfig& cfg);
