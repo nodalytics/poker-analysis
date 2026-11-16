@@ -14,6 +14,14 @@ river), so "strong" means the same thing on every board.
   never folds nuts  river, the big blind facing a 3/4-pot bet: its strongest 2% fold at most 2%
   commits short     8bb stacks, flop, the big blind facing an all-in: its strongest 30% call at least 85%
 
+Weak hands win pots too (added 2026-11-16): a strategy that bets only its strong hands is read and folded against,
+so a sound one bluffs and defends with some weak ones.
+  c-bet bluffs      flop, checked to the button: its weakest 30% bet 15-85% (not only value)
+  river bluffs      river, checked to the button: 15-45% of its bets come from its weakest 30% (a 3/4-pot bet is
+                    balanced near 30% bluffs; the weakest hands cannot win at showdown, so betting them is right)
+  river defence     river, the big blind facing a 3/4-pot bet: continues 30-75% (minimum defence: 57%), and its
+                    middle hands (strength 0.4-0.7, bluff-catchers) call at least 20%
+
 Chip payouts (winner takes all) and the run's own ante, as ninemax_sense.py. The bands are rough references, not
 exact equilibria: a WARN is a spot to look at.
 
@@ -80,6 +88,7 @@ def check(run, dealer, dev, G):
     add("c-bets when checked to (flop, 20bb)", float(b.mean()), (0.40, 0.85),
         f"strongest 15% bet {share(b, s >= 0.85):.0%}, weakest 30% bet {share(b, s <= 0.30):.0%}")  # fmt: skip
     add("strongest hands bet the flop when checked to", share(b, s >= 0.85), (0.50, 1.0), "strength >= 0.85")
+    add("c-bets some of its weakest hands (bluffs)", share(b, s <= 0.30), (0.15, 0.85), "strength <= 0.30: bet rate")
     # the big blind facing a 1/3-pot c-bet
     pr, s = spot(net, dealer, menu, dev, G, 20, [(BBS, 1), (BTN, 2)])
     fold = pr[:, 0]
@@ -93,12 +102,19 @@ def check(run, dealer, dev, G):
     b = bet(pr)
     add("value-bets the river with its strongest hands", share(b, s >= 0.90), (0.60, 1.0),
         f"strength >= 0.90; all hands bet {float(b.mean()):.0%}, weakest 30% bet {share(b, s <= 0.30):.0%}")  # fmt: skip
+    weak = (s <= 0.30).float()
+    add("river bets include bluffs (share of its bets from its weakest 30%)", float((b * weak).sum() / b.sum()),
+        (0.15, 0.45), f"weakest 30% bet {share(b, s <= 0.30):.0%}; a 3/4-pot bet is balanced near 30% bluffs")  # fmt: skip
     # the big blind facing a 3/4-pot river bet
     pr, s = spot(net, dealer, menu, dev, G, 20, [(BBS, 1), (BTN, 1), (BBS, 1), (BTN, 1), (BBS, 1), (BTN, 3)])
     fold = pr[:, 0]
     add("never folds the nuts on the river", share(fold, s >= 0.98), (0.0, 0.02),
         f"strength >= 0.98: fold rate; all hands fold {float(fold.mean()):.0%}, weakest 30% "
         f"{share(fold, s <= 0.30):.0%}")  # fmt: skip
+    add("defends a 3/4-pot river bet (calls or raises)", 1 - float(fold.mean()), (0.30, 0.75),
+        f"raises {float(bet(pr).mean()):.0%}, calls {float(pr[:, 1].mean()):.0%}")  # fmt: skip
+    mid = (s >= 0.40) & (s <= 0.70)
+    add("calls a river bet with some bluff-catchers", share(pr[:, 1], mid), (0.20, 1.0), "strength 0.4-0.7: call rate")
     # short stacks: 8bb, the big blind facing an all-in on the flop
     pr, s = spot(net, dealer, menu, dev, G, 8, [(BBS, 1), (BTN, A - 1)])
     call = pr[:, 1]

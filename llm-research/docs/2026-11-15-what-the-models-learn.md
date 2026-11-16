@@ -99,3 +99,26 @@ leaks the exploiter finds are before the flop or in multiway pots, where most de
 is not the exploitability test for short-stack tournaments; the exploiter stays the main one. A pre-flop LBR
 (push/fold against the network's ranges, scored in ICM) would test where the leaks are.
 
+
+## Weak hands win too (2026-11-16)
+
+A strategy that bets only its strong hands is easy to read and fold against, so a sound one also bluffs, steals and
+defends with some weak hands. The poker-sense checks now measure that (`ninemax_sense.py`, `ninemax_postflop.py`;
+`results/ninemax/sense2_*.json`, `postflop2_*.json`, 100,000 deals a spot):
+
+| Check | nm25 | nm20 | nm17 | Band |
+|---|---|---|---|---|
+| flop c-bet with its weakest 30% (checked to) | 80% | 73% | 45% | 15-85% |
+| river: share of its bets from its weakest 30% (bluffs) | **30%** | 30% | 22% | 15-45% (balanced near 30% for a 3/4-pot bet) |
+| river: continues against a 3/4-pot bet | 46% | 47% | 47% | 30-75% |
+| river: bluff-catchers (strength 0.4-0.7) call | 49% | 51% | 49% | at least 20% |
+| big blind defends weak hands (T6s 85s 63s K4o Q5s) vs a button min-open, 20bb | 64% | 66% | 23% | at least 40% |
+| button steals with weak hands (K5o Q7o J7o T7s 64s A3o), 20bb | 30% (WARN) | 23% | 21% | at least 40% |
+
+- nm25's river bets carry exactly the balanced share of bluffs, and it calls with half its bluff-catchers.
+- nm17 bluffs too little and defends its big blind too tightly; nm20 and nm25 corrected both.
+- The one warning: nm25 opens 43% on the button (inside the 42-68% band, at its bottom), and of the borderline weak
+  hands it plays only A3o often (98%); K5o, Q7o, J7o, T7s and 64s are opened 14-22%. That is a tighter button than
+  the charts, a spot to watch (the band is approximate, and an open that is 0 EV for the network is a coin flip).
+- How weak hands win: by making strong hands fold (bluffs, steals) and by the price (defending a min-open). The
+  network learns these from self-play alone; nothing in its training is told which hands to bluff.

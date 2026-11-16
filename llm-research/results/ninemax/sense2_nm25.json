@@ -1,0 +1,167 @@
+{
+ "nm25": {
+  "hands_trained": 3833413632,
+  "checks": [
+   {
+    "check": "premiums raise first in (UTG, 20bb)",
+    "value": 1.0,
+    "band": [
+     0.95,
+     1.0
+    ],
+    "ok": true,
+    "detail": "AA 100% KK 100% QQ 100% AKs 100% AKo 100% | limp max 0%"
+   },
+   {
+    "check": "premiums raise first in (BTN, 20bb)",
+    "value": 1.0,
+    "band": [
+     0.95,
+     1.0
+    ],
+    "ok": true,
+    "detail": "AA 100% KK 100% QQ 100% AKs 100% AKo 100% | limp max 0%"
+   },
+   {
+    "check": "trash folds first in (UTG, 20bb)",
+    "value": 0.953,
+    "band": [
+     0.97,
+     1.0
+    ],
+    "ok": false,
+    "detail": "72o 96% 83o 96% 94o 95% T2o 95% J3o 96%"
+   },
+   {
+    "check": "opens first in (UTG, 20bb)",
+    "value": 0.186,
+    "band": [
+     0.13,
+     0.22
+    ],
+    "ok": true,
+    "detail": "limp 0.0%, opens 6.7%/7.5%/4.1%, shove 0.3%"
+   },
+   {
+    "check": "opens first in (MP, 20bb)",
+    "value": 0.212,
+    "band": [
+     0.16,
+     0.27
+    ],
+    "ok": true,
+    "detail": "limp 0.0%, opens 7.2%/8.9%/4.8%, shove 0.3%"
+   },
+   {
+    "check": "opens first in (HJ, 20bb)",
+    "value": 0.289,
+    "band": [
+     0.22,
+     0.34
+    ],
+    "ok": true,
+    "detail": "limp 0.0%, opens 9.8%/12.6%/6.1%, shove 0.4%"
+   },
+   {
+    "check": "opens first in (CO, 20bb)",
+    "value": 0.365,
+    "band": [
+     0.29,
+     0.45
+    ],
+    "ok": true,
+    "detail": "limp 0.0%, opens 13.5%/16.0%/6.4%, shove 0.6%"
+   },
+   {
+    "check": "opens first in (BTN, 20bb)",
+    "value": 0.434,
+    "band": [
+     0.42,
+     0.68
+    ],
+    "ok": true,
+    "detail": "limp 0.0%, opens 17.6%/19.0%/6.0%, shove 0.8%"
+   },
+   {
+    "check": "opens first in (SB, 20bb)",
+    "value": 0.579,
+    "band": [
+     0.4,
+     0.8
+    ],
+    "ok": true,
+    "detail": "limp 9.5%, opens 19.1%/23.3%/4.8%, shove 1.1%"
+   },
+   {
+    "check": "steals with weak hands on the button (20bb)",
+    "value": 0.3,
+    "band": [
+     0.4,
+     1.0
+    ],
+    "ok": false,
+    "detail": "K5o 14% Q7o 15% J7o 15% T7s 22% 64s 16% A3o 98%"
+   },
+   {
+    "check": "plays all in at 8bb (UTG), share of hands played",
+    "value": 0.068,
+    "band": [
+     0.75,
+     1.0
+    ],
+    "ok": false,
+    "detail": "plays 16% of hands"
+   },
+   {
+    "check": "plays all in at 8bb (CO), share of hands played",
+    "value": 0.219,
+    "band": [
+     0.75,
+     1.0
+    ],
+    "ok": false,
+    "detail": "plays 31% of hands"
+   },
+   {
+    "check": "big blind defends vs button min-open (20bb)",
+    "value": 0.625,
+    "band": [
+     0.6,
+     0.85
+    ],
+    "ok": true,
+    "detail": "calls 41%, raises 22%"
+   },
+   {
+    "check": "big blind defends weak hands vs button min-open (20bb)",
+    "value": 0.638,
+    "band": [
+     0.4,
+     1.0
+    ],
+    "ok": true,
+    "detail": "T6s 96% 85s 58% 63s 16% K4o 53% Q5s 96%"
+   },
+   {
+    "check": "heads-up: small blind plays first in (10bb)",
+    "value": 0.664,
+    "band": [
+     0.75,
+     1.0
+    ],
+    "ok": false,
+    "detail": "limp 6%, opens 33%, shove 27%"
+   },
+   {
+    "check": "heads-up: big blind defends vs min-raise (20bb)",
+    "value": 0.857,
+    "band": [
+     0.65,
+     0.92
+    ],
+    "ok": true,
+    "detail": "calls 57%, raises 29%"
+   }
+  ]
+ }
+}
