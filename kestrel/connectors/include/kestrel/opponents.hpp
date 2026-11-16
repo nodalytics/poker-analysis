@@ -42,6 +42,7 @@ class OpponentBook {
     // a short line for a seat: "VPIP/PFR/3B · hands", or "" when there is nothing yet
     std::string hud(const std::string& platform, const std::string& name) const;
     void flush();  // write the book now (it also saves every 10 hands)
+    void set_store(class Store* s);  // also save the book into the database
 
   private:
     void save_locked();
@@ -49,6 +50,7 @@ class OpponentBook {
     mutable std::mutex mu_;
     std::map<std::string, std::map<std::string, OpponentStats>> book_;
     int unsaved_ = 0;
+    class Store* store_ = nullptr;
 };
 
 }  // namespace kestrel

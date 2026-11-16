@@ -35,15 +35,18 @@ NMSpot NMSpot::from_json(const json& j) {
 
 json NMAdvice::to_json() const {
     json o = json::array();
-    for (auto& x : options)
+    for (auto& x : options) {
         o.push_back({{"action", x.action}, {"to", x.to}, {"add", x.add}, {"prob", x.prob}, {"slot", x.slot}, {"label", x.label}});
+        if (!std::isnan(x.q)) o.back()["q_bb"] = x.q;
+    }
     json j = {{"options", o}, {"value_bb", value_bb}, {"translated", translated}};
     if (!error.empty()) j["error"] = error;
     if (!view.is_null()) j["view"] = view;
+    if (searched) j["searched"] = true, j["samples"] = samples, j["ess"] = ess;
     return j;
 }
 
-NMAdvice ninemax_decide(const Net& net, const NMSpot& sp) {
+NMAdvice ninemax_decide(const Net& net, const NMSpot& sp, const SearchConfig* search) {
     NMAdvice adv;
     const int n = int(sp.players.size());
     if (n < 2 || n > 9) return adv.error = "2 to 9 players", adv;
@@ -82,6 +85,21 @@ NMAdvice ninemax_decide(const Net& net, const NMSpot& sp) {
     }
     replay.open_limp = true;  // opponents may limp on a platform; the model's own rule is restored for its move
     replay.short_stacks = true;
+    TourneyCtx ctx;
+    ctx.pay.assign(9, 0.0);
+    if (sp.payouts.empty()) ctx.pay[0] = 1.0;
+    for (size_t k = 0; k < sp.payouts.size() && k < 9; ++k) ctx.pay[k] = sp.payouts[k];
+    double bounties = 0;
+    for (auto& p : sp.players) bounties += std::max(p.bounty, 0.0);
+    if (bounties > 0) {  // knockouts: the prizes and the bounties as shares of all the money at stake
+        double total = bounties;
+        for (double x : ctx.pay) total += x;
+        for (auto& x : ctx.pay) x /= total;
+        ctx.bounty.assign(9, 0.0);
+        for (int s = 0; s < 9; ++s)
+            if (who[s] >= 0) ctx.bounty[s] = std::max(sp.players[who[s]].bounty, 0.0) / total;
+    }
+    ctx.eq0 = start_equity(std::vector<double>(stacks.begin(), stacks.end()), ctx);
     Table T(stacks, Menu::named(net.info().menu), replay);
     const int A = T.menu().A;
     const auto pos = position_names(n);
@@ -94,6 +112,11 @@ NMAdvice ninemax_decide(const Net& net, const NMSpot& sp) {
     int cur = 0;
     auto sync = [&] {
         if (T.street() != cur) base = T.contrib, cur = T.street();
+    };
+    std::vector<OppDecision> hist;  // the opponents' decisions as the network saw them, for search's weights
+    auto record = [&](int s, int slot, const std::vector<uint8_t>& L) {
+        if (search && s != seat_of(sp.me))
+            hist.push_back({s, T.street(), slot, features(T, net.info(), &ctx), L});
     };
     for (auto& a : sp.actions) {
         if (T.done()) return adv.error = "the hand is over before all actions were replayed", adv;
@@ -125,11 +148,19 @@ NMAdvice ninemax_decide(const Net& net, const NMSpot& sp) {
             bool on_menu = total == T.avail[s];
             for (int k = 0; k < T.menu().S; ++k) on_menu = on_menu || (L[2 + k] && std::fabs(t[k] - double(total)) <= 0.5);
             adv.translated += !on_menu;
+            int near = T.menu().A - 1;  // for search's weights: the menu slot closest to the platform's size
+            if (total < T.avail[s]) {
+                double gap = INFINITY;
+                for (int k = 0; k < T.menu().S; ++k)
+                    if (L[2 + k] && std::fabs(t[k] - double(total)) < gap) gap = std::fabs(t[k] - double(total)), near = 2 + k;
+            }
+            record(s, near, L);
             said(s, total >= T.avail[s] ? "all-in " + bb_str(double(T.avail[s] - base[s]))
                                         : (T.bet > base[s] ? "raise to " : "bet ") + bb_str(double(total - base[s])));
             T.step_to(total);
             continue;
         }
+        record(s, slot, L);
         T.step(slot);
     }
     sync();
@@ -139,21 +170,6 @@ NMAdvice ninemax_decide(const Net& net, const NMSpot& sp) {
     Rules mine = net.info().rules;
     mine.ante_bb = replay.ante_bb, mine.short_stacks = true, mine.extra_dead = replay.extra_dead;
     T.set_rules(mine);
-    TourneyCtx ctx;
-    ctx.pay.assign(9, 0.0);
-    if (sp.payouts.empty()) ctx.pay[0] = 1.0;
-    for (size_t k = 0; k < sp.payouts.size() && k < 9; ++k) ctx.pay[k] = sp.payouts[k];
-    double bounties = 0;
-    for (auto& p : sp.players) bounties += std::max(p.bounty, 0.0);
-    if (bounties > 0) {  // knockouts: the prizes and the bounties as shares of all the money at stake
-        double total = bounties;
-        for (double x : ctx.pay) total += x;
-        for (auto& x : ctx.pay) x /= total;
-        ctx.bounty.assign(9, 0.0);
-        for (int s = 0; s < 9; ++s)
-            if (who[s] >= 0) ctx.bounty[s] = std::max(sp.players[who[s]].bounty, 0.0) / total;
-    }
-    ctx.eq0 = start_equity(std::vector<double>(stacks.begin(), stacks.end()), ctx);
     std::vector<int> cards{card_from(sp.hole[0]), card_from(sp.hole[1])};
     for (auto& c : sp.board) cards.push_back(card_from(c));
     const int st = T.street(), nb[4] = {0, 3, 4, 5};
@@ -168,6 +184,16 @@ NMAdvice ninemax_decide(const Net& net, const NMSpot& sp) {
     net.forward(f, bk, st, strength(net.info(), st, bk[st]), lg, v);
     auto p = net.policy(lg, L);
     adv.value_bb = v;
+    int live = 0;
+    for (int s = 0; s < 9; ++s) live += who[s] >= 0 && !T.folded[s];
+    std::vector<double> q(A, std::nan(""));
+    if (search && search->samples > 0 && (st == 0 || live <= 3)) {
+        std::vector<int> bd;
+        for (auto& c : sp.board) bd.push_back(card_from(c));
+        auto r = ninemax_search(net, T, ctx, hist, me, {cards[0], cards[1]}, bd, *search);
+        p = r.policy, q = r.q;
+        adv.searched = true, adv.samples = r.samples, adv.ess = r.ess;
+    }
     json seats = json::array();
     for (int s = 0; s < 9; ++s) {
         if (who[s] < 0) continue;
@@ -184,7 +210,7 @@ NMAdvice ninemax_decide(const Net& net, const NMSpot& sp) {
     for (int a = 0; a < A; ++a) {
         if (!L[a]) continue;  // every legal move, those the model never plays included (probability 0)
         NMOption o;
-        o.slot = a, o.prob = p[a];
+        o.slot = a, o.prob = p[a], o.q = q[a];
         int64_t total = T.contrib[me];
         if (a == 0) o.action = "fold";
         else if (a == 1) o.action = to_call ? "call" : "check", total = std::min(T.bet, T.avail[me]);

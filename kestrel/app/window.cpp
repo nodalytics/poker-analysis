@@ -527,8 +527,10 @@ void Window::newTable() {
         model->addItems(names(engines_models_, [&](const QJsonObject& m) {
             return m.value("available").toBool() && m.value("players").toInt() == (players > 2 ? 9 : 2);
         }));
-        solver->addItems(players > 2 ? QStringList{"none"}
-                                     : names(engines_solvers_, [](const QJsonObject& s) { return s.value("available").toBool(); }));
+        solver->addItems(names(engines_solvers_, [&](const QJsonObject& s) {  // 9-max solvers say players 9
+            return s.value("available").toBool() &&
+                   (s.value("name").toString() == "none" || s.value("players").toInt(2) == (players > 2 ? 9 : 2));
+        }));
         tours->setEnabled(players > 2);
     };
     connect(conn, &QComboBox::currentTextChanged, &d, fill);
@@ -753,11 +755,11 @@ QWidget* Window::settingsPage() {
         return s;
     };
     port_ = spin(1024, 65535), wsPort_ = spin(0, 65535), tcpPort_ = spin(0, 65535);
-    resolveIters_ = spin(50, 20000), tsThreads_ = spin(1, 256);
+    resolveIters_ = spin(50, 20000), tsThreads_ = spin(1, 256), searchSamples_ = spin(16, 4096);
     lan_ = new QCheckBox("Reach Kestrel from other devices on the network (they need the access link)");
     defaultModel_ = new QComboBox;
-    tsBin_ = new QLineEdit, tsRes_ = new QLineEdit, sessionsDir_ = new QLineEdit, packDir_ = new QLineEdit;
-    for (auto* e : {tsBin_, tsRes_, sessionsDir_, packDir_}) e->setPlaceholderText("default");
+    tsBin_ = new QLineEdit, tsRes_ = new QLineEdit, sessionsDir_ = new QLineEdit, packDir_ = new QLineEdit, dbPath_ = new QLineEdit;
+    for (auto* e : {tsBin_, tsRes_, sessionsDir_, packDir_, dbPath_}) e->setPlaceholderText("default");
     auto browse = [this](QLineEdit* e, bool dir) {
         auto row = new QWidget;
         auto h = new QHBoxLayout(row);
@@ -797,6 +799,7 @@ QWidget* Window::settingsPage() {
     auto fp = new QFormLayout(play);
     fp->addRow("Default 9-max model", defaultModel_);
     fp->addRow("River re-solve iterations", resolveIters_);
+    fp->addRow("9-max search deals per decision", searchSamples_);
     fp->addRow("TexasSolver program", browse(tsBin_, false));
     fp->addRow("TexasSolver resources", browse(tsRes_, true));
     fp->addRow("TexasSolver threads", tsThreads_);
@@ -804,6 +807,7 @@ QWidget* Window::settingsPage() {
     auto files = new QWidget;
     auto ff = new QFormLayout(files);
     ff->addRow("Sessions folder", browse(sessionsDir_, true));
+    ff->addRow("Database (kestrel.db)", browse(dbPath_, false));
     ff->addRow("Heads-up data pack", browse(packDir_, true));
 
     settingsNote_ = new QLabel;
@@ -846,10 +850,12 @@ void Window::loadSettings() {
     tcpPort_->setValue(s.value("tcp_port").toInt(8792));
     lan_->setChecked(s.value("lan").toBool(true));
     resolveIters_->setValue(s.value("resolve_iters").toInt(500));
+    searchSamples_->setValue(s.value("search_samples").toInt(1024));
     tsThreads_->setValue(s.value("texassolver_threads").toInt(8));
     tsBin_->setText(s.value("texassolver_bin").toString());
     tsRes_->setText(s.value("texassolver_resources").toString());
     sessionsDir_->setText(s.value("sessions_dir").toString());
+    dbPath_->setText(s.value("db").toString());
     packDir_->setText(s.value("pack").toString());
     const QString want = s.value("default_model").toString("nm25");
     defaultModel_->clear();
@@ -874,12 +880,13 @@ void Window::saveSettings() {
     s["lan"] = lan_->isChecked();
     s["default_model"] = defaultModel_->currentText();
     s["resolve_iters"] = resolveIters_->value();
+    s["search_samples"] = searchSamples_->value();
     s["texassolver_threads"] = tsThreads_->value();
     auto put = [&](const char* k, QLineEdit* e) {
         if (e->text().trimmed().isEmpty()) s.remove(k);
         else s[k] = e->text().trimmed();
     };
-    put("texassolver_bin", tsBin_), put("texassolver_resources", tsRes_), put("sessions_dir", sessionsDir_), put("pack", packDir_);
+    put("texassolver_bin", tsBin_), put("texassolver_resources", tsRes_), put("sessions_dir", sessionsDir_), put("pack", packDir_), put("db", dbPath_);
     if (lan_->isChecked() && !readSettings().value("lan").toBool(true) &&
         !ask(this, "Other devices on your network will be able to reach Kestrel with the access link. Continue?"))
         return;

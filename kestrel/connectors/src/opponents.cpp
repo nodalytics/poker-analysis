@@ -1,5 +1,7 @@
 #include "kestrel/opponents.hpp"
 
+#include "kestrel/store.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <filesystem>
@@ -124,6 +126,17 @@ void OpponentBook::save_locked() {
         f << j.dump(1);
     }
     std::filesystem::rename(tmp, path_, ec);  // whole or not at all
+    if (store_) {
+        try {
+            store_->put_opponents(j);
+        } catch (const std::exception&) {  // the database is a copy: the file above is saved either way
+        }
+    }
+}
+
+void OpponentBook::set_store(Store* s) {
+    std::lock_guard<std::mutex> lk(mu_);
+    store_ = s;
 }
 
 void OpponentBook::flush() {

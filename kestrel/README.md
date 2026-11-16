@@ -47,7 +47,14 @@ kestreld serve --pack llm-research/blueprint/pack --connectors kestrel/connector
 uv --project llm-research run python kestrel/testplatform/ninemax_platform.py &       # 127.0.0.1:8793
 kestreld play kestrel/connectors/testplatform.yaml --model llm-research/models/ninemax/nm25 \
     --tournaments 20 --hands 100000 --out sessions/test9 --pack llm-research/blueprint/pack
+kestreld play kestrel/connectors/testplatform.yaml --model llm-research/models/ninemax/nm25 --solver search \
+    --search-samples 1024 --tournaments 20 --hands 100000 --out sessions/test9s --pack llm-research/blueprint/pack
 ```
+
+**Search** (`--solver search` or `search-robust`, or the Solver box of a new 9-max table) plays nm25 with search at
+decision time, before the flop and in pots of up to three players after it: about 2 s a decision on 8 cores at the
+default 1,024 deals (`search_samples` in the settings; 256 is 4× faster), 3× that for `search-robust`. Without it, a 9-max table plays
+the network's own policy.
 
 Other connectors: `pokerpi.yaml` (a self-hosted bot tournament server, long polling), `testplatform-ws.yaml` (the test platform over a WebSocket, speaking Open Poker's protocol: `uv run --with websockets==14.1 python kestrel/testplatform/ws_platform.py`) and `openpoker.yaml` (a draft until the account exists). The connector format is in [`docs/design.md`](docs/design.md#connector-files).
 
@@ -60,14 +67,41 @@ curl -s -X POST http://127.0.0.1:8790/v1/decide -H 'Content-Type: application/js
   "actions": [{"player": "a", "street": 0, "kind": "raise", "to": 125}], "payouts": [0.5, 0.3, 0.2]}'
 ```
 
+Add `"solver": "search"` (or `search-robust`, and optionally `"samples": 512`) to search the spot; each option then
+also carries `q_bb`, its searched value in big blinds of ICM equity, and the answer says `searched`, `samples` and
+`ess` (the effective number of deals after weighting by the opponents' moves).
+
 The web app shows every running table live, each on its own screen. Switch screens with tabs or keys `1`–`9`, press `g` for a grid of all tables, `n` to start a new table and `t` to change theme. Each screen shows:
 - the cards, the pot and the betting as it happens;
 - Kestrel's decision, with its probabilities;
 - the session's results.
 
-## The desktop app
+## The database
 
-`Kestrel` (built beside `kestreld` when Qt 6 is installed: `qt6-base-dev` on Debian) shows the same tables as the web app, drawn live, with a grid of all of them and your moves at a practice seat. It installs models, checks and adds connectors, and is the admin for Kestrel's settings: ports, LAN access and its token, the default model, TexasSolver and folders, saved to `settings.json` and applied by restarting the server. It starts Kestrel itself when it isn't running. `Kestrel --tab settings` opens on a tab.
+Every hand Kestrel plays, at a platform's table or a practice table, goes into one SQLite file,
+`~/.local/share/kestrel/kestrel.db` (`db` in the settings to move it, `"db": false` to turn it off), with its session
+and the opponents' statistics. Each session's `hands.jsonl` and `summary.json` are still written as an export.
+
+| Table | Rows |
+|---|---|
+| `sessions` | one per session or practice table: kind, connector, model, solver, folder, start and end, `summary` (JSON) |
+| `hands` | one per hand: session, order, connector, the platform's hand id, model, solver, `result_bb`, and `data`, the whole record (JSON) |
+| `opponents` | one per platform and username: hands and `stats` (JSON: VPIP, raise, 3-bet, fold to c-bet, ...) |
+
+```
+kestreld db stats                                  # how much it holds
+kestreld db sessions                               # every session, newest first, with hands and bb/100
+kestreld db import ~/.local/share/kestrel/sessions # history recorded before the database (each folder once)
+sqlite3 ~/.local/share/kestrel/kestrel.db "SELECT json_extract(data, '$.hole'), json_extract(data, '$.action'),
+  result_bb FROM hands WHERE connector = 'testplatform' ORDER BY result_bb LIMIT 10"   # the biggest losses
+```
+
+Over the API: `GET /v1/db` (counts), `GET /v1/db/sessions?limit=&offset=`, `GET /v1/hands?session=&connector=&limit=&offset=`.
+The database uses write-ahead logging, so it can be read (sqlite3, a notebook) while Kestrel plays. SQLite is built
+into Kestrel, so there is nothing to install.
+
+
+`Kestrel` (built beside `kestreld` when Qt 6 is installed: `qt6-base-dev` on Debian) shows the same tables as the web app, drawn live, with a grid of all of them and your moves at a practice seat. It installs models, checks and adds connectors, and is the admin for Kestrel's settings: ports, LAN access and its token, the default model, 9-max search deals per decision, TexasSolver and folders, saved to `settings.json` and applied by restarting the server. It starts Kestrel itself when it isn't running. `Kestrel --tab settings` opens on a tab.
 
 ## Build and self-test
 

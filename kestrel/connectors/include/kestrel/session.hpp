@@ -10,6 +10,8 @@
 
 namespace kestrel {
 
+class Store;
+
 struct SessionPlan {
     int hands = 100;
     std::string out_dir;
@@ -17,7 +19,10 @@ struct SessionPlan {
     uint64_t seed = 1;
     std::string model = "hu-blueprint", solver = "none";
     int tournaments = 1;  // structured connectors: tournaments to play (the hands cap still applies)
-    OpponentBook* opponents = nullptr;  // where the opponents' statistics are kept (none: not tracked)
+    OpponentBook* opponents = nullptr;
+    Store* store = nullptr;  // the database every hand is also written to (none: the files only)
+    int search_samples = 0;  // structured connectors: search at decision time (0: the network alone)
+    bool search_robust = false;  // where the opponents' statistics are kept (none: not tracked)
 };
 
 struct SessionSummary {

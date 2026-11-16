@@ -37,6 +37,10 @@ class Net {
     void forward(const std::vector<float>& feat, const std::array<int, 4>& buckets, int street, float strength,
                  std::vector<float>& logits, float& value) const;
     std::vector<float> policy(const std::vector<float>& logits, const std::vector<uint8_t>& legal) const;
+    // B positions at once (row-major inputs and outputs; value may be null): the same arithmetic as forward, but each
+    // weight is read once for the whole batch, which is what makes search affordable on a CPU
+    void forward_batch(int B, const float* feat, const int* buckets, const int* street, const float* strength,
+                       float* logits, float* value) const;
 
   private:
     struct Lin {

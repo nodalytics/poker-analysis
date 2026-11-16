@@ -205,6 +205,12 @@ int main(int argc, char** argv) {
     Check rturn{"9max replay: ok", 0}, rprob{"9max replay: probs", 1e-5}, rto{"9max replay: to", 1e-6};
     std::mt19937_64 rng(7);
     int rdec = 0;
+    // the batched forward pass must equal the single one, and search must give one legal move with values
+    Check bfwd{"9max batch: logits", 1e-4}, bval{"9max batch: value", 1e-4}, srch{"9max search: ok", 0};
+    std::vector<float> BF, BS, BL, BLg;
+    std::vector<int> BK, BSt;
+    std::vector<float> BV;
+    int searched = 0;
     const double cb = 40;  // platform chips per big blind
     for (int hand = 0; hand < 300; ++hand) {
         const int n = 2 + hand % 8;
@@ -256,6 +262,9 @@ int main(int argc, char** argv) {
             float v;
             net.forward(f, bk[i], st, strength(info, st, bk[i][st]), lg, v);
             auto p = net.policy(lg, L);
+            BF.insert(BF.end(), f.begin(), f.end()), BK.insert(BK.end(), bk[i].begin(), bk[i].end());
+            BSt.push_back(st), BS.push_back(strength(info, st, bk[i][st])), BLg.insert(BLg.end(), lg.begin(), lg.end());
+            BV.push_back(v);
             sp.me = "p" + std::to_string(who[i]);
             sp.hole = {card_str(hole[i][0]), card_str(hole[i][1])};
             sp.board.clear();
@@ -270,6 +279,17 @@ int main(int argc, char** argv) {
                     rto.cmp(o.to, double((o.slot == menu.A - 1 ? T.avail[i] : int64_t(t[o.slot - 2])) - base[i]) / BB * cb, w);
             }
             for (int a = 0; a < menu.A; ++a) rprob.cmp(got[a], L[a] ? p[a] : 0.0, w + " slot " + std::to_string(a));
+            if (rdec % 40 == 0) {
+                SearchConfig sc;
+                sc.samples = 64, sc.robust = (rdec / 40) % 2;
+                auto sa = ninemax_decide(net, sp, &sc);
+                int ones = 0;
+                bool fine = sa.error.empty();
+                for (auto& o : sa.options) ones += o.prob == 1.0, fine = fine && (!sa.searched || std::isfinite(o.q));
+                fine = fine && (!sa.searched || (ones == 1 && sa.ess >= 1 && sa.ess <= 64.0001));
+                srch.eq(fine, 1, w + " " + sa.error);
+                searched += sa.searched;
+            }
             const int act = std::discrete_distribution<int>(p.begin(), p.end())(rng);
             const int64_t to_call = T.bet - T.contrib[i];
             NMAction na{sp.me, st, "", 0};
@@ -282,11 +302,21 @@ int main(int argc, char** argv) {
         }
     }
 
+    {
+        const int B = int(BV.size()), A = menu.A;
+        std::vector<float> lg(size_t(B) * A), v(B);
+        net.forward_batch(B, BF.data(), BK.data(), BSt.data(), BS.data(), lg.data(), v.data());
+        for (int i = 0; i < B; ++i) {
+            for (int a = 0; a < A; ++a) bfwd.cmp(lg[size_t(i) * A + a], BLg[size_t(i) * A + a], "row " + std::to_string(i));
+            bval.cmp(v[i], BV[i], "row " + std::to_string(i));
+        }
+        srch.eq(searched > 5, 1, "searched decisions: " + std::to_string(searched));
+    }
     bool ok = true;
     std::printf("kestrel self-test: %zu 9-max hands, %d ICM cases, %d heads-up decisions, %d with the defence floor "
                 "(%d floored), %d replayed platform decisions\n", V["hands"].size(), c, hc, fc, floored, rdec);
     for (Check* k : {&actor, &street, &legal, &targets, &feat, &str, &logit, &value, &done, &pay, &eq0, &icmc, &hturn,
-                     &hnode, &hbk, &hn, &hkind, &hprob, &hto, &fagree, &rturn, &rprob, &rto, &mwc}) {
+                     &hnode, &hbk, &hn, &hkind, &hprob, &hto, &fagree, &rturn, &rprob, &rto, &mwc, &bfwd, &bval, &srch}) {
         std::printf("  %-6s %-10s %6ld checks, worst error %.2e (tolerance %.0e)%s\n", k->bad ? "FAIL" : "ok",
                     k->name.c_str(), k->n, k->worst, k->tol, k->bad ? "" : "");
         if (k->bad) {

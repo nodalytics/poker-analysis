@@ -25,6 +25,7 @@
 #include "kestrel/models.hpp"
 #include "kestrel/server.hpp"
 #include "kestrel/session.hpp"
+#include "kestrel/store.hpp"
 
 using namespace kestrel;
 
@@ -39,15 +40,20 @@ int usage() {
                  "       kestreld models list|install PACKAGE.tar.gz|verify NAME [--dir DIR]\n"
                  "       kestreld mcp [--port 8790]        MCP over stdio for LLMs and agents\n"
                  "       kestreld check CONNECTOR\n"
+                 "       kestreld db [--db FILE] stats|sessions|import DIR...   the database (default\n"
+                 "                     ~/.local/share/kestrel/kestrel.db); import: session folders' hands.jsonl\n"
                  "       kestreld play CONNECTOR --hands N --out DIR [--pack DIR] [--model M]\n"
                  "                     [--solver none|kestrel-river|texassolver] [--resolve-iters N]\n"
                  "                     [--texassolver BIN --texassolver-resources DIR] [--seed S] [--max-errors E]\n"
                  "                     table connectors (codec structured): --model <9-max model folder> [--tournaments N]\n"
+                 "                     [--solver none|search|search-robust] [--search-samples 1024]\n"
+                 "                     [--db FILE|off]   (every hand also goes into kestrel.db)\n"
                  "       kestreld                         (no arguments: start the app and open it, as a double-click does)\n"
                  "       kestreld start                   the same without opening the browser (the desktop app runs it)\n"
                  "       kestreld serve [--port P] [--lan on|off] [--pack DIR] [--models DIR] [--connectors DIR]...\n"
                  "                      [--web DIR] [--assets DIR] [--default-model nm25]\n"
-                 "                      [--out DIR] [--resolve-iters N] [--texassolver BIN --texassolver-resources DIR]\n");
+                 "                      [--out DIR] [--resolve-iters N] [--search-samples N] [--db FILE|off]\n"
+                 "                      [--texassolver BIN --texassolver-resources DIR]\n");
     return 2;
 }
 }
@@ -157,6 +163,13 @@ std::filesystem::path exe_dir(const char* argv0) {
     return std::filesystem::absolute(argv0, ec).parent_path();
 }
 
+// the user's data folder ($XDG_DATA_HOME/kestrel, else ~/.local/share/kestrel): sessions and kestrel.db
+std::filesystem::path data_dir() {
+    namespace fs = std::filesystem;
+    std::string home = std::getenv("HOME") ? std::getenv("HOME") : (std::getenv("USERPROFILE") ? std::getenv("USERPROFILE") : ".");
+    return env("XDG_DATA_HOME") ? fs::path(env("XDG_DATA_HOME")) / "kestrel" : fs::path(home) / ".local" / "share" / "kestrel";
+}
+
 // a double-click: serve with everything found beside the program (the release layout: bin/ and share/kestrel/) and
 // in the user's folders, and open the app in the browser
 ServeOptions defaults(const char* argv0) {
@@ -171,6 +184,7 @@ ServeOptions defaults(const char* argv0) {
     o.models = default_models_dir();
     o.extra_models = {(share / "models").string(), (share / "models" / "ninemax").string()};
     o.out = (data / "sessions").string();
+    o.db = (data / "kestrel.db").string();
     o.pack = std::getenv("KESTREL_PACK") ? std::getenv("KESTREL_PACK")
              : fs::exists(share / "pack" / "tree.tsv") ? (share / "pack").string()
                                                          : (data / "pack").string();
@@ -190,10 +204,11 @@ ServeOptions defaults(const char* argv0) {
             };
             o.lan = st.value("lan", true);
             num("port", o.port), num("ws_port", o.ws_port), num("tcp_port", o.tcp_port);
-            num("resolve_iters", o.resolve_iters), num("texassolver_threads", o.ts_threads);
+            num("resolve_iters", o.resolve_iters), num("search_samples", o.search_samples), num("texassolver_threads", o.ts_threads);
             str("default_model", o.nine_max_default);
             str("texassolver_bin", o.ts_bin), str("texassolver_resources", o.ts_resources);
-            str("sessions_dir", o.out), str("pack", o.pack);
+            str("sessions_dir", o.out), str("pack", o.pack), str("db", o.db);
+            if (st.contains("db") && st["db"].is_boolean() && !st["db"].get<bool>()) o.db.clear();  // "db": false
         }
     }
     return o;
@@ -252,6 +267,53 @@ int start_command(const char* argv0) {
     }
 }
 
+// kestreld db: the database's size, its sessions, or importing session folders recorded before it existed (each
+// folder once; a folder of folders imports every one with a hands.jsonl)
+int db_command(int argc, char** argv) {
+    namespace fs = std::filesystem;
+    std::string path = (data_dir() / "kestrel.db").string(), cmd;
+    std::vector<std::string> dirs;
+    for (int k = 2; k < argc; ++k) {
+        std::string a = argv[k];
+        if (a == "--db" && k + 1 < argc) path = argv[++k];
+        else if (cmd.empty()) cmd = a;
+        else dirs.push_back(a);
+    }
+    try {
+        Store st(path);
+        if (cmd == "stats") {
+            std::printf("%s\n", st.stats().dump(1).c_str());
+        } else if (cmd == "sessions") {
+            for (auto& s : st.sessions(1000))
+                std::printf("%5lld  %-8s %-18s %-8s %-14s %6lld hands  %s\n", (long long)s["id"].get<int64_t>(),
+                            s["kind"].get<std::string>().c_str(), s["connector"].get<std::string>().c_str(),
+                            s["model"].is_string() ? s["model"].get<std::string>().c_str() : "",
+                            s["solver"].is_string() ? s["solver"].get<std::string>().c_str() : "",
+                            (long long)s["hands"].get<int64_t>(),
+                            s["bb100"].is_number() ? (std::to_string(s["bb100"].get<double>()) + " bb/100").c_str() : "");
+        } else if (cmd == "import" && !dirs.empty()) {
+            int total = 0, folders = 0;
+            auto one = [&](const fs::path& d) {
+                int n = st.import_dir(d.string());
+                if (n) ++folders, total += n, std::printf("%s: %d hands\n", d.string().c_str(), n);
+            };
+            for (auto& d : dirs) {
+                if (fs::exists(fs::path(d) / "hands.jsonl")) one(d);
+                else if (fs::is_directory(d))
+                    for (auto& e : fs::directory_iterator(d))
+                        if (e.is_directory() && fs::exists(e.path() / "hands.jsonl")) one(e.path());
+            }
+            std::printf("imported %d hands from %d folders into %s\n", total, folders, path.c_str());
+        } else {
+            return usage();
+        }
+        return 0;
+    } catch (const std::exception& e) {
+        std::fprintf(stderr, "kestreld: %s\n", e.what());
+        return 1;
+    }
+}
+
 int main(int argc, char** argv) {
     if (argc == 1) return launch(argv[0]);
     if (std::string(argv[1]) == "start") return start_command(argv[0]);
@@ -268,6 +330,7 @@ int main(int argc, char** argv) {
         for (auto& e : errors) std::printf("  not loaded: %s\n", e.c_str());
         return errors.empty() ? 0 : 1;
     }
+    if (argc >= 2 && std::string(argv[1]) == "db") return db_command(argc, argv);
     if (argc >= 2 && std::string(argv[1]) == "serve") {
         ServeOptions o;
         o.pack = "blueprint/pack";
@@ -281,12 +344,14 @@ int main(int argc, char** argv) {
             else if (a == "--out") o.out = v;
             else if (a == "--models") o.extra_models.push_back(v);
             else if (a == "--resolve-iters") o.resolve_iters = std::stoi(v);
+            else if (a == "--search-samples") o.search_samples = std::clamp(std::stoi(v), 16, 4096);
             else if (a == "--texassolver") o.ts_bin = v;
             else if (a == "--texassolver-resources") o.ts_resources = v;
             else if (a == "--lan") o.lan = v == "on" || v == "1" || v == "true";
             else if (a == "--ws-port") o.ws_port = std::stoi(v);
             else if (a == "--default-model") o.nine_max_default = v;
             else if (a == "--tcp-port") o.tcp_port = std::stoi(v);
+            else if (a == "--db") o.db = v == "off" ? "" : v;
             else return usage();
         }
         o.connectors.push_back(default_dir());
@@ -312,7 +377,8 @@ int main(int argc, char** argv) {
         if (cmd != "play") return usage();
         SessionPlan plan;
         std::string pack = "blueprint/pack";
-        int iters = 500;
+        int iters = 500, samples = 1024;
+        std::string db_path = (data_dir() / "kestrel.db").string();
         TexasSolverConfig ts;
         for (int k = 3; k + 1 < argc; k += 2) {
             std::string a = argv[k], v = argv[k + 1];
@@ -325,6 +391,8 @@ int main(int argc, char** argv) {
             else if (a == "--tournaments") plan.tournaments = std::stoi(v);
             else if (a == "--solver") plan.solver = v;
             else if (a == "--resolve-iters") iters = std::stoi(v);
+            else if (a == "--search-samples") samples = std::clamp(std::stoi(v), 16, 4096);
+            else if (a == "--db") db_path = v == "off" ? "" : v;
             else if (a == "--texassolver") ts.bin = v;
             else if (a == "--texassolver-resources") ts.resources = v;
             else return usage();
@@ -332,6 +400,16 @@ int main(int argc, char** argv) {
         if (plan.out_dir.empty()) return usage();
         OpponentBook opponents(plan.out_dir + "/opponents.json");  // the opponents' statistics for this output folder
         plan.opponents = &opponents;
+        std::unique_ptr<Store> store;
+        if (!db_path.empty()) {
+            try {
+                store = std::make_unique<Store>(db_path);
+                plan.store = store.get();
+                opponents.set_store(store.get());
+            } catch (const std::exception& e) {
+                std::fprintf(stderr, "kestreld: %s; continuing with files only\n", e.what());
+            }
+        }
         std::signal(SIGINT, on_signal);
         std::signal(SIGTERM, on_signal);
         int n = 0;
@@ -342,6 +420,9 @@ int main(int argc, char** argv) {
         };
         if (spec.codec == "structured") {  // a 2-9 handed table: --model is a 9-max model folder (net.json, net.bin)
             if (plan.model == "hu-blueprint") throw std::runtime_error("this connector needs --model <9-max model folder>");
+            if (plan.solver != "none" && plan.solver != "search" && plan.solver != "search-robust")
+                throw std::runtime_error("9-max tables take --solver none, search or search-robust");
+            if (plan.solver != "none") plan.search_samples = samples, plan.search_robust = plan.solver == "search-robust";
             buckets_init(pack);
             Net net(plan.model);
             auto s = run_ninemax_session(spec, plan, net, progress, &g_stop, [](const json& e) {
