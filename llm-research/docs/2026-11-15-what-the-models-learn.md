@@ -60,9 +60,24 @@ PRO 6000).
 - The intervals are about ±2.5-3.5 per row and not paired, so most single differences are not significant at 2,000
   deals; version 1 against raise-biased opponents is the clearest.
 
-**Next:** a paired comparison (the same deals scored hand by hand) over more deals, and an exploiter test against the
-robust searcher, since robustness is what it is for. Into Kestrel only if it beats the plain network in duplicate
-matches; at 80 ms a decision it fits a platform's time limit easily.
+**Paired, 2026-11-16** (`search3_nm25_*`, 4,000 deals per run, all runs on the same deals, the gain scored deal by
+deal so the cards' luck cancels; `scripts/search_paired.py`): gain over plain nm25, bb/100
+
+| Opponents play | Version 1 | Robust |
+|---|---|---|
+| the network | +2.18 [−0.32, +4.68] | +1.99 [+0.02, +3.96] |
+| raise-biased | **+6.39** [+3.92, +8.86] | **+3.69** [+1.54, +5.84] |
+| call-biased | **+3.89** [+1.30, +6.49] | **+3.13** [+0.98, +5.28] |
+| fold-biased | +2.26 [−0.07, +4.60] | +0.82 [−1.07, +2.71] |
+
+Both searches gain against every kind of opponent; neither loses anywhere once the deals are paired (the unpaired
+run's small losses for version 1 were the cards). Version 1 gains at least as much as robust everywhere, and is three
+times faster (about 27 against 80 ms a decision). Robust's promise, holding up when opponents adapt to it, is not
+shown by these fixed opponents; it needs an adaptive one: an exploiter trained against each searcher.
+
+**Then:** an exploiter test against each searcher, since robustness is what the robust version is for. Both beat the
+plain network in duplicate matches, so search is ready for Kestrel; at 27-80 ms a decision it fits any platform's
+time limit.
 
 ## Local best response for 9-max (2026-11-15)
 
