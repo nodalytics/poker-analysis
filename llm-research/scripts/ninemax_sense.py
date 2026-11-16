@@ -10,6 +10,10 @@ many random hands and reads the network's action probabilities by hand class:
   shove short  first in at 8bb: of the hands it plays, the share that are all in (open-shove territory)
   bb defence   big blind facing the button's 2x open at 20bb, the small blind folded: share it defends
                (calls or raises); the price is good, so a wide defence
+  steals       first in on the button at 20bb with weak hands that win by stealing the blinds (K5o, Q7o, J7o, T7s,
+               64s, A3o): how often it plays them (often; weak hands win pots when everyone folds)
+  bb weak      big blind facing the button's min-open at 20bb with weak hands that the price makes playable (T6s,
+               85s, 63s, K4o, Q5s): how often it defends them
   heads-up     (final tables down to two, --short runs) the small blind (the button) first in at 10bb: share of
                hands played, at least the push/fold equilibrium's shove share (59%, 75% with the ante; limping and
                min-raising more hands is fine); the big blind against a min-raise at 20bb: share defended
@@ -41,6 +45,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 NAMES = ["UTG", "UTG+1", "MP", "LJ", "HJ", "CO", "BTN", "SB", "BB"]  # action order before the flop
 PREMIUMS = ["AA", "KK", "QQ", "AKs", "AKo"]
 TRASH = ["72o", "83o", "94o", "T2o", "J3o"]
+STEALS = ["K5o", "Q7o", "J7o", "T7s", "64s", "A3o"]  # weak, but they win the blinds on the button
+BB_WEAK = ["T6s", "85s", "63s", "K4o", "Q5s"]  # weak, but the price of a min-open makes them a defence
 # reference bands (share of all hands played first in at 20bb, 9-handed), approximate
 OPEN_BAND = {"UTG": (0.10, 0.20), "MP": (0.13, 0.24), "HJ": (0.18, 0.30), "CO": (0.24, 0.38), "BTN": (0.35, 0.58),
              "SB": (0.35, 0.70)}  # fmt: skip
@@ -121,6 +127,11 @@ def check(run, dealer, dev, G):
         add(f"opens first in ({pos}, 20bb)", play, (OPEN_BAND_ANTE if ante else OPEN_BAND)[pos],
             f"limp {float(pr[:, 1].mean()):.1%}, opens " + "/".join(f"{x:.1%}" for x in sizes) +
             f", shove {float(pr[:, S + 2].mean()):.1%}")  # fmt: skip
+    pr, names = spot(net, dealer, menu, dev, G, 20, 6)
+    bc = by_class(pr, names, STEALS)
+    play = [1 - float(p[0]) for p in bc.values() if p is not None]
+    add("steals with weak hands on the button (20bb)", sum(play) / len(play), (0.40, 1.0),
+        " ".join(f"{h} {1 - float(p[0]):.0%}" for h, p in bc.items() if p is not None))  # fmt: skip
     for pos, j in (("UTG", 0), ("CO", 5)):
         pr, names = spot(net, dealer, menu, dev, G, 8, j)
         play = 1 - pr[:, 0]
@@ -131,6 +142,10 @@ def check(run, dealer, dev, G):
     pr, names = spot(net, dealer, menu, dev, G, 20, 6, forced=((2, 1),))
     add("big blind defends vs button min-open (20bb)", float(1 - pr[:, 0].mean()), BB_DEFEND_ANTE if ante else BB_DEFEND,
         f"calls {float(pr[:, 1].mean()):.0%}, raises {float(pr[:, 2:].sum(1).mean()):.0%}")  # fmt: skip
+    bc = by_class(pr, names, BB_WEAK)
+    play = [1 - float(p[0]) for p in bc.values() if p is not None]
+    add("big blind defends weak hands vs button min-open (20bb)", sum(play) / len(play), (0.40, 1.0),
+        " ".join(f"{h} {1 - float(p[0]):.0%}" for h, p in bc.items() if p is not None))  # fmt: skip
     # heads-up: the small blind first in at 10bb, and the big blind against its min-raise at 20bb
     pr, names = spot(net, dealer, menu, dev, G, 10, 7, seated=2)
     add("heads-up: small blind plays first in (10bb)", float(1 - pr[:, 0].mean()), HU_SB_PLAY_ANTE if ante else HU_SB_PLAY,
