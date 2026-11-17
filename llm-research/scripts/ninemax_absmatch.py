@@ -76,8 +76,11 @@ def main():
                 per += u[:, seat] / BB
             x = (per / P).cpu().numpy()
             m, se = x.mean() * 100, x.std() / math.sqrt(len(x)) * 100
-            res[f"{h['name']} vs {v['name']}"] = [round(float(m), 1), round(float(m - 1.96 * se), 1),
-                                                  round(float(m + 1.96 * se), 1)]  # fmt: skip
+            res[f"{h['name']} vs {v['name']}"] = [
+                round(float(m), 4),
+                round(float(m - 1.96 * se), 4),
+                round(float(m + 1.96 * se), 4),
+            ]  # fmt: skip  (4 places: tests use them)
             print(f"{h['name']:>8} {str(h['buckets']):>18} vs 8 x {v['name']:<8} {m:+7.1f} bb/100 "
                   f"[{m - 1.96 * se:+.1f}, {m + 1.96 * se:+.1f}]", flush=True)  # fmt: skip
     shutil.rmtree(tmp, ignore_errors=True)
