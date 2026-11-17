@@ -28,6 +28,10 @@ OpponentStats from_json(const json& j) {
     s.aggressive = g("aggressive"), s.passive = g("passive"), s.saw_flop = g("saw_flop"), s.showdown = g("showdown");
     if (j.contains("shown") && j["shown"].is_array())
         for (auto& x : j["shown"]) s.shown.push_back(x);
+    for (int d = 0; d < 6; ++d) {  // the forgetting counts (books written before 2026-11-17 have none: start empty)
+        if (j.contains("recent_x") && j["recent_x"].size() == 6) s.recent_x[d] = j["recent_x"][d].get<double>();
+        if (j.contains("recent_n") && j["recent_n"].size() == 6) s.recent_n[d] = j["recent_n"][d].get<double>();
+    }
     return s;
 }
 
@@ -45,6 +49,7 @@ json OpponentStats::to_json() const {
             {"vpip_n", vpip}, {"pfr_n", pfr}, {"threebet_n", threebet}, {"threebet_chances", threebet_chance},
             {"cbet_folds", cbet_folds}, {"cbet_faced", cbet_faced}, {"aggressive", aggressive}, {"passive", passive},
             {"saw_flop", saw_flop}, {"showdown", showdown}, {"shown", json(shown)},
+            {"recent_x", recent_x}, {"recent_n", recent_n},
             {"profile", profile_json(*this)}};  // the closest player type (profile.hpp); not read back
 }
 
@@ -98,6 +103,8 @@ void OpponentBook::record(const std::string& platform, const std::vector<std::st
     if (!board.empty() && board.size() >= 3) flop_seen = true;
     for (auto& name : in) {
         OpponentStats& s = plat[name];
+        double x0[kProfileDim], n0[kProfileDim];
+        profile_counts(s, false, x0, n0);  // before this hand, for the forgetting counts below
         ++s.hands;
         s.vpip += vpip.count(name), s.pfr += pfr.count(name);
         s.threebet += three.count(name), s.threebet_chance += three_chance.count(name);
@@ -112,6 +119,12 @@ void OpponentBook::record(const std::string& platform, const std::vector<std::st
             ++s.showdown;
             s.shown.push_back({{"cards", it->second}, {"board", board}});
             while (s.shown.size() > 20) s.shown.pop_front();
+        }
+        double x1[kProfileDim], n1[kProfileDim];
+        profile_counts(s, false, x1, n1);
+        for (int d = 0; d < kProfileDim; ++d) {  // forget a little, then add this hand's events and chances
+            s.recent_x[d] = kRecentDecay * s.recent_x[d] + (x1[d] - x0[d]);
+            s.recent_n[d] = kRecentDecay * s.recent_n[d] + (n1[d] - n0[d]);
         }
     }
     if (++unsaved_ >= 10) save_locked();
@@ -149,11 +162,22 @@ void OpponentBook::flush() {
     save_locked();
 }
 
+RatePrior OpponentBook::prior_locked(const std::map<std::string, OpponentStats>& players) const {
+    std::vector<const OpponentStats*> v;
+    for (auto& [name, s] : players) v.push_back(&s);
+    return population_prior(v);
+}
+
 json OpponentBook::platform(const std::string& platform) const {
     std::lock_guard<std::mutex> lk(mu_);
     json out = json::object();
-    if (auto it = book_.find(platform); it != book_.end())
-        for (auto& [name, s] : it->second) out[name] = s.to_json();
+    auto it = book_.find(platform);
+    if (it == book_.end()) return out;
+    const RatePrior prior = prior_locked(it->second);
+    for (auto& [name, s] : it->second) {
+        out[name] = s.to_json();
+        out[name]["profile"] = profile_json(s, &prior);  // shrunk towards this platform's own players
+    }
     return out;
 }
 
@@ -162,7 +186,11 @@ json OpponentBook::player(const std::string& platform, const std::string& name) 
     auto it = book_.find(platform);
     if (it == book_.end()) return nullptr;
     auto p = it->second.find(name);
-    return p == it->second.end() ? json(nullptr) : p->second.to_json();
+    if (p == it->second.end()) return nullptr;
+    json j = p->second.to_json();
+    const RatePrior prior = prior_locked(it->second);
+    j["profile"] = profile_json(p->second, &prior);
+    return j;
 }
 
 json OpponentBook::platforms() const {
@@ -182,7 +210,8 @@ std::string OpponentBook::hud(const std::string& platform, const std::string& na
     auto r = [](int64_t a, int64_t b) { return b ? std::to_string(int(std::lround(100.0 * double(a) / double(b)))) : std::string("-"); };
     std::string line = r(s.vpip, s.hands) + "/" + r(s.pfr, s.hands) + "/" + r(s.threebet, s.threebet_chance) + " · " +
                        std::to_string(s.hands) + "h";
-    json pr = profile_json(s);
+    const RatePrior prior = prior_locked(it->second);
+    const json pr = profile_json(s, &prior);
     if (pr["settled"].get<bool>()) line += " · " + pr["type"].get<std::string>();
     return line;
 }

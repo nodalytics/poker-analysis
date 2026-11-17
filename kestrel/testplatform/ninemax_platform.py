@@ -42,12 +42,21 @@ PAYOUTS = [0.30, 0.20, 0.145, 0.105, 0.08, 0.065, 0.05, 0.035, 0.02]
 RANKS = "23456789TJQKA"
 STREETS = {0: "preflop", 3: "flop", 4: "turn", 5: "river"}
 BOTS = ["limper", "station", "odd", "tag", "minraiser", "odd", "limper", "tag"]
+# planted behaviours (2026-11-17), for checking that Kestrel's analyses find what is there (--bots chooses a lineup):
+#   switcher  tag for its first 150 hands, then a calling station (a player who changes: the forgetting profile)
+#   tilter    tag, but after losing 15bb or more in a hand plays loose and aggressive for 25 hands (tilt)
+#   ally      tag, but never bets or raises into another live ally and folds to an ally's bet unless strong
+#             (soft play between colluders)
 
 
 def strength(hole, board):
     """A rough 0..1 hand strength for the bots: pairs, high cards, and a made pair with the board."""
     r = sorted((RANKS.index(repr(c)[0]) for c in hole), reverse=True)
-    s = (r[0] + r[1]) / 24 * 0.6 + (0.35 if r[0] == r[1] else 0) + (0.05 if repr(hole[0])[1] == repr(hole[1])[1] else 0)
+    s = (
+        (r[0] + r[1]) / 24 * 0.6
+        + (0.35 if r[0] == r[1] else 0)
+        + (0.05 if repr(hole[0])[1] == repr(hole[1])[1] else 0)
+    )
     b = [RANKS.index(repr(c)[0]) for c in board]
     if any(x in b for x in r):
         s += 0.3 + 0.02 * max(x for x in r if x in b)
@@ -55,8 +64,11 @@ def strength(hole, board):
 
 
 class Tournament:
-    def __init__(self, name, players, rng, ante=True, outbox=None):
+    def __init__(self, name, players, rng, ante=True, outbox=None, memory=None):
         self.use_ante, self.outbox, self.board_seen, self.last = ante, outbox, 0, None
+        self.memory = (
+            memory if memory is not None else {}
+        )  # each bot's state across tournaments, by name
         self.rng = rng
         self.names = [name] + [f"{BOTS[k % len(BOTS)]}{k}" for k in range(1, players)]
         self.kind = {n: n.rstrip("0123456789") for n in self.names[1:]}
@@ -94,7 +106,12 @@ class Tournament:
                 order = [self.ring[(self.button + 1 + k) % n] for k in range(n)]
             self.hands += 1
             bb = self.bb()
-            self.order, self.sb_, self.bb_, self.ante = order, bb // 2, bb, bb if self.use_ante else 0
+            self.order, self.sb_, self.bb_, self.ante = (
+                order,
+                bb // 2,
+                bb,
+                bb if self.use_ante else 0,
+            )
             self.start = {p: self.chips[p] for p in order}
             self.actions = []
             self.state = NoLimitTexasHoldem.create_state(
@@ -106,7 +123,12 @@ class Tournament:
                 self.out({"type": "hand_start", "hand_id": f"h-{self.hands}", "seat": self.seat(self.me),
                           "dealer_seat": self.seat(order[-1]), "blinds": {"small_blind": bb // 2, "big_blind": bb}})  # fmt: skip
                 self.out(
-                    {"type": "hole_cards", "cards": [repr(c) for c in self.state.hole_cards[order.index(self.me)]]}
+                    {
+                        "type": "hole_cards",
+                        "cards": [
+                            repr(c) for c in self.state.hole_cards[order.index(self.me)]
+                        ],
+                    }
                 )
             self.run_bots()
             if self.state is not None:
@@ -115,11 +137,31 @@ class Tournament:
     def finish_hand(self):
         for p, s in zip(self.order, self.state.stacks):
             self.chips[p] = s
+        for p in self.order:  # the planted behaviours' memory
+            if p == self.me:
+                continue
+            m = self.memory.setdefault(p, {"hands": 0, "tilt": 0})
+            m["hands"] += 1
+            m["tilt"] = max(0, m["tilt"] - 1)
+            if (
+                self.kind[p] == "tilter"
+                and self.start[p] - self.chips[p] >= 15 * self.bb_
+            ):
+                m["tilt"] = 25
         # the finished hand's history, as platforms give it: every action, the board, and the cards shown down
         board = [repr(c) for cs in self.state.board_cards for c in cs]
-        live = [p for p in self.order if not any(a["player"] == p and a["type"] == "fold" for a in self.actions)]
+        live = [
+            p
+            for p in self.order
+            if not any(a["player"] == p and a["type"] == "fold" for a in self.actions)
+        ]
         shown = (
-            {p: [repr(c) for c in self.state.hole_cards[self.order.index(p)]] for p in live} if len(live) > 1 else {}
+            {
+                p: [repr(c) for c in self.state.hole_cards[self.order.index(p)]]
+                for p in live
+            }
+            if len(live) > 1
+            else {}
         )
         self.last = {"id": self.hands, "actions": list(self.actions), "board": board,
                      "shown": [{"id": p, "cards": c} for p, c in shown.items()]}  # fmt: skip
@@ -139,9 +181,17 @@ class Tournament:
             self.outbox.append(msg)
 
     def board_events(self):
-        board = [repr(c) for cs in self.state.board_cards for c in cs] if self.state else []
+        board = (
+            [repr(c) for cs in self.state.board_cards for c in cs] if self.state else []
+        )
         if len(board) > self.board_seen:
-            self.out({"type": "community_cards", "cards": board[self.board_seen :], "street": STREETS[len(board)]})
+            self.out(
+                {
+                    "type": "community_cards",
+                    "cards": board[self.board_seen :],
+                    "street": STREETS[len(board)],
+                }
+            )
             self.board_seen = len(board)
 
     def apply(self, i, action, amount=0):
@@ -154,14 +204,24 @@ class Tournament:
         elif action in ("raise", "allin") and st.can_complete_bet_or_raise_to():
             lo = st.min_completion_betting_or_raising_to_amount
             hi = st.max_completion_betting_or_raising_to_amount
-            to = hi if action == "allin" else max(lo, min(hi, int(round(float(amount)))))
+            to = (
+                hi if action == "allin" else max(lo, min(hi, int(round(float(amount)))))
+            )
             st.complete_bet_or_raise_to(to)
             kind = "allin" if to == hi else "raise" if top else "bet"
         else:
             to = min(top, mine + st.stacks[i])
             st.check_or_call()
             kind = "call" if top > mine else "check"
-        self.actions.append({"player": self.order[i], "street": street, "type": kind, "to": to, "add": to - mine})
+        self.actions.append(
+            {
+                "player": self.order[i],
+                "street": street,
+                "type": kind,
+                "to": to,
+                "add": to - mine,
+            }
+        )
         self.out({"type": "player_action", "seat": self.seat(self.order[i]), "name": self.order[i],
                   "action": {"allin": "all_in", "bet": "raise"}.get(kind, kind),
                   "amount": None if kind in ("fold", "check") else to - mine if kind == "call" else to,
@@ -179,6 +239,51 @@ class Tournament:
         pot = st.total_pot_amount
         r = self.rng.random()
         can_raise = st.can_complete_bet_or_raise_to()
+        mem = self.memory.setdefault(name, {"hands": 0, "tilt": 0})
+        if kind == "switcher":
+            kind = "tag" if mem["hands"] < 150 else "station"
+        if kind == "tilter":
+            if mem["tilt"] > 0:  # on tilt: loose and aggressive
+                if s > 0.3 and can_raise and r < 0.6:
+                    return "raise", max(st.bets) * 2.5 if st.street_index == 0 else max(
+                        st.bets
+                    ) + pot * 0.8
+                return (
+                    ("call", 0)
+                    if to_call and s > 0.15
+                    else ("check", 0)
+                    if not to_call
+                    else ("fold", 0)
+                )
+            kind = "tag"
+        if kind == "ally":
+            live = [
+                p
+                for p in self.order
+                if not any(
+                    a["player"] == p and a["type"] == "fold" for a in self.actions
+                )
+            ]
+            allies = [p for p in live if p != name and self.kind.get(p) == "ally"]
+            last_aggr = next(
+                (
+                    a["player"]
+                    for a in reversed(self.actions)
+                    if a["type"] in ("raise", "bet", "allin")
+                ),
+                None,
+            )
+            if allies:  # soft play: no bets or raises into a partner, and give way to a partner's bet
+                if to_call and last_aggr in allies:
+                    return ("call", 0) if s > 0.8 else ("fold", 0)
+                return (
+                    ("call", 0)
+                    if to_call and s > 0.5
+                    else ("check", 0)
+                    if not to_call
+                    else ("fold", 0)
+                )
+            kind = "tag"
         if kind == "station":
             return ("call", 0) if to_call else ("check", 0)
         if kind == "limper":
@@ -186,27 +291,55 @@ class Tournament:
                 return "call", 0
             if s > 0.75 and can_raise:
                 return "raise", max(st.bets) + pot * 0.63
-            return ("call", 0) if to_call and s > 0.45 else ("check", 0) if not to_call else ("fold", 0)
+            return (
+                ("call", 0)
+                if to_call and s > 0.45
+                else ("check", 0)
+                if not to_call
+                else ("fold", 0)
+            )
         if kind == "minraiser":
             if s > 0.55 and can_raise:
                 return "raise", max(st.bets) * 2 if max(st.bets) else self.bb_
-            return ("call", 0) if to_call and s > 0.4 else ("check", 0) if not to_call else ("fold", 0)
+            return (
+                ("call", 0)
+                if to_call and s > 0.4
+                else ("check", 0)
+                if not to_call
+                else ("fold", 0)
+            )
         if kind == "odd":
             if s > 0.5 and can_raise and r < 0.7:
-                return "raise", max(st.bets) + pot * self.rng.choice([0.27, 0.41, 0.83, 1.37, 2.9])
+                return "raise", max(st.bets) + pot * self.rng.choice(
+                    [0.27, 0.41, 0.83, 1.37, 2.9]
+                )
             if r < 0.1 and can_raise:
                 return "allin", 0
-            return ("call", 0) if to_call and s > 0.35 else ("check", 0) if not to_call else ("fold", 0)
+            return (
+                ("call", 0)
+                if to_call and s > 0.35
+                else ("check", 0)
+                if not to_call
+                else ("fold", 0)
+            )
         # tag
         if s > 0.65 and can_raise:
-            return "raise", max(st.bets) * 3 if st.street_index == 0 else max(st.bets) + pot * 0.55
+            return "raise", max(st.bets) * 3 if st.street_index == 0 else max(
+                st.bets
+            ) + pot * 0.55
         if (
             st.street_index == 0
             and not any(a["street"] == 0 and a["type"] != "fold" for a in self.actions)
             and s > 0.45
         ):
             return ("raise", 2.3 * self.bb_) if can_raise else ("call", 0)
-        return ("call", 0) if to_call and s > 0.5 else ("check", 0) if not to_call else ("fold", 0)
+        return (
+            ("call", 0)
+            if to_call and s > 0.5
+            else ("check", 0)
+            if not to_call
+            else ("fold", 0)
+        )
 
     def run_bots(self):
         while self.state is not None:
@@ -240,12 +373,18 @@ class Tournament:
             "chips": self.chips[self.me],
             "hand": {
                 "id": self.hands,
-                "players": [{"name": p, "start_stack": self.start[p]} for p in self.ring if p in self.start],
+                "players": [
+                    {"name": p, "start_stack": self.start[p]}
+                    for p in self.ring
+                    if p in self.start
+                ],
                 "button": self.order[-1],
                 "sb": self.sb_,
                 "bb": self.bb_,
                 "ante": self.ante,
-                "to_act": self.order[st.actor_index] if st.actor_index is not None else None,
+                "to_act": self.order[st.actor_index]
+                if st.actor_index is not None
+                else None,
                 "hole": [repr(c) for c in st.hole_cards[i]],
                 "board": [repr(c) for cs in st.board_cards for c in cs],
                 "actions": self.actions,
@@ -255,22 +394,41 @@ class Tournament:
 
 class Platform:
     def __init__(self, players, seed):
-        self.players, self.rng, self.lock, self.t = players, random.Random(seed), threading.Lock(), {}
+        self.players, self.rng, self.lock, self.t = (
+            players,
+            random.Random(seed),
+            threading.Lock(),
+            {},
+        )
+        self.memory = {}  # the bots' state across tournaments
 
     def handle(self, method, path, q, body):
         with self.lock:
             if method == "POST" and path == "/join":
                 tok = secrets.token_hex(8)
-                self.t[tok] = Tournament(str(body.get("name", "kestrel")), self.players, self.rng)
+                self.t[tok] = Tournament(
+                    str(body.get("name", "kestrel")),
+                    self.players,
+                    self.rng,
+                    memory=self.memory,
+                )
                 return {"token": tok}
-            t = self.t.get(q.get("token", [body.get("token", "")])[0] if method == "GET" else body.get("token", ""))
+            t = self.t.get(
+                q.get("token", [body.get("token", "")])[0]
+                if method == "GET"
+                else body.get("token", "")
+            )
             if t is None:
                 return {"error": "unknown token"}
             if method == "GET" and path == "/state":
                 return t.view()
             if method == "POST" and path == "/act":
                 st = t.state
-                if st is None or st.actor_index is None or t.order[st.actor_index] != t.me:
+                if (
+                    st is None
+                    or st.actor_index is None
+                    or t.order[st.actor_index] != t.me
+                ):
                     return {"error": "not your turn"}
                 a = body.get("action", "")
                 if a not in ("fold", "check", "call", "raise", "allin"):
@@ -288,7 +446,13 @@ def main():
     ap.add_argument("--port", type=int, default=8793)
     ap.add_argument("--players", type=int, default=9)
     ap.add_argument("--seed", type=int, default=1)
+    ap.add_argument(
+        "--bots",
+        help="the bots, comma-separated (e.g. tag,switcher,tilter,ally,ally,station,limper,odd)",
+    )
     a = ap.parse_args()
+    if a.bots:
+        BOTS[:] = a.bots.split(",")
     plat = Platform(a.players, a.seed)
 
     class H(BaseHTTPRequestHandler):
@@ -296,7 +460,9 @@ def main():
             u = urlparse(self.path)
             n = int(self.headers.get("Content-Length") or 0)
             body = json.loads(self.rfile.read(n) or b"{}") if n else {}
-            out = json.dumps(plat.handle(method, u.path, parse_qs(u.query), body)).encode()
+            out = json.dumps(
+                plat.handle(method, u.path, parse_qs(u.query), body)
+            ).encode()
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(out)))

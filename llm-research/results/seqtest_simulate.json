@@ -1,0 +1,58 @@
+{
+ "K": 8,
+ "alpha": 0.05,
+ "C": 2.0696,
+ "margin_bb100": 0.5,
+ "n_max": 40000,
+ "sd": 0.34,
+ "rows": [
+  {
+   "true_bb100": 0.0,
+   "difference": 0.048,
+   "equivalent": 0.753,
+   "fixed_design_significant": 0.049,
+   "deals_used": 31922.5,
+   "saved": 0.2019375
+  },
+  {
+   "true_bb100": 0.25,
+   "difference": 0.2915,
+   "equivalent": 0.389,
+   "fixed_design_significant": 0.3115,
+   "deals_used": 33390.0,
+   "saved": 0.16525
+  },
+  {
+   "true_bb100": 0.5,
+   "difference": 0.8265,
+   "equivalent": 0.054,
+   "fixed_design_significant": 0.8365,
+   "deals_used": 29580.0,
+   "saved": 0.26049999999999995
+  },
+  {
+   "true_bb100": 1.0,
+   "difference": 0.9995,
+   "equivalent": 0.0,
+   "fixed_design_significant": 0.9995,
+   "deals_used": 17127.5,
+   "saved": 0.5718125000000001
+  },
+  {
+   "true_bb100": 2.0,
+   "difference": 1.0,
+   "equivalent": 0.0,
+   "fixed_design_significant": 1.0,
+   "deals_used": 9977.5,
+   "saved": 0.7505625
+  },
+  {
+   "true_bb100": 3.0,
+   "difference": 1.0,
+   "equivalent": 0.0,
+   "fixed_design_significant": 1.0,
+   "deals_used": 6805.0,
+   "saved": 0.829875
+  }
+ ]
+}

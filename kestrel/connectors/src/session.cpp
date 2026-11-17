@@ -439,10 +439,10 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
     std::map<std::string, std::string> seen_name_of;  // player id -> username, for the hand being closed
     auto close_hand = [&](double now_chips, const json& r) {
         if (cur_hand.empty() || cur_bb <= 0) return;
+        std::map<std::string, std::vector<std::string>> shown;
         if (plan.opponents && !seen_names.empty()) {
             // the finished hand's whole history, when the platform gives it (last_actions): what Kestrel saw stops at
             // its own last move, and folds after it, to a continuation bet say, would be missed
-            std::map<std::string, std::vector<std::string>> shown;
             json la = at(r, fields, "last_actions");
             if (la.is_array() && (!fields.contains("last_hand") || id_of(at(r, fields, "last_hand")) == cur_hand)) {
                 auto user = [&](const std::string& id) { return seen_name_of.count(id) ? seen_name_of[id] : id; };
@@ -458,6 +458,16 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
                 if (json lb = at(r, fields, "last_board"); !lb.is_null()) seen_board = cards(lb);
             }
             plan.opponents->record(spec.name, seen_names, seen_acts, shown, seen_board, seen_me);
+        }
+        if (!seen_names.empty()) {  // the whole table, for analyses of the other players (tilt, collusion)
+            json acts = json::array(), stacks = json::object();
+            for (auto& a : seen_acts) acts.push_back({a.player, a.street, a.kind});
+            const json start_stacks = cur_line.value("stacks_bb", json::object());  // named: items() of a temporary dangles
+            for (auto& [id, st] : start_stacks.items())
+                stacks[seen_name_of.count(id) ? seen_name_of[id] : id] = st;
+            cur_line["table"] = {{"players", seen_names}, {"me", seen_me}, {"bb", cur_bb}, {"stacks_bb", stacks},
+                                 {"actions", acts}, {"shown", shown}};
+            cur_line.erase("stacks_bb");
         }
         seen_names.clear(), seen_acts.clear(), seen_board.clear();
         double won = (now_chips - cur_start) / cur_bb;
@@ -691,6 +701,8 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
             cur_hand = hand, cur_start = my_start(sp), cur_bb = sp.bb;
             cur_line = {{"connector", spec.name}, {"model", model_name(plan.model)}, {"solver", plan.solver}, {"hand_id", hand}, {"players", sp.players.size()},
                         {"start_bb", sp.bb > 0 ? cur_start / sp.bb : 0.0}, {"decisions", json::array()}};
+            for (auto& p : sp.players)  // every player's chips at the start, in big blinds (by id; named at the end)
+                if (sp.bb > 0) cur_line["stacks_bb"][p.id] = p.stack / sp.bb;
         }
         if (stream ? !turn_event
                    : id_of(at(r, fields, "to_act")) != sp.me && !(at(r, fields, "to_act").is_boolean() && truthy(at(r, fields, "to_act")))) {

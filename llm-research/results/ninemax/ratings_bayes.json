@@ -1,0 +1,103 @@
+{
+ "pairs": 78,
+ "chi2": 108.78648010518721,
+ "dof": 66,
+ "versions": {
+  "nm12": {
+   "least_squares": -1.022,
+   "bayes": -1.022,
+   "ci95": 0.156,
+   "p_best": 0.0
+  },
+  "nm13": {
+   "least_squares": -1.037,
+   "bayes": -1.036,
+   "ci95": 0.155,
+   "p_best": 0.0
+  },
+  "nm14": {
+   "least_squares": -1.022,
+   "bayes": -1.021,
+   "ci95": 0.155,
+   "p_best": 0.0
+  },
+  "nm15": {
+   "least_squares": -0.288,
+   "bayes": -0.288,
+   "ci95": 0.158,
+   "p_best": 0.0
+  },
+  "nm16": {
+   "least_squares": -0.23,
+   "bayes": -0.229,
+   "ci95": 0.158,
+   "p_best": 0.0
+  },
+  "nm17": {
+   "least_squares": 0.0,
+   "bayes": 0.0,
+   "ci95": 0.0,
+   "p_best": 0.0
+  },
+  "nm18": {
+   "least_squares": -0.431,
+   "bayes": -0.431,
+   "ci95": 0.158,
+   "p_best": 0.0
+  },
+  "nm19": {
+   "least_squares": -0.361,
+   "bayes": -0.361,
+   "ci95": 0.158,
+   "p_best": 0.0
+  },
+  "nm20": {
+   "least_squares": 1.045,
+   "bayes": 1.045,
+   "ci95": 0.147,
+   "p_best": 0.3764
+  },
+  "nm21": {
+   "least_squares": -0.564,
+   "bayes": -0.564,
+   "ci95": 0.162,
+   "p_best": 0.0
+  },
+  "nm25": {
+   "least_squares": 0.964,
+   "bayes": 0.964,
+   "ci95": 0.152,
+   "p_best": 0.0346
+  },
+  "nm26": {
+   "least_squares": 1.034,
+   "bayes": 1.034,
+   "ci95": 0.153,
+   "p_best": 0.296
+  },
+  "nm27": {
+   "least_squares": 1.033,
+   "bayes": 1.033,
+   "ci95": 0.153,
+   "p_best": 0.293
+  }
+ },
+ "p_beats": {
+  "nm20 > nm20": 0.5,
+  "nm20 > nm26": 0.562,
+  "nm20 > nm27": 0.565,
+  "nm20 > nm25": 0.871,
+  "nm26 > nm20": 0.438,
+  "nm26 > nm26": 0.5,
+  "nm26 > nm27": 0.504,
+  "nm26 > nm25": 0.826,
+  "nm27 > nm20": 0.435,
+  "nm27 > nm26": 0.496,
+  "nm27 > nm27": 0.5,
+  "nm27 > nm25": 0.822,
+  "nm25 > nm20": 0.129,
+  "nm25 > nm26": 0.174,
+  "nm25 > nm27": 0.178,
+  "nm25 > nm25": 0.5
+ }
+}
