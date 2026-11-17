@@ -70,7 +70,9 @@ deal so the cards' luck cancels; `scripts/search_paired.py`): gain over plain nm
 | call-biased | **+3.89** [+1.30, +6.49] | **+3.13** [+0.98, +5.28] |
 | fold-biased | +2.26 [−0.07, +4.60] | +0.82 [−1.07, +2.71] |
 
-Both searches gain against every kind of opponent; neither loses anywhere once the deals are paired (the unpaired
+Corrected for looking at eight results at once (Holm, `scripts/multitest.py`, 2026-11-17), four gains hold: version 1
+and robust against raise- and call-biased opponents; robust against the network (+1.99, p 0.048 alone) does not
+survive the correction. Both searches gain against every kind of opponent; neither loses anywhere once the deals are paired (the unpaired
 run's small losses for version 1 were the cards). Version 1 gains at least as much as robust everywhere, and is three
 times faster (about 27 against 80 ms a decision). Robust's promise, holding up when opponents adapt to it, is not
 shown by these fixed opponents; it needs an adaptive one: an exploiter trained against each searcher.
