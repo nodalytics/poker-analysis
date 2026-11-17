@@ -85,7 +85,7 @@ if(NOT KESTREL_CORE_ONLY)
                              SQLITE_DEFAULT_WAL_SYNCHRONOUS=1)
   find_package(Threads REQUIRED)
   target_link_libraries(kestrel_sqlite PRIVATE Threads::Threads)
-  add_library(kestrel_connectors connectors/src/connector.cpp connectors/src/store.cpp connectors/src/session.cpp connectors/src/opponents.cpp connectors/src/server.cpp
+  add_library(kestrel_connectors connectors/src/connector.cpp connectors/src/store.cpp connectors/src/profile.cpp connectors/src/session.cpp connectors/src/opponents.cpp connectors/src/server.cpp
     connectors/src/gateway.cpp)
   target_link_libraries(kestrel_connectors PUBLIC kestrel_core PRIVATE httplib::httplib yaml-cpp::yaml-cpp ixwebsocket kestrel_sqlite)
   add_executable(kestreld tools/kestreld.cpp)

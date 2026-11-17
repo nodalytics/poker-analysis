@@ -53,7 +53,8 @@ kestreld play kestrel/connectors/testplatform.yaml --model llm-research/models/n
 
 **Search** (`--solver search` or `search-robust`, or the Solver box of a new 9-max table) plays nm25 with search at
 decision time, before the flop and in pots of up to three players after it: about 2 s a decision on 8 cores at the
-default 1,024 deals (`search_samples` in the settings; 256 is 4× faster), 3× that for `search-robust`. Without it, a 9-max table plays
+default 1,024 deals (`search_samples` in the settings, 1,024 to 4,096: with 256 deals search lost 5-6.5 bb/100 to
+the plain network, because its estimates of each move's value are too noisy), 3× that for `search-robust`. Without it, a 9-max table plays
 the network's own policy.
 
 Other connectors: `pokerpi.yaml` (a self-hosted bot tournament server, long polling), `testplatform-ws.yaml` (the test platform over a WebSocket, speaking Open Poker's protocol: `uv run --with websockets==14.1 python kestrel/testplatform/ws_platform.py`) and `openpoker.yaml` (a draft until the account exists). The connector format is in [`docs/design.md`](docs/design.md#connector-files).
@@ -87,6 +88,7 @@ and the opponents' statistics. Each session's `hands.jsonl` and `summary.json` a
 | `sessions` | one per session or practice table: kind, connector, model, solver, folder, start and end, `summary` (JSON) |
 | `hands` | one per hand: session, order, connector, the platform's hand id, model, solver, `result_bb`, and `data`, the whole record (JSON) |
 | `opponents` | one per platform and username: hands and `stats` (JSON: VPIP, raise, 3-bet, fold to c-bet, ...) |
+| `spots` | one per decision at a 9-max table: its hand, model, street, position, the move played, and `vec`, the network's embedding of the spot (128 numbers, length 1) |
 
 ```
 kestreld db stats                                  # how much it holds
@@ -97,6 +99,14 @@ sqlite3 ~/.local/share/kestrel/kestrel.db "SELECT json_extract(data, '$.hole'), 
 ```
 
 Over the API: `GET /v1/db` (counts), `GET /v1/db/sessions?limit=&offset=`, `GET /v1/hands?session=&connector=&limit=&offset=`.
+
+**Similar spots and opponent profiles.** `GET /v1/spots/similar?spot=ID&k=10`, or `"similar": k` in a `POST /v1/decide`,
+returns the stored spots the network sees as most alike (cosine similarity of its embeddings), with how Kestrel
+played them and the result; the desktop app's Spot study tab lists them under its answer. Each opponent gets the
+closest player type (nit, tag, lag, maniac, station, loose-passive) by cosine similarity of their statistics, shown
+from 30 hands in the HUD line and the Opponents tab, and `GET /v1/opponents?platform=P&player=U` adds the players
+met before who play most like them. Both are for study: Kestrel's play does not change on them
+([design](docs/design.md#embeddings-and-similarity-2026-11-16)).
 The database uses write-ahead logging, so it can be read (sqlite3, a notebook) while Kestrel plays. SQLite is built
 into Kestrel, so there is nothing to install.
 

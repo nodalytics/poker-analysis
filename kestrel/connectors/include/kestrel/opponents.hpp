@@ -41,6 +41,10 @@ class OpponentBook {
     nlohmann::json platforms() const;
     // a short line for a seat: "VPIP/PFR/3B · hands", or "" when there is nothing yet
     std::string hud(const std::string& platform, const std::string& name) const;
+    // the k players most like this one (cosine similarity of their profiles, profile.hpp), on this platform or (all)
+    // every platform, among those with at least min_hands
+    nlohmann::json similar(const std::string& platform, const std::string& name, int k = 5, bool all = false,
+                           int min_hands = 30) const;
     void flush();  // write the book now (it also saves every 10 hands)
     void set_store(class Store* s);  // also save the book into the database
 

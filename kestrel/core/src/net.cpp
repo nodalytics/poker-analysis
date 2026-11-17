@@ -3,6 +3,8 @@
 #include "kestrel/icm.hpp"
 
 #include <algorithm>
+#include <map>
+#include <mutex>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -290,7 +292,7 @@ void Net::forward_batch(int B, const float* feat, const int* bk, const int* stre
 }
 
 void Net::forward(const std::vector<float>& feat, const std::array<int, 4>& bk, int street, float st,
-                  std::vector<float>& logits, float& value) const {
+                  std::vector<float>& logits, float& value, std::vector<float>* hidden) const {
     std::vector<float> x(feat);
     for (int s = 0; s < 4; ++s) {
         int row = std::min(bk[s], emb_rows_[s] - 1);
@@ -312,6 +314,54 @@ void Net::forward(const std::vector<float>& feat, const std::array<int, 4>& bk, 
     logits.assign(pi_.out, 0.0f);
     linear(pi_.w, pi_.b, pi_.out, H, a.data(), logits.data());
     linear(v_.w, v_.b, 1, H, a.data(), &value);
+    if (hidden) hidden->assign(a.begin(), a.begin() + H);
+}
+
+std::vector<float> embed_hidden(const std::vector<float>& h) {
+    const int n = int(h.size());
+    // the projection matrix, generated once per input size from a fixed seed (splitmix64 + Box-Muller): portable,
+    // unlike std::normal_distribution, whose numbers differ between standard libraries
+    static std::mutex mu;
+    static std::map<int, std::vector<float>> mats;
+    const std::vector<float>* M;
+    {
+        std::lock_guard<std::mutex> lk(mu);
+        auto& m = mats[n];
+        if (m.empty()) {
+            uint64_t x = 0x6b657374726c3132ULL;
+            auto next = [&x] {
+                uint64_t z = (x += 0x9e3779b97f4a7c15ULL);
+                z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9ULL;
+                z = (z ^ (z >> 27)) * 0x94d049bb133111ebULL;
+                return double((z ^ (z >> 31)) >> 11) * (1.0 / 9007199254740992.0);
+            };
+            m.resize(size_t(kEmbedDim) * n);
+            for (size_t k = 0; k < m.size(); k += 2) {
+                double u1 = std::max(next(), 1e-300), u2 = next(), r = std::sqrt(-2.0 * std::log(u1));
+                m[k] = float(r * std::cos(6.283185307179586 * u2));
+                if (k + 1 < m.size()) m[k + 1] = float(r * std::sin(6.283185307179586 * u2));
+            }
+        }
+        M = &m;
+    }
+    std::vector<float> e(kEmbedDim, 0.0f);
+    double norm = 0;
+    for (int o = 0; o < kEmbedDim; ++o) {
+        double s = 0;
+        const float* r = M->data() + size_t(o) * n;
+        for (int k = 0; k < n; ++k) s += double(r[k]) * h[k];
+        e[o] = float(s), norm += s * s;
+    }
+    norm = std::sqrt(norm);
+    if (norm > 0)
+        for (auto& v : e) v = float(v / norm);
+    return e;
+}
+
+float cosine(const float* a, const float* b, int n) {
+    double ab = 0, aa = 0, bb = 0;
+    for (int k = 0; k < n; ++k) ab += double(a[k]) * b[k], aa += double(a[k]) * a[k], bb += double(b[k]) * b[k];
+    return aa > 0 && bb > 0 ? float(ab / std::sqrt(aa * bb)) : 0.0f;
 }
 
 std::vector<float> Net::policy(const std::vector<float>& logits, const std::vector<uint8_t>& legal) const {
@@ -330,7 +380,9 @@ std::vector<double> start_equity(const std::vector<double>& stacks, const Tourne
     auto eq = icm(stacks, ctx.pay);
     double total = 0;
     for (double x : stacks) total += x;
-    for (size_t j = 0; j < eq.size() && j < ctx.bounty.size(); ++j) eq[j] += ctx.bounty[j] * stacks[j] / std::max(total, 1.0);
+    double pool = 0;  // every bounty, shared by chips (ninemax_selfplay.start_equity): the equities keep the money whole
+    for (double b : ctx.bounty) pool += b;
+    for (size_t j = 0; j < eq.size() && !ctx.bounty.empty(); ++j) eq[j] += pool * stacks[j] / std::max(total, 1.0);
     return eq;
 }
 

@@ -1,8 +1,12 @@
 #include "kestrel/store.hpp"
 
+#include "kestrel/net.hpp"
+
 #include <sqlite3.h>
 
+#include <algorithm>
 #include <chrono>
+#include <functional>
 #include <ctime>
 #include <filesystem>
 #include <fstream>
@@ -119,7 +123,17 @@ CREATE TABLE IF NOT EXISTS opponents (
   hands INTEGER, stats TEXT NOT NULL, updated TEXT NOT NULL,
   PRIMARY KEY (platform, player)
 );
-INSERT OR IGNORE INTO meta VALUES ('schema', '1');
+CREATE TABLE IF NOT EXISTS spots (
+  id INTEGER PRIMARY KEY,
+  hand_id INTEGER NOT NULL REFERENCES hands(id) ON DELETE CASCADE,
+  model TEXT NOT NULL,         -- embeddings compare only within one network
+  street INTEGER, pos TEXT, chose TEXT,
+  vec BLOB NOT NULL            -- float32 x 128, length 1 (net.hpp embed_hidden)
+);
+CREATE INDEX IF NOT EXISTS spots_by_model ON spots(model, id);
+CREATE INDEX IF NOT EXISTS spots_by_hand ON spots(hand_id);
+INSERT OR IGNORE INTO meta VALUES ('schema', '2');
+UPDATE meta SET value = '2' WHERE key = 'schema';
 )");
 }
 
@@ -164,12 +178,12 @@ void Store::end_session_locked(int64_t session, const json& summary) {
     s.text(1, now_utc()).text(2, summary.dump()).i64(3, session).step();
 }
 
-void Store::add_hand(int64_t session, const json& h) {
+int64_t Store::add_hand(int64_t session, const json& h) {
     std::lock_guard<std::mutex> lk(mu_);
-    add_hand_locked(session, h);
+    return add_hand_locked(session, h);
 }
 
-void Store::add_hand_locked(int64_t session, const json& h) {
+int64_t Store::add_hand_locked(int64_t session, const json& h) {
     Stmt n(db_, "SELECT COALESCE(MAX(seq), 0) + 1 FROM hands WHERE session_id = ?");
     n.i64(1, session).step();
     const int64_t seq = sqlite3_column_int64(n.s, 0);
@@ -182,6 +196,74 @@ void Store::add_hand_locked(int64_t session, const json& h) {
     if (h.contains("result_bb") && h["result_bb"].is_number()) s.num(8, h["result_bb"].get<double>());
     else s.null(8);
     s.text(9, h.dump()).step();
+    return sqlite3_last_insert_rowid(db_);
+}
+
+void Store::add_spots(int64_t hand, const std::string& model, const std::vector<Spot>& spots) {
+    std::lock_guard<std::mutex> lk(mu_);
+    exec("BEGIN");
+    try {
+        Stmt s(db_, "INSERT INTO spots (hand_id, model, street, pos, chose, vec) VALUES (?, ?, ?, ?, ?, ?)");
+        for (auto& sp : spots) {
+            if (sp.vec.size() != size_t(kEmbedDim)) continue;
+            sqlite3_reset(s.s);
+            s.i64(1, hand).text(2, model).i64(3, sp.street).text(4, sp.pos).text(5, sp.chose);
+            sqlite3_bind_blob(s.s, 6, sp.vec.data(), int(sp.vec.size() * sizeof(float)), SQLITE_TRANSIENT);
+            s.step();
+        }
+        exec("COMMIT");
+    } catch (...) {
+        exec("ROLLBACK");
+        throw;
+    }
+}
+
+std::vector<float> Store::spot_vec(int64_t spot, std::string* model) {
+    std::lock_guard<std::mutex> lk(mu_);
+    Stmt s(db_, "SELECT model, vec FROM spots WHERE id = ?");
+    if (!s.i64(1, spot).step()) return {};
+    if (model) *model = s.col_text(0);
+    const int bytes = sqlite3_column_bytes(s.s, 1);
+    const float* p = static_cast<const float*>(sqlite3_column_blob(s.s, 1));
+    if (!p || bytes != int(kEmbedDim * sizeof(float))) return {};
+    return std::vector<float>(p, p + kEmbedDim);
+}
+
+json Store::similar(const std::string& model, const std::vector<float>& vec, int k, int64_t exclude, int scan) {
+    if (vec.size() != size_t(kEmbedDim)) return json::array();
+    std::lock_guard<std::mutex> lk(mu_);
+    std::vector<std::pair<float, int64_t>> best;  // (similarity, spot id), the k best so far
+    {
+        Stmt s(db_, "SELECT id, vec FROM spots WHERE model = ? ORDER BY id DESC LIMIT ?");
+        s.text(1, model).i64(2, scan);
+        while (s.step()) {
+            const int64_t id = sqlite3_column_int64(s.s, 0);
+            const float* p = static_cast<const float*>(sqlite3_column_blob(s.s, 1));
+            if (id == exclude || !p || sqlite3_column_bytes(s.s, 1) != int(kEmbedDim * sizeof(float))) continue;
+            const float c = cosine(vec.data(), p, kEmbedDim);
+            if (int(best.size()) < k) {
+                best.push_back({c, id});
+                std::push_heap(best.begin(), best.end(), std::greater<>());
+            } else if (c > best.front().first) {
+                std::pop_heap(best.begin(), best.end(), std::greater<>());
+                best.back() = {c, id};
+                std::push_heap(best.begin(), best.end(), std::greater<>());
+            }
+        }
+    }
+    std::sort(best.begin(), best.end(), std::greater<>());
+    json out = json::array();
+    Stmt q(db_, "SELECT sp.street, sp.pos, sp.chose, sp.hand_id, h.session_id, h.result_bb, h.data FROM spots sp "
+                "JOIN hands h ON h.id = sp.hand_id WHERE sp.id = ?");
+    for (auto& [c, id] : best) {
+        sqlite3_reset(q.s);
+        if (!q.i64(1, id).step()) continue;
+        json h = json::parse(q.col_text(6), nullptr, false);
+        out.push_back({{"spot", id}, {"similarity", c}, {"street", q.col(0)}, {"pos", q.col(1)}, {"chose", q.col(2)},
+                       {"hand_id", q.col(3)}, {"session", q.col(4)}, {"result_bb", q.col(5)},
+                       {"hand", h.is_discarded() ? json(nullptr) : h}});
+    }
+    return out;
 }
 
 void Store::put_opponents(const json& book) {
@@ -210,7 +292,7 @@ void Store::put_opponents(const json& book) {
 json Store::stats() {
     std::lock_guard<std::mutex> lk(mu_);
     json j = {{"path", path_}};
-    for (const char* t : {"sessions", "hands", "opponents"}) {
+    for (const char* t : {"sessions", "hands", "opponents", "spots"}) {
         Stmt s(db_, (std::string("SELECT COUNT(*) FROM ") + t).c_str());
         s.step();
         j[t] = sqlite3_column_int64(s.s, 0);

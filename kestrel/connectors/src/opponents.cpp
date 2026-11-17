@@ -1,5 +1,9 @@
 #include "kestrel/opponents.hpp"
 
+#include <algorithm>
+
+#include "kestrel/profile.hpp"
+
 #include "kestrel/store.hpp"
 
 #include <algorithm>
@@ -40,7 +44,8 @@ json OpponentStats::to_json() const {
             // the counts, so the book can be read back and the rates recomputed
             {"vpip_n", vpip}, {"pfr_n", pfr}, {"threebet_n", threebet}, {"threebet_chances", threebet_chance},
             {"cbet_folds", cbet_folds}, {"cbet_faced", cbet_faced}, {"aggressive", aggressive}, {"passive", passive},
-            {"saw_flop", saw_flop}, {"showdown", showdown}, {"shown", json(shown)}};
+            {"saw_flop", saw_flop}, {"showdown", showdown}, {"shown", json(shown)},
+            {"profile", profile_json(*this)}};  // the closest player type (profile.hpp); not read back
 }
 
 OpponentBook::OpponentBook(std::string path) : path_(std::move(path)) {
@@ -175,8 +180,37 @@ std::string OpponentBook::hud(const std::string& platform, const std::string& na
     if (p == it->second.end() || p->second.hands == 0) return "";
     const OpponentStats& s = p->second;
     auto r = [](int64_t a, int64_t b) { return b ? std::to_string(int(std::lround(100.0 * double(a) / double(b)))) : std::string("-"); };
-    return r(s.vpip, s.hands) + "/" + r(s.pfr, s.hands) + "/" + r(s.threebet, s.threebet_chance) + " · " +
-           std::to_string(s.hands) + "h";
+    std::string line = r(s.vpip, s.hands) + "/" + r(s.pfr, s.hands) + "/" + r(s.threebet, s.threebet_chance) + " · " +
+                       std::to_string(s.hands) + "h";
+    json pr = profile_json(s);
+    if (pr["settled"].get<bool>()) line += " · " + pr["type"].get<std::string>();
+    return line;
+}
+
+json OpponentBook::similar(const std::string& platform, const std::string& name, int k, bool all, int min_hands) const {
+    std::lock_guard<std::mutex> lk(mu_);
+    auto pit = book_.find(platform);
+    if (pit == book_.end()) return json::array();
+    auto me = pit->second.find(name);
+    if (me == pit->second.end()) return json::array();
+    const auto v = profile_vector(profile_rates(me->second));
+    std::vector<std::pair<double, json>> found;
+    for (auto& [plat, players] : book_) {
+        if (!all && plat != platform) continue;
+        for (auto& [who, s] : players) {
+            if ((plat == platform && who == name) || s.hands < min_hands) continue;
+            const auto w = profile_vector(profile_rates(s));
+            double ab = 0, aa = 0, bb = 0;
+            for (int d = 0; d < kProfileDim; ++d) ab += v[d] * w[d], aa += v[d] * v[d], bb += w[d] * w[d];
+            const double c = aa > 0 && bb > 0 ? ab / std::sqrt(aa * bb) : 0.0;
+            found.push_back({c, {{"platform", plat}, {"player", who}, {"hands", s.hands},
+                                 {"similarity", std::round(c * 1000.0) / 1000.0}}});
+        }
+    }
+    std::sort(found.begin(), found.end(), [](auto& a, auto& b) { return a.first > b.first; });
+    json out = json::array();
+    for (int i = 0; i < int(found.size()) && i < k; ++i) out.push_back(found[i].second);
+    return out;
 }
 
 }  // namespace kestrel

@@ -357,6 +357,20 @@ int serve(const ServeOptions& o) {
             reply(res, {{"error", e.what()}}, 500);
         }
     });
+    // GET /v1/spots/similar?spot=ID&k=10: the stored spots most like a stored one (same model, cosine similarity of
+    // the network's embeddings), each with its hand; POST /v1/decide with "similar": k does the same for a new spot
+    srv.Get("/v1/spots/similar", [&](const httplib::Request& req, httplib::Response& res) {
+        if (!db) return reply(res, {{"error", "no database"}}, 404);
+        try {
+            const int64_t id = int_param(req, "spot", 0, 0, 1 << 30);
+            std::string model;
+            auto v = db->spot_vec(id, &model);
+            if (v.empty()) return reply(res, {{"error", "no spot " + std::to_string(id)}}, 404);
+            reply(res, {{"spot", id}, {"model", model}, {"similar", db->similar(model, v, int_param(req, "k", 10, 1, 100), id)}});
+        } catch (const std::exception& e) {
+            reply(res, {{"error", e.what()}}, 500);
+        }
+    });
     // GET /v1/hands?session=&connector=&limit=&offset=: hands newest first, each with its whole record
     srv.Get("/v1/hands", [&](const httplib::Request& req, httplib::Response& res) {
         if (!db) return reply(res, {{"error", "no database"}}, 404);
@@ -369,6 +383,13 @@ int serve(const ServeOptions& o) {
         }
     });
     srv.Get("/v1/opponents", [&](const httplib::Request& req, httplib::Response& res) {
+        if (req.has_param("platform") && req.has_param("player")) {  // one player: statistics, profile, look-alikes
+            const std::string p = req.get_param_value("platform"), who = req.get_param_value("player");
+            json all = opponents.platform(p);
+            if (!all.contains(who)) return reply(res, {{"error", "no player " + who + " on " + p}}, 404);
+            return reply(res, {{"platform", p}, {"player", who}, {"stats", all[who]},
+                               {"like", opponents.similar(p, who, 5, req.has_param("all"))}});
+        }
         if (req.has_param("platform")) return reply(res, {{"platform", req.get_param_value("platform")},
                                                           {"players", opponents.platform(req.get_param_value("platform"))}});
         reply(res, {{"platforms", opponents.platforms()}});
@@ -697,12 +718,14 @@ int serve(const ServeOptions& o) {
                 const std::string solver = b.value("solver", "none");
                 if (!nine_max_solver(solver)) return reply(res, {{"error", "solver is none, search or search-robust"}}, 400);
                 SearchConfig sc;
-                sc.samples = std::clamp(b.value("samples", o.search_samples), 16, 4096), sc.robust = solver == "search-robust";
+                sc.samples = std::clamp(b.value("samples", o.search_samples), 1024, 4096), sc.robust = solver == "search-robust";
                 sc.seed = std::random_device{}();
                 buckets_init(o.pack);
                 auto adv = ninemax_decide(*engines.net(it->second), NMSpot::from_json(b), solver == "none" ? nullptr : &sc);
                 json j = adv.to_json();
                 j["model"] = model, j["solver"] = solver;
+                if (const int k = std::clamp(b.value("similar", 0), 0, 100); k > 0 && db && adv.error.empty())
+                    j["similar"] = db->similar(model, adv.embedding, k);
                 return reply(res, j, adv.error.empty() ? 200 : 400);
             } catch (const std::exception& e) {
                 return reply(res, {{"error", e.what()}}, 400);

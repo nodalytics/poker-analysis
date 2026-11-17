@@ -22,20 +22,28 @@ struct TourneyCtx {
     std::vector<double> eq0;     // start_equity
 };
 
-// each seat's equity at the start of a hand: ICM on the regular prizes, plus its own bounty times its chip share (the
-// chance of winning it back by winning the tournament), as the trainer values it (ninemax_selfplay.start_equity)
+// each seat's equity at the start of a hand: ICM on the regular prizes, plus its chip share of all the bounties (each
+// is eventually collected by someone, in proportion to chips), as the trainer values it (ninemax_selfplay.start_equity)
 std::vector<double> start_equity(const std::vector<double>& stacks, const TourneyCtx& ctx);
 
 std::vector<float> features(const Table& T, const NetInfo& info, const TourneyCtx* ctx);
 
 float strength(const NetInfo& info, int street, int bucket);
 
+// a spot's embedding: the last hidden layer projected to kEmbedDim numbers by a fixed random Gaussian matrix (the same
+// on every machine, so stored embeddings stay comparable) and scaled to length 1, so the dot product of two
+// embeddings is their cosine similarity. Random projection keeps cosines to about +/-0.1 at 128 numbers.
+constexpr int kEmbedDim = 128;
+std::vector<float> embed_hidden(const std::vector<float>& hidden);
+float cosine(const float* a, const float* b, int n);  // of two vectors (0 when either is zero)
+
 class Net {
   public:
     explicit Net(const std::string& dir);
     const NetInfo& info() const { return info_; }
+    // hidden: when given, the last hidden layer (after the final norm), the network's own picture of the spot
     void forward(const std::vector<float>& feat, const std::array<int, 4>& buckets, int street, float strength,
-                 std::vector<float>& logits, float& value) const;
+                 std::vector<float>& logits, float& value, std::vector<float>* hidden = nullptr) const;
     std::vector<float> policy(const std::vector<float>& logits, const std::vector<uint8_t>& legal) const;
     // B positions at once (row-major inputs and outputs; value may be null): the same arithmetic as forward, but each
     // weight is read once for the whole batch, which is what makes search affordable on a CPU

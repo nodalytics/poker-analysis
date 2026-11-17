@@ -290,9 +290,67 @@ and that is where it pays. It belongs in Kestrel, not only in training.
   next. It is solved from the start of the river with both blueprint ranges, and its gadget keeps every opponent
   hand at or below its blueprint value. It is off by default until it measures better than the blueprint against
   Slumbot or LBR.
-- **9-max tournaments:** search on top of the network (`llm-research/scripts/ninemax_search.py`) is still a
-  research item. It goes into Kestrel when it beats the plain network in duplicate matches; until then Kestrel plays
-  the network's policy.
+- **9-max tournaments (in Kestrel 2026-11-16, solvers `search` and `search-robust`):** a C++ port of
+  `llm-research/scripts/ninemax_search.py` (`core/src/ninemax_search.cpp`), checked with `kestrel_search_match`:
+  nm25 tables drawn as in training, 4,000 deals, the hero in every seat of every deal once plain and once with
+  search, the gain scored deal by deal (bb/100 of ICM equity, 95% interval):
+
+  | Opponents | Deals a search | Gain over plain nm25 |
+  |---|---|---|
+  | raise-biased | 1,024 | **+6.16** [+3.35, +8.98] (Python, 2,048 deals: +6.39) |
+  | raise-biased | 256 | +0.50 [−2.91, +3.91] |
+  | the network | 256 | **−5.21** [−8.65, −1.78] |
+  | call-biased | 256 | **−6.54** [−10.21, −2.88] |
+  | fold-biased | 256 | **−5.16** [−8.52, −1.80] |
+  | the network, robust | 256 | −2.27 [−5.03, +0.50] |
+
+  The port reproduces Python at 1,024 deals; at 256 it loses, because it plays the move with the best estimated
+  value and 256 deals leave those estimates too noisy (it then picks noise). So Kestrel offers 1,024 to 4,096 deals
+  (default 1,024); 1,024 against the other opponents and 2,048 against the network are running.
+
+## Embeddings and similarity (2026-11-16)
+
+The networks already work with embeddings: every card bucket enters as a learned vector of 32 numbers, and the last
+hidden layer (512 numbers) is the network's own picture of the spot. Similarity on top of them is used where it
+answers a question; none of it changes how Kestrel plays until a measured test says it helps, as with search.
+
+**Built:**
+
+1. **Opponent profiles** (`connectors/src/profile.cpp`). Six rates per player (VPIP, pre-flop raise, 3-bet, fold to
+   a continuation bet, post-flop aggression frequency, went to showdown), each pulled towards the average of the
+   reference types by 8 chances of prior so a short sample cannot look extreme, centred on that average and scaled
+   by the types' spread, then compared by cosine similarity with six reference types (nit, tag, lag, maniac,
+   station, loose-passive; approximate HUD-guide rates) and with every player met before. Shown from 30 hands: in
+   the HUD line under each seat, the desktop app's Opponents tab (type, similarity, the runner-up, who the player
+   plays most like) and `GET /v1/opponents?platform=P&player=U` (`profile`, `like`). Statistics only: Kestrel does
+   not change its play on them yet.
+2. **Similar spots** (`core/src/net.cpp` `embed_hidden`, `connectors/src/store.cpp`). Every decision at a 9-max
+   table stores the network's last hidden layer, projected to 128 numbers by a fixed random Gaussian matrix (the
+   same on every machine) and scaled to length 1, in the database's `spots` table with its hand, position and the
+   move played. The nearest stored spots of the same model by cosine similarity are returned by
+   `GET /v1/spots/similar?spot=ID&k=10` and by `POST /v1/decide` with `"similar": k`, and shown under the answer in
+   the desktop app's Spot study tab with how Kestrel played them and the result. A random projection keeps cosines
+   to about ±0.1; the search is a scan of the newest 200,000 spots.
+
+**To do, in order:**
+
+3. **Reusing search answers** (Kestrel). A spot almost identical to one already searched (cosine above a threshold,
+   same legal moves and stack depths) reuses that answer instead of 1-2 s of search. Only if a paired match shows
+   it costs nothing: two spots close in the network's picture can still call for different moves, and search exists
+   for exactly those.
+4. **A varied training pool** (training). Training keeps earlier snapshots as opponents, chosen by time. Instead,
+   measure how differently each plays on a fixed set of probe spots, by the Jensen-Shannon divergence of their move
+   probabilities (the right measure between two distributions, where cosine is not), and keep the most different
+   ones. The same number flags a run that has stopped changing or is cycling between strategies. Check: the
+   exploiter's winnings against runs trained each way.
+5. **Grouping leaks** (training and evaluation). Embed the decisions where the exploiter or LBR wins, cluster them
+   (k-means on the embeddings) and report the winnings per cluster, so a leak reads as "facing a 3-bet at 15bb from
+   the small blind" rather than one total.
+6. **Card abstraction by distribution distance** (training; the costliest, last). The card buckets come from a
+   similarity measure too. Libratus and Pluribus cluster hands by the earth mover's distance between their
+   distributions of future strength (potential-aware), where ours use percentiles of one strength number. It means
+   a new abstraction and a retrained network, and our test of more and fewer buckets made no difference, so it waits
+   until the other leaks are closed.
 
 ## Models and solvers, chosen per table
 

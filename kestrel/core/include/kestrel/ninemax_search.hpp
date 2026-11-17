@@ -19,7 +19,8 @@
 namespace kestrel {
 
 struct SearchConfig {
-    int samples = 1024;   // deals of the unknown cards, 16 to 4,096 (the Python tests used 2,048)
+    int samples = 1024;   // deals of the unknown cards, 16 to 4,096; Kestrel offers 1,024 and up (256 lost to the
+                          // plain network by 5-6.5 bb/100, 1,024 gained +6.2 against raise-biased opponents)
     bool robust = false;  // the opponents may switch continuation strategy
     double bias = 5.0;    // how strongly a continuation strategy is tilted
     uint64_t seed = 1;

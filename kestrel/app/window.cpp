@@ -755,7 +755,7 @@ QWidget* Window::settingsPage() {
         return s;
     };
     port_ = spin(1024, 65535), wsPort_ = spin(0, 65535), tcpPort_ = spin(0, 65535);
-    resolveIters_ = spin(50, 20000), tsThreads_ = spin(1, 256), searchSamples_ = spin(16, 4096);
+    resolveIters_ = spin(50, 20000), tsThreads_ = spin(1, 256), searchSamples_ = spin(1024, 4096);
     lan_ = new QCheckBox("Reach Kestrel from other devices on the network (they need the access link)");
     defaultModel_ = new QComboBox;
     tsBin_ = new QLineEdit, tsRes_ = new QLineEdit, sessionsDir_ = new QLineEdit, packDir_ = new QLineEdit, dbPath_ = new QLineEdit;
