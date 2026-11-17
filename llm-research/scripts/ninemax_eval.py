@@ -30,7 +30,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from ninemax_engine import BB, Dealer, Menu
-from ninemax_selfplay import NineNet, duplicate, masked, play, set_mode
+from ninemax_selfplay import FEAT, NineNet, duplicate, masked, play, set_mode
 
 
 def setup(args, dev):
@@ -99,8 +99,12 @@ def exploit(args, dev):
         bk, rk, _ = dealer.deal(args.batch)
         recs, Gs = [], []
         n = args.batch // args.chunks
+        # the seats a player can sit in: with fewer seats (6-max cash, --seats) the early ones are always empty, and a
+        # hero there has no decisions
+        k = FEAT["seats"] or P
+        seats = [0, 1] + list(range(P - (k - 2), P)) if k < P else list(range(P))
         for c in range(args.chunks):  # the hero in one seat per chunk, the seat drawn at random
-            seat = int(torch.randint(P, ()).item())
+            seat = seats[int(torch.randint(len(seats), ()).item())]
             pols = [target] * P
             pols[seat] = hero
             sl = slice(c * n, (c + 1) * n)
@@ -109,6 +113,8 @@ def exploit(args, dev):
             Gs += [u[r[0], r[1]] / BB for r in rec]
         g, i, f, legal, mybk, street, s, a = (torch.cat([r[k] for r in recs]) for k in range(8))
         G = torch.cat(Gs)
+        if len(G) == 0:  # no decision of the hero's this step (short tables): nothing to learn from, and the mean of an
+            continue  # empty batch is NaN, which would poison adv_scale and then every later step
         lg, v = hero(f, mybk, street, s)
         logp = F.log_softmax(masked(lg, legal), 1)
         ent = -(logp.exp() * logp).masked_fill(~legal, 0).sum(1)
