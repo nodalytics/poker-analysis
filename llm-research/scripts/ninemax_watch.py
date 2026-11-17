@@ -21,6 +21,8 @@ import glob
 import json
 import os
 import re
+import shutil
+import tempfile
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -99,7 +101,18 @@ def results():
     """The evaluation results kept in results/ninemax: search at play time (search*_*.json), the poker-sense
     checks (sense_*.json) and the ICM push/fold agreement (pushfold_check*.json)."""
     res = os.path.join(ROOT, "results", "ninemax")
-    out = {"search": [], "sense": {}, "pushfold": [], "ladder": None}
+    out = {"search": [], "sense": {}, "pushfold": [], "ladder": None, "prereg": [], "ratings": None}
+    for f in sorted(glob.glob(os.path.join(ROOT, "results", "prereg", "*.result.json"))):  # pre-registered tests
+        try:
+            r = json.load(open(f))
+        except (OSError, ValueError):
+            continue
+        out["prereg"].append({"name": os.path.basename(f)[: -len(".result.json")], "family": r.get("family", {}),
+                              "decision": r.get("decision", ""), "deviations": r.get("deviations", [])})  # fmt: skip
+    try:  # the Bayesian ratings (ratings_bayes.py): P(best) and the fit of the ladder
+        out["ratings"] = json.load(open(os.path.join(res, "ratings_bayes.json")))
+    except (OSError, ValueError):
+        pass
     try:  # the version ladder (ninemax_ladder.py): every version against every other, one rating each
         out["ladder"] = json.load(open(os.path.join(res, "ladder.json")))
     except (OSError, ValueError):
@@ -111,9 +124,13 @@ def results():
             continue
         out["search"].append({k: r.get(k) for k in ("run", "samples", "mode", "tau", "bb100", "ci95", "ess_median",
                                                      "searched_decisions", "seconds", "hands", "preflop", "tourney")})  # fmt: skip
-    for f in sorted(glob.glob(os.path.join(res, "sense_*.json")), key=os.path.getmtime):
+    sense_files = glob.glob(os.path.join(res, "sense*_*.json")) + glob.glob(os.path.join(res, "postflop*_*.json"))
+    for f in sorted(sense_files, key=os.path.getmtime):
         try:
-            out["sense"].update(json.load(open(f)))  # later files replace earlier readings of the same run
+            d = json.load(open(f))
+            if os.path.basename(f).startswith("postflop"):  # after-flop checks: their own rows
+                d = {f"{k} (after the flop)": v for k, v in d.items()}
+            out["sense"].update(d)  # later files replace earlier readings of the same run
         except (OSError, ValueError):
             continue
     pf = {}
@@ -215,15 +232,29 @@ class Lab:
 
     def __init__(self, absdir, lib):
         torch.set_num_threads(2)
-        self.B = int(open(os.path.join(absdir, "meta.txt")).read().split()[1])
-        self.dealer = Dealer(lib, absdir, 9, self.B, "cpu", seed=int(time.time()) % 100000)
-        bk0, _, _ = self.dealer.raw(1 << 16)
-        pre_s = self.dealer.pre_strength[torch.tensor(bk0[:, :, 0].ravel())]
-        self.dealer.pre_q = (torch.quantile(pre_s, 0.88).item(), torch.quantile(pre_s, 0.65).item())
+        self.lib, self.dealers, self.tmp = lib, {}, tempfile.mkdtemp(prefix="watch-")
+        self.dealer = self.dealer_for(absdir)
+        self.B = self.dealer.B
         self.menus = {}
+
+    def dealer_for(self, absdir):
+        """A dealer for one card abstraction, through its own copy of the bucket library (one loaded library holds
+        one abstraction): every run is dealt through the buckets it was trained on."""
+        if absdir not in self.dealers:
+            copy = os.path.join(self.tmp, f"libbp_{len(self.dealers)}.so")
+            shutil.copy(self.lib, copy)
+            B = int(open(os.path.join(absdir, "meta.txt")).read().split()[1])
+            d = Dealer(copy, absdir, 9, B, "cpu", seed=int(time.time()) % 100000)
+            bk0, _, _ = d.raw(1 << 16)
+            pre_s = d.pre_strength[torch.tensor(bk0[:, :, 0].ravel())]
+            d.pre_q = (torch.quantile(pre_s, 0.88).item(), torch.quantile(pre_s, 0.65).item())
+            self.dealers[absdir] = d
+        return self.dealers[absdir]
 
     def load(self, run):
         cfg = json.load(open(os.path.join(run, "config.json")))
+        self.dealer = self.dealer_for(cfg.get("abs", "blueprint/out"))  # under LOCK, until the hands are played
+        self.B = self.dealer.B
         set_mode(  # under LOCK, until the hands are played
             cfg.get("stacks", "100"),
             cfg.get("tourney", False),

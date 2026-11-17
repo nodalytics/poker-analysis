@@ -114,6 +114,11 @@
     <p class="muted">Each pair plays a duplicate match both ways (one network in every seat in turn against 8 copies of the other, on the same deals). One rating per version is fitted to all the pairs, with a 95% range. Older versions are judged on today's game (big-blind ante, short-handed final tables), which some of them never trained on.</p>
     <div class="charts" id="ladderChart"></div>
     <div class="runs-wrap"><table class="runs" id="ladderTable"></table></div>
+    <h2>Which version is best? <span class="muted">(Bayesian ratings from the same pairs: each version's chance of being the strongest; ratings_bayes.py)</span></h2>
+    <p class="muted" id="ratingsNote"></p>
+    <div class="runs-wrap"><table class="runs" id="ratingsTable"></table></div>
+    <h2>Pre-registered tests <span class="muted">(each written down and pushed before its runs started: the rules cannot bend to the results)</span></h2>
+    <div class="runs-wrap"><table class="runs" id="preregTable"></table></div>
     <h2>Search at play time <span class="muted">(the thinking bot vs 8 copies of the same network playing on instinct; bb/100 over the deals, all 9 seats)</span></h2>
     <p class="muted">Before each decision after the flop (pots of up to 3 players), and with "before the flop too" before every preflop decision, the bot imagines thousands of possible opponent hands consistent with how they played, tries every action and plays each out. "Effective" = how many of the imagined hands really count. Tournament networks are scored in ICM prize equity (converted to big blinds), the same unit they train in; cash networks in chips.</p>
     <div class="runs-wrap"><table class="runs" id="searchTable"></table></div>
@@ -237,6 +242,7 @@ function chart(series, key, title, note) {
   return `<div class="chart"><h3>${title}</h3><p>${note}</p><svg viewBox="0 0 ${W} ${H}" width="100%">${g}</svg></div>`;
 }
 const fmt = (v) => Math.abs(v) >= 1000 ? (v / 1000).toFixed(1) + "k" : Math.abs(v) >= 10 ? v.toFixed(0) : v.toFixed(2);
+const esc = (x) => String(x ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const sgn = (v, d = 0) => v === null || v === undefined ? "–" : (v >= 0 ? "+" : "") + v.toFixed(d);
 async function refreshInfo() {
   try {
@@ -286,6 +292,18 @@ async function refreshResults() {
         rows.map(([n, v]) => { const d = prev === null ? "–" : sgn(v.rating - prev, 1); prev = v.rating;
           const h = (L.hands_trained || {})[n]; return `<tr><td>${n}</td><td class="num"><b>${sgn(v.rating, 1)}</b></td><td class="num">± ${v.ci95.toFixed(1)}</td><td class="num">${d}</td><td class="num">${h ? (h / 1e9).toFixed(1) + " B" : "–"}</td></tr>`; }).join("");
     }
+    const Rb = r.ratings;
+    if (Rb && Rb.versions) {
+      $("ratingsNote").textContent = `Fit of the ratings to the pairs: chi²/dof ${(Rb.chi2 / Rb.dof).toFixed(2)} (1 = the ratings explain every pair; more = styles beat each other in circles, so the ladder's ranges are too narrow).`;
+      const vs = Object.entries(Rb.versions).sort((a, b) => b[1].p_best - a[1].p_best);
+      $("ratingsTable").innerHTML = `<tr><th>Version</th><th class="num">Rating</th><th class="num">± 95%</th><th class="num">P(best)</th></tr>` +
+        vs.map(([n, v]) => `<tr><td>${esc(n)}</td><td class="num">${sgn(v.bayes, 2)}</td><td class="num">${v.ci95.toFixed(2)}</td><td class="num"><b>${(100 * v.p_best).toFixed(1)}%</b></td></tr>`).join("");
+    }
+    $("preregTable").innerHTML = `<tr><th>Test</th><th>Comparison</th><th class="num">Δ, bb/100</th><th class="num">95% range</th><th class="num">Holm p</th><th>Verdict</th></tr>` +
+      (r.prereg || []).flatMap((t) => Object.entries(t.family).map(([cmp, v]) => `<tr><td>${esc(t.name)}</td><td>${esc(cmp)}</td>
+        <td class="num"><b>${sgn(v.delta, 2)}</b></td><td class="num">${v.ci95 ? sgn(v.ci95[0], 2) + " to " + sgn(v.ci95[1], 2) : "–"}</td>
+        <td class="num">${v.holm ?? "–"}</td><td>${esc(v.verdict)}</td></tr>`)).join("") +
+      (r.prereg || []).map((t) => `<tr><td colspan="6" class="muted">${esc(t.name)}: ${esc(t.decision)}</td></tr>`).join("");
     $("senseBox").innerHTML = Object.entries(r.sense).reverse().map(([run, v]) => {
       const ok = v.checks.filter((c) => c.ok).length;
       return `<h3>${run} <span class="muted">(${(v.hands_trained / 1e6).toFixed(0)} M hands): ${ok} of ${v.checks.length} within the reference band</span></h3>
@@ -485,7 +503,8 @@ $("liveRun").onchange = $("liveOpp").onchange = () => { if (liveOn) { C.stop(); 
 (async () => {
   await refreshCharts();
   await loadSnapshots(false);
-  setInterval(async () => { await refreshCharts(); await loadSnapshots(true); }, 60000);
+  // every minute: the charts, the snapshots and the results (new evaluations appear without a reload)
+  setInterval(async () => { await refreshCharts(); await loadSnapshots(true); await refreshResults(); }, 60000);
 })();
 </script>
 </body>
