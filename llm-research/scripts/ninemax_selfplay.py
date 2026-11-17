@@ -134,11 +134,50 @@ def features(T, g, i):
     return torch.cat(f, 1), legal
 
 
+def seat_layout(P, A, S):
+    """Where each other seat's inputs sit in features() (FEAT must be set): a [P-1, d] index tensor, one row per
+    other seat in table order after me (live, all-in, committed, acted, aggressor, then chips behind, bounty and
+    equity when the mode has them), and the indices of everything else (the table as a whole and my own inputs)."""
+    R = P - 1
+    at = P + 4 + 10  # seat one-hot, street one-hot, the ten pot and price scalars
+    cols = [list(range(at + k * R, at + (k + 1) * R)) for k in range(5)]
+    at += 5 * R
+    if FEAT["stacks"] or FEAT["tourney"]:
+        cols.append(list(range(at + 1, at + 1 + R)))  # chips behind (after my log stack)
+        at += 1 + R + 1
+    if FEAT["tourney"]:
+        at += P  # the prize ladder
+        if FEAT["bounty"]:
+            cols.append(list(range(at + 1, at + 1 + R)))  # bounties (after mine)
+            at += 1 + R
+        cols.append(list(range(at + 1, at + 1 + R)))  # start equities (after mine)
+        at += 1 + R + 1
+    total = at + A + S
+    tok = torch.tensor(cols).T  # [R, d]
+    glob = torch.tensor(sorted(set(range(total)) - set(tok.flatten().tolist())))
+    return tok, glob, total
+
+
 class NineNet(nn.Module):
-    def __init__(self, nfeat, A, buckets, hidden=512, blocks=4, emb=32):
+    """arch "mlp": every input in one vector (nm1-nm30). arch "sets": the other seats as a set of tokens (Deep Sets,
+    as particle-flow networks read a jet's particles): one shared network reads each seat's inputs with its position
+    relative to me, the results are pooled by sum and max, so what is learnt about a seat is shared by every seat and
+    tables of any size read alike."""
+
+    def __init__(self, nfeat, A, buckets, hidden=512, blocks=4, emb=32, arch="mlp", players=9, tok_hidden=128):
         super().__init__()
         per_street = list(buckets) if isinstance(buckets, (list, tuple)) else [buckets] * 3  # flop, turn, river
         self.emb = nn.ModuleList([nn.Embedding(169, emb)] + [nn.Embedding(b, emb) for b in per_street])
+        self.arch = arch
+        if arch == "sets":
+            tok, glob, total = seat_layout(players, A, A - 3)
+            assert total == nfeat, f"seat layout covers {total} inputs, the features have {nfeat}"
+            self.register_buffer("tok_idx", tok, persistent=False)
+            self.register_buffer("glob_idx", glob, persistent=False)
+            self.register_buffer("pos", torch.eye(players - 1), persistent=False)
+            self.tok = nn.Sequential(nn.Linear(tok.shape[1] + players - 1, tok_hidden), nn.GELU(),
+                                     nn.Linear(tok_hidden, tok_hidden), nn.GELU())  # fmt: skip
+            nfeat = len(glob) + 2 * tok_hidden
         self.inp = nn.Linear(nfeat + 4 * emb + 1, hidden)
         self.blocks = nn.ModuleList(
             nn.Sequential(nn.LayerNorm(hidden), nn.Linear(hidden, hidden), nn.GELU(), nn.Linear(hidden, hidden))
@@ -152,6 +191,11 @@ class NineNet(nn.Module):
         """bk: [n, 4] this player's buckets per street; streets after the current one are masked out."""
         e = [self.emb[s](bk[:, s].clamp(max=self.emb[s].num_embeddings - 1)) * (street >= s).float()[:, None]
              for s in range(4)]  # fmt: skip
+        if self.arch == "sets":
+            seats = feat[:, self.tok_idx]  # [n, P-1, d]
+            pos = self.pos.expand(feat.shape[0], -1, -1)
+            t = self.tok(torch.cat([seats, pos], 2))
+            feat = torch.cat([feat[:, self.glob_idx], t.sum(1), t.max(1).values], 1)
         h = self.inp(torch.cat([feat] + e + [st[:, None]], 1))
         for blk in self.blocks:
             h = h + blk(h)
@@ -458,11 +502,23 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("out")
     ap.add_argument("--players", type=int, default=9)
+    ap.add_argument(
+        "--arch",
+        choices=("mlp", "sets"),
+        default="mlp",
+        help="the network: one input vector, or the other seats as a set (Deep Sets)",
+    )
     ap.add_argument("--menu", default="medium")
     ap.add_argument("--abs", default="blueprint/out")
     ap.add_argument("--lib", default="blueprint/libbp5.so")
     ap.add_argument("--batch", type=int, default=8192, help="tables per training batch")
     ap.add_argument("--minutes", type=float, default=1440)
+    ap.add_argument(
+        "--max-hands",
+        type=float,
+        default=None,
+        help="also stop after this many hands this session: equal training for runs compared, whatever their speed",
+    )
     ap.add_argument("--eval-minutes", type=float, default=30)
     ap.add_argument("--eval-hands", type=int, default=20000, help="deals per duplicate match (x players seatings)")
     ap.add_argument("--lr", type=float, default=3e-4)
@@ -523,7 +579,7 @@ def main():
     menu = Menu(args.menu, dev)
     nfeat = n_features(args.players, menu, dev)
     buckets = list(read_buckets(args.abs))
-    net = NineNet(nfeat, menu.A, buckets).to(dev)
+    net = NineNet(nfeat, menu.A, buckets, arch=args.arch, players=args.players).to(dev)
     magnet, avg = copy.deepcopy(net), copy.deepcopy(net)
     for m in (magnet, avg):
         m.requires_grad_(False)
@@ -554,7 +610,7 @@ def main():
     t0 = last_eval = time.time()
     kept = 0.0  # hours of this session already kept as avg_<hours>h.pt
     h_start, adv_scale = hands, 1.0
-    while time.time() - t0 < args.minutes * 60:
+    while time.time() - t0 < args.minutes * 60 and (args.max_hands is None or hands - h_start < args.max_hands):
         bk, rk, _ = dealer.deal(args.batch)
         # self-play on part of the batch; on the rest, chunks of tables where the net holds some seats and one
         # opponent from the population (rule players, past checkpoints) holds the others. The net learns from its

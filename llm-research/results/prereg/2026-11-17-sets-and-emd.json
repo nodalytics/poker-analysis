@@ -1,0 +1,27 @@
+{
+ "name": "2026-11-17-sets-and-emd",
+ "registered": "2026-11-17, before any of the runs below started; the git commit that adds this file is the record",
+ "question": "Does a seat-order-independent network (Deep Sets) or a distribution-aware card abstraction (k-means on CDFs, an earth mover's distance proxy) make a stronger 9-max tournament network than today's design?",
+ "runs": {
+  "nm31": {"role": "baseline", "arch": "mlp", "abs": "blueprint/out (200/200/200, EHS2/HS percentiles)"},
+  "nm32": {"role": "candidate", "arch": "sets", "abs": "blueprint/out"},
+  "nm33": {"role": "candidate", "arch": "mlp", "abs": "blueprint/out_pa200 (200/200/200, k-means on next-street strength CDFs, OCHS river; renumbered by mean strength)"}
+ },
+ "common": "from scratch, nm25's settings: --tourney --menu mtt --depths 10,25 --ante 1 --short 0.5 --no-open-limp --pg neurd --neurd-beta 4 --kl 0.3 --entropy 0.04 --pool reg,reg,tag,maniac,station --pool-share 0.5 --exploit-share 0.25 --exploit-reset 60 --chunks 4 --batch 16384 --lib blueprint/libbp7.so; stop at --max-hands 6e8; the averaged network is compared",
+ "primary": {
+  "metric": "duplicate match against the baseline in nm25's game, both directions: delta = (candidate vs 8 x nm31 - nm31 vs 8 x candidate) / 2, bb/100 of ICM equity, each candidate on its own abstraction",
+  "deals": 40000,
+  "seed": 2026,
+  "estimator": "the plain duplicate mean is the primary estimate; the control-variate estimator (value-baseline, physics-style) is reported beside it and used only if its bias check passes (it must agree with the plain mean on a copy-vs-copy match within its interval)",
+  "test": "two-sided z test of delta = 0",
+  "family": ["nm32 vs nm31", "nm33 vs nm31"],
+  "correction": "Holm at alpha 0.05 over the family (look-elsewhere)",
+  "decision": "a candidate is better if its Holm-adjusted p < 0.05 and delta > 0"
+ },
+ "secondary": {
+  "exploiter": "30-minute exploiter against each run; reported, a candidate must not be worse than the baseline by more than 1 bb/100",
+  "sense": "ninemax_sense.py and ninemax_postflop.py pass counts; reported only",
+  "copy_check": "each run against copies of itself must read 0 within its interval"
+ },
+ "not_allowed": "changing the deal count, the seed, the metric, the family or the decision rule after seeing results; re-running a comparison and keeping the better reading"
+}
