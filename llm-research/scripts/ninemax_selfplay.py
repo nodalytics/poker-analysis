@@ -469,20 +469,66 @@ def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None,
     return u, rec
 
 
-def duplicate(dealer, menu, hero, villain, n, dev):
-    """Hero in each seat in turn against P-1 copies of villain, on the same n deals: hero's bb/100 and 95% CI."""
+def luck_means(dealer, n=1 << 20):
+    """E[strength on street t | bucket on street t-1], t = 1..3, and E[pre-flop strength], from n independent deals
+    (cached on the dealer): what the card-luck control variates subtract."""
+    if getattr(dealer, "_luck", None) is None:
+        bk, _, _ = dealer.deal(n)
+        b = bk.reshape(-1, 4)
+        s = torch.stack([strength(dealer, bk, torch.full((n,), t, device=bk.device)).reshape(-1) for t in range(4)], 1)
+        tabs = []
+        for t in range(1, 4):
+            prev = b[:, t - 1]
+            K = int(prev.max()) + 1
+            tot = torch.zeros(K, device=b.device).index_add_(0, prev, s[:, t])
+            cnt = torch.zeros(K, device=b.device).index_add_(0, prev, torch.ones_like(s[:, t]))
+            tabs.append(tot / cnt.clamp(min=1))
+        dealer._luck = (s[:, 0].mean(), tabs)
+    return dealer._luck
+
+
+def card_luck(dealer, bk):
+    """Each seat's card luck per street, [n, P, 4]: pre-flop strength less its mean, then each street's strength less
+    its expectation given the previous street's bucket. Each term has mean 0 exactly (the tower property), so any
+    multiple of it can be subtracted from a result without bias: a control variate, as in physics Monte Carlo."""
+    m0, tabs = luck_means(dealer)
+    n, P, _ = bk.shape
+    s = torch.stack([strength(dealer, bk, torch.full((n,), t, device=bk.device)) for t in range(4)], 2)  # [n, P, 4]
+    x = torch.empty_like(s)
+    x[..., 0] = s[..., 0] - m0
+    for t in range(1, 4):
+        x[..., t] = s[..., t] - tabs[t - 1][bk[..., t - 1].clamp(max=len(tabs[t - 1]) - 1)]
+    return x
+
+
+def duplicate(dealer, menu, hero, villain, n, dev, cv=False):
+    """Hero in each seat in turn against P-1 copies of villain, on the same n deals: hero's bb/100 and 95% CI.
+    cv: also the estimate with card-luck control variates (card_luck: the hero's luck in each seating, per street,
+    regressed out by least squares) and its interval, as (m, lo, hi, m_cv, lo_cv, hi_cv)."""
     P = dealer.P
     bk, rk, _ = dealer.deal(n)
     ctx = context(n, P, dev)  # the same stacks (and payouts) for every seating
     per = torch.zeros(n, device=dev)
+    xs = []
+    luck = card_luck(dealer, bk) if cv else None
     for seat in range(P):
         pols = [villain] * P
         pols[seat] = hero
         u, _ = play(dealer, menu, pols, bk, rk, dev=dev, ctx=ctx)
         per += u[:, seat] / BB
+        if cv:
+            seated = (ctx[0][:, seat] > 0).float()[:, None] if ctx[0] is not None else 1.0
+            xs.append(luck[:, seat, :] * seated)  # the hero's luck in this seating (none in an empty seat)
     x = (per / P).cpu().numpy()  # hero's average over the seats, per deal
     m, se = x.mean() * 100, x.std() / math.sqrt(len(x)) * 100
-    return m, m - 1.96 * se, m + 1.96 * se
+    if not cv:
+        return m, m - 1.96 * se, m + 1.96 * se
+    X = torch.cat(xs, 1).cpu().double().numpy()  # [n, 4 P]: every seating's luck terms, each with mean 0
+    y = x - x.mean()
+    beta = np.linalg.lstsq(X, y, rcond=None)[0]
+    r = x - X @ beta  # the result less the luck the regression explains; E[X] = 0 so the mean is unbiased
+    mc, sec = r.mean() * 100, r.std() / math.sqrt(len(r)) * 100
+    return m, m - 1.96 * se, m + 1.96 * se, mc, mc - 1.96 * sec, mc + 1.96 * sec
 
 
 def set_mode(stacks="100", tourney=False, depths=None, open_limp=True, ante=0.0, short=0.0, seats=None, bounty=0.0):

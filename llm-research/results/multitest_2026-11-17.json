@@ -1,0 +1,250 @@
+{
+ "search on nm25, Python, paired (2026-11-16)": [
+  {
+   "result": "v1 vs network",
+   "bb100": 2.18,
+   "p": 0.08743,
+   "holm": 0.19086,
+   "bh": 0.09992,
+   "verdict": "not significant"
+  },
+  {
+   "result": "v1 vs raise-biased",
+   "bb100": 6.39,
+   "p": 0.0,
+   "holm": 0.0,
+   "bh": 0.0,
+   "verdict": "holds"
+  },
+  {
+   "result": "v1 vs call-biased",
+   "bb100": 3.89,
+   "p": 0.0033,
+   "holm": 0.01981,
+   "bh": 0.00865,
+   "verdict": "holds"
+  },
+  {
+   "result": "v1 vs fold-biased",
+   "bb100": 2.26,
+   "p": 0.05782,
+   "holm": 0.19086,
+   "bh": 0.0771,
+   "verdict": "not significant"
+  },
+  {
+   "result": "robust vs network",
+   "bb100": 1.99,
+   "p": 0.04771,
+   "holm": 0.19086,
+   "bh": 0.07634,
+   "verdict": "lost to look-elsewhere"
+  },
+  {
+   "result": "robust vs raise-biased",
+   "bb100": 3.69,
+   "p": 0.00077,
+   "holm": 0.00538,
+   "bh": 0.00307,
+   "verdict": "holds"
+  },
+  {
+   "result": "robust vs call-biased",
+   "bb100": 3.13,
+   "p": 0.00433,
+   "holm": 0.02163,
+   "bh": 0.00865,
+   "verdict": "holds"
+  },
+  {
+   "result": "robust vs fold-biased",
+   "bb100": 0.82,
+   "p": 0.39512,
+   "holm": 0.39512,
+   "bh": 0.39512,
+   "verdict": "not significant"
+  }
+ ],
+ "search in Kestrel, C++, paired (2026-11-17)": [
+  {
+   "result": "1,024 vs raise-biased",
+   "bb100": 6.16,
+   "p": 2e-05,
+   "holm": 0.00018,
+   "bh": 0.00018,
+   "verdict": "holds"
+  },
+  {
+   "result": "1,024 vs network",
+   "bb100": 4.12,
+   "p": 0.00332,
+   "holm": 0.01829,
+   "bh": 0.00553,
+   "verdict": "holds"
+  },
+  {
+   "result": "1,024 vs call-biased",
+   "bb100": 4.18,
+   "p": 0.00458,
+   "holm": 0.01834,
+   "bh": 0.00655,
+   "verdict": "holds"
+  },
+  {
+   "result": "1,024 vs fold-biased",
+   "bb100": 3.73,
+   "p": 0.00785,
+   "holm": 0.02355,
+   "bh": 0.00981,
+   "verdict": "holds"
+  },
+  {
+   "result": "2,048 vs network",
+   "bb100": 4.2,
+   "p": 0.00161,
+   "holm": 0.01288,
+   "bh": 0.00537,
+   "verdict": "holds"
+  },
+  {
+   "result": "256 vs raise-biased",
+   "bb100": 0.5,
+   "p": 0.77381,
+   "holm": 0.77381,
+   "bh": 0.77381,
+   "verdict": "not significant"
+  },
+  {
+   "result": "256 vs network",
+   "bb100": -5.21,
+   "p": 0.00295,
+   "holm": 0.01829,
+   "bh": 0.00553,
+   "verdict": "holds"
+  },
+  {
+   "result": "256 vs call-biased",
+   "bb100": -6.54,
+   "p": 0.00047,
+   "holm": 0.00423,
+   "bh": 0.00235,
+   "verdict": "holds"
+  },
+  {
+   "result": "256 vs fold-biased",
+   "bb100": -5.16,
+   "p": 0.00261,
+   "holm": 0.01829,
+   "bh": 0.00553,
+   "verdict": "holds"
+  },
+  {
+   "result": "256 robust vs network",
+   "bb100": -2.27,
+   "p": 0.10759,
+   "holm": 0.21518,
+   "bh": 0.11955,
+   "verdict": "not significant"
+  }
+ ],
+ "version ladder against nm17 (rating, +-ci95)": [
+  {
+   "result": "nm15",
+   "bb100": -0.36,
+   "p": 1e-05,
+   "holm": 3e-05,
+   "bh": 1e-05,
+   "verdict": "holds"
+  },
+  {
+   "result": "nm16",
+   "bb100": -0.26,
+   "p": 0.00145,
+   "holm": 0.00145,
+   "bh": 0.00145,
+   "verdict": "holds"
+  },
+  {
+   "result": "nm18",
+   "bb100": -0.43,
+   "p": 0.0,
+   "holm": 0.0,
+   "bh": 0.0,
+   "verdict": "holds"
+  },
+  {
+   "result": "nm19",
+   "bb100": -0.36,
+   "p": 1e-05,
+   "holm": 3e-05,
+   "bh": 1e-05,
+   "verdict": "holds"
+  },
+  {
+   "result": "nm20",
+   "bb100": 1.04,
+   "p": 0.0,
+   "holm": 0.0,
+   "bh": 0.0,
+   "verdict": "holds"
+  },
+  {
+   "result": "nm21",
+   "bb100": -0.56,
+   "p": 0.0,
+   "holm": 0.0,
+   "bh": 0.0,
+   "verdict": "holds"
+  },
+  {
+   "result": "nm25",
+   "bb100": 0.96,
+   "p": 0.0,
+   "holm": 0.0,
+   "bh": 0.0,
+   "verdict": "holds"
+  },
+  {
+   "result": "nm26",
+   "bb100": 1.03,
+   "p": 0.0,
+   "holm": 0.0,
+   "bh": 0.0,
+   "verdict": "holds"
+  },
+  {
+   "result": "nm27",
+   "bb100": 1.03,
+   "p": 0.0,
+   "holm": 0.0,
+   "bh": 0.0,
+   "verdict": "holds"
+  }
+ ],
+ "local best response, 9-max (2026-11-15)": [
+  {
+   "result": "nm25",
+   "bb100": 0.26,
+   "p": 0.46018,
+   "holm": 0.92036,
+   "bh": 0.69027,
+   "verdict": "not significant"
+  },
+  {
+   "result": "nm20",
+   "bb100": 0.09,
+   "p": 0.71885,
+   "holm": 0.92036,
+   "bh": 0.71885,
+   "verdict": "not significant"
+  },
+  {
+   "result": "nm17",
+   "bb100": -0.55,
+   "p": 0.19938,
+   "holm": 0.59813,
+   "bh": 0.59813,
+   "verdict": "not significant"
+  }
+ ]
+}
