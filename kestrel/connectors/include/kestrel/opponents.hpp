@@ -2,6 +2,7 @@
 // statistics layer only: Kestrel does not change its play on them (bounded exploitation comes later, once there is
 // data: docs/design.md, Status).
 #pragma once
+#include <array>
 #include <deque>
 #include <map>
 #include <mutex>
@@ -9,6 +10,8 @@
 #include <vector>
 
 #include <nlohmann/json.hpp>
+
+#include "kestrel/profile.hpp"
 
 namespace kestrel {
 
@@ -25,6 +28,9 @@ struct OpponentStats {
     int64_t cbet_folds = 0, cbet_faced = 0;     // folded to the pre-flop raiser's first flop bet / faced one
     int64_t aggressive = 0, passive = 0;        // after the flop: bets and raises / calls
     int64_t saw_flop = 0, showdown = 0;         // saw the flop / showed cards
+    // the same six rates' events and chances, counted with forgetting (profile.hpp, kRecentDecay a hand): a player's
+    // recent play, which a lifetime average hides when the player changes
+    std::array<double, 6> recent_x{}, recent_n{};
     std::deque<nlohmann::json> shown;           // the last hands shown: cards and board
     nlohmann::json to_json() const;
 };
@@ -50,6 +56,7 @@ class OpponentBook {
 
   private:
     void save_locked();
+    RatePrior prior_locked(const std::map<std::string, OpponentStats>& players) const;
     std::string path_;
     mutable std::mutex mu_;
     std::map<std::string, std::map<std::string, OpponentStats>> book_;

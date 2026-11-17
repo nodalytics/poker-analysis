@@ -5,9 +5,10 @@
 // (bets and raises over bets, raises and calls) and went to showdown. Each rate is pulled towards the average of the
 // types in proportion to how few chances it had (k = 8 chances of prior), so a player seen for 10 hands is not
 // declared a maniac on two raises; then centred on that average and divided by the spread of the types, with the
-// pre-flop rates weighted double (3-bet x1.5), as they rest on many more chances. Cosine similarity then compares the
-// direction of a player's deviations from the average: looser and more passive than average reads as a calling
-// station whether it is a little or a lot.
+// pre-flop rates weighted double (3-bet x1.5), as they rest on many more chances. Cosine similarity then compares
+// the direction of a player's deviations from the average: looser and more passive than average reads as a calling
+// station whether it is a little or a lot. The prior is the platform's own population when there is one (empirical
+// Bayes, population_prior), and a recent profile with forgetting tracks players who change.
 //
 // The reference rates are approximate, from common HUD guides for 6-max and full-ring online games; they name the
 // style, they do not measure it. Kestrel does not change its play on a profile (bounded exploitation comes later:
@@ -37,7 +38,25 @@ std::array<double, kProfileDim> profile_rates(const OpponentStats& s);
 // the vector compared: rates centred on the types' average and scaled by their spread
 std::array<double, kProfileDim> profile_vector(const std::array<double, kProfileDim>& rates);
 
-// {type, similarity, runner_up, runner_up_similarity, hands, settled (enough hands to say), rates}
-nlohmann::json profile_json(const OpponentStats& s);
+// the six rates' events x and chances n: lifetime counts, or the recent (forgetting) ones
+void profile_counts(const OpponentStats& s, bool recent, double x[kProfileDim], double n[kProfileDim]);
+
+// forgetting: each hand the recent counts are multiplied by this before the hand's events are added (a Beta-Bernoulli
+// filter, the discrete cousin of a Kalman filter: half-life about 49 hands)
+constexpr double kRecentDecay = 0.986;
+
+// the prior each rate is shrunk towards: a mean and a strength (in chances). Empirical Bayes: fitted to a
+// platform's own players by the method of moments (their average rate, and how much they truly differ once the
+// binomial noise of each player's sample is removed); the reference types' average with strength 8 when there are
+// fewer than 5 players with enough chances
+struct RatePrior {
+    std::array<double, kProfileDim> mean{}, strength{};
+    int players = 0;  // players the prior was fitted on (0: the reference types)
+};
+RatePrior population_prior(const std::vector<const OpponentStats*>& players);
+
+// {type, similarity, runner_up, runner_up_similarity, hands, settled, rates, prior, recent: {type, similarity, hands,
+// settled}, change_z, changed (recent play reads as another type and a pre-flop rate moved by z >= 3)}
+nlohmann::json profile_json(const OpponentStats& s, const RatePrior* prior = nullptr);
 
 }  // namespace kestrel

@@ -469,6 +469,12 @@ def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None,
     return u, rec
 
 
+def seats_used(P):
+    """The seats players can sit in: all P, or with --seats k < P the blinds and the last k-2 (the early ones empty)."""
+    k = FEAT["seats"] or P
+    return [0, 1] + list(range(P - (k - 2), P)) if k < P else list(range(P))
+
+
 def luck_means(dealer, n=1 << 20):
     """E[strength on street t | bucket on street t-1], t = 1..3, and E[pre-flop strength], from n independent deals
     (cached on the dealer): what the card-luck control variates subtract."""
@@ -589,6 +595,23 @@ def main():
     ap.add_argument("--pool-share", type=float, default=0.0, help="share of each batch played against the population")
     ap.add_argument("--pool", default="tag,maniac,station,random", help="rule opponents in the population")
     ap.add_argument("--pool-snapshots", type=int, default=5, help="past checkpoints kept in the population")
+    # the league (after AlphaStar, Vinyals et al. 2019): opponents picked by how hard they are (prioritised fictitious
+    # self-play), a league exploiter that hunts the whole population, and retired exploiters kept frozen
+    ap.add_argument(
+        "--pfsp",
+        type=float,
+        default=0.0,
+        help="pick pool opponents with weight (1 - p_win)^PFSP, p_win "
+        "the network's running chance of beating each; 0 = uniform (as before)",
+    )
+    ap.add_argument(
+        "--league-share",
+        type=float,
+        default=0.0,
+        help="share of tables for a league exploiter, trained "
+        "against the network and every pool member; frozen into the pool at each reset",
+    )
+    ap.add_argument("--max-frozen", type=int, default=0, help="frozen exploiters kept in the pool (0 = all, as before)")
     ap.add_argument("--chunks", type=int, default=4, help="population chunks per batch (one opponent each)")
     # exploiters (AlphaStar's league, PSRO): a second network trains only to beat the main one. A share of each batch
     # seats it once against eight copies of the main network; both learn from those tables, so the main network has
@@ -648,7 +671,11 @@ def main():
     opt_x = torch.optim.Adam(expl.parameters(), lr=args.lr) if expl is not None else None
     adv_scale_x, last_reset = 1.0, time.time()
     rules = [x for x in args.pool.split(",") if x] if args.pool else []
-    snaps = []
+    snaps, frozen = [], []
+    lexp = copy.deepcopy(avg).requires_grad_(True) if args.league_share > 0 else None
+    opt_l = torch.optim.Adam(lexp.parameters(), lr=args.lr) if lexp is not None else None
+    adv_scale_l = 1.0
+    score = {}  # PFSP: the network's running result (bb a hand) against each pool member, by id
     pool = (rules or None) if args.pool_share > 0 else None
     json.dump({**vars(args), "nfeat": nfeat, "actions": menu.A, "buckets": buckets}, open(os.path.join(args.out, "config.json"), "w"),
               indent=1)  # fmt: skip
@@ -663,22 +690,60 @@ def main():
         # own seats only.
         n_pop = int(args.batch * args.pool_share) // args.chunks * args.chunks if pool else 0
         n_x = int(args.batch * args.exploit_share) if expl is not None else 0
+        n_l = int(args.batch * args.league_share) // args.chunks * args.chunks if lexp is not None and pool else 0
         # one seating table for the whole batch (policy 0 = the net, 1 = the exploiter), played in a single loop:
         # rows [0, n_x) exploiter tables, then n_pop population tables, then self-play
         assign = torch.zeros(args.batch, args.players, dtype=torch.long, device=dev)
-        pols = [net] + ([expl] if expl is not None else []) + (pool or [])
+        pols = [net] + ([expl] if expl is not None else []) + ([lexp] if n_l else []) + (pool or [])
         first = len(pols) - len(pool or [])
-        if n_x:
-            assign[torch.arange(n_x, device=dev), torch.randint(args.players, (n_x,), device=dev)] = 1
+        lid = 2 if expl is not None else 1  # the league exploiter's policy index
+        if n_x:  # the exploiter in a seat where players sit (6-max: never one of the always-empty early seats)
+            occupied = torch.tensor(seats_used(args.players), device=dev)
+            assign[torch.arange(n_x, device=dev), occupied[torch.randint(len(occupied), (n_x,), device=dev)]] = 1
+        occupied = torch.tensor(seats_used(args.players), device=dev)
+        for c in range(args.chunks if n_l else 0):  # league exploiter tables: one seat it, the rest one member or net
+            rows = torch.arange(n_x + c * n_l // args.chunks, n_x + (c + 1) * n_l // args.chunks, device=dev)
+            opp = int(torch.randint(len(pool) + 1, ()).item())
+            assign[rows] = 0 if opp == len(pool) else first + opp
+            assign[rows, occupied[torch.randint(len(occupied), (len(rows),), device=dev)]] = lid
+        if args.pfsp > 0 and pool:  # harder opponents more often: weight (1 - p_win)^pfsp
+            p_win = torch.tensor([torch.sigmoid(torch.tensor(score.get(id(m), 0.0) / 0.5)).item() for m in pool])
+            weights = (1 - p_win).clamp(min=1e-3) ** args.pfsp
+        else:
+            weights = torch.ones(len(pool or [1]))
+        chunk_opp = []
         for c in range(args.chunks if n_pop else 0):
-            rows = slice(n_x + c * n_pop // args.chunks, n_x + (c + 1) * n_pop // args.chunks)
-            opp = first + int(torch.randint(len(pool), ()).item())
+            rows = slice(n_x + n_l + c * n_pop // args.chunks, n_x + n_l + (c + 1) * n_pop // args.chunks)
+            opp = first + int(torch.multinomial(weights, 1).item())
+            chunk_opp.append((rows, opp))
             k = int(torch.randint(1, args.players, ()).item())  # the net holds k seats, chosen at random
             theirs = torch.randperm(args.players, device=dev)[k:]
             assign[rows, theirs] = opp
-        learner = [net, expl] if expl is not None else net
+        learner = [net] + ([expl] if expl is not None else []) + ([lexp] if n_l else [])
+        learner = learner if len(learner) > 1 else net
         u, rec = play(dealer, menu, pols, bk, rk, record=True, dev=dev, learner=learner, assign=assign)
         g, i, f, legal, mybk, street, s, a, who = (torch.cat([r[k] for r in rec]) for k in range(9))
+        with torch.no_grad():  # PFSP: the network's result against each chunk's opponent
+            for rows, opp in chunk_opp:
+                mine = assign[rows] == 0
+                if bool(mine.any()):
+                    r = float((u[rows][mine] / BB).mean())
+                    key = id(pols[opp])
+                    score[key] = 0.9 * score.get(key, r) + 0.1 * r
+        if n_l and bool((who == lid).any()):  # the league exploiter: plain policy gradient, as the exploiter
+            lm_ = who == lid
+            lgl, vl = lexp(f[lm_], mybk[lm_], street[lm_], s[lm_])
+            Gl = u[g[lm_], i[lm_]] / BB
+            logpl = F.log_softmax(masked(lgl, legal[lm_]), 1)
+            entl = -(logpl.exp() * logpl).masked_fill(~legal[lm_], 0).sum(1)
+            advl = Gl - vl.detach()
+            adv_scale_l = 0.99 * adv_scale_l + 0.01 * advl.abs().mean().item()
+            lpl = logpl.gather(1, a[lm_][:, None]).squeeze(1)
+            loss_l = (-advl / max(adv_scale_l, 1e-3) * lpl + 0.5 * (vl - Gl) ** 2 / 25 - 0.003 * entl).mean()
+            opt_l.zero_grad()
+            loss_l.backward()
+            nn.utils.clip_grad_norm_(lexp.parameters(), 1.0)
+            opt_l.step()
         if expl is not None:  # the exploiter: plain policy gradient against the main network, no pull
             xm = who == 1
             lgx, vx = expl(f[xm], mybk[xm], street[xm], s[xm])
@@ -693,6 +758,9 @@ def main():
             loss_x.backward()
             nn.utils.clip_grad_norm_(expl.parameters(), 1.0)
             opt_x.step()
+            nm = who == 0
+            g, i, f, legal, mybk, street, s, a = (x[nm] for x in (g, i, f, legal, mybk, street, s, a))
+        elif n_l:  # a league exploiter without the main one: the network learns from its own seats only
             nm = who == 0
             g, i, f, legal, mybk, street, s, a = (x[nm] for x in (g, i, f, legal, mybk, street, s, a))
         G = u[g, i] / BB  # big blinds won by the player who acted
@@ -760,11 +828,17 @@ def main():
             prev = copy.deepcopy(avg)
             if pool is not None and args.pool_snapshots:
                 snaps = (snaps + [copy.deepcopy(avg).requires_grad_(False)])[-args.pool_snapshots :]
-                pool = rules + snaps
+                pool = rules + frozen + snaps
             if expl is not None and time.time() - last_reset >= args.exploit_reset * 60:
-                if pool is not None:  # the old exploiter stays in the population, frozen
-                    rules.append(copy.deepcopy(expl).requires_grad_(False))
-                    pool = rules + snaps
+                if pool is not None:  # the old exploiters stay in the population, frozen
+                    frozen.append(copy.deepcopy(expl).requires_grad_(False))
+                    if lexp is not None:
+                        frozen.append(copy.deepcopy(lexp).requires_grad_(False))
+                        lexp.load_state_dict(avg.state_dict())
+                        opt_l, adv_scale_l = torch.optim.Adam(lexp.parameters(), lr=args.lr), 1.0
+                    if args.max_frozen:
+                        frozen = frozen[-args.max_frozen :]
+                    pool = rules + frozen + snaps
                 expl.load_state_dict(avg.state_dict())
                 opt_x = torch.optim.Adam(expl.parameters(), lr=args.lr)
                 adv_scale_x, last_reset = 1.0, time.time()

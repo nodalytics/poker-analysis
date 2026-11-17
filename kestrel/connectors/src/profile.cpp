@@ -55,16 +55,64 @@ const std::vector<PlayerType>& player_types() {
     return types;
 }
 
+void profile_counts(const OpponentStats& s, bool recent, double x[kProfileDim], double n[kProfileDim]) {
+    if (recent) {
+        for (int d = 0; d < kProfileDim; ++d) x[d] = s.recent_x[d], n[d] = s.recent_n[d];
+        return;
+    }
+    const double xs[kProfileDim] = {double(s.vpip), double(s.pfr), double(s.threebet), double(s.cbet_folds),
+                                    double(s.aggressive), double(s.showdown)};
+    const double ns[kProfileDim] = {double(s.hands), double(s.hands), double(s.threebet_chance), double(s.cbet_faced),
+                                    double(s.aggressive + s.passive), double(s.saw_flop)};
+    for (int d = 0; d < kProfileDim; ++d) x[d] = xs[d], n[d] = ns[d];
+}
+
+RatePrior population_prior(const std::vector<const OpponentStats*>& players) {
+    RatePrior p;
+    const Norm& nm = norm();
+    for (int d = 0; d < kProfileDim; ++d) p.mean[d] = nm.mean[d], p.strength[d] = kPrior;
+    int fitted = 0;
+    for (int d = 0; d < kProfileDim; ++d) {
+        double sx = 0, sn = 0;
+        std::vector<std::pair<double, double>> r;  // (rate, chances) of players with enough chances
+        for (auto* s : players) {
+            double x[kProfileDim], n[kProfileDim];
+            profile_counts(*s, false, x, n);
+            if (n[d] >= 10) r.push_back({x[d] / n[d], n[d]}), sx += x[d], sn += n[d];
+        }
+        if (r.size() < 5) continue;
+        const double m = std::clamp(sx / sn, 0.01, 0.99);
+        double var = 0, noise = 0;
+        for (auto& [rate, n] : r) var += (rate - m) * (rate - m), noise += m * (1 - m) / n;
+        var /= double(r.size()), noise /= double(r.size());
+        const double between = std::max(var - noise, 1e-4);  // how much players truly differ
+        p.mean[d] = m;
+        p.strength[d] = std::clamp(m * (1 - m) / between - 1, 2.0, 200.0);  // the Beta prior's a + b
+        fitted = std::max(fitted, int(r.size()));
+    }
+    p.players = fitted;
+    return p;
+}
+
 std::array<double, kProfileDim> profile_rates(const OpponentStats& s) {
-    const Norm& n = norm();
-    const double x[kProfileDim] = {double(s.vpip), double(s.pfr), double(s.threebet), double(s.cbet_folds),
-                                   double(s.aggressive), double(s.showdown)};
-    const double c[kProfileDim] = {double(s.hands), double(s.hands), double(s.threebet_chance), double(s.cbet_faced),
-                                   double(s.aggressive + s.passive), double(s.saw_flop)};
+    double x[kProfileDim], n[kProfileDim];
+    profile_counts(s, false, x, n);
+    const Norm& nm = norm();
     std::array<double, kProfileDim> r{};
-    for (int d = 0; d < kProfileDim; ++d) r[d] = (x[d] + kPrior * n.mean[d]) / (c[d] + kPrior);
+    for (int d = 0; d < kProfileDim; ++d) r[d] = (x[d] + kPrior * nm.mean[d]) / (n[d] + kPrior);
     return r;
 }
+
+namespace {
+// the posterior mean of each rate under a prior (Beta-binomial)
+std::array<double, kProfileDim> shrunk(const OpponentStats& s, const RatePrior& p, bool recent) {
+    double x[kProfileDim], n[kProfileDim];
+    profile_counts(s, recent, x, n);
+    std::array<double, kProfileDim> r{};
+    for (int d = 0; d < kProfileDim; ++d) r[d] = (x[d] + p.strength[d] * p.mean[d]) / (n[d] + p.strength[d]);
+    return r;
+}
+}  // namespace
 
 std::array<double, kProfileDim> profile_vector(const std::array<double, kProfileDim>& rates) {
     // the pre-flop rates count double (3-bet 1.5): they have many more chances behind them than the post-flop ones,
@@ -77,18 +125,41 @@ std::array<double, kProfileDim> profile_vector(const std::array<double, kProfile
     return v;
 }
 
-json profile_json(const OpponentStats& s) {
-    const auto rates = profile_rates(s);
-    const auto v = profile_vector(rates);
-    std::vector<std::pair<double, std::string>> sims;
-    for (auto& t : player_types()) sims.push_back({cos6(v, profile_vector(t.rates)), t.name});
-    std::sort(sims.begin(), sims.end(), std::greater<>());
+json profile_json(const OpponentStats& s, const RatePrior* prior) {
+    RatePrior types;  // without a population, the reference types' average with 8 chances
+    for (int d = 0; d < kProfileDim; ++d) types.mean[d] = norm().mean[d], types.strength[d] = kPrior;
+    const RatePrior& p = prior ? *prior : types;
     auto r3 = [](double x) { return std::round(x * 1000.0) / 1000.0; };
-    json rj = json::array();
+    auto classify = [&](const std::array<double, kProfileDim>& rates) {
+        const auto v = profile_vector(rates);
+        std::vector<std::pair<double, std::string>> sims;
+        for (auto& t : player_types()) sims.push_back({cos6(v, profile_vector(t.rates)), t.name});
+        std::sort(sims.begin(), sims.end(), std::greater<>());
+        return sims;
+    };
+    const auto rates = shrunk(s, p, false);
+    const auto life = classify(rates);
+    const auto recent = classify(shrunk(s, p, true));
+    const double recent_hands = s.recent_n[0];  // the forgetting count of hands (chances for VPIP)
+    const bool settled = s.hands >= kSettled, recent_settled = recent_hands >= 20;
+    // evidence of a change: the largest z of a pre-flop rate's recent value against the lifetime one (binomial error at
+    // the recent sample size); a different type label alone is not enough (labels flip near a boundary)
+    double change_z = 0;
+    for (int d = 0; d < 3; ++d) {
+        if (s.recent_n[d] < 10) continue;
+        const double p = std::clamp(rates[d], 0.01, 0.99), q = s.recent_x[d] / s.recent_n[d];
+        change_z = std::max(change_z, std::fabs(q - p) / std::sqrt(p * (1 - p) / s.recent_n[d]));
+    }
+    json rj = json::array(), pm = json::array(), ps = json::array();
     for (double x : rates) rj.push_back(r3(x));
-    return {{"type", sims[0].second}, {"similarity", r3(sims[0].first)}, {"runner_up", sims[1].second},
-            {"runner_up_similarity", r3(sims[1].first)}, {"hands", s.hands}, {"settled", s.hands >= kSettled},
-            {"rates", rj}};
+    for (int d = 0; d < kProfileDim; ++d) pm.push_back(r3(p.mean[d])), ps.push_back(std::round(p.strength[d] * 10) / 10);
+    return {{"type", life[0].second}, {"similarity", r3(life[0].first)}, {"runner_up", life[1].second},
+            {"runner_up_similarity", r3(life[1].first)}, {"hands", s.hands}, {"settled", settled}, {"rates", rj},
+            {"prior", {{"mean", pm}, {"strength", ps}, {"players", p.players}}},
+            {"recent", {{"type", recent[0].second}, {"similarity", r3(recent[0].first)}, {"hands", r3(recent_hands)},
+                        {"settled", recent_settled}}},
+            {"change_z", r3(change_z)},
+            {"changed", settled && recent_settled && recent[0].second != life[0].second && change_z >= 3}};
 }
 
 }  // namespace kestrel

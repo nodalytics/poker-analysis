@@ -30,7 +30,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from ninemax_engine import BB, Dealer, Menu
-from ninemax_selfplay import FEAT, NineNet, duplicate, masked, play, set_mode
+from ninemax_selfplay import NineNet, duplicate, masked, play, seats_used, set_mode
 
 
 def setup(args, dev):
@@ -101,8 +101,7 @@ def exploit(args, dev):
         n = args.batch // args.chunks
         # the seats a player can sit in: with fewer seats (6-max cash, --seats) the early ones are always empty, and a
         # hero there has no decisions
-        k = FEAT["seats"] or P
-        seats = [0, 1] + list(range(P - (k - 2), P)) if k < P else list(range(P))
+        seats = seats_used(P)
         for c in range(args.chunks):  # the hero in one seat per chunk, the seat drawn at random
             seat = seats[int(torch.randint(len(seats), ()).item())]
             pols = [target] * P
