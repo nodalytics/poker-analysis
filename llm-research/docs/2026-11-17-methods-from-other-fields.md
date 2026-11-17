@@ -9,8 +9,8 @@ named-property`); every family of results is corrected for looking in many place
 |---|---|---|---|---|
 | 1 | particle physics | look-elsewhere correction | built (`scripts/multitest.py`) | one past claim falls |
 | 2 | particle physics | blind analysis (pre-registration) | in use | the comparison of 4-5 was fixed and pushed before its runs started |
-| 3 | particle physics | earth mover's distance card buckets | training (nm33) | pending |
-| 4 | particle physics | seat-order-independent network (Deep Sets) | training (nm32) | pending |
+| 3 | particle physics | earth mover's distance card buckets | tested (nm33, pre-registered) | not better; probably worse (−0.30, Holm p 0.036) |
+| 4 | particle physics | seat-order-independent network (Deep Sets) | tested (nm32, pre-registered) | level with the baseline (−0.10 ± 0.27) |
 | 5 | particle physics | control variates | built (`duplicate(cv=True)`) | no gain: duplicate already cancels card luck |
 | 6 | clinical trials | group-sequential tests | built (`scripts/seqtest.py`) | 20-83% of deals saved, errors held |
 | 7 | multi-agent RL | league training (PFSP, league exploiters) | training (nm35) | pending, against nm34 |
@@ -171,5 +171,24 @@ players), once human hands exist to check it on.
 
 ## The training comparisons
 
-Pending: nm31 (baseline), nm32 (Deep Sets) and nm33 (EMD buckets), 600 million hands each, compared as
-pre-registered; nm34 against nm35 by the 30-minute exploiter.
+**nm31 (baseline), nm32 (Deep Sets), nm33 (EMD buckets)**, from scratch with nm25's settings, compared exactly as
+pre-registered (`results/prereg/2026-11-17-sets-and-emd.result.json`): 40,000 deals, seed 2026, delta = (candidate
+vs 8 × nm31 − nm31 vs 8 × candidate) / 2, Holm over the two:
+
+| Candidate | Delta, bb/100 | 95% interval | Holm p | Verdict |
+|---|---|---|---|---|
+| nm32, Deep Sets | −0.10 | [−0.37, +0.17] | 0.46 | level with the baseline |
+| nm33, EMD buckets | −0.30 | [−0.55, −0.05] | 0.036 | not better; probably worse |
+
+Neither is adopted. Two deviations, recorded with the result: the compared checkpoints are at 565-585 million hands
+(the trainer saved only at evaluations, so the last ~5% was lost at the hand limit; now fixed, and all three lost
+about the same), and the match tool rounded to 0.1 bb/100 (nm33's z lies between about −2.0 and −2.8; not re-run, as
+registered; the tool now keeps 4 places). The dashboard impression that nm33 played very well came from a handful of
+eventful hands; 40,000 paired deals say otherwise, which is what a fixed plan is for.
+
+Why the EMD buckets may not help here: at 10-25bb most decisions are before the flop or all-in on it, where future
+strength distributions matter least; and the network already sees each street's bucket through its own embedding, so
+it can learn draws from the bucket sequence itself. The Deep Sets network learns the same game with weights shared
+across seats; at equal hands it neither gains nor loses, so its value (tables of any size alike) is untested here.
+
+**nm34 against nm35** (the 6-max cash fixes): pending, the 30-minute exploiters.

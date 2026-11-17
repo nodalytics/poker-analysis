@@ -843,6 +843,11 @@ def main():
                 opt_x = torch.optim.Adam(expl.parameters(), lr=args.lr)
                 adv_scale_x, last_reset = 1.0, time.time()
             last_eval = time.time()
+    # the end of training (--minutes or --max-hands): save, or everything since the last evaluation is lost
+    ck = os.path.join(args.out, "checkpoint.pt")
+    torch.save({"net": net.state_dict(), "magnet": magnet.state_dict(), "avg": avg.state_dict(),
+                "opt": opt.state_dict(), "hands": hands}, ck + ".tmp")  # fmt: skip
+    os.replace(ck + ".tmp", ck)
     with open(os.path.join(args.out, "train.log"), "a") as f:
         f.write("stopped\n")
 

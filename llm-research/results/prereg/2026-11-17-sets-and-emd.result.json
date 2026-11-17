@@ -1,0 +1,14 @@
+{
+ "registration": "2026-11-17-sets-and-emd.json (commit 57b1a5c, pushed before the runs started)",
+ "evaluated": "2026-11-17 22:00 WAT, ninemax_absmatch.py, 40,000 deals, seed 2026, exactly as registered",
+ "deviations": [
+  "the compared checkpoints are at 565M (nm31), 585M (nm32), 569M (nm33) hands, not 600M: the trainer saved only at evaluations and lost the last ~5% at the --max-hands stop (fixed after: it now saves at the stop); all three lost about the same",
+  "the match tool saved results rounded to 0.1 bb/100, so delta and z carry about +-0.05 of rounding; not re-run, as the registration forbids re-running and keeping a reading (the tool now keeps 4 places)"
+ ],
+ "matches_bb100": {"nm32 vs 8 x nm31": -0.3, "nm31 vs 8 x nm32": -0.1, "nm33 vs 8 x nm31": -0.4, "nm31 vs 8 x nm33": 0.2},
+ "family": {
+  "nm32 vs nm31": {"delta": -0.10, "ci95": [-0.37, 0.17], "p": 0.46, "holm": 0.46, "verdict": "not better (no difference)"},
+  "nm33 vs nm31": {"delta": -0.30, "ci95": [-0.55, -0.05], "p": 0.018, "holm": 0.036, "verdict": "not better; worse at Holm p 0.036 (z about -2.0 to -2.8 with the rounding)"}
+ },
+ "decision": "neither candidate is adopted. The Deep Sets network is level with the baseline at 600M hands; the distribution-aware (EMD) buckets are not better and probably worse."
+}
