@@ -298,6 +298,10 @@ and that is where it pays. It belongs in Kestrel, not only in training.
   | Opponents | Deals a search | Gain over plain nm25 |
   |---|---|---|
   | raise-biased | 1,024 | **+6.16** [+3.35, +8.98] (Python, 2,048 deals: +6.39) |
+  | the network | 1,024 | **+4.12** [+1.37, +6.87] |
+  | call-biased | 1,024 | **+4.18** [+1.29, +7.07] |
+  | fold-biased | 1,024 | **+3.73** [+0.98, +6.48] |
+  | the network | 2,048 | +4.20 [+1.59, +6.81] |
   | raise-biased | 256 | +0.50 [−2.91, +3.91] |
   | the network | 256 | **−5.21** [−8.65, −1.78] |
   | call-biased | 256 | **−6.54** [−10.21, −2.88] |
@@ -305,8 +309,10 @@ and that is where it pays. It belongs in Kestrel, not only in training.
   | the network, robust | 256 | −2.27 [−5.03, +0.50] |
 
   The port reproduces Python at 1,024 deals; at 256 it loses, because it plays the move with the best estimated
-  value and 256 deals leave those estimates too noisy (it then picks noise). So Kestrel offers 1,024 to 4,096 deals
-  (default 1,024); 1,024 against the other opponents and 2,048 against the network are running.
+  value and 256 deals leave those estimates too noisy (it then picks noise). At 1,024 deals it gains against every
+  kind of opponent, +3.7 to +6.2 bb/100, each interval above zero; 2,048 adds nothing (+4.20 against +4.12) at twice
+  the time. So Kestrel offers 1,024 to 4,096 deals, default 1,024 (about 2 s a decision on 8 cores). Robust search
+  at 1,024 is not yet measured in C++; at 256 it lost less than version 1 (−2.3 against −5.2).
 
 ## Embeddings and similarity (2026-11-16)
 

@@ -75,6 +75,12 @@ run's small losses for version 1 were the cards). Version 1 gains at least as mu
 times faster (about 27 against 80 ms a decision). Robust's promise, holding up when opponents adapt to it, is not
 shown by these fixed opponents; it needs an adaptive one: an exploiter trained against each searcher.
 
+**In Kestrel, 2026-11-17** (the C++ port, `kestrel/tools/search_match.cpp`, 4,000 deals with the hero in every seat,
+paired; `kestrel/docs/design.md`, Search): version 1 at 1,024 deals gains +4.12 against the network, +4.18 against
+call-biased, +3.73 against fold-biased and +6.16 against raise-biased opponents, every interval above zero; at 256
+deals it loses 5-6.5 bb/100, because a greedy choice among noisy values picks the noise. The number of deals is not a
+speed setting below 1,024.
+
 **Then:** an exploiter test against each searcher, since robustness is what the robust version is for. Both beat the
 plain network in duplicate matches, so search is ready for Kestrel; at 27-80 ms a decision it fits any platform's
 time limit.
