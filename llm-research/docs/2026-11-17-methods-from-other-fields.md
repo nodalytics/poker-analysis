@@ -13,7 +13,7 @@ named-property`); every family of results is corrected for looking in many place
 | 4 | particle physics | seat-order-independent network (Deep Sets) | tested (nm32, pre-registered) | level with the baseline (−0.10 ± 0.27) |
 | 5 | particle physics | control variates | built (`duplicate(cv=True)`) | no gain: duplicate already cancels card luck |
 | 6 | clinical trials | group-sequential tests | built (`scripts/seqtest.py`) | 20-83% of deals saved, errors held |
-| 7 | multi-agent RL | league training (PFSP, league exploiters) | training (nm35) | pending, against nm34 |
+| 7 | multi-agent RL | league training (PFSP, league exploiters) | tested (nm35 vs nm34) | hole shrunk by a third, not closed; slightly ahead of a bigger exploiter |
 | 8 | Bayesian statistics | empirical-Bayes prior and forgetting profiles | built (Kestrel) | finds a player who changes, 19 hands late |
 | 9 | sports ratings | Bayesian ratings, P(best) | built (`scripts/ratings_bayes.py`) | the ladder is not transitive (chi²/dof 1.65) |
 | 10 | behavioural economics | tilt, suited overvaluation | built (`scripts/table_analysis.py`) | finds a planted tilter only |
@@ -191,4 +191,15 @@ strength distributions matter least; and the network already sees each street's 
 it can learn draws from the bucket sequence itself. The Deep Sets network learns the same game with weights shared
 across seats; at equal hands it neither gains nor loses, so its value (tables of any size alike) is untested here.
 
-**nm34 against nm35** (the 6-max cash fixes): pending, the 30-minute exploiters.
+**nm34 against nm35** (the 6-max cash fixes, 12 hours each from nm28; nm35 got fewer hands on the slower GPU, about
+1.9 against 2.8 billion), by the 30-minute exploiter (copy check at minute 0 in brackets):
+
+| Model | Copy | Exploiter after 30 min |
+|---|---|---|
+| nm28 | −1.4 | +11.0 [+6.7, +15.2] |
+| nm34, bigger exploiter | +1.6 | +8.2 [+4.4, +12.0] |
+| nm35, league | −1.0 | +7.0 [+3.9, +10.0] |
+
+Both shrank the hole by about a third, the league slightly more on fewer hands, but the intervals overlap and neither
+closes it. nm35 read +2.1 at 20 minutes: the exploiter needed the full 30 to find the leak, which is why the gate is
+the 30-minute reading. Next: nm35 continued with the league for another 12 hours on the faster GPU.
