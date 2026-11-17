@@ -6,6 +6,9 @@ Every seat is the network (on-policy positions); in each batch one seat is the h
 searches (before the flop, and after it in pots of up to three players), and play continues with the network's own
 move so the positions stay the network's. Rows: features, buckets, street, strength, legal, Q, pi_net.
 
+--ensemble RUN,RUN,...: no search; every decision of every seat is labelled with the average policy of those networks
+(Q = 0, so the trainer's target is that average): distilling an ensemble into one network.
+
 Usage (lab, GPU venv): PYTHONPATH=scripts .venv-gpu/bin/python scripts/ninemax_distill_data.py blueprint/nm25 OUTDIR \\
     [--decisions 500000] [--samples 2048] [--batch 256] [--seed 1] [--shard 50000]
 """
@@ -36,6 +39,7 @@ def main():
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--shard", type=int, default=50_000)
     ap.add_argument("--max-live", type=int, default=3)
+    ap.add_argument("--ensemble", help="comma-separated runs: label with their average policy instead of search")
     a = ap.parse_args()
     dev = "cuda"
     torch.manual_seed(a.seed)
@@ -46,6 +50,9 @@ def main():
     menu = Menu(cfg_menu, dev)
     search = Search(net, dealer, menu, a.samples, "greedy", 1.0, a.chunk)
     search.trace = []
+    members = [load(r, dealer.B, dev)[0] for r in a.ensemble.split(",")] if a.ensemble else []
+    if members:  # load() sets the game from each run's config: the positions are this run's game, so it goes last
+        net, _ = load(a.run, dealer.B, dev)
     P = dealer.P
     rows, shard, total, t0 = [], 0, 0, time.time()
 
@@ -69,6 +76,21 @@ def main():
                 g = (~T.done).nonzero().squeeze(1)
                 i = T.actor[g]
                 probs, _ = net_probs(net, dealer, T, g, bk)
+                if members:  # every decision, labelled with the ensemble's average policy
+                    feat, legal = features(T, g, i)
+                    st = strength(dealer, bk[g], T.street[g]).gather(1, i[:, None]).squeeze(1)
+                    avg_p = sum(net_probs(m, dealer, T, g, bk)[0] for m in members) / len(members)
+                    rows.append({"feat": feat.half(), "bk": bk[g, i].short(), "street": T.street[g].byte(),
+                                 "strength": st.half(), "legal": legal, "q": torch.zeros_like(avg_p),
+                                 "pnet": avg_p.half()})  # fmt: skip
+                    total += len(g)
+                    if sum(len(r["q"]) for r in rows) >= a.shard:
+                        flush()
+                    a_ = torch.multinomial(probs, 1).squeeze(1)
+                    for t, s, x in zip(g.tolist(), i.tolist(), a_.tolist()):
+                        hist[t].append((s, x))
+                    T.step(g, a_)
+                    continue
                 small = ((~T.folded[g]).sum(1) <= a.max_live) | (T.street[g] == 0)
                 el = (i == h) & small
                 if el.any():

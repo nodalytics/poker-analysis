@@ -1,0 +1,15 @@
+{
+ "name": "2026-11-17-nm39-nm40",
+ "registered": "2026-11-17, before either run started; the pushed commit that adds this file is the record",
+ "nm40": {
+  "question": "Does distilling the average policy of nm20, nm25, nm26 and nm27 (they tie on strength and play differently) into nm25 make a stronger network than nm25?",
+  "run": "init blueprint/nm25/checkpoint.pt; nm25's settings; --distill blueprint/distill_ensemble (3,012,857 positions from nm25 self-play, every decision labelled with the four networks' average policy, Q = 0 so the target is that average) --distill-weight 1.0 --distill-batch 4096; 6 hours on the PRO 6000 after nm36",
+  "decision": "sequential duplicate match, nm40 against 8 x nm25 (seqtest.py, 40,000 deals max, 8 looks, equivalence margin 0.5) at alpha 0.025; adopted if it stops for a difference with nm40 ahead and its 30-minute exploiter is within 1 bb/100 of nm25's +0.2"
+ },
+ "nm39": {
+  "question": "A tournament model for deeper stacks (average 25-60bb, the early stages, where no model is trained)",
+  "run": "init blueprint/nm25/checkpoint.pt; nm25's settings with --depths 25,60; 6 hours on the RTX 3090 after nm38",
+  "decision": "a coverage model, judged in its own game: against nm25 in the 25-60bb game (seqtest, alpha 0.05) it must be ahead or equivalent, its copy check 0, its 30-minute exploiter within 1 bb/100 of nm25's, and the sense checks at 20bb no worse than nm25's; then it ships as the deep-stack option, nm25 stays the 10-25bb default"
+ },
+ "not_allowed": "changing any setting, budget, metric or decision rule after seeing results; re-running and keeping the better reading"
+}
