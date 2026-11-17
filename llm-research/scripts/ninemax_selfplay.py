@@ -69,12 +69,15 @@ def split_pay(pay):
 
 def start_equity(stacks, pay):
     """Each player's equity at the start of a hand, in prize-money shares: ICM on the regular prizes and, with
-    bounties, the player's own bounty times its chance of winning the tournament (its chip share), since the winner
-    collects its own."""
+    bounties, its chip share of the whole bounty pool. Every bounty is eventually collected by someone (the winner
+    collects its own); in proportion to chips is the simple model that keeps the money whole: the equities sum to all
+    the prizes and bounties, so the reward is zero-sum. (nm29's version credited only each player's own bounty times
+    its chip share, so a knockout created equity: a copy of nm29 beat itself by +90 bb/100.)"""
     reg, bty = split_pay(pay)
     eq = icm(stacks.float(), reg).float()
     if bty is not None:
-        eq = eq + bty * (stacks.float() / stacks.float().sum(1, keepdim=True).clamp(min=1))
+        share = stacks.float() / stacks.float().sum(1, keepdim=True).clamp(min=1)
+        eq = eq + share * bty.sum(1, keepdim=True)
     return eq
 
 
@@ -416,7 +419,8 @@ def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None,
             k = F.one_hot(u.argmax(1), T.P).float() * won[:, None] / 2
             left = torch.where(busted, torch.zeros_like(bty), bty) + k
             alive = torch.where(busted, torch.zeros_like(end), end).float()
-            eq1 = eq1 + k + left * alive / alive.sum(1, keepdim=True).clamp(min=1)
+            # the bounties still in play, by chip share (as start_equity): the money stays whole
+            eq1 = eq1 + k + left.sum(1, keepdim=True) * alive / alive.sum(1, keepdim=True).clamp(min=1)
         u = (eq1 - T.eq0) * T.stack.sum(1, keepdim=True).float()
     return u, rec
 
