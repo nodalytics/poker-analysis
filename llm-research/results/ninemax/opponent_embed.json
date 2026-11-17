@@ -1,0 +1,135 @@
+{
+ "classes": [
+  "tag",
+  "station",
+  "limper",
+  "odd",
+  "minraiser",
+  "tilter"
+ ],
+ "rows": [
+  {
+   "N": 10,
+   "train": 4027,
+   "test": 1320,
+   "stats": {
+    "accuracy": 0.7667,
+    "se": 0.0116,
+    "per_class": {
+     "tag": 0.939,
+     "station": 1.0,
+     "limper": 0.925,
+     "odd": 0.307,
+     "minraiser": 0.184,
+     "tilter": 0.689
+    }
+   },
+   "xvector": {
+    "accuracy": 0.872,
+    "se": 0.0092,
+    "per_class": {
+     "tag": 0.925,
+     "station": 1.0,
+     "limper": 0.935,
+     "odd": 0.711,
+     "minraiser": 0.665,
+     "tilter": 0.824
+    }
+   },
+   "gru": {
+    "accuracy": 0.8424,
+    "se": 0.01,
+    "per_class": {
+     "tag": 0.891,
+     "station": 1.0,
+     "limper": 0.928,
+     "odd": 0.746,
+     "minraiser": 0.547,
+     "tilter": 0.797
+    }
+   }
+  },
+  {
+   "N": 20,
+   "train": 1999,
+   "test": 657,
+   "stats": {
+    "accuracy": 0.7915,
+    "se": 0.0158,
+    "per_class": {
+     "tag": 0.943,
+     "station": 1.0,
+     "limper": 0.925,
+     "odd": 0.263,
+     "minraiser": 0.348,
+     "tilter": 0.778
+    }
+   },
+   "xvector": {
+    "accuracy": 0.9239,
+    "se": 0.0103,
+    "per_class": {
+     "tag": 0.98,
+     "station": 1.0,
+     "limper": 0.965,
+     "odd": 0.912,
+     "minraiser": 0.697,
+     "tilter": 0.833
+    }
+   },
+   "gru": {
+    "accuracy": 0.9178,
+    "se": 0.0107,
+    "per_class": {
+     "tag": 0.943,
+     "station": 1.0,
+     "limper": 0.955,
+     "odd": 0.912,
+     "minraiser": 0.764,
+     "tilter": 0.861
+    }
+   }
+  },
+  {
+   "N": 50,
+   "train": 788,
+   "test": 259,
+   "stats": {
+    "accuracy": 0.8494,
+    "se": 0.0222,
+    "per_class": {
+     "tag": 0.98,
+     "station": 1.0,
+     "limper": 0.962,
+     "odd": 0.409,
+     "minraiser": 0.486,
+     "tilter": 0.786
+    }
+   },
+   "xvector": {
+    "accuracy": 0.9807,
+    "se": 0.0085,
+    "per_class": {
+     "tag": 0.98,
+     "station": 1.0,
+     "limper": 1.0,
+     "odd": 1.0,
+     "minraiser": 0.914,
+     "tilter": 1.0
+    }
+   },
+   "gru": {
+    "accuracy": 0.9575,
+    "se": 0.0125,
+    "per_class": {
+     "tag": 0.908,
+     "station": 1.0,
+     "limper": 1.0,
+     "odd": 1.0,
+     "minraiser": 0.943,
+     "tilter": 1.0
+    }
+   }
+  }
+ ]
+}
