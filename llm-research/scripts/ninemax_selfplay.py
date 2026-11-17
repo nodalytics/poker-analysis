@@ -611,6 +611,11 @@ def main():
         help="share of tables for a league exploiter, trained "
         "against the network and every pool member; frozen into the pool at each reset",
     )
+    # expert iteration: pull the policy towards search's improved policy on stored positions (ninemax_distill_data.py)
+    ap.add_argument("--distill", help="a folder of distillation shards: every step also learns pi ~ pi_net exp(Q/tau)")
+    ap.add_argument("--distill-weight", type=float, default=1.0, help="weight of the distillation cross-entropy")
+    ap.add_argument("--distill-tau", type=float, default=1.0, help="temperature of the target, big blinds")
+    ap.add_argument("--distill-batch", type=int, default=4096, help="stored positions per step")
     ap.add_argument("--max-frozen", type=int, default=0, help="frozen exploiters kept in the pool (0 = all, as before)")
     ap.add_argument("--chunks", type=int, default=4, help="population chunks per batch (one opponent each)")
     # exploiters (AlphaStar's league, PSRO): a second network trains only to beat the main one. A share of each batch
@@ -676,6 +681,16 @@ def main():
     opt_l = torch.optim.Adam(lexp.parameters(), lr=args.lr) if lexp is not None else None
     adv_scale_l = 1.0
     score = {}  # PFSP: the network's running result (bb a hand) against each pool member, by id
+    dist = None
+    if args.distill:  # search-labelled positions; the target is fixed, so it is computed once
+        import glob
+
+        shards = [torch.load(f) for f in sorted(glob.glob(os.path.join(args.distill, "shard_*.pt")))]
+        dist = {k: torch.cat([d[k] for d in shards]).to(dev) for k in shards[0]}
+        q = dist["q"].masked_fill(~dist["legal"], -1e9)
+        z = torch.log(dist["pnet"].float().clamp(min=1e-6)) + (q - q.max(1, keepdim=True).values) / args.distill_tau
+        dist["target"] = torch.softmax(masked(z, dist["legal"]), 1)
+        print(f"distillation: {len(q)} positions from {len(shards)} shards, tau {args.distill_tau}", flush=True)
     pool = (rules or None) if args.pool_share > 0 else None
     json.dump({**vars(args), "nfeat": nfeat, "actions": menu.A, "buckets": buckets}, open(os.path.join(args.out, "config.json"), "w"),
               indent=1)  # fmt: skip
@@ -792,6 +807,14 @@ def main():
             frac = min((time.time() - t0) / (args.kl_ramp * 60), 1.0)
             kl_w = args.kl_start + frac * (args.kl - args.kl_start)
         loss = (pg + 0.5 * (v - G) ** 2 / 25 + kl_w * kl - args.entropy * ent).mean()
+        if dist is not None:  # towards search's policy on stored positions (expert iteration)
+            j = torch.randint(len(dist["q"]), (args.distill_batch,), device=dev)
+            lgd, _ = net(
+                dist["feat"][j].float(), dist["bk"][j].long(), dist["street"][j].long(), dist["strength"][j].float()
+            )
+            logpd = F.log_softmax(masked(lgd, dist["legal"][j]), 1)
+            loss_d = -(dist["target"][j] * logpd.masked_fill(~dist["legal"][j], 0)).sum(1).mean()
+            loss = loss + args.distill_weight * loss_d
         opt.zero_grad()
         loss.backward()
         nn.utils.clip_grad_norm_(net.parameters(), 1.0)
@@ -814,7 +837,9 @@ def main():
             m2, lo2, hi2 = duplicate(dealer, menu, avg, prev, args.eval_hands, dev)
             line = (
                 f"{(now - t0) / 60:.1f} min {hands} hands {rate:.0f} hands/s pull {kl_w:.3f} loss {loss.item():.4f} "
-                f"kl {kl.mean().item():.4f} entropy {ent.mean().item():.3f}  1-vs-8 vs tag: {m1:+.1f} bb/100 "
+                f"kl {kl.mean().item():.4f} entropy {ent.mean().item():.3f}"
+                + (f" distill {loss_d.item():.4f}" if dist is not None else "")
+                + f"  1-vs-8 vs tag: {m1:+.1f} bb/100 "
                 f"[{lo1:+.1f}, {hi1:+.1f}]  vs previous checkpoint: {m2:+.1f} [{lo2:+.1f}, {hi2:+.1f}]"
             )
             for opp in ("reg", "maniac", "station", "random"):

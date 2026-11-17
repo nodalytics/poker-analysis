@@ -125,6 +125,7 @@ class Search:
         self.N, self.mode, self.tau, self.chunk = samples, mode, tau, chunk
         self.robust, self.bias = robust, bias
         self.ess = []
+        self.trace = None  # a list to receive (Q, network policy) of every decision searched (distillation data)
         import ctypes
 
         dealer.lib.bp_deal_fixed.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_uint64] + [ctypes.c_void_p] * 4
@@ -193,6 +194,8 @@ class Search:
         q = (u * w[pairs[:, 0]][None]).sum(2).min(0).values  # the worst continuation for the hero
         Q = torch.full(legal.shape, -1e9, device=dev)
         Q[pairs[:, 0], pairs[:, 1]] = q
+        if self.trace is not None:
+            self.trace.append((Q.clone(), pnet.clone()))
         if self.mode == "greedy":
             return F.one_hot(Q.argmax(1), legal.shape[1]).float()
         z = torch.log(pnet.clamp(min=1e-12)) + (Q - Q.max(1, keepdim=True).values) / self.tau
