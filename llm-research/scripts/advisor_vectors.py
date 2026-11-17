@@ -62,7 +62,8 @@ def main():
     menu = Menu(cfg.get("menu", "medium"), dev)
 
     # ---- weights ----
-    sd = net.state_dict()
+    # training-only outputs (the belief head) are not part of the policy Kestrel reads
+    sd = {k: t for k, t in net.state_dict().items() if not k.startswith("belief.")}
     wd = a.out or d
     os.makedirs(wd, exist_ok=True)
     with open(os.path.join(wd, "net.bin"), "wb") as f:

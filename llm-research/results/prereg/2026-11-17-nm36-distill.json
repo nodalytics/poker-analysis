@@ -8,7 +8,8 @@
  "primary": {
   "metric": "sequential duplicate match, nm36 in each seat against 8 x nm25 (scripts/seqtest.py): up to 40,000 deals in 8 looks, O'Brien-Fleming at alpha 0.05 (C 2.0696), equivalence margin 0.5 bb/100",
   "seed": "seqtest's default dealer seed 2026",
-  "decision": "nm36 is better if the match stops for a difference with nm36 ahead; equivalent or behind: not adopted"
+  "decision": "nm36 is better if the match stops for a difference with nm36 ahead; equivalent or behind: not adopted",
+  "family": "with nm38 (belief) the two upgrades are a family of two against nm25: the sequential boundary is applied at alpha 0.025 each (Holm-Bonferroni over two), added 2026-11-17 before either run started"
  },
  "secondary": {
   "exploiter": "30-minute exploiter against nm36; it must not exceed nm25's (+0.2 [-0.4, +0.7]) by more than 1 bb/100 for nm36 to be adopted",
