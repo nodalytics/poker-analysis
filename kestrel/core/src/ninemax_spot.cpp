@@ -185,7 +185,9 @@ NMAdvice ninemax_decide(const Net& net, const NMSpot& sp, const SearchConfig* se
     auto f = features(T, net.info(), &ctx);
     std::vector<float> lg;
     float v;
-    net.forward(f, bk, st, strength(net.info(), st, bk[st]), lg, v);
+    std::vector<float> hidden;
+    net.forward(f, bk, st, strength(net.info(), st, bk[st]), lg, v, &hidden);
+    adv.embedding = embed_hidden(hidden);
     auto p = net.policy(lg, L);
     adv.value_bb = v;
     int live = 0;

@@ -10,6 +10,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <vector>
 
 #include <nlohmann/json.hpp>
 
@@ -30,7 +31,20 @@ class Store {
     int64_t begin_session(const std::string& kind, const std::string& connector, const std::string& model,
                           const std::string& solver, const std::string& out_dir);
     void end_session(int64_t session, const nlohmann::json& summary);
-    void add_hand(int64_t session, const nlohmann::json& hand);  // one line of hands.jsonl
+    int64_t add_hand(int64_t session, const nlohmann::json& hand);  // one line of hands.jsonl; returns its row id
+
+    // one of Kestrel's decisions in a hand, with the network's embedding of the spot (net.hpp, embed_hidden)
+    struct Spot {
+        int street = 0;
+        std::string pos, chose;  // the position and the move played ("raise to 2.5")
+        std::vector<float> vec;
+    };
+    void add_spots(int64_t hand, const std::string& model, const std::vector<Spot>& spots);
+    // the k stored spots of the same model most like vec (cosine similarity), each with its hand's record; scans the
+    // newest `scan` spots
+    nlohmann::json similar(const std::string& model, const std::vector<float>& vec, int k = 10, int64_t exclude = 0,
+                           int scan = 200000);
+    std::vector<float> spot_vec(int64_t spot, std::string* model);  // a stored spot's embedding (empty: none)
     // the whole opponent book, {platform: {username: stats}}: every player's row replaced in one transaction
     void put_opponents(const nlohmann::json& book);
 
@@ -47,7 +61,7 @@ class Store {
     int64_t begin_session_locked(const std::string& kind, const std::string& connector, const std::string& model,
                                  const std::string& solver, const std::string& out_dir);
     void end_session_locked(int64_t session, const nlohmann::json& summary);
-    void add_hand_locked(int64_t session, const nlohmann::json& hand);
+    int64_t add_hand_locked(int64_t session, const nlohmann::json& hand);
     std::string path_;
     sqlite3* db_ = nullptr;
     std::mutex mu_;

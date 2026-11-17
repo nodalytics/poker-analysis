@@ -205,6 +205,7 @@ ServeOptions defaults(const char* argv0) {
             o.lan = st.value("lan", true);
             num("port", o.port), num("ws_port", o.ws_port), num("tcp_port", o.tcp_port);
             num("resolve_iters", o.resolve_iters), num("search_samples", o.search_samples), num("texassolver_threads", o.ts_threads);
+            o.search_samples = std::clamp(o.search_samples, 1024, 4096);  // fewer deals lose to the plain network
             str("default_model", o.nine_max_default);
             str("texassolver_bin", o.ts_bin), str("texassolver_resources", o.ts_resources);
             str("sessions_dir", o.out), str("pack", o.pack), str("db", o.db);
@@ -344,7 +345,7 @@ int main(int argc, char** argv) {
             else if (a == "--out") o.out = v;
             else if (a == "--models") o.extra_models.push_back(v);
             else if (a == "--resolve-iters") o.resolve_iters = std::stoi(v);
-            else if (a == "--search-samples") o.search_samples = std::clamp(std::stoi(v), 16, 4096);
+            else if (a == "--search-samples") o.search_samples = std::clamp(std::stoi(v), 1024, 4096);
             else if (a == "--texassolver") o.ts_bin = v;
             else if (a == "--texassolver-resources") o.ts_resources = v;
             else if (a == "--lan") o.lan = v == "on" || v == "1" || v == "true";
@@ -391,7 +392,7 @@ int main(int argc, char** argv) {
             else if (a == "--tournaments") plan.tournaments = std::stoi(v);
             else if (a == "--solver") plan.solver = v;
             else if (a == "--resolve-iters") iters = std::stoi(v);
-            else if (a == "--search-samples") samples = std::clamp(std::stoi(v), 16, 4096);
+            else if (a == "--search-samples") samples = std::clamp(std::stoi(v), 1024, 4096);
             else if (a == "--db") db_path = v == "off" ? "" : v;
             else if (a == "--texassolver") ts.bin = v;
             else if (a == "--texassolver-resources") ts.resources = v;

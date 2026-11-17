@@ -424,7 +424,7 @@ void SpotPage::ask() {
                 {"button", QString("P%1").arg(button_->value())}, {"me", QString("P%1").arg(me_->value())},
                 {"sb", sb_->value()}, {"bb", bb_->value()}, {"ante", ante_->value()},
                 {"hole", toArray(cardsOf(hole_->text()))}, {"board", toArray(cardsOf(board_->text()))},
-                {"actions", acts}, {"payouts", pay}};
+                {"actions", acts}, {"payouts", pay}, {"similar", 8}};
     }
     answer_->setHtml("<p style='color:gray'>Asking…</p>");
     client_.post("/v1/decide", body, [this, body](const QJsonDocument& d, int, const QString& err) {
@@ -438,6 +438,24 @@ void SpotPage::ask() {
         if (r.contains("value_bb")) h += QString("<p style='color:%1'>value %2 bb · %3</p>").arg(p.muted, sign(r.value("value_bb").toDouble()), esc(r.value("model").toString()));
         if (r.contains("on_tree")) h += QString("<p style='color:%1'>%2%3</p>").arg(p.muted, r.value("on_tree").toBool() ? "on the blueprint's tree" : "off the tree", r.value("resolved").toBool() ? " · re-solved" : "");
         if (r.value("translated").toInt()) h += QString("<p style='color:%1'>%2 bet(s) at sizes the model does not use</p>").arg(p.muted).arg(r.value("translated").toInt());
+        // the stored spots the network sees as most like this one (cosine similarity of its embeddings, kestrel.db)
+        if (const QJsonArray sim = r.value("similar").toArray(); !sim.isEmpty()) {
+            h += "<p style='margin-top:10px'><b>Similar spots Kestrel has played</b></p><table cellspacing='6'>"
+                 "<tr><th align='left'>cosine</th><th align='left'>pos</th><th align='left'>cards</th><th align='left'>board</th>"
+                 "<th align='left'>played</th><th align='right'>result</th></tr>";
+            for (const auto& v : sim) {
+                const QJsonObject o = v.toObject(), hd = o.value("hand").toObject();
+                QStringList hole, board;
+                for (const auto& x : hd.value("hole").toArray()) hole << x.toString();
+                for (const auto& x : hd.value("board").toArray()) board << x.toString();
+                const QJsonValue res = o.value("result_bb");
+                h += "<tr><td>" + QString::number(o.value("similarity").toDouble(), 'f', 3) + "</td><td>" + esc(o.value("pos").toString()) +
+                     "</td><td style='font-family:monospace'>" + esc(hole.join(' ')) + "</td><td style='font-family:monospace'>" +
+                     esc(board.join(' ')) + "</td><td>" + esc(o.value("chose").toString()) + "</td><td align='right'>" +
+                     (res.isDouble() ? sign(res.toDouble()) + " bb" : QString("–")) + "</td></tr>";
+            }
+            h += "</table>";
+        }
         answer_->setHtml(h);
         drawn_->setState(r.value("view").toObject(), {}, dark_());
         if (body.value("game").toString() == "ninemax" && !body.value("payouts").toArray().isEmpty())
@@ -608,8 +626,8 @@ OpponentsPage::OpponentsPage(Client& c, QWidget* parent) : QWidget(parent), clie
     platform_ = new QComboBox;
     platform_->setMinimumWidth(180);
     connect(platform_, &QComboBox::currentTextChanged, this, [this] { showPlatform(); });
-    table_ = new QTableWidget(0, 8);
-    table_->setHorizontalHeaderLabels({"Player", "Hands", "VPIP %", "Pre-flop raise %", "3-bet %", "Fold to c-bet %", "Aggression", "Showdown %"});
+    table_ = new QTableWidget(0, 9);
+    table_->setHorizontalHeaderLabels({"Player", "Hands", "VPIP %", "Pre-flop raise %", "3-bet %", "Fold to c-bet %", "Aggression", "Showdown %", "Type"});
     table_->verticalHeader()->hide();
     table_->setSelectionBehavior(QAbstractItemView::SelectRows);
     table_->setSortingEnabled(true);
@@ -618,14 +636,31 @@ OpponentsPage::OpponentsPage(Client& c, QWidget* parent) : QWidget(parent), clie
     connect(table_, &QTableWidget::currentCellChanged, this, [this](int row) {
         if (row < 0 || !table_->item(row, 0)) return;
         const QString name = table_->item(row, 0)->text();
-        QString h = "<p><b>" + esc(name) + "</b>: the last hands shown</p>";
+        const QJsonObject pr = players_.value(name).toObject().value("profile").toObject();
+        QString h = "<p><b>" + esc(name) + "</b>: closest type <b>" + esc(pr.value("type").toString()) + "</b> (cosine " +
+                    QString::number(pr.value("similarity").toDouble(), 'f', 2) + "), then " + esc(pr.value("runner_up").toString()) +
+                    " (" + QString::number(pr.value("runner_up_similarity").toDouble(), 'f', 2) + ")" +
+                    (pr.value("settled").toBool() ? QString() : QString(" &mdash; fewer than 30 hands, not settled")) + "</p>";
+        QString shownHtml = "<p><b>The last hands shown</b></p>";
         for (const auto& v : players_.value(name).toObject().value("shown").toArray()) {
             QStringList c, b;
             for (const auto& x : v.toObject().value("cards").toArray()) c << x.toString();
             for (const auto& x : v.toObject().value("board").toArray()) b << x.toString();
-            h += "<div style='font-family:monospace'>" + esc(c.join(' ')) + " &nbsp;|&nbsp; " + esc(b.join(' ')) + "</div>";
+            shownHtml += "<div style='font-family:monospace'>" + esc(c.join(' ')) + " &nbsp;|&nbsp; " + esc(b.join(' ')) + "</div>";
         }
-        shown_->setHtml(h);
+        shown_->setHtml(h + shownHtml);
+        // the players met before who play most like this one (cosine similarity of their profiles)
+        client_.get("/v1/opponents?platform=" + QUrl::toPercentEncoding(platform_->currentText()) + "&player=" + QUrl::toPercentEncoding(name),
+                    [this, h, shownHtml](const QJsonDocument& d, int, const QString& err) {
+                        if (!err.isEmpty()) return;
+                        QStringList like;
+                        for (const auto& v : d.object().value("like").toArray()) {
+                            const QJsonObject o = v.toObject();
+                            like << esc(o.value("player").toString()) + " " + QString::number(o.value("similarity").toDouble(), 'f', 2);
+                        }
+                        shown_->setHtml(h + "<p>Plays most like: " + (like.isEmpty() ? QString("no one yet (30 hands needed)") : like.join(", ")) +
+                                        "</p>" + shownHtml);
+                    });
     });
     auto reloadBtn = new QPushButton("Reload");
     connect(reloadBtn, &QPushButton::clicked, this, &OpponentsPage::reload);
@@ -682,6 +717,12 @@ void OpponentsPage::showPlatform() {
             int c = 2;
             for (const char* k : {"vpip", "pfr", "threebet", "fold_to_cbet", "aggression", "went_to_showdown"})
                 table_->setItem(r, c++, num(s.value(k).toDouble()));
+            const QJsonObject pr = s.value("profile").toObject();
+            auto type = new QTableWidgetItem(pr.value("settled").toBool() ? pr.value("type").toString() + " " +
+                                                                                 QString::number(pr.value("similarity").toDouble(), 'f', 2)
+                                                                           : "(" + pr.value("type").toString() + ")");
+            type->setFlags(type->flags() & ~Qt::ItemIsEditable);
+            table_->setItem(r, c, type);
         }
         table_->setSortingEnabled(true);
         table_->sortItems(1, Qt::DescendingOrder);

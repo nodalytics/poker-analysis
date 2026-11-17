@@ -62,6 +62,7 @@ struct NMAdvice {
     int samples = 0;
     double ess = 0;      // search: the effective number of deals after weighting by the opponents' actions
     std::string error;   // set when the spot could not be replayed
+    std::vector<float> embedding;  // the spot as the network sees it (kEmbedDim numbers, length 1): for similar spots
     nlohmann::json view;  // the table as replayed: seats, positions, stacks and the pot in big blinds, the hand's log
     nlohmann::json to_json() const;
 };

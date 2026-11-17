@@ -26,13 +26,22 @@ json SessionSummary::to_json() const {
 }
 
 namespace {
+// a model as the database names it: a folder's name (kestreld play takes a path, the server a name), so spots stored
+// by either can be compared
+std::string model_name(const std::string& m) {
+    std::string s = m;
+    while (s.size() > 1 && (s.back() == '/' || s.back() == '\\')) s.pop_back();
+    const auto k = s.find_last_of("/\\");
+    return k == std::string::npos ? s : s.substr(k + 1);
+}
+
 // the session's rows in the database, when there is one; a database error is reported once and never stops play
 struct DbLog {
     Store* st = nullptr;
     int64_t id = 0;
     bool warned = false;
     DbLog(const SessionPlan& plan, const std::string& connector) : st(plan.store) {
-        guard([&] { id = st->begin_session("session", connector, plan.model, plan.solver, plan.out_dir); });
+        guard([&] { id = st->begin_session("session", connector, model_name(plan.model), plan.solver, plan.out_dir); });
     }
     template <class F> void guard(F f) {
         if (!st) return;
@@ -43,7 +52,14 @@ struct DbLog {
             warned = true;
         }
     }
-    void hand(const json& h) { guard([&] { if (id) st->add_hand(id, h); }); }
+    int64_t hand(const json& h) {  // the hand's row id (0: not stored)
+        int64_t row = 0;
+        guard([&] { if (id) row = st->add_hand(id, h); });
+        return row;
+    }
+    void spots(int64_t hand, const std::string& model, const std::vector<Store::Spot>& sp) {
+        if (hand && !sp.empty()) guard([&] { st->add_spots(hand, model, sp); });
+    }
     void end(const json& summary) { guard([&] { if (id) st->end_session(id, summary); }); }
 };
 
@@ -411,6 +427,7 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
     std::string cur_hand, acted_at;
     double cur_start = 0, cur_bb = 0;
     json cur_line;
+    std::vector<Store::Spot> cur_spots;  // the hand's decisions, with their embeddings
     auto my_start = [&](const NMSpot& sp) {
         for (auto& p : sp.players)
             if (p.id == sp.me) return p.stack;
@@ -448,7 +465,8 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
         cur_line["result_bb"] = won;
         if (json b = at(r, fields, "last_board"); !b.is_null()) cur_line["board"] = cards(b);
         log << cur_line.dump() << "\n" << std::flush;
-        db.hand(cur_line);
+        db.spots(db.hand(cur_line), model_name(plan.model), cur_spots);
+        cur_spots.clear();
         if (on_hand) on_hand(cur_line);
         json ev = cur_line;
         ev["type"] = "hand";
@@ -671,7 +689,7 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
             close_hand(my_start(sp), r);
             if (int(results.size()) >= plan.hands) break;
             cur_hand = hand, cur_start = my_start(sp), cur_bb = sp.bb;
-            cur_line = {{"connector", spec.name}, {"model", plan.model}, {"solver", plan.solver}, {"hand_id", hand}, {"players", sp.players.size()},
+            cur_line = {{"connector", spec.name}, {"model", model_name(plan.model)}, {"solver", plan.solver}, {"hand_id", hand}, {"players", sp.players.size()},
                         {"start_bb", sp.bb > 0 ? cur_start / sp.bb : 0.0}, {"decisions", json::array()}};
         }
         if (stream ? !turn_event
@@ -760,6 +778,8 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
         std::string chose = pick.label.empty() ? pick.action : pick.label;
         cur_line["hole"] = hole;
         cur_line["decisions"].push_back({{"street", street}, {"chose", chose}});
+        if (plan.store && !adv.embedding.empty())  // the spot as the network saw it, for finding similar spots later
+            cur_spots.push_back({street, adv.view.value("pos", ""), chose, adv.embedding});
         std::string summary;
         for (auto& d : cur_line["decisions"]) summary += (summary.empty() ? "" : ", ") + d["chose"].get<std::string>();
         cur_line["action"] = summary;
