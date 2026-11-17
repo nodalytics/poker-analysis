@@ -235,7 +235,13 @@ class Lab:
             cfg.get("bounty", 0.0),
         )
         menu = self.menus.setdefault(cfg.get("menu", "medium"), Menu(cfg.get("menu", "medium"), "cpu"))
-        net = NineNet(cfg["nfeat"], cfg["actions"], cfg.get("buckets", self.B), arch=cfg.get("arch", "mlp"))
+        net = NineNet(
+            cfg["nfeat"],
+            cfg["actions"],
+            cfg.get("buckets", self.B),
+            arch=cfg.get("arch", "mlp"),
+            belief=cfg.get("belief_weight", 0) > 0,
+        )
         st = torch.load(os.path.join(run, "checkpoint.pt"), map_location="cpu", weights_only=True)
         net.load_state_dict(st["avg"])
         return net.eval(), menu, int(st["hands"])

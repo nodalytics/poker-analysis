@@ -1,0 +1,19 @@
+{
+ "name": "2026-11-17-nm38-belief",
+ "registered": "2026-11-17, before nm38 started training; the pushed commit that adds this file is the record",
+ "question": "Does an auxiliary belief target (predict each live opponent's hand strength in tenths from the last hidden layer) make a stronger network than nm25?",
+ "run": {
+  "nm38": "init blueprint/nm25/checkpoint.pt; nm25's settings (as nm36's registration) plus --belief-weight 0.5; 6 hours on the RTX 3090 (slower than nm36's GPU, so fewer hands: nm38 is compared with nm25, not with nm36); the averaged network is compared"
+ },
+ "primary": {
+  "metric": "sequential duplicate match, nm38 in each seat against 8 x nm25 (scripts/seqtest.py): up to 40,000 deals in 8 looks, O'Brien-Fleming at alpha 0.05, equivalence margin 0.5 bb/100",
+  "decision": "nm38 is better if the match stops for a difference with nm38 ahead; equivalent or behind: not adopted",
+  "family": "with nm36 the two upgrades are a family of two against nm25: a win must hold at Holm alpha 0.05 over both (the sequential boundary at alpha 0.025 for each, 0.05 / 2)"
+ },
+ "secondary": {
+  "exploiter": "30-minute exploiter; must not exceed nm25's +0.2 by more than 1 bb/100",
+  "copy_check": "minute-0 reading 0 within its interval",
+  "belief_loss": "reported: the auxiliary loss should fall below its start (1.59 in the smoke test; random guessing is 2.30)"
+ },
+ "not_allowed": "changing the weight, budget, metric or decision rule after seeing any nm38 result; re-running and keeping the better reading"
+}

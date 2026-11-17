@@ -134,6 +134,9 @@ def features(T, g, i):
     return torch.cat(f, 1), legal
 
 
+BELIEF_BINS = 10  # the belief output's classes per seat: strength in tenths
+
+
 def seat_layout(P, A, S):
     """Where each other seat's inputs sit in features() (FEAT must be set): a [P-1, d] index tensor, one row per
     other seat in table order after me (live, all-in, committed, acted, aggressor, then chips behind, bounty and
@@ -164,7 +167,8 @@ class NineNet(nn.Module):
     relative to me, the results are pooled by sum and max, so what is learnt about a seat is shared by every seat and
     tables of any size read alike."""
 
-    def __init__(self, nfeat, A, buckets, hidden=512, blocks=4, emb=32, arch="mlp", players=9, tok_hidden=128):
+    def __init__(self, nfeat, A, buckets, hidden=512, blocks=4, emb=32, arch="mlp", players=9, tok_hidden=128,
+                 belief=False):  # fmt: skip
         super().__init__()
         per_street = list(buckets) if isinstance(buckets, (list, tuple)) else [buckets] * 3  # flop, turn, river
         self.emb = nn.ModuleList([nn.Embedding(169, emb)] + [nn.Embedding(b, emb) for b in per_street])
@@ -186,6 +190,10 @@ class NineNet(nn.Module):
         self.norm = nn.LayerNorm(hidden)
         self.pi = nn.Linear(hidden, A)
         self.v = nn.Linear(hidden, 1)
+        # belief modelling (DeepStack, ReBeL): an extra output, used only in training, predicting each other seat's
+        # hand strength (tenths of the strength scale) from the last hidden layer, so that layer must carry ranges
+        self.belief = nn.Linear(hidden, (players - 1) * BELIEF_BINS) if belief else None
+        self.last_h = None
 
     def forward(self, feat, bk, street, st):
         """bk: [n, 4] this player's buckets per street; streets after the current one are masked out."""
@@ -200,6 +208,8 @@ class NineNet(nn.Module):
         for blk in self.blocks:
             h = h + blk(h)
         h = self.norm(h)
+        if self.belief is not None and self.training:
+            self.last_h = h
         return self.pi(h), self.v(h).squeeze(1)
 
 
@@ -616,6 +626,12 @@ def main():
     ap.add_argument("--distill-weight", type=float, default=1.0, help="weight of the distillation cross-entropy")
     ap.add_argument("--distill-tau", type=float, default=1.0, help="temperature of the target, big blinds")
     ap.add_argument("--distill-batch", type=int, default=4096, help="stored positions per step")
+    ap.add_argument(
+        "--belief-weight",
+        type=float,
+        default=0.0,
+        help="belief modelling: weight of the auxiliary loss predicting each live opponent's hand strength (0 = off)",
+    )
     ap.add_argument("--max-frozen", type=int, default=0, help="frozen exploiters kept in the pool (0 = all, as before)")
     ap.add_argument("--chunks", type=int, default=4, help="population chunks per batch (one opponent each)")
     # exploiters (AlphaStar's league, PSRO): a second network trains only to beat the main one. A share of each batch
@@ -653,7 +669,7 @@ def main():
     menu = Menu(args.menu, dev)
     nfeat = n_features(args.players, menu, dev)
     buckets = list(read_buckets(args.abs))
-    net = NineNet(nfeat, menu.A, buckets, arch=args.arch, players=args.players).to(dev)
+    net = NineNet(nfeat, menu.A, buckets, arch=args.arch, players=args.players, belief=args.belief_weight > 0).to(dev)
     magnet, avg = copy.deepcopy(net), copy.deepcopy(net)
     for m in (magnet, avg):
         m.requires_grad_(False)
@@ -669,7 +685,9 @@ def main():
     elif args.init:  # warm start: a run's checkpoint (net, magnet, avg) or a snapshot (avg into all three)
         st = torch.load(args.init, map_location=dev, weights_only=True)
         for mod, k in ((net, "net"), (magnet, "magnet"), (avg, "avg")):
-            mod.load_state_dict(st[k] if k in st else st["avg"])
+            missing, extra = mod.load_state_dict(st[k] if k in st else st["avg"], strict=False)
+            # a warm start may add a training-only head the source run did not have (--belief-weight); nothing else
+            assert not extra and all(m.startswith("belief.") for m in missing), (missing, extra)
         hands = st["hands"]
     prev = copy.deepcopy(avg)
     expl = copy.deepcopy(avg).requires_grad_(True) if args.exploit_share > 0 else None
@@ -807,6 +825,17 @@ def main():
             frac = min((time.time() - t0) / (args.kl_ramp * 60), 1.0)
             kl_w = args.kl_start + frac * (args.kl - args.kl_start)
         loss = (pg + 0.5 * (v - G) ** 2 / 25 + kl_w * kl - args.entropy * ent).mean()
+        if (
+            args.belief_weight > 0 and net.last_h is not None
+        ):  # each live opponent's hand strength, from the hidden layer
+            P_ = args.players
+            rel = (i[:, None] + 1 + torch.arange(P_ - 1, device=dev)) % P_
+            s_all = strength(dealer, bk[g], street).gather(1, rel)  # [n, P-1] the opponents' true strength now
+            tgt = (s_all * BELIEF_BINS).long().clamp(0, BELIEF_BINS - 1)
+            live_opp = f[:, seat_layout(P_, menu.A, menu.S)[0][:, 0]] > 0.5  # live (not folded, seated), table order
+            bl = net.belief(net.last_h).view(len(i), P_ - 1, BELIEF_BINS)
+            loss_b = F.cross_entropy(bl[live_opp], tgt[live_opp]) if bool(live_opp.any()) else bl.sum() * 0
+            loss = loss + args.belief_weight * loss_b
         if dist is not None:  # towards search's policy on stored positions (expert iteration)
             j = torch.randint(len(dist["q"]), (args.distill_batch,), device=dev)
             lgd, _ = net(
@@ -839,6 +868,7 @@ def main():
                 f"{(now - t0) / 60:.1f} min {hands} hands {rate:.0f} hands/s pull {kl_w:.3f} loss {loss.item():.4f} "
                 f"kl {kl.mean().item():.4f} entropy {ent.mean().item():.3f}"
                 + (f" distill {loss_d.item():.4f}" if dist is not None else "")
+                + (f" belief {loss_b.item():.4f}" if args.belief_weight > 0 else "")
                 + f"  1-vs-8 vs tag: {m1:+.1f} bb/100 "
                 f"[{lo1:+.1f}, {hi1:+.1f}]  vs previous checkpoint: {m2:+.1f} [{lo2:+.1f}, {hi2:+.1f}]"
             )

@@ -57,7 +57,13 @@ class Seat:
             cfg.get("bounty", 0.0),
         )
         self.menu = Menu(cfg.get("menu", "medium"), "cpu")
-        self.net = NineNet(cfg["nfeat"], cfg["actions"], cfg.get("buckets", self.B), arch=cfg.get("arch", "mlp"))
+        self.net = NineNet(
+            cfg["nfeat"],
+            cfg["actions"],
+            cfg.get("buckets", self.B),
+            arch=cfg.get("arch", "mlp"),
+            belief=cfg.get("belief_weight", 0) > 0,
+        )
         st = torch.load(os.path.join(d, "checkpoint.pt"), map_location="cpu", weights_only=True)
         self.net.load_state_dict(st["avg"])
         self.net.eval()
