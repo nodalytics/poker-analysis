@@ -186,6 +186,11 @@ about the same), and the match tool rounded to 0.1 bb/100 (nm33's z lies between
 registered; the tool now keeps 4 places). The dashboard impression that nm33 played very well came from a handful of
 eventful hands; 40,000 paired deals say otherwise, which is what a fixed plan is for.
 
+The secondary measures, read after the primary (2026-11-18): the 30-minute exploiter finds nothing in nm31 (−0.0
+[−0.6, +0.6]) but holes in nm32 (+1.9 [+1.4, +2.5]) and nm33 (+1.0 [+0.5, +1.5]), so both candidates are also more
+exploitable; the copy checks read +0.4, +0.3 and −0.1. Poker sense (before / after the flop, of 16 / 12): nm31 7 / 9,
+nm32 9 / 10, nm33 9 / 9, all below nm25 (11 / 12) after only 565-585 million hands from scratch.
+
 Why the EMD buckets may not help here: at 10-25bb most decisions are before the flop or all-in on it, where future
 strength distributions matter least; and the network already sees each street's bucket through its own embedding, so
 it can learn draws from the bucket sequence itself. The Deep Sets network learns the same game with weights shared
