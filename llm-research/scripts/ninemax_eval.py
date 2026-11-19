@@ -30,7 +30,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from ninemax_engine import BB, Dealer, Menu
-from ninemax_selfplay import NineNet, duplicate, masked, play, seats_used, set_mode
+from ninemax_selfplay import FEAT, NineNet, board_of, duplicate, masked, play, seats_used, set_mode
 
 
 def setup(args, dev):
@@ -56,6 +56,7 @@ def load(run, B, dev, part="avg"):
         cfg.get("short", 0.0),
         cfg.get("seats"),
         cfg.get("bounty", 0.0),
+        cfg.get("texture", False),
     )  # the runs compared must share a mode
     net = NineNet(
         cfg["nfeat"],
@@ -102,7 +103,8 @@ def exploit(args, dev):
     m, lo, hi = duplicate(dealer, menu, hero, target, args.hands, dev)
     log.write(f"0.0 min 0 hands  learner vs 8 x target: {m:+.1f} bb/100 [{lo:+.1f}, {hi:+.1f}]\n")
     while time.time() - t0 < args.minutes * 60:
-        bk, rk, _ = dealer.deal(args.batch)
+        bk, rk, cd = dealer.deal(args.batch, cards=FEAT["texture"])
+        board = board_of(cd, P, dev)
         recs, Gs = [], []
         n = args.batch // args.chunks
         # the seats a player can sit in: with fewer seats (6-max cash, --seats) the early ones are always empty, and a
@@ -113,7 +115,8 @@ def exploit(args, dev):
             pols = [target] * P
             pols[seat] = hero
             sl = slice(c * n, (c + 1) * n)
-            u, rec = play(dealer, menu, pols, bk[sl], rk[sl], record=True, dev=dev, learner=hero)
+            bsl = None if board is None else board[sl]
+            u, rec = play(dealer, menu, pols, bk[sl], rk[sl], record=True, dev=dev, learner=hero, board=bsl)
             recs += rec
             Gs += [u[r[0], r[1]] / BB for r in rec]
         g, i, f, legal, mybk, street, s, a = (torch.cat([r[k] for r in recs]) for k in range(8))
@@ -144,6 +147,11 @@ def exploit(args, dev):
             log.write(line + "\n")
             print(line, flush=True)
             last = time.time()
+    # the exploiter itself, for leak maps (ninemax_leaks.py): where it wins is where the target leaks
+    torch.save(
+        {"avg": hero.state_dict(), "target": args.runs[0], "target_hands": hands},
+        os.path.join(args.out, "exploiter.pt"),
+    )
     log.write("stopped\n")
 
 

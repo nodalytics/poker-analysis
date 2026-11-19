@@ -22,7 +22,7 @@ import torch
 
 from ninemax_engine import BB, Dealer, Menu
 from ninemax_eval import load
-from ninemax_selfplay import context, play
+from ninemax_selfplay import board_of, context, play
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -72,7 +72,7 @@ def main():
             for seat in range(P):
                 pols = [v["net"]] * P
                 pols[seat] = h["net"]
-                u, _ = play(base, menu, pols, bk, rk, dev=dev, ctx=ctx, views=views)
+                u, _ = play(base, menu, pols, bk, rk, dev=dev, ctx=ctx, views=views, board=board_of(cd, P, dev))
                 per += u[:, seat] / BB
             x = (per / P).cpu().numpy()
             m, se = x.mean() * 100, x.std() / math.sqrt(len(x)) * 100

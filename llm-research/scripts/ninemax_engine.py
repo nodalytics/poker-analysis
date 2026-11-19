@@ -156,6 +156,8 @@ class Tables:
         self.bet, self.last_raise, self.raises, self.street = g(BB), g(BB), g(0), g(0)
         self.pre_raises = g(0)  # complete raises pre-flop: 1 = opened, 2 = 3-bet pot, ...
         self.aggressor = g(-1)
+        # the betting so far, per street: full raises, calls (of a bet), checks [G, 4, 3] (texture features)
+        self.hist = torch.zeros(G, 4, 3, dtype=torch.long, device=dev)
         self.to_act = g(1)  # the scan for the next actor starts after this seat
         self.done = torch.zeros(G, dtype=torch.bool, device=dev)
         self.showdown = torch.zeros(G, dtype=torch.bool, device=dev)
@@ -257,6 +259,11 @@ class Tables:
         total = torch.where(fold, self.contrib[g, i], total)
         inc = total - bet
         full = ~fold & ~call & (inc >= self.last_raise[g])
+        owed = bet > self.contrib[g, i]  # before this move: a call pays, a "call" of nothing is a check
+        st = self.street[g]
+        self.hist[g, st, 0] += full.long()
+        self.hist[g, st, 1] += (call & owed).long()
+        self.hist[g, st, 2] += (call & ~owed).long()
         self.folded[g, i] |= fold
         self.contrib[g, i] = total
         self.allin[g, i] |= total >= stk

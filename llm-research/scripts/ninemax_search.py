@@ -52,7 +52,7 @@ from ninemax_eval import load
 from ninemax_selfplay import FEAT, context, features, masked
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-FIELDS = ("stack", "contrib", "folded", "allin", "acted", "bet", "last_raise", "raises", "street", "pre_raises",
+FIELDS = ("stack", "contrib", "folded", "allin", "acted", "bet", "last_raise", "raises", "street", "pre_raises", "hist",
           "aggressor", "to_act", "done", "showdown", "actor")  # fmt: skip
 NBOARD = {0: 0, 1: 3, 2: 4, 3: 5}
 
@@ -64,6 +64,8 @@ def take(T, idx):
         setattr(U, f, getattr(T, f)[idx].clone())
     if hasattr(T, "pay"):
         U.pay, U.eq0 = T.pay[idx], T.eq0[idx]
+    if getattr(T, "board", None) is not None:  # texture runs read the board cards
+        U.board = T.board[idx]
     return U
 
 
