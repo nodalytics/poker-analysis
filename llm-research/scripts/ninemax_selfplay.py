@@ -56,7 +56,8 @@ from ninemax_engine import BB, RULES, STACK, Dealer, Menu, Tables, read_buckets,
 #   bounty   progressive knockout (PKO) tournaments: this share of the money at stake is in bounties on the players'
 #            heads. Knocking a player out pays half their bounty in cash and adds the other half to your own; the
 #            payouts tensor then carries both, [G, 2P] (split_pay). 0: no bounties.
-FEAT = {"stacks": None, "tourney": False, "depths": None, "short": 0.0, "seats": None, "bounty": 0.0}
+FEAT = {"stacks": None, "tourney": False, "depths": None, "short": 0.0, "seats": None, "bounty": 0.0, "texture": False}
+PRIORITY = {}  # prioritised scenario sampling: table cell -> weight (ninemax_leaks.py), training tables only
 
 
 def split_pay(pay):
@@ -79,6 +80,40 @@ def start_equity(stacks, pay):
         share = stacks.float() / stacks.float().sum(1, keepdim=True).clamp(min=1)
         eq = eq + share * bty.sum(1, keepdim=True)
     return eq
+
+
+def board_of(cd, P, dev):
+    """The board cards [G, 5] from a deal made with cards=True (None without)."""
+    return None if cd is None else torch.as_tensor(cd[:, 2 * P : 2 * P + 5], dtype=torch.long, device=dev)
+
+
+def board_texture(board, g, street, dev):
+    """Seven numbers about the board cards visible on each table's street (zeros before the flop or without cards):
+    the largest suit count, paired, trips or better, distinct ranks, the most distinct ranks in any five-rank window
+    (straight potential, the ace also low), the top rank, and the broadway cards. Cards are rank * 4 + suit."""
+    n = len(g)
+    out = torch.zeros(n, 7, device=dev)
+    if board is None:
+        return out
+    b = board[g]  # [n, 5]
+    shown = torch.tensor([0, 3, 4, 5], device=dev)[street]  # cards visible
+    vis = torch.arange(5, device=dev)[None, :] < shown[:, None]
+    rank, suit = b // 4, b % 4
+    rc = torch.zeros(n, 13, device=dev).scatter_add_(1, rank, vis.float())
+    sc = torch.zeros(n, 4, device=dev).scatter_add_(1, suit, vis.float())
+    present = (rc > 0).float()
+    wheel = torch.cat([present[:, 12:13], present], 1)  # the ace low as well
+    windows = wheel.unfold(1, 5, 1).sum(2).max(1).values
+    top = torch.where(vis, rank, torch.full_like(rank, -1)).max(1).values.float()
+    on = (shown > 0).float()
+    out[:, 0] = sc.max(1).values / 5
+    out[:, 1] = (rc >= 2).any(1).float()
+    out[:, 2] = (rc >= 3).any(1).float()
+    out[:, 3] = present.sum(1) / 5
+    out[:, 4] = windows / 5
+    out[:, 5] = top.clamp(min=0) / 12
+    out[:, 6] = (rc[:, 8:].sum(1)) / 5
+    return out * on[:, None]
 
 
 def features(T, g, i):
@@ -127,6 +162,9 @@ def features(T, g, i):
         f.append(eq.gather(1, rel))
         share = T.stack[g].float() / T.stack[g].sum(1, keepdim=True)  # chip shares at the start of the hand
         f.append((T.eq0[g] / share.clamp(min=1e-6)).gather(1, i[:, None]).clamp(0, 5))  # equity per chip
+    if FEAT["texture"]:  # the betting so far, per street, and the board's texture (the network otherwise sees buckets)
+        f.append((T.hist[g].float() / 4).clamp(max=1).reshape(len(g), 12))
+        f.append(board_texture(getattr(T, "board", None), g, T.street[g], g.device))
     legal, t = T.legal(g, i)
     f.append(legal.float())
     S = T.menu.S
@@ -374,10 +412,27 @@ def n_features(P, menu, dev):
     return features(T, torch.zeros(1, dtype=torch.long, device=dev), T.actor[:1])[0].shape[1]
 
 
-def context(G, P, dev):
-    """Starting stacks [G, P] and payouts (or None) for G tables in the run's mode (FEAT); None, None = 100bb cash."""
+def table_cell(st, kind):
+    """Each table's cell for prioritised sampling and leak maps: kind (0 final table, 1 bubble, 2 in the money), the
+    seated players' average stack (under 12, 12-18, 18-25, 25+ bb) and how many are seated (2, 3-5, 6-8, 9)."""
+    seated = (st > 0).sum(1)
+    avg = st.float().sum(1) / seated.clamp(min=1) / BB
+    depth = (avg >= 12).long() + (avg >= 18).long() + (avg >= 25).long()
+    players = (seated >= 3).long() + (seated >= 6).long() + (seated >= 9).long()
+    return kind.view(-1) * 16 + depth * 4 + players
+
+
+def context(G, P, dev, prioritized=False):
+    """Starting stacks [G, P] and payouts (or None) for G tables in the run's mode (FEAT); None, None = 100bb cash.
+    prioritized (training only): tables drawn in proportion to their cell's weight in PRIORITY (the leak map)."""
     if FEAT["tourney"]:
-        st, pay, _ = scenarios(G, P, dev, avg_bb=FEAT["depths"] or (10, 60), short=FEAT["short"])
+        if prioritized and PRIORITY:  # draw 3x and keep G by weight: the leaky cells come up more often
+            st3, pay3, kind3 = scenarios(3 * G, P, dev, avg_bb=FEAT["depths"] or (10, 60), short=FEAT["short"])
+            w = torch.tensor([PRIORITY.get(int(c), 1.0) for c in table_cell(st3, kind3).tolist()], device=dev)
+            keep = torch.multinomial(w, G, replacement=False)
+            st, pay = st3[keep], pay3[keep]
+        else:
+            st, pay, _ = scenarios(G, P, dev, avg_bb=FEAT["depths"] or (10, 60), short=FEAT["short"])
         beta = FEAT["bounty"]
         if beta:  # bounties: bigger stacks have usually collected more; empty seats have none
             share = st.float() / st.float().mean(1, keepdim=True).clamp(min=1)
@@ -403,7 +458,8 @@ def context(G, P, dev):
     return st, None
 
 
-def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None, assign=None, ctx=None, views=None):
+def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None, assign=None, ctx=None, views=None,
+         board=None):  # fmt: skip
     """Play len(bk) hands; policies[seat] is a NineNet or a rule name (rule_probs). Returns payoffs [G, P] (chips)
     and, with record, the decisions (only those of the policy `learner`, or of a list of policies, when given), each
     with the index of the policy that took it (last field).
@@ -422,6 +478,7 @@ def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None,
     T = Tables(G, P, menu, dev, stacks=stacks)
     if pay is not None:
         T.pay, T.eq0 = pay.float(), start_equity(T.stack, pay)
+    T.board = board  # [G, 5] cards (texture runs; None: the texture features read zero)
     rec = []
     if assign is None:
         uniq = list({id(p): p for p in policies}.values())  # each distinct policy once; seat -> its index
@@ -522,7 +579,8 @@ def duplicate(dealer, menu, hero, villain, n, dev, cv=False):
     cv: also the estimate with card-luck control variates (card_luck: the hero's luck in each seating, per street,
     regressed out by least squares) and its interval, as (m, lo, hi, m_cv, lo_cv, hi_cv)."""
     P = dealer.P
-    bk, rk, _ = dealer.deal(n)
+    bk, rk, cd = dealer.deal(n, cards=FEAT["texture"])
+    board = board_of(cd, P, dev)
     ctx = context(n, P, dev)  # the same stacks (and payouts) for every seating
     per = torch.zeros(n, device=dev)
     xs = []
@@ -530,7 +588,7 @@ def duplicate(dealer, menu, hero, villain, n, dev, cv=False):
     for seat in range(P):
         pols = [villain] * P
         pols[seat] = hero
-        u, _ = play(dealer, menu, pols, bk, rk, dev=dev, ctx=ctx)
+        u, _ = play(dealer, menu, pols, bk, rk, dev=dev, ctx=ctx, board=board)
         per += u[:, seat] / BB
         if cv:
             seated = (ctx[0][:, seat] > 0).float()[:, None] if ctx[0] is not None else 1.0
@@ -547,7 +605,8 @@ def duplicate(dealer, menu, hero, villain, n, dev, cv=False):
     return m, m - 1.96 * se, m + 1.96 * se, mc, mc - 1.96 * sec, mc + 1.96 * sec
 
 
-def set_mode(stacks="100", tourney=False, depths=None, open_limp=True, ante=0.0, short=0.0, seats=None, bounty=0.0):
+def set_mode(stacks="100", tourney=False, depths=None, open_limp=True, ante=0.0, short=0.0, seats=None, bounty=0.0,
+             texture=False):  # fmt: skip
     """Set FEAT from a run's options (also used by the tools that load a run, from its config.json). depths: the
     tournament tables' average-stack ranges, "LO,HI;LO,HI" (None: icm.scenarios' default, 10-60bb)."""
     RULES["open_limp"] = bool(open_limp)
@@ -558,6 +617,7 @@ def set_mode(stacks="100", tourney=False, depths=None, open_limp=True, ante=0.0,
     FEAT["short"] = float(short or 0.0)
     FEAT["seats"] = int(seats) if seats else None
     FEAT["bounty"] = float(bounty or 0.0)
+    FEAT["texture"] = bool(texture)
 
 
 def main():
@@ -632,6 +692,8 @@ def main():
         default=0.0,
         help="belief modelling: weight of the auxiliary loss predicting each live opponent's hand strength (0 = off)",
     )
+    ap.add_argument("--texture", action="store_true", help="also read the betting per street and the board's texture")
+    ap.add_argument("--priority", help="a leak map (ninemax_leaks.py JSON): training tables drawn by its cell weights")
     ap.add_argument("--max-frozen", type=int, default=0, help="frozen exploiters kept in the pool (0 = all, as before)")
     ap.add_argument("--chunks", type=int, default=4, help="population chunks per batch (one opponent each)")
     # exploiters (AlphaStar's league, PSRO): a second network trains only to beat the main one. A share of each batch
@@ -656,7 +718,10 @@ def main():
     ap.add_argument("--depths", help='tournament average-stack ranges in bb, "LO,HI;LO,HI" (default 10,60)')
     args = ap.parse_args()
     set_mode(args.stacks, args.tourney, args.depths, not args.no_open_limp, args.ante, args.short, args.seats,
-             args.bounty)  # fmt: skip
+             args.bounty, args.texture)  # fmt: skip
+    if args.priority:  # the leak map's weights per table cell (ninemax_leaks.py)
+        PRIORITY.update({int(k): float(v) for k, v in json.load(open(args.priority))["weights"].items()})
+        print(f"prioritised sampling: {len(PRIORITY)} cells weighted, max {max(PRIORITY.values()):.2f}", flush=True)
     dev = "cuda"
     torch.manual_seed(0)
     os.makedirs(args.out, exist_ok=True)
@@ -685,7 +750,13 @@ def main():
     elif args.init:  # warm start: a run's checkpoint (net, magnet, avg) or a snapshot (avg into all three)
         st = torch.load(args.init, map_location=dev, weights_only=True)
         for mod, k in ((net, "net"), (magnet, "magnet"), (avg, "avg")):
-            missing, extra = mod.load_state_dict(st[k] if k in st else st["avg"], strict=False)
+            sd = dict(st[k] if k in st else st["avg"])
+            old_w, new_w = sd["inp.weight"], mod.inp.weight
+            if old_w.shape[1] < new_w.shape[1]:  # --texture from a run without it: new input columns start at zero
+                pos = old_w.shape[1] - (4 * mod.emb[0].embedding_dim + 1) - (menu.A + menu.S)  # before legal and sizes
+                extra_cols = torch.zeros(old_w.shape[0], new_w.shape[1] - old_w.shape[1], device=old_w.device)
+                sd["inp.weight"] = torch.cat([old_w[:, :pos], extra_cols, old_w[:, pos:]], 1)
+            missing, extra = mod.load_state_dict(sd, strict=False)
             # a warm start may add a training-only head the source run did not have (--belief-weight); nothing else
             assert not extra and all(m.startswith("belief.") for m in missing), (missing, extra)
         hands = st["hands"]
@@ -717,7 +788,7 @@ def main():
     kept = 0.0  # hours of this session already kept as avg_<hours>h.pt
     h_start, adv_scale = hands, 1.0
     while time.time() - t0 < args.minutes * 60 and (args.max_hands is None or hands - h_start < args.max_hands):
-        bk, rk, _ = dealer.deal(args.batch)
+        bk, rk, cd = dealer.deal(args.batch, cards=args.texture)
         # self-play on part of the batch; on the rest, chunks of tables where the net holds some seats and one
         # opponent from the population (rule players, past checkpoints) holds the others. The net learns from its
         # own seats only.
@@ -754,7 +825,9 @@ def main():
             assign[rows, theirs] = opp
         learner = [net] + ([expl] if expl is not None else []) + ([lexp] if n_l else [])
         learner = learner if len(learner) > 1 else net
-        u, rec = play(dealer, menu, pols, bk, rk, record=True, dev=dev, learner=learner, assign=assign)
+        ctx_t = context(args.batch, args.players, dev, prioritized=True) if PRIORITY else None
+        u, rec = play(dealer, menu, pols, bk, rk, record=True, dev=dev, learner=learner, assign=assign, ctx=ctx_t,
+                      board=board_of(cd, args.players, dev))  # fmt: skip
         g, i, f, legal, mybk, street, s, a, who = (torch.cat([r[k] for r in rec]) for k in range(9))
         with torch.no_grad():  # PFSP: the network's result against each chunk's opponent
             for rows, opp in chunk_opp:

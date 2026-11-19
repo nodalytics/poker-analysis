@@ -79,7 +79,7 @@ def match(a_run, b_run, n_max, K, alpha, margin, dev="cuda"):
 
     from ninemax_engine import Menu, run_dealer
     from ninemax_eval import load
-    from ninemax_selfplay import BB, context, play
+    from ninemax_selfplay import BB, FEAT, board_of, context, play
 
     bounds, C = boundaries(K, alpha)
     dealer = run_dealer(a_run, os.path.join(ROOT, "blueprint", "libbp7.so"), None, 9, 0, dev, 2026, "/tmp/seqtest")
@@ -90,13 +90,14 @@ def match(a_run, b_run, n_max, K, alpha, margin, dev="cuda"):
     step, xs, looks = n_max // K, [], []
     with torch.no_grad():
         for k in range(K):
-            bk, rk, _ = dealer.deal(step)
+            bk, rk, cd = dealer.deal(step, cards=FEAT["texture"])
+            board = board_of(cd, dealer.P, dev)
             ctx = context(step, dealer.P, dev)
             per = torch.zeros(step, device=dev)
             for seat in range(dealer.P):
                 pols = [b] * dealer.P
                 pols[seat] = a
-                u, _ = play(dealer, menu, pols, bk, rk, dev=dev, ctx=ctx)
+                u, _ = play(dealer, menu, pols, bk, rk, dev=dev, ctx=ctx, board=board)
                 per += u[:, seat] / BB
             xs.append((per / dealer.P).cpu().numpy())
             x = np.concatenate(xs)

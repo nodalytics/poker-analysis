@@ -9,5 +9,6 @@ How the lab's model server was set up for these studies, so it can be rebuilt fr
 | `pull-models.sh` | Pulls the four models in use |
 | `tool-models/` | Templates and Modelfiles that add native tool calling; `create-tool-models.sh` builds them |
 | `docker-compose.yml` | Docker alternative, **untested**, not what the studies used |
+| `claude-code.md` | Running the Claude Code tool with a local Ollama model (directly, or through a LiteLLM proxy) |
 
 Order: `install-ollama.sh`, `serve.sh`, `pull-models.sh`, then `tool-models/create-tool-models.sh`.
