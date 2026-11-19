@@ -1,0 +1,11 @@
+{
+ "registration": "2026-11-17-nm39-nm40.json",
+ "evaluated": "2026-11-19, seqtest.py (nm39 in its own 25-60bb game, alpha 0.05; nm40 alpha 0.025), 30-minute exploiters",
+ "deviations": ["seqtest loaded the second run last, which would have set nm25's game for nm39's match; fixed before nm39's match ran (the match is in nm39's game)"],
+ "family": {
+  "nm40 vs 8 x nm25": {"delta": -0.25, "ci95": [-0.59, 0.09], "z": -1.44, "verdict": "no difference after 40,000 deals (neither a win nor inside the +-0.5 margin)"},
+  "nm39 vs 8 x nm25, 25-60bb": {"delta": 0.38, "ci95": [-0.24, 1.00], "z": 1.21, "verdict": "no difference after 40,000 deals (neither ahead nor inside the +-0.5 margin)"}
+ },
+ "exploiters": {"nm40": "+0.5 [-0.1, +1.1]", "nm39": "+2.1 [+1.1, +3.1] (nm25: +0.2 [-0.4, +0.7])"},
+ "decision": "neither adopted. nm40 is not better than nm25. nm39 is not shown ahead or equivalent in its own game and its exploiter finds 1.9 bb/100 more than nm25's, past the registered 1 bb/100, so it does not ship as the deep-stack option."
+}

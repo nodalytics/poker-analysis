@@ -1,0 +1,15 @@
+{
+ "name": "2026-11-19-nm41-nm42",
+ "registered": "2026-11-19, before either run started; the pushed commit that adds this file is the record",
+ "nm41": {
+  "question": "Do explicit betting-history and board-texture inputs (19: raises, calls and checks per street; seven board-texture numbers) make a stronger network than nm25?",
+  "run": "init blueprint/nm25/checkpoint.pt (zero-weight new input columns, so it starts as nm25); nm25's settings plus --texture; 6 hours on the RTX 4090",
+  "decision": "seqtest.py match nm41 vs 8 x nm25, 40,000 deals max, 8 looks, equivalence margin 0.5, alpha 0.025; adopted if it stops for a difference with nm41 ahead and its 30-minute exploiter is within 1 bb/100 of nm25's +0.2. If adopted, Kestrel needs the 19 inputs in C++ before it ships."
+ },
+ "nm42": {
+  "question": "Does training more often in the table cells where nm25 leaks (its leak map) make a stronger network than nm25?",
+  "run": "init blueprint/nm25/checkpoint.pt; nm25's settings plus --priority results/ninemax/leaks_nm25.json (from a fresh 30-minute exploiter of nm25, mapped on 40,000 deals by ninemax_leaks.py); 6 hours on the first free GPU after the map",
+  "decision": "as nm41, at alpha 0.025; and its leak map's top cells, re-measured with its own exploiter, must shrink. If nm25's map has no cell with z > 0 above 200 deals, every weight is 1 and nm42 is not run (recorded as such)."
+ },
+ "not_allowed": "changing the inputs, weights, budget, metric or decision rule after seeing results; re-running and keeping the better reading"
+}
