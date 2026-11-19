@@ -83,8 +83,8 @@ def match(a_run, b_run, n_max, K, alpha, margin, dev="cuda"):
 
     bounds, C = boundaries(K, alpha)
     dealer = run_dealer(a_run, os.path.join(ROOT, "blueprint", "libbp7.so"), None, 9, 0, dev, 2026, "/tmp/seqtest")
-    a, _ = load(a_run, dealer.B, dev)
     b, _ = load(b_run, dealer.B, dev)
+    a, _ = load(a_run, dealer.B, dev)  # last: load() sets the game from the config, and the match is in a's game
     cfg = json.load(open(os.path.join(a_run, "config.json")))
     menu = Menu(cfg.get("menu", "medium"), dev)
     step, xs, looks = n_max // K, [], []

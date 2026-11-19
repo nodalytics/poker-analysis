@@ -1,0 +1,7 @@
+{
+ "registration": "2026-11-17-nm38-belief.json",
+ "evaluated": "2026-11-19, seqtest.py match blueprint/nm38 blueprint/nm25 --max 40000 --looks 8 --alpha 0.025 --margin 0.5",
+ "deviations": [],
+ "family": {"nm38 vs 8 x nm25": {"delta": -0.079, "ci95": [-0.422, 0.264], "holm": null, "verdict": "equivalent (all 40,000 deals: the interval lies inside +-0.5)"}},
+ "decision": "not adopted: level with nm25. The belief loss fell from 1.59 to 1.46, so the hidden layer did learn the opponents' strength, but it did not make the policy stronger."
+}
