@@ -41,7 +41,10 @@ SB = 50
 # habit learned against the rule-based maniacs and stations in the training pool (2026-11-11).
 # ante: the big-blind ante in big blinds (1.0 = the big blind also posts one big blind of dead money, the format of
 # almost every tournament today); 0 = no ante (every run before nm15, 2026-11-13).
-RULES = {"open_limp": True, "ante": 0.0}
+RULES = {"open_limp": True, "ante": 0.0, "early_shove_bb": 0.0}
+# early_shove_bb > 0: first in before the flop with at least 6 players still to act behind (UTG, UTG+1 at a full table)
+# and at least this many big blinds, no all-in; raise small instead (the partner's rule, 2026-11-19: nm25 shoved there
+# 0.3% of the time, and 94-100% of those shoves were not premium hands)
 STACK = 100 * BB
 
 # open sizes (bb), re-raise multiples by level, max pre-flop raises, heads-up bet / raise fractions,
@@ -214,6 +217,14 @@ class Tables:
         t = torch.where(pre[:, None], pre_t, post_t).floor()
         return t
 
+    def early_shove(self, g, i, min_bb, can_raise):
+        """Rows where the early-shove rule applies: first in before the flop, at least 6 players still to act behind
+        (UTG, UTG+1 at a full table), at least min_bb big blinds, and a raise available instead."""
+        first = (self.street[g] == 0) & (self.pre_raises[g] == 0) & (self.bet[g] == BB)
+        live = (self.stack[g] > 0) & ~self.folded[g]
+        behind = (live & (self.ar[None, :] > i[:, None])).sum(1) + live[:, 0].long() + live[:, 1].long()
+        return first & (i >= 2) & (behind >= 6) & (self.avail[g, i] >= int(min_bb * BB)) & can_raise
+
     def legal(self, g, i):
         m = self.menu
         bet = self.bet[g]
@@ -238,6 +249,8 @@ class Tables:
         fold = to_call > 0
         call = torch.ones_like(fold)
         allin = (stk > bet) & reopened  # shoving more than the bet (with less, calling is the all-in)
+        if RULES["early_shove_bb"] > 0:  # early and first in with a real stack: open small, never shove
+            allin = allin & ~self.early_shove(g, i, RULES["early_shove_bb"], ok_size.any(1))
         if not RULES["open_limp"]:  # first in from UTG to the button: no limping, when there is a way in by raising
             first_in = (self.street[g] == 0) & (self.pre_raises[g] == 0) & (bet == BB) & (i >= 2)
             call = call & ~(first_in & (ok_size.any(1) | allin))

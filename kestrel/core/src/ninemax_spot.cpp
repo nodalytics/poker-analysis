@@ -30,6 +30,10 @@ NMSpot NMSpot::from_json(const json& j) {
             s.actions.push_back({a.at("player").get<std::string>(), a.value("street", -1), a.at("kind").get<std::string>(),
                                  a.value("to", 0.0), a.value("add", -1.0), a.value("left", -1.0)});
     s.payouts = j.value("payouts", std::vector<double>{});
+    if (j.contains("exploit") && j["exploit"].is_object())  // {player id: {fold, call, raise}}
+        for (auto& [id, t] : j["exploit"].items())
+            s.tilts[id] = {std::clamp(t.value("fold", 1.0), 0.1, 10.0), std::clamp(t.value("call", 1.0), 0.1, 10.0),
+                           std::clamp(t.value("raise", 1.0), 0.1, 10.0)};
     return s;
 }
 
@@ -45,6 +49,9 @@ json NMAdvice::to_json() const {
     if (searched) j["searched"] = true, j["samples"] = samples, j["ess"] = ess;
     return j;
 }
+
+// the early-shove rule for Kestrel's own moves (Rules::early_shove_bb): opponents' replayed moves are not restricted
+constexpr double kEarlyShoveBB = 15.0;
 
 NMAdvice ninemax_decide(const Net& net, const NMSpot& sp, const SearchConfig* search) {
     NMAdvice adv;
@@ -169,6 +176,7 @@ NMAdvice ninemax_decide(const Net& net, const NMSpot& sp, const SearchConfig* se
     // the model's own rule for its move (e.g. no open-limping), so its legal moves are those it trained with
     Rules mine = net.info().rules;
     mine.ante_bb = replay.ante_bb, mine.short_stacks = true, mine.extra_dead = replay.extra_dead;
+    mine.early_shove_bb = kEarlyShoveBB;  // never shove first in from UTG/UTG+1 with a real stack (table.hpp)
     T.set_rules(mine);
     if (sp.board.size() > 5) return adv.error = "a board has at most 5 cards", adv;
     std::vector<int> cards{card_from(sp.hole[0]), card_from(sp.hole[1])};
@@ -196,7 +204,14 @@ NMAdvice ninemax_decide(const Net& net, const NMSpot& sp, const SearchConfig* se
     if (search && search->samples > 0 && (st == 0 || live <= 3)) {
         std::vector<int> bd(cards.begin() + 2, cards.begin() + 2 + nb[st]);  // the street's board only
         try {
-            auto r = ninemax_search(net, T, ctx, hist, me, {cards[0], cards[1]}, bd, *search);
+            SearchConfig sc = *search;
+            if (sc.exploit_weight > 0) {  // each opponent's tilt at its Kestrel seat
+                sc.tilts.assign(9, OpponentTilt{});
+                for (int s = 0; s < 9; ++s)
+                    if (who[s] >= 0)
+                        if (auto it = sp.tilts.find(sp.players[who[s]].id); it != sp.tilts.end()) sc.tilts[s] = it->second;
+            }
+            auto r = ninemax_search(net, T, ctx, hist, me, {cards[0], cards[1]}, bd, sc);
             p = r.policy, q = r.q;
             adv.searched = true, adv.samples = r.samples, adv.ess = r.ess;
         } catch (const std::invalid_argument&) {  // a spot search cannot deal: the network's own policy

@@ -15,6 +15,9 @@ struct Rules {
     bool open_limp = true;
     bool short_stacks = false;  // platform replays: stacks under 2bb play, and a blind that cannot be covered is all-in
     int64_t extra_dead = 0;     // dead money already paid from the stacks (antes posted by every player)
+    // first in before the flop with at least 6 players still to act behind (UTG, UTG+1 at a full table) and at least
+    // this many big blinds: no all-in, open small instead (the partner's rule, 2026-11-19; 0: off)
+    double early_shove_bb = 0.0;
 };
 
 struct Menu {

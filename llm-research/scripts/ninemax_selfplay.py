@@ -514,6 +514,12 @@ def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None,
                 with torch.no_grad():
                     lg, _ = pol(feat[m], mybk[m], T.street[g][m], s[m])
                 probs = F.softmax(masked(lg, legal[m]), 1)
+            rule = getattr(pol, "early_shove_bb", 0) if not isinstance(pol, str) else 0
+            if rule:  # this player follows the early-shove rule (a hero-only test of it)
+                no = T.early_shove(g[m], i[m], rule, legal[m][:, 2 : 2 + menu.S].any(1))
+                probs = probs.clone()
+                probs[no, menu.A - 1] = 0
+                probs = probs / probs.sum(1, keepdim=True)
             a[m] = torch.multinomial(probs, 1).squeeze(1)
         if record:
             keep = torch.ones_like(i, dtype=torch.bool) if learner is None else torch.isin(pol_of, lids)
