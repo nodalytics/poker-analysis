@@ -167,6 +167,13 @@ std::vector<uint8_t> Table::legal(std::vector<float>* tout) const {
     L[0] = to_call > 0;
     bool call = true;
     bool shove = (stk > bet) && reopened;
+    if (rules_.early_shove_bb > 0 && street_ == 0 && pre_raises == 0 && bet == BB && i >= 2 && any_size &&
+        stk >= std::llround(rules_.early_shove_bb * double(BB))) {
+        int behind = 0;  // players still to act: the seats after this one, then the blinds
+        for (int j = 0; j < P_; ++j)
+            if (stack[j] > 0 && !folded[j] && (j > i || j <= 1)) ++behind;
+        if (behind >= 6) shove = false;
+    }
     if (!rules_.open_limp) {
         bool first_in = street_ == 0 && pre_raises == 0 && bet == BB && i >= 2;
         call = call && !(first_in && (any_size || shove));

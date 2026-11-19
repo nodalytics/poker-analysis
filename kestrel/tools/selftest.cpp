@@ -248,7 +248,9 @@ int main(int argc, char** argv) {
             int c[7] = {hole[s][0], hole[s][1], deck[d], deck[d + 1], deck[d + 2], deck[d + 3], deck[d + 4]};
             bk[s] = {bucket_of(c, 2), bucket_of(c, 5), bucket_of(c, 6), bucket_of(c, 7)};
         }
-        Table T(stacks, menu, info.rules);
+        Rules adapter = info.rules;  // ninemax_decide applies the early-shove rule to its own moves; so does this reference
+        adapter.early_shove_bb = 15.0;
+        Table T(stacks, menu, adapter);
         const int nb[4] = {0, 3, 4, 5};
         std::vector<int64_t> base(9, 0);
         int cur = 0;
