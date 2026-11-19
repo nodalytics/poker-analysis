@@ -1,0 +1,7 @@
+{
+ "registration": "2026-11-17-nm36-distill.json",
+ "evaluated": "2026-11-19, seqtest.py match blueprint/nm36 blueprint/nm25 --max 40000 --looks 8 --alpha 0.025 --margin 0.5",
+ "deviations": ["the 600,000 positions were generated in three sessions (the lab rebooted twice on 2026-11-18): 400,514 then 199,500 with new seeds; same generator and settings"],
+ "family": {"nm36 vs 8 x nm25": {"delta": 0.039, "ci95": [-0.345, 0.423], "holm": null, "verdict": "equivalent (stopped at 30,000 deals: the interval lies inside +-0.5)"}},
+ "decision": "not adopted: level with nm25. The distillation loss fell (0.25 at the end) and the network still plays like nm25: search's improvements did not survive into the network at this weight and temperature, or they are too small for 30,000 deals to see."
+}
