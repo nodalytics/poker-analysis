@@ -477,10 +477,11 @@ int serve(const ServeOptions& o) {
             t->spec = *it;
             t->hands = hands;
             t->model = model, t->solver = solver;
+            t->players = it->players;  // the connector's table size: the web app draws 2 as heads-up, more as a 9-max table
             hub.tables[t->id] = t;
         }
         hub.publish({{"type", "table"}, {"table", t->id}, {"connector", name}, {"status", "starting"}, {"model", model},
-                     {"solver", solver}});
+                     {"solver", solver}, {"players", t->players}});
         if (!pack_problem.empty()) return reply(res, {{"error", pack_problem}}, 400);
         std::shared_ptr<HUBlueprint> engine;
         std::shared_ptr<Net> net;
