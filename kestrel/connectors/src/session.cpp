@@ -19,7 +19,8 @@ namespace kestrel {
 
 json SessionSummary::to_json() const {
     json j = {{"connector", connector}, {"hands", hands},      {"bb100", bb100},         {"ci95", {ci_lo, ci_hi}},
-              {"errors", errors},       {"off_tree", off_tree}, {"fallbacks", fallbacks}, {"stopped", stopped}};
+              {"errors", errors},       {"off_tree", off_tree}, {"fallbacks", fallbacks}, {"stopped", stopped},
+              {"outages", outages}};
     if (!luck.is_null()) j["luck_adjusted"] = luck;
     if (!tournaments.is_null()) j["tournaments"] = tournaments;
     return j;
@@ -205,7 +206,13 @@ SessionSummary run_session(const ConnectorSpec& spec, const SessionPlan& plan, H
     };
     if (spec.codec != "acpc") throw std::runtime_error(spec.name + ": codec " + spec.codec + " is not built yet");
     if (spec.players != 2) throw std::runtime_error(spec.name + ": the acpc codec is heads-up");
-    auto tr = make_transport(spec);
+    SessionSummary sum;  // before the transport: it counts the outages
+    auto tr = patient(make_transport(spec), stop, plan.outage_limit_s, [&](const json& c) {
+        if (c["state"] == "down") ++sum.outages;
+        json e = c;
+        e["type"] = "transport";
+        emit(e);
+    });
     const json& routes = spec.raw["routes"];
     const json& flow = spec.raw["flow"];
     const json& start = routes[flow["start"].get<std::string>()];
@@ -227,7 +234,6 @@ SessionSummary run_session(const ConnectorSpec& spec, const SessionPlan& plan, H
     std::ofstream log(plan.out_dir + "/hands.jsonl", std::ios::app);
     DbLog db(plan, spec.name);
     std::mt19937_64 rng(plan.seed);
-    SessionSummary sum;
     sum.connector = spec.name;
     std::vector<double> results;
     std::vector<LuckHand> luck;
@@ -249,6 +255,7 @@ SessionSummary run_session(const ConnectorSpec& spec, const SessionPlan& plan, H
         if (auto e = platform_error(r); !e.empty()) throw std::runtime_error(spec.name + ": login refused: " + e);
         keep_token(r);
     }
+    int in_a_row = 0;  // platform errors since the last played hand
     for (int h = 0; h < plan.hands; ++h) {
         if (stop && *stop) {
             sum.stopped = "stopped";
@@ -306,14 +313,15 @@ SessionSummary run_session(const ConnectorSpec& spec, const SessionPlan& plan, H
             }
         }
         if (failed) {
-            if (sum.errors >= plan.max_errors) {
-                sum.stopped = "too many platform errors";
+            if (++in_a_row >= plan.max_errors) {
+                sum.stopped = "too many platform errors in a row";
                 break;
             }
             continue;
         }
         double won = at(r, fields, "result").get<double>() / double(spec.big);
         results.push_back(won);
+        in_a_row = 0;
         json line = {{"connector", spec.name},
                      {"model", plan.model},
                      {"solver", plan.solver},
@@ -367,7 +375,13 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
     if (spec.codec != "structured") throw std::runtime_error(spec.name + ": 9-max models play structured connectors");
     const json& routes = spec.raw["routes"];
     const json& flow = spec.raw["flow"];
-    auto tr = make_transport(spec);
+    SessionSummary sum;  // before the transport: it counts the outages
+    auto tr = patient(make_transport(spec), stop, plan.outage_limit_s, [&](const json& c) {
+        if (c["state"] == "down") ++sum.outages;
+        json e = c;
+        e["type"] = "transport";
+        emit(e);
+    });
     const bool stream = tr->streaming();
     if (!stream && !flow.contains("state")) throw std::runtime_error(spec.name + ": flow.state (the table state route) is required");
     if (stream && !spec.raw.contains("events")) throw std::runtime_error(spec.name + ": a WebSocket connector needs events");
@@ -396,7 +410,6 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
     std::ofstream log(plan.out_dir + "/hands.jsonl", std::ios::app);
     DbLog db(plan, spec.name);
     std::mt19937_64 rng(plan.seed);
-    SessionSummary sum;
     sum.connector = spec.name;
     sum.tournaments = json::array();
     std::vector<double> results;

@@ -268,7 +268,7 @@ class HttpTransport : public Transport {
             std::this_thread::sleep_for(std::chrono::duration<double>(wait));
             wait *= 2;
         }
-        throw std::runtime_error(origin_ + path + " failed: " + err);
+        throw TransportError(origin_ + path + " failed: " + err);
     }
 
   private:
@@ -353,6 +353,55 @@ class WsTransport : public Transport {
     std::chrono::steady_clock::time_point next_{};
 };
 
+}
+
+namespace {
+class PatientTransport : public Transport {
+  public:
+    PatientTransport(std::unique_ptr<Transport> inner, const std::atomic<bool>* stop, double limit_s,
+                     std::function<void(const json&)> on_change, double first_s, double max_s)
+        : inner_(std::move(inner)), stop_(stop), limit_s_(limit_s), on_change_(std::move(on_change)),
+          first_s_(first_s), max_s_(max_s) {}
+    json call(const json& route, const std::map<std::string, std::string>& vars) override {
+        using clock = std::chrono::steady_clock;
+        clock::time_point down_since{};
+        double wait = first_s_;
+        while (true) {
+            try {
+                json r = inner_->call(route, vars);
+                if (down_since != clock::time_point{} && on_change_)
+                    on_change_({{"state", "up"}, {"down_s", std::chrono::duration<double>(clock::now() - down_since).count()}});
+                return r;
+            } catch (const TransportError& e) {
+                const auto now = clock::now();
+                if (down_since == clock::time_point{}) {
+                    down_since = now;
+                    if (on_change_) on_change_({{"state", "down"}, {"reason", e.what()}});
+                }
+                const double down = std::chrono::duration<double>(now - down_since).count();
+                if (down >= limit_s_ || (stop_ && *stop_)) throw;
+                for (double t = 0; t < wait && !(stop_ && *stop_); t += 1) std::this_thread::sleep_for(std::chrono::seconds(1));
+                if (stop_ && *stop_) throw;
+                wait = std::min(wait * 2, max_s_);
+            }
+        }
+    }
+    bool streaming() const override { return inner_->streaming(); }
+    void send(const json& r, const std::map<std::string, std::string>& v) override { inner_->send(r, v); }
+    json next(int timeout_ms) override { return inner_->next(timeout_ms); }
+
+  private:
+    std::unique_ptr<Transport> inner_;
+    const std::atomic<bool>* stop_;
+    double limit_s_;
+    std::function<void(const json&)> on_change_;
+    double first_s_, max_s_;
+};
+}  // namespace
+
+std::unique_ptr<Transport> patient(std::unique_ptr<Transport> inner, const std::atomic<bool>* stop, double limit_s,
+                                   std::function<void(const json&)> on_change, double first_s, double max_s) {
+    return std::make_unique<PatientTransport>(std::move(inner), stop, limit_s, std::move(on_change), first_s, max_s);
 }
 
 std::unique_ptr<Transport> make_transport(const ConnectorSpec& spec) {
