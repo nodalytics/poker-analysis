@@ -1,0 +1,12 @@
+{
+ "registration": "2026-11-19-nm41-nm42.json",
+ "evaluated": "2026-11-20, seqtest.py at alpha 0.025, 30-minute exploiters, nm42's own leak map",
+ "deviations": ["nm41's first match crashed before its first deal: in a mixed match nm25 was fed nm41's 19 texture inputs (249 numbers into a 230-input network). play() now strips them for a network trained without; the match was then run once, as registered"],
+ "family": {
+  "nm41 vs 8 x nm25": {"delta": -0.379, "ci95": [-0.726, -0.031], "z": -2.13, "verdict": "no difference at alpha 0.025 (boundary 2.33), and if anything worse"},
+  "nm42 vs 8 x nm25": {"delta": 0.128, "ci95": [-0.222, 0.478], "z": 0.72, "verdict": "equivalent"}
+ },
+ "exploiters": {"nm41": "+1.6 [+0.7, +2.4]", "nm42": "+1.2 [+0.7, +1.8]", "nm25 (two readings)": "+0.2 [-0.4, +0.7], +0.2 [-0.3, +0.8]"},
+ "nm42_leaks": "nm42's own leak map: exploiter +1.70 [+1.23, +2.16] overall (nm25's: +0.30 [-0.14, +0.74]); the cell it was weighted most towards (in the money, under 12bb, 9 seated) still leaks +0.62 (nm25: +0.59), and others opened (in the money 12-18bb 9 seated +0.80; final table 12-18bb 3-5 seated +5.63)",
+ "decision": "neither adopted. The texture inputs did not help and the network is if anything slightly worse; weighting training towards the leak cells did not close them and made the network more exploitable overall."
+}
