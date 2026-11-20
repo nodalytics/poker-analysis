@@ -20,6 +20,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include "kestrel/ninemax_search.hpp"
+
 namespace kestrel {
 
 struct OpponentStats;
@@ -58,5 +60,14 @@ RatePrior population_prior(const std::vector<const OpponentStats*>& players);
 // {type, similarity, runner_up, runner_up_similarity, hands, settled, rates, prior, recent: {type, similarity, hands,
 // settled}, change_z, changed (recent play reads as another type and a pre-flop rate moved by z >= 3)}
 nlohmann::json profile_json(const OpponentStats& s, const RatePrior* prior = nullptr);
+
+// safe exploitation: how an opponent plays as a tilt of the network (ninemax_search.hpp), from a player's statistics
+// with their profile (OpponentBook::player): each tendency's z against the platform's population (the profile's
+// prior), clamped to +-2, scaled by 0.5 and by the evidence n / (n + 100), as a factor exp(.) on
+//   fold   fold to a continuation bet
+//   call   going to showdown against post-flop aggression (a calling station calls down)
+//   raise  post-flop aggression and pre-flop raising
+// A player seen for a few hands gets factors near 1, which is the network itself.
+OpponentTilt opponent_tilt(const nlohmann::json& stats);
 
 }  // namespace kestrel

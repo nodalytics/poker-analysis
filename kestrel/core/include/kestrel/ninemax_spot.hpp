@@ -4,6 +4,7 @@
 // the platform's chips.
 #pragma once
 #include <array>
+#include <map>
 #include <cmath>
 #include <string>
 #include <vector>
@@ -40,6 +41,10 @@ struct NMSpot {
     std::vector<NMAction> actions;    // the hand so far, in order
     std::vector<double> payouts;      // prize shares for places 1..; empty: chips (winner takes all). With bounties,
                                       // payouts and bounties are in the same money and are scaled together
+
+    // safe exploitation (search's exploit_weight > 0): how each opponent plays, by player id (opponent_tilt, from its
+    // profile); players not here are played as the network
+    std::map<std::string, OpponentTilt> tilts;
 
     static NMSpot from_json(const nlohmann::json& j);
 };

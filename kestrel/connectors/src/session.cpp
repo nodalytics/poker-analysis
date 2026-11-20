@@ -746,6 +746,15 @@ SessionSummary run_ninemax_session(const ConnectorSpec& spec, const SessionPlan&
         }
         SearchConfig sc;
         sc.samples = plan.search_samples, sc.robust = plan.search_robust, sc.seed = plan.seed * 1000003 + rng();
+        if (plan.search_exploit && plan.opponents) {  // each opponent as its profile says, weighted by the evidence
+            sc.exploit_weight = 0.5;
+            for (auto& p : sp.players) {
+                const std::string u = name_of.count(p.id) ? name_of[p.id] : p.id;
+                if (u == seen_me) continue;
+                json stats = plan.opponents->player(spec.name, u);
+                if (!stats.is_null()) sp.tilts[p.id] = opponent_tilt(stats);
+            }
+        }
         NMAdvice adv = ninemax_decide(net, sp, plan.search_samples > 0 ? &sc : nullptr);
         NMOption pick{"check", 0, 0, 1.0, 1, "check"};
         if (!adv.error.empty() || adv.options.empty()) {

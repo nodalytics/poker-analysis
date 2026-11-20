@@ -46,7 +46,7 @@ int usage() {
                  "                     [--solver none|kestrel-river|texassolver] [--resolve-iters N]\n"
                  "                     [--texassolver BIN --texassolver-resources DIR] [--seed S] [--max-errors E]\n"
                  "                     table connectors (codec structured): --model <9-max model folder> [--tournaments N]\n"
-                 "                     [--solver none|search|search-robust] [--search-samples 1024]\n"
+                 "                     [--solver none|search|search-robust|search-exploit] [--search-samples 1024]\n"
                  "                     [--db FILE|off]   (every hand also goes into kestrel.db)\n"
                  "       kestreld                         (no arguments: start the app and open it, as a double-click does)\n"
                  "       kestreld start                   the same without opening the browser (the desktop app runs it)\n"
@@ -254,7 +254,7 @@ int mcp_command(int argc, char** argv) {
         }).detach();
         for (int k = 0; k < 100 && !running(); ++k) std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-    return mcp_stdio(o.port, "0.3.0");
+    return mcp_stdio(o.port, "0.4.0");
 }
 
 // the desktop app's server: as a double-click, without opening the browser
@@ -421,9 +421,12 @@ int main(int argc, char** argv) {
         };
         if (spec.codec == "structured") {  // a 2-9 handed table: --model is a 9-max model folder (net.json, net.bin)
             if (plan.model == "hu-blueprint") throw std::runtime_error("this connector needs --model <9-max model folder>");
-            if (plan.solver != "none" && plan.solver != "search" && plan.solver != "search-robust")
-                throw std::runtime_error("9-max tables take --solver none, search or search-robust");
-            if (plan.solver != "none") plan.search_samples = samples, plan.search_robust = plan.solver == "search-robust";
+            if (plan.solver != "none" && plan.solver != "search" && plan.solver != "search-robust" &&
+                plan.solver != "search-exploit")
+                throw std::runtime_error("9-max tables take --solver none, search, search-robust or search-exploit");
+            if (plan.solver != "none")
+                plan.search_samples = samples, plan.search_robust = plan.solver == "search-robust",
+                plan.search_exploit = plan.solver == "search-exploit";
             buckets_init(pack);
             Net net(plan.model);
             auto s = run_ninemax_session(spec, plan, net, progress, &g_stop, [](const json& e) {

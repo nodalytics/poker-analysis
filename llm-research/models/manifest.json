@@ -137,6 +137,32 @@
    },
    "source": "blueprint/nm4",
    "vs_tag_bb100": 195.4
+  },
+  "nm30": {
+   "bytes": 4525921,
+   "hands_trained": 2928902144,
+   "minutes_trained": 480.0,
+   "note": "PKO tournaments 10-25bb, bounty 0.5 (conserved equity); exploiter +0.8 [-0.1, +1.8]; calls wider as the bounty grows (42.9/44.0/46.0%)",
+   "path": "ninemax/nm30/avg_fp16.pt",
+   "sha256": {
+    "avg_fp16.pt": "2b37b0960f5f790b5245c099cbb03cc4e27b7140622fdca734d465b9aaa6b9ff",
+    "config.json": "62baacba583c8e3bfa56608034a06ed0d67b63599b9e30513c74856b01b57386"
+   },
+   "source": "blueprint/nm30",
+   "vs_tag_bb100": 19.0
+  },
+  "nm37": {
+   "bytes": 4497249,
+   "hands_trained": 6576275456,
+   "minutes_trained": 720.0,
+   "note": "6-max cash 50-250bb, league training (experimental); exploiter +5.6 [-0.3, +11.6], nm28 +11.0",
+   "path": "ninemax/nm37/avg_fp16.pt",
+   "sha256": {
+    "avg_fp16.pt": "d4a77a969953e1f16673c5ddeb299848e493e185303bedf24ee5bd77109702b4",
+    "config.json": "d7bddd4e0b230138bfb0ff1878eb647eceea03e7ef7daefddd6f2a56c0417d99"
+   },
+   "source": "blueprint/nm37",
+   "vs_tag_bb100": 48.5
   }
  },
  "releases": {
