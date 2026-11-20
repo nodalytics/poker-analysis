@@ -26,5 +26,10 @@ else
   exit 1
 fi
 # Kestrel answers a request without the token with 403 "needs the access link": that is the site working
-code=$(curl -sk -o /dev/null -w "%{http_code}" --resolve $SITE:443:127.0.0.1 https://$SITE/v1/health)
+# a reload is asynchronous: until the new workers run, the request lands on another vhost (a 502 from it, seen once)
+for _ in 1 2 3 4 5 6 7 8 9 10; do
+  code=$(curl -sk -o /dev/null -w "%{http_code}" --resolve $SITE:443:127.0.0.1 https://$SITE/v1/health)
+  [ "$code" = 403 ] || [ "$code" = 200 ] && break
+  sleep 1
+done
 echo "https://$SITE answers $code (403 without the token is expected; open the access link once per device)"
