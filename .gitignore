@@ -9,3 +9,12 @@ build/
 .pytest_cache/
 .vscode/
 *.log
+.secrets
+
+# third-party checkouts (TexasSolver: build it from its own repo, see kestrel/README.md)
+tools/TexasSolver/
+# Kestrel's runtime output when run from a source folder: session folders, opponents.json and its database
+sessions/
+kestrel.db
+# extracted from the Pluribus hands by scripts/human_clone.py extract; regenerate rather than commit
+llm-research/results/human_clones/*.npz
