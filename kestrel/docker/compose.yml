@@ -13,6 +13,7 @@ services:
       - ${KESTREL_PACK:?set KESTREL_PACK to the heads-up data pack}:/data/pack:ro
     environment:
       OMP_NUM_THREADS: "16"
+      KESTREL_PUBLIC_HOSTS: kestrel.stbfarm.org  # served there through the lab's nginx, with the token only
     cpus: 16                            # search uses every thread it gets; the lab is shared
     mem_limit: 8g
   testplatform:

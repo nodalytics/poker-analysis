@@ -360,6 +360,15 @@ int main(int argc, char** argv) {
         }
         o.connectors.push_back(default_dir());
         if (o.token_file.empty()) o.token_file = config_dir() + "/token";
+        if (const char* ph = std::getenv("KESTREL_PUBLIC_HOSTS")) {  // comma-separated, as --public-host (compose sets it)
+            std::string all = ph;
+            for (size_t i = 0; i <= all.size();) {
+                size_t j = all.find(',', i);
+                if (j == std::string::npos) j = all.size();
+                if (j > i) o.public_hosts.push_back(all.substr(i, j - i));
+                i = j + 1;
+            }
+        }
         try {
             return serve(o);
         } catch (const std::exception& e) {
