@@ -556,7 +556,7 @@ int serve(const ServeOptions& o) {
                     std::lock_guard<std::mutex> lk(hub.mu);
                     t->summary = {{"error", e.what()}};
                 }
-                set_status("failed");
+                set_status(t->stop ? "stopped" : "failed");  // stopped during an outage: the wait ends by throwing
             }
         });
         reply(res, {{"id", t->id}}, 201);

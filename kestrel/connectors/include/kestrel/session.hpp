@@ -15,7 +15,8 @@ class Store;
 struct SessionPlan {
     int hands = 100;
     std::string out_dir;
-    int max_errors = 20;
+    int max_errors = 20;  // heads-up: platform errors in a row (a played hand resets it); 9-max: in all
+    double outage_limit_s = 6 * 3600;  // a platform unreachable this long in a row ends the session (connector.hpp: patient)
     uint64_t seed = 1;
     std::string model = "hu-blueprint", solver = "none";
     int tournaments = 1;  // structured connectors: tournaments to play (the hands cap still applies)
@@ -28,7 +29,7 @@ struct SessionPlan {
 
 struct SessionSummary {
     std::string connector;
-    int hands = 0, errors = 0, off_tree = 0, fallbacks = 0;
+    int hands = 0, errors = 0, off_tree = 0, fallbacks = 0, outages = 0;
     double bb100 = 0, ci_lo = 0, ci_hi = 0;
     std::string stopped;
     json tournaments;  // structured connectors: each tournament's place and prize

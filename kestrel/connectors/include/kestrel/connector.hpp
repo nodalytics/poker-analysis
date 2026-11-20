@@ -1,8 +1,10 @@
 #pragma once
+#include <atomic>
 #include <chrono>
 #include <functional>
 #include <map>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -39,5 +41,19 @@ class Transport {
 };
 
 std::unique_ptr<Transport> make_transport(const ConnectorSpec& spec);
+
+// a request that still failed after the transport's own retries (about 2 minutes): the platform could not be reached,
+// or kept answering 5xx. Anything else (a platform's refusal, bad JSON) is not one.
+struct TransportError : std::runtime_error {
+    using std::runtime_error::runtime_error;
+};
+
+// waits out an outage instead of ending the session: a request that throws TransportError is sent again after a
+// pause that doubles from first_s to max_s, until it gets an answer, *stop is set, or the platform has been
+// unreachable for limit_s in a row (then the TransportError is thrown). on_change hears {"state": "down"|"up",
+// "reason", "down_s"}. A heads-up session lost one hand to a 2-minute network blip on the lab, and with it the
+// whole session (2026-11-20); polls are safe to repeat, and a repeated move is refused as not our turn.
+std::unique_ptr<Transport> patient(std::unique_ptr<Transport> inner, const std::atomic<bool>* stop, double limit_s,
+                                   std::function<void(const json&)> on_change, double first_s = 15, double max_s = 300);
 
 }
