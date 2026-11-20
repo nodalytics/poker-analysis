@@ -58,7 +58,7 @@ class Window : public QMainWindow {
     void log(const QString& line);
 
     Client client_;
-    bool dark_ = true;
+    bool dark_ = false;
     QJsonArray engines_models_, engines_solvers_, connectors_;
     QMap<int, QJsonObject> tables_;  // id -> table summary, updated by events
     QMap<int, QJsonObject> state_;   // id -> its latest event
