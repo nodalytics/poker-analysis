@@ -172,6 +172,7 @@ def features(T, g, i):
     return torch.cat(f, 1), legal
 
 
+TEXTURE_N = 19  # the texture inputs (12 betting history + 7 board), just before the legal moves and sizes
 BELIEF_BINS = 10  # the belief output's classes per seat: strength in tenths
 
 
@@ -511,8 +512,13 @@ def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None,
                     lg, _ = pol(feat[m], vbk[gm, im], T.street[gm], sv)
                 probs = F.softmax(masked(lg, legal[m]), 1)
             else:
+                fm = feat[m]
+                if FEAT["texture"] and getattr(pol, "texture", True) is False:  # a network trained without them
+                    A_, S_ = menu.A, menu.S
+                    cut = fm.shape[1] - A_ - S_
+                    fm = torch.cat([fm[:, : cut - TEXTURE_N], fm[:, cut:]], 1)
                 with torch.no_grad():
-                    lg, _ = pol(feat[m], mybk[m], T.street[g][m], s[m])
+                    lg, _ = pol(fm, mybk[m], T.street[g][m], s[m])
                 probs = F.softmax(masked(lg, legal[m]), 1)
             rule = getattr(pol, "early_shove_bb", 0) if not isinstance(pol, str) else 0
             if rule:  # this player follows the early-shove rule (a hero-only test of it)

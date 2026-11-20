@@ -67,6 +67,7 @@ def load(run, B, dev, part="avg"):
     ).to(dev)
     st = torch.load(ck, map_location=dev, weights_only=True)
     net.load_state_dict(st[part])
+    net.texture = bool(cfg.get("texture", False))  # play() strips the texture inputs for a network trained without
     return net.requires_grad_(False).eval(), st["hands"]
 
 
