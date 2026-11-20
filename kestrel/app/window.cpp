@@ -103,8 +103,7 @@ Window::Window(QWidget* parent) : QMainWindow(parent) {
     setWindowIcon(QIcon(":/logo-mark-256.png"));
     resize(1280, 820);
     QSettings ui;
-    dark_ = ui.contains("dark") ? ui.value("dark").toBool()
-                                : QGuiApplication::styleHints()->colorScheme() != Qt::ColorScheme::Light;
+    dark_ = ui.value("dark", false).toBool();  // light unless the user picked dark (as the web app)
 
     auto central = new QWidget;
     auto v = new QVBoxLayout(central);
