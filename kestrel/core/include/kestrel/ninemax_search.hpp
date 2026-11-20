@@ -18,11 +18,23 @@
 
 namespace kestrel {
 
+// how one opponent plays, as a tilt of the network's own policy: its fold, call and raise probabilities multiplied by
+// these (then renormalised); 1, 1, 1 is the network itself
+struct OpponentTilt {
+    double fold = 1, call = 1, raise = 1;
+};
+
 struct SearchConfig {
     int samples = 1024;   // deals of the unknown cards, 16 to 4,096; Kestrel offers 1,024 and up (256 lost to the
                           // plain network by 5-6.5 bb/100, 1,024 gained +6.2 against raise-biased opponents)
     bool robust = false;  // the opponents may switch continuation strategy
     double bias = 5.0;    // how strongly a continuation strategy is tilted
+    // safe exploitation: each seat's tilt (Kestrel's seats; empty: none). Every deal is also played out with the
+    // opponents tilted so, and a move's value is (1 - exploit_weight) x its usual value + exploit_weight x its value
+    // against them. The tilts come already shrunk towards 1 by the evidence behind them (connectors: opponent_tilt),
+    // so an opponent seen for a few hands changes nothing.
+    std::vector<OpponentTilt> tilts;
+    double exploit_weight = 0.0;
     uint64_t seed = 1;
 };
 

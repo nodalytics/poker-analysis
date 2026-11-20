@@ -19,10 +19,11 @@ struct SessionPlan {
     uint64_t seed = 1;
     std::string model = "hu-blueprint", solver = "none";
     int tournaments = 1;  // structured connectors: tournaments to play (the hands cap still applies)
-    OpponentBook* opponents = nullptr;
+    OpponentBook* opponents = nullptr;  // where the opponents' statistics are kept (none: not tracked)
     Store* store = nullptr;  // the database every hand is also written to (none: the files only)
     int search_samples = 0;  // structured connectors: search at decision time (0: the network alone)
-    bool search_robust = false;  // where the opponents' statistics are kept (none: not tracked)
+    bool search_robust = false;  // the opponents may switch continuation strategy (search-robust)
+    bool search_exploit = false;  // safe exploitation from the opponents' profiles (search-exploit; needs opponents)
 };
 
 struct SessionSummary {

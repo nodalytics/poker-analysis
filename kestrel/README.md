@@ -57,6 +57,20 @@ default 1,024 deals (`search_samples` in the settings, 1,024 to 4,096: with 256 
 the plain network, because its estimates of each move's value are too noisy), 3× that for `search-robust`. Without it, a 9-max table plays
 the network's own policy.
 
+Search assumes every opponent plays like the network. That holds against strong, balanced players (+4 to +6 bb/100
+over the plain network against nm25-like tables) and fails against loose ones: on the test platform's calling
+stations it lost -96.5 bb/100 where the plain network won +75.5. Against unknown or loose opponents use the plain
+network, `search-exploit` (plays each opponent as its profile says) or `search-robust`.
+
+**Models** (`--model`, or the Model box of a new table):
+
+| Model | Game | Notes |
+|---|---|---|
+| `nm25` | 9-max tournaments, 10-25bb, ICM | the default; never shoves a real stack first in from the first two seats (Rules::early_shove_bb, 15bb) |
+| `nm17` | 9-max tournaments | the previous champion |
+| `nm30` | progressive knockout (bounty) tournaments | calls wider as an opponent's bounty grows (42.9%, 44.0%, 46.0% for none, small and large) |
+| `nm37` | 6-max cash, 50-250bb | **experimental**: a 30-minute exploiter still wins +5.6 bb/100 against it |
+
 Other connectors: `pokerpi.yaml` (a self-hosted bot tournament server, long polling), `testplatform-ws.yaml` (the test platform over a WebSocket, speaking Open Poker's protocol: `uv run --with websockets==14.1 python kestrel/testplatform/ws_platform.py`) and `openpoker.yaml` (a draft until the account exists). The connector format is in [`docs/design.md`](docs/design.md#connector-files).
 
 Advice for one spot, in the platform's own chips (`to` is the street total):
@@ -127,6 +141,8 @@ The self-test replays reference data written by the Python code in `llm-research
 - the features and the network's output.
 
 It also checks the payoffs and ICM, and for heads-up the blueprint's node, bucket, strategy and raise sizes. For platform tables it re-describes 1,922 self-played decisions as a platform would and must get the network's own answer exactly. It prints `PASS` only if all of them match.
+
+`ctest` also replays nm30's vectors (bounties) and nm37's (6-max cash, deep stacks, three empty seats).
 
 The data it reads (the network `models/ninemax/nm17/net.bin` and the heads-up pack `blueprint/pack/`) defaults to `../llm-research`. Set `-DKESTREL_DATA=...` to point elsewhere.
 

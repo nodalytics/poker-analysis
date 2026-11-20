@@ -71,6 +71,7 @@ def main():
             f.write(t.detach().half().contiguous().numpy().astype("<f2").tobytes())
     meta = {
         "tensors": [[k, list(t.shape)] for k, t in sd.items()],
+        "seats": cfg.get("seats") or cfg.get("players", 9),  # the table size it plays (6 for 6-max), for its description
         "nfeat": cfg["nfeat"], "actions": cfg["actions"], "buckets": B, "players": P,
         "menu": cfg.get("menu", "medium"), "menu_def": MENUS[cfg.get("menu", "medium")],
         "ante_bb": RULES["ante"], "open_limp": RULES["open_limp"],

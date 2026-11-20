@@ -44,7 +44,7 @@ namespace kestrel {
 
 namespace {
 
-constexpr const char* VERSION = "0.3.0";
+constexpr const char* VERSION = "0.4.0";
 
 // the models and solvers a table can play with; heads-up connectors take the heads-up blueprint
 TexasSolverConfig ts_config(const ServeOptions& o) {
@@ -65,16 +65,24 @@ json solvers_json(const ServeOptions& o) {
                          {"available", ts}},
                         {{"name", "search"},
                          {"about", "9-max: search at decision time, " + std::to_string(o.search_samples) +
-                                       " deals each, opponents' ranges from their actions (+2 to +6 bb/100 over the network alone)"},
+                                       " deals each, opponents' ranges from their actions. For strong, balanced opponents: +4 to +6 bb/100 over "
+                                       "the network against nm25-like play, but it assumes everyone plays like the network and lost "
+                                       "-96 bb/100 to calling stations in tests (search-exploit or search-robust there)"},
                          {"available", true}, {"players", 9}},
                         {{"name", "search-robust"},
                          {"about", "9-max: search that assumes the opponents may play tighter, looser or more aggressive "
                                    "(after Pluribus); never below the network in tests, about 3x slower than search"},
+                         {"available", true}, {"players", 9}},
+                        {{"name", "search-exploit"},
+                         {"about", "9-max: search that also plays each opponent as its profile says (fold, call and "
+                                   "raise tendencies from its statistics), weighted by the evidence: safe exploitation"},
                          {"available", true}, {"players", 9}}});
 }
 
-// 9-max solvers: none, search or search-robust; false for anything else
-bool nine_max_solver(const std::string& s) { return s == "none" || s == "search" || s == "search-robust"; }
+// 9-max solvers: none, search, search-robust or search-exploit; false for anything else
+bool nine_max_solver(const std::string& s) {
+    return s == "none" || s == "search" || s == "search-robust" || s == "search-exploit";
+}
 
 struct Engines {
     std::mutex mu;
@@ -131,9 +139,21 @@ json models_json(const ServeOptions& o) {
                  {"practice", false},
                  {"about", pack ? "heads-up blueprint, 200bb (the data pack)"
                                 : "heads-up blueprint: the data pack is not installed (" + o.pack + ")"}});
-    for (auto& [name, dir] : nine_max_models(o))
-        a.push_back({{"name", name}, {"game", "9-max tournament"}, {"players", 9}, {"available", pack},
-                     {"practice", pack}, {"about", "9-max tournament network: practice tournaments, advice (/v1/decide) and 9-max platforms"}});
+    for (auto& [name, dir] : nine_max_models(o)) {
+        // the game it was trained for, from its net.json: tournament (ICM), bounty tournament (PKO) or cash
+        std::ifstream f(std::filesystem::path(dir) / "net.json");
+        json nj = json::parse(f, nullptr, false);
+        const json feat = nj.is_object() ? nj.value("features", json::object()) : json::object();
+        const bool tourney = feat.value("tourney", true), pko = feat.value("bounty", 0.0) > 0;
+        const int seats = nj.is_object() ? nj.value("seats", 9) : 9;
+        std::string game = pko ? "9-max bounty tournament" : tourney ? "9-max tournament" : std::to_string(seats) + "-max cash";
+        std::string about = pko ? "progressive knockout (PKO) tournaments, 10-25bb: practice tournaments with bounties, advice and platforms"
+                          : tourney ? "9-max tournament network, 10-25bb with ICM: practice tournaments, advice (/v1/decide) and platforms"
+                                    : std::to_string(seats) + "-max cash network, 50-250bb: advice and cash platforms";
+        if (nj.is_object() && nj.contains("note") && nj["note"].is_string()) about += " (" + nj["note"].get<std::string>() + ")";
+        a.push_back({{"name", name}, {"game", game}, {"players", 9}, {"seats", seats}, {"available", pack},
+                     {"practice", pack && tourney}, {"about", about}});
+    }
     return a;
 }
 
@@ -438,11 +458,11 @@ int serve(const ServeOptions& o) {
             auto m = std::find_if(ms.begin(), ms.end(), [&](auto& x) { return x.first == model; });
             if (m == ms.end()) return reply(res, {{"error", "no 9-max model " + model + " for this connector"}}, 400);
             if (!nine_max_solver(solver))
-                return reply(res, {{"error", "9-max tables take solver none, search or search-robust"}}, 400);
+                return reply(res, {{"error", "9-max tables take solver none, search, search-robust or search-exploit"}}, 400);
             net_dir = m->second;
         } else {
             if (model != "hu-blueprint") return reply(res, {{"error", "model " + model + " cannot play this connector"}}, 400);
-            if (solver == "search" || solver == "search-robust")
+            if (solver == "search" || solver == "search-robust" || solver == "search-exploit")
                 return reply(res, {{"error", "search is for 9-max tables"}}, 400);
             bool known = false;
             for (auto& x : solvers_json(o))
@@ -481,8 +501,9 @@ int serve(const ServeOptions& o) {
             plan.tournaments = tournaments;
             plan.opponents = &opponents;
             plan.store = db;
-            if (t->solver == "search" || t->solver == "search-robust")
-                plan.search_samples = o.search_samples, plan.search_robust = t->solver == "search-robust";
+            if (t->solver == "search" || t->solver == "search-robust" || t->solver == "search-exploit")
+                plan.search_samples = o.search_samples, plan.search_robust = t->solver == "search-robust",
+                plan.search_exploit = t->solver == "search-exploit";
             plan.out_dir = o.out + "/" + std::to_string(t->id) + "-" + t->spec.name;
             plan.seed = uint64_t(t->id) * 7919;
             auto set_status = [&](const std::string& s) {
@@ -716,9 +737,11 @@ int serve(const ServeOptions& o) {
             if (it == ms.end()) return reply(res, {{"error", "no 9-max model " + model}}, 404);
             try {
                 const std::string solver = b.value("solver", "none");
-                if (!nine_max_solver(solver)) return reply(res, {{"error", "solver is none, search or search-robust"}}, 400);
+                if (!nine_max_solver(solver))
+                    return reply(res, {{"error", "solver is none, search, search-robust or search-exploit"}}, 400);
                 SearchConfig sc;
                 sc.samples = std::clamp(b.value("samples", o.search_samples), 1024, 4096), sc.robust = solver == "search-robust";
+                if (solver == "search-exploit") sc.exploit_weight = 0.5;  // tilts: the request's "exploit" {id: {fold, call, raise}}
                 sc.seed = std::random_device{}();
                 buckets_init(o.pack);
                 auto adv = ninemax_decide(*engines.net(it->second), NMSpot::from_json(b), solver == "none" ? nullptr : &sc);

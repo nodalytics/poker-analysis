@@ -127,7 +127,9 @@ SearchResult ninemax_search(const Net& net, const Table& T, const TourneyCtx& ct
     std::vector<int> moves;
     for (int a = 0; a < A; ++a)
         if (L[a]) moves.push_back(a);
-    const int C = cfg.robust ? 4 : 1, M = int(moves.size());
+    const int C0 = cfg.robust ? 4 : 1, M = int(moves.size());
+    const bool exploit = cfg.exploit_weight > 0 && int(cfg.tilts.size()) >= P;
+    const int C = C0 + (exploit ? 1 : 0);  // continuation C0: the opponents as their profiles say (exploitation)
     const size_t R = size_t(M) * C * N;  // row r: move r / (C N), continuation (r / N) % C, deal r % N
     std::vector<Table> tabs(R, T);
     for (size_t r = 0; r < R; ++r) tabs[r].step(moves[r / (size_t(C) * N)]);
@@ -167,7 +169,18 @@ SearchResult ninemax_search(const Net& net, const Table& T, const TourneyCtx& ct
                 Table& U = tabs[r];
                 float* p = lg.data() + size_t(i) * A;
                 softmax_legal(p, legal[i].data(), A);
-                if (U.actor() != hero) tilt(p, A, int((r / N) % C), cfg.bias);
+                const int cont = int((r / N) % C);
+                if (U.actor() != hero && cont < C0) tilt(p, A, cont, cfg.bias);
+                if (U.actor() != hero && cont == C0) {  // this opponent as its profile says
+                    const OpponentTilt& o = cfg.tilts[U.actor()];
+                    double z = 0;
+                    for (int a = 0; a < A; ++a) {
+                        p[a] = float(p[a] * (a == 0 ? o.fold : a == 1 ? o.call : o.raise));
+                        z += p[a];
+                    }
+                    if (z > 0)
+                        for (int a = 0; a < A; ++a) p[a] = float(p[a] / z);
+                }
                 double x = u01(rng), acc = 0;
                 int pick = 1;
                 for (int a = 0; a < A; ++a)
@@ -186,7 +199,7 @@ SearchResult ninemax_search(const Net& net, const Table& T, const TourneyCtx& ct
     // 4. each move's value: the weighted mean result over the deals (the worst continuation, robust)
     res.q.assign(A, std::numeric_limits<double>::quiet_NaN());
     for (int m = 0; m < M; ++m) {
-        double worst = std::numeric_limits<double>::infinity();
+        double worst = std::numeric_limits<double>::infinity(), profiled = 0;
         for (int c = 0; c < C; ++c) {
             double v = 0;
             for (int n = 0; n < N; ++n) {
@@ -201,9 +214,10 @@ SearchResult ninemax_search(const Net& net, const Table& T, const TourneyCtx& ct
                 }
                 v += w[n] * r;
             }
-            worst = std::min(worst, v);
+            if (c < C0) worst = std::min(worst, v);
+            else profiled = v;
         }
-        res.q[moves[m]] = worst;
+        res.q[moves[m]] = exploit ? (1 - cfg.exploit_weight) * worst + cfg.exploit_weight * profiled : worst;
     }
     int best = moves[0];
     for (int a : moves)

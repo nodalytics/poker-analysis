@@ -162,4 +162,22 @@ json profile_json(const OpponentStats& s, const RatePrior* prior) {
             {"changed", settled && recent_settled && recent[0].second != life[0].second && change_z >= 3}};
 }
 
+OpponentTilt opponent_tilt(const json& st) {
+    OpponentTilt t;
+    if (!st.is_object() || !st.contains("profile")) return t;
+    const json& pr = st["profile"];
+    if (!pr.contains("rates") || !pr.contains("prior")) return t;
+    auto z = [&](int d) {  // the shrunk rate against the population, in prior standard deviations
+        const double r = pr["rates"][d].get<double>(), m = std::clamp(pr["prior"]["mean"][d].get<double>(), 0.01, 0.99);
+        const double k = pr["prior"]["strength"][d].get<double>();
+        return std::clamp((r - m) / std::sqrt(m * (1 - m) / (k + 1)), -2.0, 2.0);
+    };
+    const double hands = st.value("hands", 0.0), w = 0.5 * hands / (hands + 100.0);
+    // rates: vpip, pfr, 3-bet, fold to c-bet, aggression frequency, went to showdown
+    t.fold = std::exp(w * z(3));
+    t.call = std::exp(w * (z(5) - z(4)) / 2);
+    t.raise = std::exp(w * (z(4) + z(1)) / 2);
+    return t;
+}
+
 }  // namespace kestrel

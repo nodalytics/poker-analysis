@@ -131,10 +131,14 @@ enable_testing()
 add_test(NAME selftest
          COMMAND kestrel_selftest --vectors ${CMAKE_CURRENT_SOURCE_DIR}/testdata
                  --model ${KESTREL_DATA}/models/ninemax/nm17 --pack ${KESTREL_DATA}/blueprint/pack)
-add_test(NAME selftest_pko  # progressive knockouts: bounty features and equity, against a small PKO model's vectors
+add_test(NAME selftest_pko  # progressive knockouts: bounty features and equity, against nm30 (the PKO model) and its vectors
          COMMAND kestrel_selftest --vectors ${CMAKE_CURRENT_SOURCE_DIR}/testdata
-                 --nine-max ${CMAKE_CURRENT_SOURCE_DIR}/testdata/vectors_pko.json
-                 --model ${CMAKE_CURRENT_SOURCE_DIR}/testdata/pko_smoke --pack ${KESTREL_DATA}/blueprint/pack)
+                 --nine-max ${CMAKE_CURRENT_SOURCE_DIR}/testdata/vectors_nm30.json
+                 --model ${KESTREL_DATA}/models/ninemax/nm30 --pack ${KESTREL_DATA}/blueprint/pack)
+add_test(NAME selftest_cash6  # 6-max cash (no ICM, deep stacks, three empty seats), against nm37 and its vectors
+         COMMAND kestrel_selftest --vectors ${CMAKE_CURRENT_SOURCE_DIR}/testdata
+                 --nine-max ${CMAKE_CURRENT_SOURCE_DIR}/testdata/vectors_nm37.json
+                 --model ${KESTREL_DATA}/models/ninemax/nm37 --pack ${KESTREL_DATA}/blueprint/pack)
 
 include(GNUInstallDirs)
 install(TARGETS ${KESTREL_BINARIES} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
@@ -152,7 +156,9 @@ install(FILES connectors/slumbot.yaml DESTINATION ${CMAKE_INSTALL_DATADIR}/kestr
 install(DIRECTORY web/ DESTINATION ${CMAKE_INSTALL_DATADIR}/kestrel/web)
 install(DIRECTORY assets/ DESTINATION ${CMAKE_INSTALL_DATADIR}/kestrel/assets)
 install(DIRECTORY testdata DESTINATION ${CMAKE_INSTALL_DATADIR}/kestrel)
-foreach(m nm25 nm17)  # nm25 is the default (ServeOptions::nine_max_default); nm17 the previous champion
+# nm25 is the default (ServeOptions::nine_max_default); nm17 the previous champion; nm30 bounty (PKO) tournaments; nm37
+# 6-max cash (experimental: its exploiter still finds +5.6 bb/100)
+foreach(m nm25 nm17 nm30 nm37)
   install(FILES ${KESTREL_DATA}/models/ninemax/${m}/net.bin ${KESTREL_DATA}/models/ninemax/${m}/net.json
           DESTINATION ${CMAKE_INSTALL_DATADIR}/kestrel/models/ninemax/${m} OPTIONAL)
 endforeach()
