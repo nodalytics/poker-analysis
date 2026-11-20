@@ -144,6 +144,13 @@ Every visitor needs the token, since requests reach the container from the Docke
 loopback. A domain in front of it (a tunnel or proxy) needs `--public-host NAME`: that name is served with the token
 only, and writes only from `https://NAME`. A new image ends the bot sessions in play; start them again.
 
+On the web at **https://kestrel.stbfarm.org**: the lab's nginx proxies it to the container
+(`kestrel/docker/nginx/kestrel.stbfarm.org.conf`, installed once with `sudo sh kestrel/docker/install-nginx.sh`),
+like poker.stbfarm.org. Only Cloudflare's addresses reach the site, the shutdown endpoint is refused there, and
+Kestrel serves the name (`KESTREL_PUBLIC_HOSTS` in compose.yml) only with its access token: open
+`https://kestrel.stbfarm.org/?token=...` once per device (the token: `docker exec kestrel-kestrel-1 cat
+/data/config/kestrel/token` on the lab). Put Cloudflare Access in front as well.
+
 ## Build and self-test
 
 ```
