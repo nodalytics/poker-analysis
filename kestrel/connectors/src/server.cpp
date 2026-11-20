@@ -839,7 +839,10 @@ int serve(const ServeOptions& o) {
     // rebinding).
     const std::string token = o.lan ? access_token(o.token_file) : "";
     const auto addrs = o.lan ? lan_addresses() : std::vector<std::string>{};
-    srv.set_pre_routing_handler([p, token, addrs](const httplib::Request& req, httplib::Response& res) {
+    if (!o.public_hosts.empty() && token.empty())
+        throw std::runtime_error("--public-host needs --lan on: a public name is only served with the access token");
+    const auto publics = o.public_hosts;
+    srv.set_pre_routing_handler([p, token, addrs, publics](const httplib::Request& req, httplib::Response& res) {
         auto deny = [&](const char* why) {
             res.status = 403;
             res.set_content(std::string(R"({"error":"refused: )") + why + "\"}", "application/json");
@@ -849,8 +852,9 @@ int serve(const ServeOptions& o) {
         bool loopback = req.remote_addr == "127.0.0.1" || req.remote_addr == "::1";
         bool local_host = host == "127.0.0.1:" + p || host == "localhost:" + p;
         for (auto& ip : addrs) local_host = local_host || host == ip + ":" + p;
-        if (!local_host) return deny("unknown host name");
-        if (!loopback) {
+        const bool public_host = std::find(publics.begin(), publics.end(), host) != publics.end();
+        if (!local_host && !public_host) return deny("unknown host name");
+        if (!loopback || public_host) {  // a public name always needs the token, even when the proxy is on this computer
             if (token.empty()) return deny("this app accepts requests from this computer only");
             std::string got = req.get_header_value("X-Kestrel-Token");
             if (got.empty() && req.has_param("token")) got = req.get_param_value("token");
@@ -861,14 +865,16 @@ int serve(const ServeOptions& o) {
             }
             if (got != token) return deny("this device needs the access link (with its token)");
             if (req.has_param("token")) {  // remember the device, and drop the token from the address bar
-                res.set_header("Set-Cookie", "kestrel_token=" + token + "; Path=/; HttpOnly; SameSite=Strict; Max-Age=31536000");
+                res.set_header("Set-Cookie", "kestrel_token=" + token + "; Path=/; HttpOnly; SameSite=Strict; Max-Age=31536000" +
+                                                  std::string(public_host ? "; Secure" : ""));
                 res.set_redirect(req.path);
                 return httplib::Server::HandlerResponse::Handled;
             }
         }
         bool write = req.method != "GET" && req.method != "HEAD";
         auto origin = req.get_header_value("Origin");
-        if (write && !origin.empty() && origin != "http://" + host) return deny("cross-site request");
+        if (write && !origin.empty() && origin != (public_host ? "https://" : "http://") + host)
+            return deny("cross-site request");
         if (req.method == "POST" && req.get_header_value("Content-Type").rfind("application/json", 0) != 0)
             return deny("JSON bodies only");
         return httplib::Server::HandlerResponse::Unhandled;

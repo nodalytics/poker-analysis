@@ -1,0 +1,9 @@
+# the build context is the repo root; send only Kestrel and the four networks it ships
+*
+!kestrel/
+kestrel/build/
+kestrel/build-*/
+!llm-research/models/ninemax/nm25/net.*
+!llm-research/models/ninemax/nm17/net.*
+!llm-research/models/ninemax/nm30/net.*
+!llm-research/models/ninemax/nm37/net.*

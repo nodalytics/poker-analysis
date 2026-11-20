@@ -127,6 +127,23 @@ into Kestrel, so there is nothing to install.
 
 `Kestrel` (built beside `kestreld` when Qt 6 is installed: `qt6-base-dev` on Debian) shows the same tables as the web app, drawn live, with a grid of all of them and your moves at a practice seat. It installs models, checks and adds connectors, and is the admin for Kestrel's settings: ports, LAN access and its token, the default model, 9-max search deals per decision, TexasSolver and folders, saved to `settings.json` and applied by restarting the server. It starts Kestrel itself when it isn't running. `Kestrel --tab settings` opens on a tab.
 
+## Docker (the lab)
+
+`kestrel/Dockerfile` builds the server with nm25, nm17, nm30 and nm37 and the web app; CI (`kestrel-docker.yml`)
+self-tests every image (nm17, nm30's bounties, nm37's cash) and pushes it to `ghcr.io/nodalytics/kestrel`.
+`kestrel/docker/compose.yml` runs it beside the test platform for unattended bot sessions:
+
+```
+sh kestrel/docker/deploy.sh            # the image CI pushed (main), after a one-time docker login ghcr.io
+sh kestrel/docker/deploy.sh --local    # or build it on this machine
+```
+
+It listens on the host's `127.0.0.1:8890` only (the inside port is the same: the server checks the Host header,
+port included). Everything it keeps is in the `kestrel-data` volume: `kestrel.db`, sessions and the access token.
+Every visitor needs the token, since requests reach the container from the Docker network, not from its own
+loopback. A domain in front of it (a tunnel or proxy) needs `--public-host NAME`: that name is served with the token
+only, and writes only from `https://NAME`. A new image ends the bot sessions in play; start them again.
+
 ## Build and self-test
 
 ```

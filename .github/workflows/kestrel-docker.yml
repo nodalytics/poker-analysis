@@ -1,0 +1,70 @@
+# Kestrel's container images: built from kestrel/Dockerfile, self-tested inside the image (nm17's vectors, nm30's
+# bounties and nm37's 6-max cash, as ctest runs them), then pushed to ghcr.io. The lab runs these images
+# (kestrel/docker/compose.yml). Images share the account's storage quota with build artifacts: keep a few.
+name: kestrel-docker
+on:
+  push:
+    branches: [main]
+    paths: ["kestrel/**", "llm-research/models/ninemax/**", ".github/workflows/kestrel-docker.yml"]
+    tags: ["kestrel-v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      IMAGE: ghcr.io/${{ github.repository_owner }}/kestrel
+      PLATFORM_IMAGE: ghcr.io/${{ github.repository_owner }}/kestrel-testplatform
+    steps:
+      - uses: actions/checkout@v4
+      - name: heads-up data pack (for the self-test; not in the image)
+        run: |
+          gh release download headsup-pack-run2 --repo "$GITHUB_REPOSITORY" --pattern 'headsup-pack-run2.tar.zst' --dir pack-download
+          mkdir -p pack-root && zstd -dc pack-download/headsup-pack-run2.tar.zst | tar -x -C pack-root
+          echo "PACK=$(dirname "$(find "$PWD/pack-root" -name tree.tsv | head -1)")" >> "$GITHUB_ENV"
+      - name: build
+        run: |
+          docker build -f kestrel/Dockerfile -t kestrel:ci .
+          docker build -f kestrel/docker/testplatform.Dockerfile -t kestrel-testplatform:ci kestrel
+      - name: self-test inside the image
+        run: |
+          st() { docker run --rm --entrypoint kestrel_selftest -v "$PACK:/pack:ro" kestrel:ci \
+                   --vectors /opt/kestrel/share/kestrel/testdata --pack /pack "$@" | tail -2; }
+          M=/opt/kestrel/share/kestrel/models/ninemax T=/opt/kestrel/share/kestrel/testdata
+          st --model $M/nm17 | tee r1; grep -qx PASS r1
+          st --model $M/nm30 --nine-max $T/vectors_nm30.json | tee r2; grep -qx PASS r2
+          st --model $M/nm37 --nine-max $T/vectors_nm37.json | tee r3; grep -qx PASS r3
+      - name: the server starts and answers
+        run: |
+          docker run -d --name k -v "$PACK:/data/pack:ro" kestrel:ci
+          for i in $(seq 30); do docker exec k curl -fs http://127.0.0.1:8890/v1/health && break; sleep 1; done
+          docker exec k curl -fs http://127.0.0.1:8890/v1/engines | grep -q '"nm30"'
+          docker rm -f k
+      - name: push
+        run: |
+          echo "$GH_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          tags="sha-${GITHUB_SHA::7}"
+          case "$GITHUB_REF" in
+            refs/heads/main) tags="$tags main" ;;
+            refs/tags/kestrel-v*) tags="$tags ${GITHUB_REF#refs/tags/kestrel-v} latest" ;;
+          esac
+          for t in $tags; do
+            docker tag kestrel:ci "$IMAGE:$t" && docker push -q "$IMAGE:$t"
+            docker tag kestrel-testplatform:ci "$PLATFORM_IMAGE:$t" && docker push -q "$PLATFORM_IMAGE:$t"
+          done
+      - name: keep the newest images only
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: kestrel
+          package-type: container
+          min-versions-to-keep: 6
+      - uses: actions/delete-package-versions@v5
+        with:
+          package-name: kestrel-testplatform
+          package-type: container
+          min-versions-to-keep: 6

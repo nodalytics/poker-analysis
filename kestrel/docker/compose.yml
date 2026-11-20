@@ -1,0 +1,27 @@
+# Kestrel on the lab: the server (web app, advice, bot sessions) and the test platform its bot plays.
+#   KESTREL_PACK=~/llm-research/blueprint/pack docker compose -f kestrel/docker/compose.yml up -d
+# The web app is on the lab's 127.0.0.1:8890 only; reach it with  ssh -N -L 8890:127.0.0.1:8890 <lab>  and open the
+# access link that  docker compose ... exec kestrel cat /data/config/kestrel/token  gives (http://localhost:8890/?token=...).
+name: kestrel
+services:
+  kestrel:
+    image: ${KESTREL_IMAGE:-kestrel:local}
+    restart: unless-stopped
+    ports: ["127.0.0.1:8890:8890"]  # never 8000 (the another service) and not 8790 (the training dashboard)
+    volumes:
+      - kestrel-data:/data              # kestrel.db, sessions, the access token: kept across new images
+      - ${KESTREL_PACK:?set KESTREL_PACK to the heads-up data pack}:/data/pack:ro
+    environment:
+      OMP_NUM_THREADS: "16"
+    cpus: 16                            # search uses every thread it gets; the lab is shared
+    mem_limit: 8g
+  testplatform:
+    image: ${KESTREL_TESTPLATFORM_IMAGE:-kestrel-testplatform:local}
+    restart: unless-stopped
+    network_mode: service:kestrel       # Kestrel reaches it at 127.0.0.1:8793, as connectors/testplatform.yaml says
+    depends_on:
+      kestrel: {condition: service_started, restart: true}  # it loses the shared network when Kestrel restarts
+    cpus: 2
+    mem_limit: 1g
+volumes:
+  kestrel-data:
