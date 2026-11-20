@@ -53,7 +53,8 @@ int usage() {
                  "       kestreld serve [--port P] [--lan on|off] [--pack DIR] [--models DIR] [--connectors DIR]...\n"
                  "                      [--web DIR] [--assets DIR] [--default-model nm25]\n"
                  "                      [--out DIR] [--resolve-iters N] [--search-samples N] [--db FILE|off]\n"
-                 "                      [--texassolver BIN --texassolver-resources DIR]\n");
+                 "                      [--texassolver BIN --texassolver-resources DIR]\n"
+                 "                      [--public-host NAME]... (served under that domain: token only) [--config DIR]\n");
     return 2;
 }
 }
@@ -353,10 +354,12 @@ int main(int argc, char** argv) {
             else if (a == "--default-model") o.nine_max_default = v;
             else if (a == "--tcp-port") o.tcp_port = std::stoi(v);
             else if (a == "--db") o.db = v == "off" ? "" : v;
+            else if (a == "--public-host") o.public_hosts.push_back(v);
+            else if (a == "--config") o.token_file = v + "/token";
             else return usage();
         }
         o.connectors.push_back(default_dir());
-        o.token_file = config_dir() + "/token";
+        if (o.token_file.empty()) o.token_file = config_dir() + "/token";
         try {
             return serve(o);
         } catch (const std::exception& e) {

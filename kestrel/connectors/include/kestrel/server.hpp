@@ -23,6 +23,9 @@ struct ServeOptions {
     std::string nine_max_default = "nm25";  // the 9-max model a table plays unless another is chosen
     std::string db;  // the database (kestrel.db): sessions, hands and opponents; empty: files only
     std::string token_file;     // where the access token is kept (created on first use, readable by the user only)
+    // domain names it is served under through a proxy or tunnel (kestrel.example.com): a request with that Host is
+    // accepted only with the access token (it never comes from this computer), and writes only from https://<name>
+    std::vector<std::string> public_hosts;
 };
 
 int serve(const ServeOptions& o);
