@@ -57,6 +57,7 @@ def load(run, B, dev, part="avg"):
         cfg.get("seats"),
         cfg.get("bounty", 0.0),
         cfg.get("texture", False),
+        cfg.get("early", 0.0),
     )  # the runs compared must share a mode
     net = NineNet(
         cfg["nfeat"],

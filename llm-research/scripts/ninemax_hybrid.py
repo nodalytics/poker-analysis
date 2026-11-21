@@ -118,6 +118,7 @@ def main():
     ap.add_argument("--abs", default="blueprint/out")
     ap.add_argument("--lib", default="blueprint/libbp5.so")
     ap.add_argument("--seed", type=int, default=11)
+    ap.add_argument("--early", type=float, default=0.0, help="share of early-stage (winner-take-all) tables")
     args = ap.parse_args()
     torch.manual_seed(args.seed)
     dev = "cuda"
@@ -125,6 +126,7 @@ def main():
     pre, _ = load(args.pre, B, dev)
     post, _ = load(args.post, B, dev)  # loaded last: its game (no bounties) is the one played
     assert not FEAT["bounty"] and FEAT["tourney"], "the post-flop network must be nm25's game"
+    FEAT["early"] = args.early
     P = dealer.P
     bk0, _, _ = dealer.raw(1 << 16)
     pre_s = dealer.pre_strength[torch.tensor(bk0[:, :, 0].ravel(), device=dev)]

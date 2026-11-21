@@ -21,10 +21,10 @@ from icm import scenarios
 from multitest import holm
 from ninemax_engine import BB, Menu, run_dealer
 from ninemax_eval import load
-from ninemax_selfplay import FEAT, NineNet, board_of, play, table_cell
+from ninemax_selfplay import FEAT, NineNet, board_of, kinds, play, table_cell
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-KINDS = ["final table", "bubble", "in the money"]
+KINDS = ["final table", "bubble", "in the money", "early"]
 DEPTHS = ["<12bb", "12-18bb", "18-25bb", "25bb+"]
 PLAYERS = ["2", "3-5", "6-8", "9"]
 
@@ -60,7 +60,7 @@ def main():
             n = min(chunk, a.hands - n_done)
             bk, rk, cd = dealer.deal(n, cards=True)
             board = board_of(cd, P, dev)
-            stacks, pay, kind = scenarios(n, P, dev, avg_bb=FEAT["depths"] or (10, 60), short=FEAT["short"])
+            stacks, pay, kind = scenarios(n, P, dev, kinds(), avg_bb=FEAT["depths"] or (10, 60), short=FEAT["short"])
             cells = table_cell(stacks, kind)
             per = torch.zeros(n, device=dev)
             seated = (stacks > 0).float()

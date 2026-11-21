@@ -73,7 +73,7 @@ def simulate(K=8, alpha=0.05, margin=0.5, sd=1.0, n_max=40000, reps=20000, seed=
     return {"K": K, "alpha": alpha, "C": round(C, 4), "margin_bb100": margin, "n_max": n_max, "sd": sd, "rows": rows}
 
 
-def match(a_run, b_run, n_max, K, alpha, margin, dev="cuda", early_shove_bb=0.0):
+def match(a_run, b_run, n_max, K, alpha, margin, dev="cuda", early_shove_bb=0.0, early=None):
     """A sequential duplicate match: a vs 8 copies of b, stage by stage on fresh deals."""
     import torch
 
@@ -85,6 +85,8 @@ def match(a_run, b_run, n_max, K, alpha, margin, dev="cuda", early_shove_bb=0.0)
     dealer = run_dealer(a_run, os.path.join(ROOT, "blueprint", "libbp7.so"), None, 9, 0, dev, 2026, "/tmp/seqtest")
     b, _ = load(b_run, dealer.B, dev)
     a, _ = load(a_run, dealer.B, dev)  # last: load() sets the game from the config, and the match is in a's game
+    if early is not None:  # the share of early-stage tables, instead of a's own (ninemax_selfplay --early)
+        FEAT["early"] = early
     if early_shove_bb:  # a plays by the early-shove rule (a separate object, so b does not; play() reads it)
         a.early_shove_bb = early_shove_bb
     cfg = json.load(open(os.path.join(a_run, "config.json")))
@@ -110,8 +112,19 @@ def match(a_run, b_run, n_max, K, alpha, margin, dev="cuda", early_shove_bb=0.0)
             print(f"look {k + 1}: {len(x)} deals  {m * 100:+.2f} bb/100  z {z:+.2f} (stop beyond {bounds[k]:.2f})",
                   flush=True)  # fmt: skip
             if v:
-                return {"a": a_run, "b": b_run, "verdict": v, "deals": len(x), "n_max": n_max, "looks": looks, "C": C}
-    return None
+                return {
+                    "a": a_run,
+                    "b": b_run,
+                    "early": FEAT["early"],
+                    "verdict": v,
+                    "deals": len(x),
+                    "n_max": n_max,
+                    "looks": looks,
+                    "C": C,
+                }
+    # no boundary crossed by n_max: the reading stands as inconclusive (it used to return None, which main() crashed on)
+    return {"a": a_run, "b": b_run, "early": FEAT["early"], "verdict": "inconclusive", "deals": len(x), "n_max": n_max,
+            "looks": looks, "C": C}  # fmt: skip
 
 
 def main():
@@ -129,6 +142,8 @@ def main():
         default=0.0,
         help="match: the first run plays by the early-shove rule from this many big blinds (0: off)",
     )
+    ap.add_argument("--early", type=float, default=None,
+                    help="match: share of early-stage (winner-take-all) tables, instead of the first run's own")  # fmt: skip
     ap.add_argument("--out")
     a = ap.parse_args()
     if a.cmd == "simulate":
@@ -139,7 +154,9 @@ def main():
                   f"for equivalence {r['equivalent']:.3f} (fixed design significant {r['fixed_design_significant']:.3f}); "
                   f"{r['deals_used']:.0f} deals on average, {r['saved']:.0%} saved")  # fmt: skip
     else:
-        res = match(a.runs[0], a.runs[1], a.max, a.looks, a.alpha, a.margin, early_shove_bb=a.early_shove_bb)
+        res = match(
+            a.runs[0], a.runs[1], a.max, a.looks, a.alpha, a.margin, early_shove_bb=a.early_shove_bb, early=a.early
+        )
         print(json.dumps({k: v for k, v in res.items() if k != "looks"}))
     if a.out:
         json.dump(res, open(a.out, "w"), indent=1)
