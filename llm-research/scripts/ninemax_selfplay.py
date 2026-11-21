@@ -460,7 +460,7 @@ def context(G, P, dev, prioritized=False):
 
 
 def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None, assign=None, ctx=None, views=None,
-         board=None):  # fmt: skip
+         board=None, chips=False):  # fmt: skip
     """Play len(bk) hands; policies[seat] is a NineNet or a rule name (rule_probs). Returns payoffs [G, P] (chips)
     and, with record, the decisions (only those of the policy `learner`, or of a list of policies, when given), each
     with the index of the policy that took it (last field).
@@ -473,7 +473,9 @@ def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None,
     tournament mode the returned results are ICM equity changes in chip equivalents, not chips.
 
     views {id(policy): (bk, dealer)}: a network that reads another abstraction sees the same cards through its own
-    buckets and hand strength (ninemax_absmatch.py); the others use bk and dealer."""
+    buckets and hand strength (ninemax_absmatch.py); the others use bk and dealer.
+
+    chips: return the chips won even in tournament mode (the players still see the payouts and ICM)."""
     G, P = bk.shape[0], bk.shape[1]
     stacks, pay = ctx if ctx is not None else context(G, P, dev)
     T = Tables(G, P, menu, dev, stacks=stacks)
@@ -532,7 +534,8 @@ def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None,
             rec.append(tuple(x[keep] for x in (g, i, feat, legal, mybk, T.street[g].clone(), s, a, pol_of)))
         T.step(g, a)
     u = T.payoffs(rk)
-    if pay is not None:  # tournament: the change in prize equity, in chips at the table's average chip value
+    # tournament: the change in prize equity, in chips at the table's average chip value
+    if pay is not None and not chips:
         reg, bty = split_pay(T.pay)
         end = end_stacks(T.stack, u)
         eq1 = icm(end, reg).float()
@@ -586,7 +589,7 @@ def card_luck(dealer, bk):
     return x
 
 
-def duplicate(dealer, menu, hero, villain, n, dev, cv=False):
+def duplicate(dealer, menu, hero, villain, n, dev, cv=False, chips=False):
     """Hero in each seat in turn against P-1 copies of villain, on the same n deals: hero's bb/100 and 95% CI.
     cv: also the estimate with card-luck control variates (card_luck: the hero's luck in each seating, per street,
     regressed out by least squares) and its interval, as (m, lo, hi, m_cv, lo_cv, hi_cv)."""
@@ -600,7 +603,7 @@ def duplicate(dealer, menu, hero, villain, n, dev, cv=False):
     for seat in range(P):
         pols = [villain] * P
         pols[seat] = hero
-        u, _ = play(dealer, menu, pols, bk, rk, dev=dev, ctx=ctx, board=board)
+        u, _ = play(dealer, menu, pols, bk, rk, dev=dev, ctx=ctx, board=board, chips=chips)
         per += u[:, seat] / BB
         if cv:
             seated = (ctx[0][:, seat] > 0).float()[:, None] if ctx[0] is not None else 1.0
