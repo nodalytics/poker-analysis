@@ -68,7 +68,7 @@ def end_stacks(start, payoff):
 
 def scenarios(G, P, dev, kinds=(0.4, 0.4, 0.2), avg_bb=(10, 60), spread=0.7, gen=None, short=0.0):
     """Random tournament tables: stacks [G, P] in chips (>= 2bb, rounded to the chip), payouts [G, P] summing to 1,
-    and the kind of each table (0 final table, 1 bubble, 2 in the money). avg_bb: the range (LO, HI) of a table's
+    and the kind of each table (0 final table, 1 bubble, 2 in the money, 3 early: kinds may have a fourth share). avg_bb: the range (LO, HI) of a table's
     average stack in big blinds, log-uniform, or a list of ranges, one picked per table with equal odds (nm10:
     [(5, 15), (20, 50)], push/fold depths and realistic mid-stack depths). short: the share of final tables with
     2..P-1 players (empty seats have stack 0 and the places below the last player pay nothing)."""
@@ -90,6 +90,8 @@ def scenarios(G, P, dev, kinds=(0.4, 0.4, 0.2), avg_bb=(10, 60), spread=0.7, gen
     bubble = torch.where(place > P - busts, torch.zeros_like(final), final)
     money = 1 + (0.3 + 0.7 * r(G, 1)) * (P - place) / P
     pay = torch.where((kind == 0)[:, None], final, torch.where((kind == 1)[:, None], bubble, money))
+    # early in a big field, far from the money, chips are money: winner-take-all makes ICM equity exactly the chip share
+    pay = torch.where((kind == 3)[:, None], (place == 1).float().expand_as(pay), pay)
     if short > 0:  # short-handed final tables: seat n players, the blinds and the last n-2 seats
         n = torch.where((kind == 0)[:, None] & (r(G, 1) < short),
                         torch.randint(2, P, (G, 1), device=dev, generator=gen), torch.full((G, 1), P, device=dev))  # fmt: skip

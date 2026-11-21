@@ -56,7 +56,8 @@ from ninemax_engine import BB, RULES, STACK, Dealer, Menu, Tables, read_buckets,
 #   bounty   progressive knockout (PKO) tournaments: this share of the money at stake is in bounties on the players'
 #            heads. Knocking a player out pays half their bounty in cash and adds the other half to your own; the
 #            payouts tensor then carries both, [G, 2P] (split_pay). 0: no bounties.
-FEAT = {"stacks": None, "tourney": False, "depths": None, "short": 0.0, "seats": None, "bounty": 0.0, "texture": False}
+FEAT = {"stacks": None, "tourney": False, "depths": None, "short": 0.0, "seats": None, "bounty": 0.0, "texture": False,
+        "early": 0.0}  # fmt: skip
 PRIORITY = {}  # prioritised scenario sampling: table cell -> weight (ninemax_leaks.py), training tables only
 
 
@@ -423,17 +424,24 @@ def table_cell(st, kind):
     return kind.view(-1) * 16 + depth * 4 + players
 
 
+def kinds():
+    """The shares of tournament tables by kind (icm.scenarios): final table, bubble, in the money and, with
+    FEAT["early"], early-stage tables (winner-take-all, chips are money) taking that share from the other three."""
+    e = FEAT["early"]
+    return (0.4 * (1 - e), 0.4 * (1 - e), 0.2 * (1 - e), e) if e else (0.4, 0.4, 0.2)
+
+
 def context(G, P, dev, prioritized=False):
     """Starting stacks [G, P] and payouts (or None) for G tables in the run's mode (FEAT); None, None = 100bb cash.
     prioritized (training only): tables drawn in proportion to their cell's weight in PRIORITY (the leak map)."""
     if FEAT["tourney"]:
         if prioritized and PRIORITY:  # draw 3x and keep G by weight: the leaky cells come up more often
-            st3, pay3, kind3 = scenarios(3 * G, P, dev, avg_bb=FEAT["depths"] or (10, 60), short=FEAT["short"])
+            st3, pay3, kind3 = scenarios(3 * G, P, dev, kinds(), avg_bb=FEAT["depths"] or (10, 60), short=FEAT["short"])
             w = torch.tensor([PRIORITY.get(int(c), 1.0) for c in table_cell(st3, kind3).tolist()], device=dev)
             keep = torch.multinomial(w, G, replacement=False)
             st, pay = st3[keep], pay3[keep]
         else:
-            st, pay, _ = scenarios(G, P, dev, avg_bb=FEAT["depths"] or (10, 60), short=FEAT["short"])
+            st, pay, _ = scenarios(G, P, dev, kinds(), avg_bb=FEAT["depths"] or (10, 60), short=FEAT["short"])
         beta = FEAT["bounty"]
         if beta:  # bounties: bigger stacks have usually collected more; empty seats have none
             share = st.float() / st.float().mean(1, keepdim=True).clamp(min=1)
@@ -621,7 +629,7 @@ def duplicate(dealer, menu, hero, villain, n, dev, cv=False, chips=False):
 
 
 def set_mode(stacks="100", tourney=False, depths=None, open_limp=True, ante=0.0, short=0.0, seats=None, bounty=0.0,
-             texture=False):  # fmt: skip
+             texture=False, early=0.0):  # fmt: skip
     """Set FEAT from a run's options (also used by the tools that load a run, from its config.json). depths: the
     tournament tables' average-stack ranges, "LO,HI;LO,HI" (None: icm.scenarios' default, 10-60bb)."""
     RULES["open_limp"] = bool(open_limp)
@@ -633,6 +641,7 @@ def set_mode(stacks="100", tourney=False, depths=None, open_limp=True, ante=0.0,
     FEAT["seats"] = int(seats) if seats else None
     FEAT["bounty"] = float(bounty or 0.0)
     FEAT["texture"] = bool(texture)
+    FEAT["early"] = float(early or 0.0)
 
 
 def main():
@@ -729,11 +738,14 @@ def main():
     ap.add_argument("--seats", type=int, default=None, help="cash tables seat at most this many players (6: 6-max)")
     ap.add_argument("--bounty", type=float, default=0.0,
                     help="--tourney: this share of the money at stake in knockout bounties (PKO; 0.5 is usual)")  # fmt: skip
+    ap.add_argument("--early", type=float, default=0.0,
+                    help="--tourney: this share of tables early in the tournament, far from the money (winner-take-all "
+                         "payouts: chips are money)")  # fmt: skip
     ap.add_argument("--init", help="warm start from a checkpoint.pt or avg_<h>h.pt when out has no checkpoint")
     ap.add_argument("--depths", help='tournament average-stack ranges in bb, "LO,HI;LO,HI" (default 10,60)')
     args = ap.parse_args()
     set_mode(args.stacks, args.tourney, args.depths, not args.no_open_limp, args.ante, args.short, args.seats,
-             args.bounty, args.texture)  # fmt: skip
+             args.bounty, args.texture, args.early)  # fmt: skip
     if args.priority:  # the leak map's weights per table cell (ninemax_leaks.py)
         PRIORITY.update({int(k): float(v) for k, v in json.load(open(args.priority))["weights"].items()})
         print(f"prioritised sampling: {len(PRIORITY)} cells weighted, max {max(PRIORITY.values()):.2f}", flush=True)

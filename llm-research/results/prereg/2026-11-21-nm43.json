@@ -1,0 +1,17 @@
+{
+ "name": "2026-11-21-nm43",
+ "registered": "2026-11-21, before the run started; the pushed commit that adds this file is the record",
+ "why": "A player found that bluff all-ins and 3x raises get folds from nm25 almost every time (148 jams in 720 practice hands, 74% folded to). Measured (results/hybrid/nm30pre-nm25post.json): the bluffs win chips (+8 to +10 bb/100) but lose prize equity (-12 to -49), so nm25's folds are right where it trained. It trained only at final tables, bubbles and in the money (icm.scenarios kinds 0.4/0.4/0.2), never early in a tournament, where chips are money and folding that much is a leak.",
+ "nm43": {
+  "question": "Does adding early-stage tables (25% of tables, winner-take-all payouts, so ICM equity is the chip share) make a network that plays early stages better without giving up anything at final tables, bubbles and in the money?",
+  "run": "init blueprint/nm25/checkpoint.pt; nm25's settings (as nm42's command, without --priority) plus --early 0.25; 6 hours (--minutes 360) on the RTX PRO 6000",
+  "decision": {
+   "1 no harm (nm25's game)": "seqtest.py match nm43 vs 8 x nm25 with --early 0, 40,000 deals max, 8 looks, margin 0.5, alpha 0.025. Fails if it stops for a difference with nm43 behind, or ends inconclusive with the mean below -0.25 bb/100.",
+   "2 the gain (early stage)": "seqtest.py match nm43 vs 8 x nm25 with --early 1, same settings. Passes only if it stops for a difference with nm43 ahead.",
+   "3 bluffs": "ninemax_hybrid.py-style bluffers (jam-any, jam-40) on early tables (--early 1), in chips: against 8 x nm43 each must lose (95% interval below 0). nm25's readings on the same tables are reported beside them.",
+   "4 robustness": "a 30-minute exploiter of nm43 (ninemax_eval.py exploit, its own mixed game) within 1 bb/100 of nm25's +0.2.",
+   "adopted": "all four pass. Then Kestrel ships it as the default only after its practice tables and advice can say which stage a table is at (early or the payout ladder); until then it is an option."
+  }
+ },
+ "not_allowed": "changing the share, budget, metric or decision rule after seeing results; re-running and keeping the better reading"
+}
