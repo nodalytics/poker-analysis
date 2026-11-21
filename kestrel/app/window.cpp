@@ -561,7 +561,7 @@ void Window::newPractice() {
     auto players = new QSpinBox, hands = new QSpinBox, pace = new QSpinBox;
     players->setRange(2, 9), players->setValue(9);
     hands->setRange(1, 100000), hands->setValue(300);
-    pace->setRange(0, 5000), pace->setValue(700), pace->setSuffix(" ms");
+    pace->setRange(0, 5000), pace->setValue(1800), pace->setSingleStep(500), pace->setSuffix(" ms a move");
     auto avg = new QSpinBox;
     avg->setRange(5, 60), avg->setValue(20), avg->setSuffix(" bb");
     auto human = new QCheckBox("Play a seat yourself (in the web app)");
