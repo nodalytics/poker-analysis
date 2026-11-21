@@ -1,0 +1,17 @@
+{
+ "name": "2026-11-21-nm43",
+ "registered": "results/prereg/2026-11-21-nm43.json (commit 6a88733, before the run)",
+ "run": "6 hours from nm25 on the RTX PRO 6000 with --early 0.25, as registered; 5,069 M hands at the end",
+ "checks": {
+  "1 no harm (nm25's game)": {"result": "equivalent after 35,000 deals: -0.06 bb/100 (looks -0.30, -0.23, -0.06)", "pass": true, "file": "results/nm43/seq_nm25game.json"},
+  "2 the gain (early stage)": {"result": "difference with nm43 ahead after 15,000 deals: +3.24 bb/100, z +4.30 (boundary 3.80)", "pass": true, "file": "results/nm43/seq_early.json"},
+  "3 bluffs (early tables, chips)": {"result": "jam-any -122.0 [-128.3, -115.8], jam-40 -23.2 [-26.1, -20.3] against 8 x nm43 (nm25: -140.3, -24.8)", "pass": true, "file": "results/nm43/bluffers_early_nm43.json"},
+  "4 robustness": {"result": "30-minute exploiter +2.1 [+1.2, +2.9] (readings +1.0, +0.7, +2.1); the limit was nm25's +0.2 plus 1, i.e. +1.2", "pass": false, "file": "results/nm43/exploit30.log"}
+ },
+ "verdict": "not adopted: check 4 fails. nm43 is better early in a tournament (+3.2 bb/100) and equal in nm25's game, but its exploiter wins more than the registered limit.",
+ "notes": [
+  "The exploiter played nm43's own game (a quarter early tables), nm25's reference +0.2 was measured in nm25's game; the registration accepted that comparison and it stands.",
+  "nm41 (+1.6) and nm42 (+1.2) also read above +1.2: every network fine-tuned from nm25 has read above nm25's single +0.2, which may itself be a low draw. A fair comparison (both exploited in the same game, several seeds) would be a new registration, not a re-reading of this one.",
+  "nm43 does not call all-ins wider: facing one on early tables it folds 59% (nm25 47%), and against a jam-any bluffer 73% (nm25 71%). Its early-stage gain comes from elsewhere in its play."
+ ]
+}

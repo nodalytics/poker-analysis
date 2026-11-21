@@ -138,7 +138,8 @@ def main():
         "jam-40": Bluffer(post, allin, top40),
         "raise-any": Bluffer(post, big),
     }
-    defenders = {"nm25": post, "hybrid-zero": Hybrid(pre, post, P, "zero"), "hybrid-pko": Hybrid(pre, post, P, "pko")}
+    pn = os.path.basename(args.post.rstrip("/"))
+    defenders = {pn: post, "hybrid-zero": Hybrid(pre, post, P, "zero"), "hybrid-pko": Hybrid(pre, post, P, "pko")}
     res = {"hands": args.hands, "pre": args.pre, "post": args.post, "head_up": {}, "fold_to_allin": {}}
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
 
@@ -157,7 +158,7 @@ def main():
                 save()
     for dn in ("hybrid-zero", "hybrid-pko"):
         d = defenders[dn]
-        for h, v, key in ((d, post, f"{dn} vs 8 x nm25"), (post, d, f"nm25 vs 8 x {dn}")):
+        for h, v, key in ((d, post, f"{dn} vs 8 x {pn}"), (post, d, f"{pn} vs 8 x {dn}")):
             m, lo, hi = duplicate(dealer, menu, h, v, args.hands, dev)
             res["head_up"][key] = [round(float(x), 2) for x in (m, lo, hi)]
             print(f"{key:<28} {m:+8.2f} bb/100 [{lo:+.2f}, {hi:+.2f}]", flush=True)
