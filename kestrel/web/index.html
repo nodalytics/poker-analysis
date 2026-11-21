@@ -196,7 +196,7 @@ select, input { width: 100%; padding: 9px 11px; border-radius: 10px; border: 1px
     <label>Model</label><select id="pmodel"></select>
     <label>Players</label><select id="pplayers"><option>9</option><option>8</option><option>7</option><option>6</option><option>5</option><option>4</option><option>3</option><option>2</option></select>
     <label>Starting stacks (average, big blinds)</label><input id="pavg" type="number" min="5" max="60" value="20">
-    <label>Pace</label><select id="ppace"><option value="1200">Slow</option><option value="700" selected>Normal</option><option value="250">Fast</option><option value="0">As fast as it can</option></select>
+    <label>Pace</label><select id="ppace"><option value="5000">Very slow (5 s a move)</option><option value="3000">Slow (3 s a move)</option><option value="1800" selected>Normal (1.8 s a move)</option><option value="800">Fast</option><option value="0">As fast as it can</option></select>
     <div class="reach">Every seat is played by the model, with its cards face up, in a real final table: stacks carry over, blinds rise every 15 hands, busted players finish in places, and ICM prize equity is recomputed every hand, as in training.</div>
   </div>
   <label>Hands</label><input id="hands" type="number" min="1" value="200">
