@@ -550,7 +550,7 @@ class Run:
         if shutil.disk_usage(HERE).free < MIN_FREE_GB * 2**30:
             self.save(status="failed", stage=f"refused: under {MIN_FREE_GB} GB of disk free")
             return
-        self.save(status="started", started=self.state.get("started") or now())
+        self.save(status="started", started=self.state.get("started") or now(), pid=os.getpid())
         try:
             if start == "train":
                 self.train()
@@ -663,6 +663,33 @@ def cmd_run(a):
     run.go(a.start)
 
 
+def alive(pid):
+    try:
+        os.kill(int(pid), 0)
+        return True
+    except (OSError, ValueError, TypeError):
+        return False
+
+
+def stranded():
+    """Runs left unfinished by a process that is gone (a restart, a crash): (name, the stage to resume from)."""
+    out = []
+    for f in glob.glob(os.path.join(HERE, "results", "pipeline", "*", "state.json")):
+        try:
+            s = json.load(open(f))
+        except ValueError:
+            continue
+        if s.get("status") in ("started", "training", "checking", "waiting", "preparing") and not alive(s.get("pid")):
+            # training survives its poller (its own session): resume from the checks once it has written a checkpoint
+            trainer = subprocess.run(["pgrep", "-f", f"ninemax_selfplay.py blueprint/{s['name']} "],
+                                     capture_output=True).returncode == 0  # fmt: skip
+            if trainer:
+                continue  # still training: look again later
+            ck = os.path.join(HERE, "blueprint", s["name"], "checkpoint.pt")
+            out.append((s["name"], "checks" if (s.get("trained") or os.path.exists(ck)) else "train"))
+    return out
+
+
 def cmd_poll(a):
     """Fetch main, sync research/ from it, run every merged recipe without a state; one at a time, forever."""
     repo = os.path.expanduser(os.environ.get("PIPELINE_REPO", "~/pipeline/poker-analysis"))
@@ -678,6 +705,12 @@ def cmd_poll(a):
                                     "research/pipeline/runs/"], capture_output=True, text=True).stdout.split()  # fmt: skip
             todo = [os.path.basename(n)[:-5] for n in names if n.endswith(".json")]
             todo = [n for n in todo if not os.path.exists(os.path.join(HERE, "results", "pipeline", n, "state.json"))]
+            for name, start in stranded():  # finish what a restart or a crash left behind, before anything new
+                path = os.path.join(HERE, "pipeline", "runs", f"{name}.json")
+                if os.path.exists(path):
+                    log.write(f"{now()} resume {name} from {start}\n")
+                    subprocess.run([sys.executable, os.path.join(HERE, "scripts", "pipeline.py"), "run", path, "--from",
+                                    start], cwd=HERE)  # fmt: skip
             if todo:
                 # the code that runs is main's: research/ (tracked files) from the fetched commit, over the lab's copy
                 subprocess.run(["git", "-C", repo, "checkout", "-q", "--detach", sha], check=True)
