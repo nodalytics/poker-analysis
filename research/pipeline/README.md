@@ -62,19 +62,39 @@ Every check must pass for `adopted`. Each has an `id` (your name for it) and a `
 Matches against copies of nm25 alone only say how a run does against nm25. A good run file also has
 `opponents` and `styles` checks and an `exploit` check, so a run cannot pass by learning to beat its own family.
 
+### Switching it on (once, on the lab)
+
+1. **Start the service** (needs sudo, so the lab's owner runs it in a terminal on the lab):
+   ```
+   sudo sh ~/research/pipeline/deploy/install.sh
+   ```
+   It installs `research-pipeline.service`, starts it now and at every boot, and prints its status, which
+   should read `active (running)`. `sudo sh ~/research/pipeline/deploy/install.sh --remove` takes it out.
+2. **Optional: let the lab open the results pull requests.** On GitHub, create a fine-grained personal access
+   token limited to `nodalytics/poker-analysis`, with **Contents** and **Pull requests** read and write. Save it on
+   the lab:
+   ```
+   mkdir -p ~/.config/research-pipeline
+   (umask 077; cat > ~/.config/research-pipeline/token)    # paste the token, Enter, then Ctrl-D
+   chmod 600 ~/.config/research-pipeline/token
+   ```
+   Without it the results stay on the lab, and the dashboard's Pipeline panel says so. Never commit or paste it.
+
+Check it: `systemctl status research-pipeline` (running), `tail ~/research/results/pipeline/poll.log` (errors, if
+any), and the Pipeline panel on the dashboard.
+
 ### On the lab
 
-The service (`deploy/research-pipeline.service`, installed with `sudo sh pipeline/deploy/install.sh` from
-`~/research`) runs `scripts/pipeline.py poll`. It fetches `main` from GitHub every two minutes (the repo is
+The service (`deploy/research-pipeline.service`) runs `scripts/pipeline.py poll`. It fetches `main` from GitHub every two minutes (the repo is
 public: it needs no access to fetch). Before a run it copies `main`'s code (`scripts/`, `pipeline/`, `web/`)
-over the lab's copy, so the code that runs is the merged code; results on the lab are never overwritten. Nothing on GitHub can send the lab a command: it only reads `main`.
+over the lab's copy, so the code that runs is the merged code; results on the lab are never overwritten.
+Nothing on GitHub can send the lab a command: it only reads `main`.
 
 - State and logs: `results/pipeline/<name>/` (`state.json`, `train.log`, one `.json` and `.log` per check).
 - Status: `python3 scripts/pipeline.py status`.
 - Stop a run: `touch results/pipeline/<name>/STOP`.
 - Rerun the checks of a run whose training finished: `python3 scripts/pipeline.py run pipeline/runs/<name>.json --from checks`.
-- Results pull requests need a token in `~/.config/research-pipeline/token` (mode 600): a fine-grained token
-  for this repository with Contents and Pull requests read and write. Without it the results stay on the lab.
+- Results pull requests need the token from step 2 above.
 
 ## The model pipeline: shipping a network
 
