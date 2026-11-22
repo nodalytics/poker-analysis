@@ -55,6 +55,7 @@ only work against itself. `train.opponents` adds, to nm25's rule players, past s
 | `generated` | that many generated styles (`seed` picks them): the network's own running average with its tendencies pushed, so each is a strong player with a leak, and it gets stronger as training goes |
 | `archetypes` | the five archetypes as styles: nit, station, maniac, shover, loose-passive |
 | `human` | styles fitted to real player types from 2009 online hands (below); built automatically the first time a run asks for them |
+| `patterns` | every pattern people found that beats the bot (`pipeline/patterns/`, and the ones mined from the practice tables, re-mined before training): played by the network's own average except in the pattern's spot |
 
 With `--pfsp` (opponents picked by how often they beat the network) the hardest of them come up most. Example:
 `"opponents": {"versions": "auto", "generated": 12, "archetypes": true, "human": true}`.
@@ -72,6 +73,14 @@ itself when `results/human_styles/styles.json` is missing:
    humans do. The humans played ~100bb cash games, the networks 10-25bb tournaments.
 
 The `styles` check plays them too with `"human": true`.
+
+#### Patterns people find
+
+When a friend or partner finds something that beats the bot, write it down in `pipeline/patterns/` (format in
+[`patterns/README.md`](patterns/README.md)), or let the miner find it: `scripts/exploit_patterns.py mine` reads every
+hand played at Kestrel's practice tables and keeps the spots where the human's move won reliably (15 hands or more,
+2 standard errors above zero). The first: from the heads-up button at 25bb+, all-in when unopened, +2.08 bb a hand
+over 15 hands. Every pattern is then tested against each new network and can be trained against.
 
 #### After every run
 
@@ -93,6 +102,7 @@ Every check must pass for `adopted`. Each has an `id` (your name for it) and a `
 | `styles` | generated opponents: nm25-like players with their tendencies pushed by random amounts (looser, tighter, more aggressive, folding more or less to bets, shoving, bluffing weak hands), plus five archetypes (nit, station, maniac, shover, loose-passive); the run and `baseline` each against 8 copies of every one, on the same deals | `count` (generated, 0-60), `seed` (the same seed is the same crowd for every run), `hands`, `baseline`, `worst_tolerance`, `mean_tolerance`, `human` (also the human-fitted styles) | it is within `worst_tolerance` of the baseline against its worst style, and within `mean_tolerance` on average |
 | `consistency` | where the run decides differently from `reference` on the same few thousand spots, by street, position, stack, facing a bet and players seated, with the most disputed spots (`ninemax_consistency.py`) | `reference`, `deals` | always: it is a report for the reviewer, not a gate |
 | `bluffers` | scripted bluffers in one seat vs 8 copies of the run (`ninemax_hybrid.py`) | `bluffers` (some of `jam-any`, `jam-40`, `raise-any`), `early`, `unit` (`chips` or `equity`) | every bluffer loses (95% interval below 0) |
+| `patterns` | every pattern people found (`pipeline/patterns/*.json`, written by hand) or mined from the practice tables (`results/exploit_patterns/mined.json`, re-mined first): each played by the run itself except in its spot, against 8 copies of the run (`exploit_patterns.py test`) | `baseline`, `hands`, `limit` (default 0), `mine` (default true) | no pattern wins more than `limit` bb/100 against the run: a pattern found once stays closed |
 | `exploiters` | a battery of exploiters that attack differently: `copy` (the standard one), `explore` (keeps trying odd moves, entropy 0.02), `fast` (learns fast and commits, lr 1e-3) and `outsider` (starts from nm17 and searches elsewhere); or your own `profiles` (`id`, `lr`, `entropy`, `init`, `minutes`) | `minutes` each, `limit`, `profiles` | the best of them wins at most `limit` bb/100 |
 | `exploit` | a learner trains for `minutes` to beat the run (`ninemax_eval.py exploit`) | `minutes`, `limit` | the exploiter's last reading is at most `limit` bb/100 |
 

@@ -1,0 +1,8 @@
+{
+ "id": "partner-preflop-jams",
+ "source": "a partner at Kestrel's practice tables, 2026-11-20 and 21: 148 all-ins in 720 hands against nm25, 74% folded to",
+ "description": "All-in before the flop when nobody has raised yet, with any two cards, about one hand in five, at 10-25bb.",
+ "when": {"street": "preflop", "stack_bb": [10, 25], "facing": "unopened", "hand": "any"},
+ "do": "all-in",
+ "freq": 0.2
+}

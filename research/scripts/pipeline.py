@@ -57,7 +57,13 @@ CHECKS = {
     "opponents": {"against", "hands", "baseline", "tolerance"},
     "styles": {"count", "seed", "hands", "baseline", "worst_tolerance", "mean_tolerance", "human"},
     "consistency": {"reference", "deals"},
-    "exploiters": {"profiles", "minutes", "limit"},  # a report: where the run decides differently from the reference
+    "exploiters": {"profiles", "minutes", "limit"},
+    "patterns": {
+        "baseline",
+        "hands",
+        "limit",
+        "mine",
+    },  # a report: where the run decides differently from the reference
 }
 SEQ_PASS = {"ahead", "not_behind", "equivalent_or_ahead"}
 BLUFFERS = {"jam-any", "jam-40", "raise-any"}
@@ -72,7 +78,7 @@ EXPLOITERS = [
     {"id": "outsider", "lr": 3e-4, "entropy": 0.003, "init": "nm17"},
 ]
 EXPLOITER_KEYS = {"id", "lr", "entropy", "init", "minutes"}  # opponents fitted to real player types
-OPPONENTS = {"versions", "generated", "seed", "archetypes", "human"}
+OPPONENTS = {"versions", "generated", "seed", "archetypes", "human", "patterns"}
 
 
 def auto_versions(init, keep=10):
@@ -160,7 +166,7 @@ def validate(path, flags=None):
                 errs.append('train.opponents.versions: "auto" or a list of run names')
             if not isinstance(o.get("generated", 0), int) or not 0 <= o.get("generated", 0) <= 40:
                 errs.append("train.opponents.generated: 0 to 40 generated styles")
-            for k in ("archetypes", "human"):
+            for k in ("archetypes", "human", "patterns"):
                 if not isinstance(o.get(k, False), bool):
                     errs.append(f"train.opponents.{k}: true or false")
     if t.get("gpu", "any") not in ("any", "pro6000", "4090", "3090"):
@@ -333,6 +339,22 @@ class Run:
                 raise Stopped("stopped")
             time.sleep(120)
 
+    def mine_patterns(self):
+        """Re-mine the practice tables' hands for patterns that win against the bot (best effort: no Kestrel, no mining)."""
+        tmp = os.path.join(self.dir, "practice_copy")
+        shutil.rmtree(tmp, ignore_errors=True)
+        os.makedirs(tmp)
+        try:
+            for src, dst in (("/data/sessions", "sessions"), ("/data/kestrel.db", "kestrel.db")):
+                subprocess.run(["docker", "cp", "-q", f"kestrel-kestrel-1:{src}", os.path.join(tmp, dst)], check=True,
+                               capture_output=True, timeout=300)  # fmt: skip
+            self.sh([sys.executable, "scripts/exploit_patterns.py", "mine", "--sessions", f"{tmp}/sessions", "--db",
+                     f"{tmp}/kestrel.db", "--out", "results/exploit_patterns/mined.json"], "patterns.log", timeout_min=30)  # fmt: skip
+        except (subprocess.SubprocessError, OSError, RuntimeError) as e:
+            self.save(patterns_mined=f"not refreshed: {type(e).__name__}")
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
     def human_styles(self):
         """Opponents fitted to real player types (human_styles.py), built from the hand histories when missing."""
         if os.path.exists(os.path.join(HERE, HUMAN)):
@@ -371,6 +393,9 @@ class Run:
         versions = auto_versions(t.get("init", "nm25")) if o.get("versions") == "auto" else o.get("versions", [])
         if versions:
             args["pool-nets"] = ",".join(f"blueprint/{v}" for v in versions)
+        if o.get("patterns"):  # what people found: the library and, freshly mined, the practice tables
+            self.mine_patterns()
+            args["pool-patterns"] = "all"
         if o:
             self.save(opponents={"styles": styles, "versions": versions})
         out = os.path.join("blueprint", self.name)
@@ -435,9 +460,23 @@ class Run:
             return ok, ", ".join(
                 f"vs {k} {v['run'][0]:+.1f} ({base} {v['baseline'][0]:+.1f})" for k, v in res.items()
             ) + (f"; each within {c['tolerance']:.1f} of {base}")
-        if (
-            typ == "exploiters"
-        ):  # a battery: different ways of attacking the run, each a lower bound on its exploitability
+        if typ == "patterns":  # what people found works against the bot: each must win at most limit against the run
+            if c.get("mine", True):
+                self.mine_patterns()
+            gpu, gname = self.pick_gpu()
+            self.save(status="checking", stage=f"check {cid} (patterns people found) on the {gname}")
+            base = c.get("baseline", "nm25")
+            cmd = [PY, "scripts/exploit_patterns.py", "test", run, "--baseline", f"blueprint/{base}",
+                   "--hands", str(c.get("hands", 10000)), "--out", out]  # fmt: skip
+            self.sh(cmd, f"{cid}.log", gpu, timeout_min=240)
+            res = json.load(open(out))
+            lim = c.get("limit", 0.0)
+            still = [k for k, v in res.items() if v["run"][0] > lim]
+            text = ", ".join(f"{k} {v['run'][0]:+.2f} ({base} {v['baseline'][0]:+.2f})" for k, v in res.items())
+            tail = f"; still winning: {', '.join(still)}" if still else ""
+            return not still, f"{len(res)} patterns: {text}; each at most {lim:+.1f}{tail}"
+        # a battery: different ways of attacking the run, each a lower bound on its exploitability
+        if typ == "exploiters":
             got = {}
             for x in c.get("profiles", EXPLOITERS):
                 gpu, gname = self.pick_gpu()

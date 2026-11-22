@@ -1,0 +1,8 @@
+{
+ "id": "partner-3x-raises",
+ "source": "a partner at Kestrel's practice tables, 2026-11-20 and 21: 111 raises in 720 hands against nm25, 77% folded to",
+ "description": "The biggest raise before the flop, first in, with any two cards, about one hand in six.",
+ "when": {"street": "preflop", "facing": "unopened", "hand": "any"},
+ "do": "raise-big",
+ "freq": 0.15
+}

@@ -14,7 +14,8 @@
    "generated": 12,
    "seed": 2026,
    "archetypes": true,
-   "human": true
+   "human": true,
+   "patterns": true
   }
  },
  "checks": [
@@ -77,6 +78,13 @@
    "type": "exploiters",
    "minutes": 30,
    "limit": 1.5
+  },
+  {
+   "id": "patterns",
+   "type": "patterns",
+   "baseline": "nm25",
+   "hands": 10000,
+   "limit": 0.0
   },
   {
    "id": "consistency",

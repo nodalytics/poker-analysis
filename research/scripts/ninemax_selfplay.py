@@ -644,7 +644,7 @@ def set_mode(stacks="100", tourney=False, depths=None, open_limp=True, ante=0.0,
     FEAT["early"] = float(early or 0.0)
 
 
-def extra_pool(args, avg, nfeat, buckets, dev):
+def extra_pool(args, avg, nfeat, buckets, dev, dealer=None, menu=None):
     """The population's extra members: styles (pipeline_opponents.Style around the network's running average, so a
     style is a strong player with a human-shaped leak that improves as training goes) and earlier networks, frozen."""
     out, names = [], []
@@ -665,6 +665,16 @@ def extra_pool(args, avg, nfeat, buckets, dev):
                 raise SystemExit(f"--pool-styles: unknown kind {kind!r}")
             out += [Style(avg, p) for p in params.values()]
             names += list(params)
+    if args.pool_patterns:  # what people found works against the bot: it must learn to punish each of them
+        from exploit_patterns import check, player, read
+
+        pats = read(None if args.pool_patterns == "all" else args.pool_patterns.split(","))
+        for p in pats:
+            if check(p):
+                print(f"--pool-patterns: {p.get('id')} is invalid ({'; '.join(check(p))}), left out", flush=True)
+                continue
+            out.append(player(avg, p, dealer, menu))
+            names.append(p["id"])
     for r in [x for x in args.pool_nets.split(",") if x]:
         cfg = json.load(open(os.path.join(r, "config.json")))
         if cfg["nfeat"] != nfeat or cfg.get("buckets", buckets) != buckets:
@@ -727,6 +737,9 @@ def main():
     ap.add_argument("--pool-styles", default="",
                     help="styles in the population, played by the network's own average (so they get stronger with it): "
                          "generated:K[:SEED], archetypes, human:PATH (human_styles.py fit), comma-separated")  # fmt: skip
+    ap.add_argument("--pool-patterns", default="",
+                    help="patterns people found (exploit_patterns.py) in the population, played around the network's "
+                         "average: all (the library and the mined file), or comma-separated files")  # fmt: skip
     ap.add_argument("--pool-nets", default="", help="earlier networks in the population, frozen: comma-separated runs")
     ap.add_argument("--pool-snapshots", type=int, default=5, help="past checkpoints kept in the population")
     # the league (after AlphaStar, Vinyals et al. 2019): opponents picked by how hard they are (prioritised fictitious
@@ -832,7 +845,9 @@ def main():
     opt_x = torch.optim.Adam(expl.parameters(), lr=args.lr) if expl is not None else None
     adv_scale_x, last_reset = 1.0, time.time()
     rules = [x for x in args.pool.split(",") if x] if args.pool else []
-    extra = extra_pool(args, avg, nfeat, buckets, dev)  # styles and earlier networks: stronger, more varied opponents
+    extra = extra_pool(
+        args, avg, nfeat, buckets, dev, dealer, menu
+    )  # styles and earlier networks: stronger, more varied opponents
     snaps, frozen = [], []
     lexp = copy.deepcopy(avg).requires_grad_(True) if args.league_share > 0 else None
     opt_l = torch.optim.Adam(lexp.parameters(), lr=args.lr) if lexp is not None else None
