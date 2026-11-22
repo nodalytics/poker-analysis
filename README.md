@@ -1,4 +1,4 @@
-# poker-analysis
+# Poker Analysis
 
 Poker research and tools: Texas hold'em only. The current goal is a strong, hard-to-exploit bot for **9-max
 tournaments (MTT)**: ICM, 10–25 big-blind stacks, push/fold. There is also a tournament analysis toolkit, an MCP
@@ -7,11 +7,16 @@ server for it, and a desktop study advisor.
 Progress is live on the watch page, **Poker AI Watch** (https://poker.stbfarm.org). It shows the training runs, the
 search, the poker-sense checks and the ICM push/fold results.
 
+**Kestrel**, the bot and advisor, runs at **https://kestrel.stbfarm.org**: its web app, practice tournaments against
+the networks, and the bot's sessions on Slumbot and other platforms. It needs an access link (a token) once per
+device; see [`kestrel/README.md`](kestrel/README.md).
+
 ## Where things are
 
 | Path | Contents |
 |---|---|
 | `archive/` | The milestone-1 tournament toolkit, kept for reference: `src/` (cards and hand evaluation, equity, ICM and bubble factor, stack categories and push/fold ranges, the analyzer, a solver wrapper), its MCP server (`mcp_server.py`, `requirements-mcp.txt`), the terminal menu, Flask GUI and demo (`poker_tool.py`, `poker_gui.py`, `demo_milestone1.py`), and `tests/` |
+| `kestrel/` | Kestrel: the C++ bot and advisor (engine, connectors, server, web and desktop apps, Docker deployment) |
 | `research/` | The research: the bots, the solvers, the evaluations and their write-ups (below) |
 
 ### `research/`
