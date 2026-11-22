@@ -36,7 +36,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from advisor import engine  # noqa: E402
+import engine  # noqa: E402  (the heads-up table, from the archived advisor)
 
 pa, ranges = engine.pa, engine.ranges
 BB = 2

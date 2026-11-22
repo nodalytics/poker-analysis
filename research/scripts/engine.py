@@ -1,4 +1,5 @@
-"""The advice engine shared by session review, the trainer and spot study.
+"""The heads-up advice engine and table, from the Python study advisor (archived in archive/advisor/ on 2026-11-22);
+lbr.py plays its Table.
 
 advise(state, i, ctx) answers "what does the solver stack play here?" as a mix over fold / call (check-call) /
 raise, with the source and a reason, using the same layers as the solver bot (scripts/poker_agents.solver_play):
