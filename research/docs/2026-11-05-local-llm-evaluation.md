@@ -9,7 +9,7 @@ Qwen2.5-VL 32B was added later as a vision model for GUI work.
 ## Setup
 
 - Ollama 0.40.5 (published 2026-10-14; checksum verified), user space in `~/ollama`, `127.0.0.1:11434` only,
-  `nice 15`, one model loaded at a time. Docker and the live `another service` container were not touched.
+  `nice 15`, one model loaded at a time. Other people's containers were not touched.
 - Models (Q4_K_M):
   - `hf.co/TheDrummer/Tiger-Gemma-9B-v3-GGUF:Q4_K_M` (5.8GB)
   - `wizard-vicuna-uncensored:13b` (7.4GB)

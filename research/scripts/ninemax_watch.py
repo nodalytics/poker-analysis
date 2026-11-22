@@ -461,7 +461,7 @@ def main():
     ap.add_argument("--lib", default="blueprint/libbp5.so")
     args = ap.parse_args()
     if args.port == 8000:
-        raise SystemExit("port 8000 is the another service tunnel")
+        raise SystemExit("port 8000 belongs to another service on the lab")
 
     def runs():
         if args.runs:

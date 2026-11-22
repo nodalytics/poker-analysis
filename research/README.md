@@ -26,8 +26,6 @@ Studies:
 - [2026-11-05 — The solver stack under the LLM](docs/2026-11-05-solver-stack.md): solver advice makes every model
   play better (p 0.003-0.021); preflop charts heads-up and multi-way, multi-way Monte Carlo, the solver library and
   flop network, and human baselines from published hand histories.
-- [2026-11-05 — MCP servers for another service](docs/2026-11-05-mcp-for-another service.md):
-  options for autonomous another service control by models through MCP (API and GUI), the tools, modes and risk limits.
 
 - [Play-money and practice poker platforms](docs/poker-play-money-platforms.md): candidates for testing agents
   outside our own tables, and which ones allow bots.

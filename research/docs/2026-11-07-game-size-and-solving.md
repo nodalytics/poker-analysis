@@ -48,7 +48,7 @@ What has been done:
   - a sampled-CFR trainer that runs for days across the lab's cores;
   - measurement against LBR and Slumbot.
 - **Cost:** about a week to build, then a week or more of lab time. It would use most of the lab's cores and a lot
-  of its memory, so it has to be scheduled around other users and the another service terminal.
+  of its memory, so it has to be scheduled around other users and services.
 
 ## Why simplification needs leak-hunting
 
