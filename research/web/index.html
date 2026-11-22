@@ -347,7 +347,9 @@ async function refreshCharts() {
     for (const sel of [$("snapRun"), $("liveRun")]) {
       const cur = sel.value;
       sel.innerHTML = series.map((s) => `<option>${s.name}</option>`).join("");
-      sel.value = cur || (series.length ? series[series.length - 1].name : "");  // default: the newest run
+      // default: the newest run that has a checkpoint to play (a run in its first 30 minutes has none yet)
+      const ready = series.filter((s) => s.pts.length);
+      sel.value = cur || (ready.length ? ready[ready.length - 1].name : series.length ? series[series.length - 1].name : "");
     }
     $("status").textContent = "updated " + new Date().toLocaleTimeString();
   } catch (e) { $("status").textContent = "server not reachable"; }
