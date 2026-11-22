@@ -108,6 +108,10 @@ def main():
         os.makedirs(os.path.dirname(keep) or ".", exist_ok=True)
         shutil.copytree(work, keep, dirs_exist_ok=True)
         shutil.rmtree(work, ignore_errors=True)
+        if os.path.exists(work):  # files Kestrel's container wrote as its own user: removed through the image
+            subprocess.run(["docker", "run", "--rm", "--user", "0", "--entrypoint", "sh", *mount(work, "/x"), a.image,
+                            "-c", "rm -rf /x/*"], capture_output=True)  # fmt: skip
+            shutil.rmtree(work, ignore_errors=True)
     res = {"model": a.model, "hands": a.hands, "seeds": seeds, "bots": a.bots, "samples": a.samples, "arms": {}}
     for solver in arms:
         runs = [got[(solver, s)] for s in seeds]
