@@ -89,12 +89,12 @@
   {
    "id": "opponent-model",
    "type": "opponent-model",
-   "hands": 2000,
+   "hands": 500,
    "seeds": [
     1,
     2
    ],
-   "samples": 256
+   "samples": 64
   },
   {
    "id": "consistency",

@@ -15,6 +15,10 @@ Each arm gets its own platform on its own port and its own fresh database, so pr
 session, as at a new site. Every arm plays the same seeds. The result is each arm's bb/100 with its interval and
 tournament places, and what the model adds over search and over none.
 
+Search is slow: Kestrel runs the network on the CPU for every rollout, about 40 s a hand at 64 samples on 4 CPUs
+(the network alone: well under a second). 500 hands an arm and seed take about 3 hours with 8 CPUs each, and leave
+intervals of 50-100 bb/100: enough to see a large effect of the model, not a small one.
+
 Usage (lab, from research; stdlib, needs docker and the kestrel:local image):
   python3 scripts/kestrel_opponent_check.py --model ../models/... (a folder with Kestrel's net.bin and net.json) \
       --pack blueprint/pack --hands 2000 --out results/kestrel_opponents/nm25.json
@@ -71,11 +75,11 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", required=True, help="a Kestrel model folder (net.bin, net.json)")
     ap.add_argument("--pack", default=os.path.join(HERE, "blueprint", "pack"))
-    ap.add_argument("--hands", type=int, default=2000, help="hands per arm and seed")
+    ap.add_argument("--hands", type=int, default=500, help="hands per arm and seed")
     ap.add_argument("--seeds", default="1,2", help="comma-separated platform seeds, the same for every arm")
     ap.add_argument("--arms", default="none,search,search-exploit")
     ap.add_argument("--bots", default=BOTS)
-    ap.add_argument("--samples", type=int, default=256, help="search samples a decision")
+    ap.add_argument("--samples", type=int, default=64, help="search samples a decision")
     ap.add_argument("--cpus", type=float, default=8, help="CPUs for each Kestrel container")
     ap.add_argument("--image", default="kestrel:local")
     ap.add_argument("--python", default=sys.executable, help="a Python with pokerkit for the platform")

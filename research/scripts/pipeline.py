@@ -466,8 +466,8 @@ class Run:
                          "--vectors-out", os.path.join(kdir, "vectors.json"), "--hands", "4", "--icm", "10"],
                         f"{cid}.log", timeout_min=30)  # fmt: skip
             self.save(status="checking", stage=f"check {cid}: Kestrel against the test platform's bots, three ways")
-            cmd = [PY, "scripts/kestrel_opponent_check.py", "--model", kdir, "--hands", str(c.get("hands", 2000)),
-                   "--seeds", ",".join(str(x) for x in c.get("seeds", [1, 2])), "--samples", str(c.get("samples", 256)),
+            cmd = [PY, "scripts/kestrel_opponent_check.py", "--model", kdir, "--hands", str(c.get("hands", 500)),
+                   "--seeds", ",".join(str(x) for x in c.get("seeds", [1, 2])), "--samples", str(c.get("samples", 64)),
                    "--python", PY, "--out", out]  # fmt: skip
             self.sh(cmd, f"{cid}.log", timeout_min=600)
             res = json.load(open(out))
