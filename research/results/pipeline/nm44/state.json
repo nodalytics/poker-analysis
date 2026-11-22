@@ -1,0 +1,47 @@
+{
+ "name": "nm44",
+ "question": "Does training against a league (opponents picked by how hard they are, a league exploiter that hunts the whole population, retired exploiters kept frozen) make nm25 harder to exploit and stronger against players unlike itself, without losing to nm25?",
+ "checks": {
+  "no-harm": {
+   "type": "seqtest",
+   "pass": true,
+   "result": "equivalent after 25,000 deals: +0.04 bb/100 (needs not behind)",
+   "at": "2026-11-22T18:23:49Z"
+  },
+  "other-players": {
+   "type": "opponents",
+   "pass": false,
+   "result": "vs reg +25.3 (nm25 +25.7), vs tag +31.2 (nm25 +32.2), vs maniac +513.6 (nm25 +517.0), vs station +98.9 (nm25 +126.3); each within 1.0 of nm25",
+   "at": "2026-11-22T18:24:19Z"
+  },
+  "styles": {
+   "type": "styles",
+   "pass": true,
+   "result": "25 styles: mean +0.15 vs nm25, worst style11 -1.23 (within 2.0 at worst and 0.0 on average)",
+   "at": "2026-11-22T18:25:19Z"
+  },
+  "bluffs": {
+   "type": "bluffers",
+   "pass": true,
+   "result": "jam-any -47.4 [-51.0, -43.9], jam-40 -12.0 [-13.6, -10.4], raise-any -11.5 [-12.5, -10.5]",
+   "at": "2026-11-22T18:26:19Z"
+  },
+  "robust": {
+   "type": "exploit",
+   "pass": true,
+   "result": "exploiter wins +0.3 bb/100 (limit +1.2)",
+   "at": "2026-11-22T18:56:49Z"
+  }
+ },
+ "commit": "e4ee14053d65",
+ "status": "done",
+ "started": "2026-11-22T09:22:28Z",
+ "updated": "2026-11-22T18:56:49Z",
+ "stage": "done",
+ "gpu": "NVIDIA RTX PRO 6000 Blackwell Workstation Edition",
+ "training_started": "2026-11-22T09:22:28Z",
+ "note": "training finished 16:22 WAT; the poller was restarted at 10:49 WAT mid-run and lost the checks, resumed by hand with --from checks at 19:25 WAT, with the checks code of main at that time",
+ "trained": "2026-11-22T15:22:00Z",
+ "verdict": "not adopted",
+ "finished": "2026-11-22T18:56:49Z"
+}

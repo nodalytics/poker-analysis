@@ -1,0 +1,28 @@
+
+# 2026-11-22T18:25:19Z /home/steven-reid/research/.venv-gpu/bin/python scripts/ninemax_hybrid.py --post blueprint/nm44 --early 0 --out /home/steven-reid/research/results/pipeline/nm44/bluffs.json
+equity   jam-any vs 8 x nm44            -47.4 bb/100 [-51.0, -43.9]
+equity   jam-any vs 8 x hybrid-zero    -128.2 bb/100 [-132.2, -124.1]
+equity   jam-any vs 8 x hybrid-pko     -133.6 bb/100 [-137.8, -129.5]
+equity    jam-40 vs 8 x nm44            -12.0 bb/100 [-13.6, -10.4]
+equity    jam-40 vs 8 x hybrid-zero     -28.6 bb/100 [-30.4, -26.8]
+equity    jam-40 vs 8 x hybrid-pko      -32.7 bb/100 [-34.5, -30.8]
+equity raise-any vs 8 x nm44            -11.5 bb/100 [-12.5, -10.5]
+equity raise-any vs 8 x hybrid-zero     -15.1 bb/100 [-16.2, -14.0]
+equity raise-any vs 8 x hybrid-pko      -18.8 bb/100 [-19.9, -17.7]
+ chips   jam-any vs 8 x nm44            +11.1 bb/100 [+6.5, +15.7]
+ chips   jam-any vs 8 x hybrid-zero    -102.9 bb/100 [-109.2, -96.7]
+ chips   jam-any vs 8 x hybrid-pko     -104.8 bb/100 [-111.0, -98.6]
+ chips    jam-40 vs 8 x nm44            +10.4 bb/100 [+8.2, +12.6]
+ chips    jam-40 vs 8 x hybrid-zero     -11.9 bb/100 [-14.8, -9.0]
+ chips    jam-40 vs 8 x hybrid-pko      -17.2 bb/100 [-20.1, -14.3]
+ chips raise-any vs 8 x nm44            -12.6 bb/100 [-14.2, -11.1]
+ chips raise-any vs 8 x hybrid-zero     -36.5 bb/100 [-38.2, -34.7]
+ chips raise-any vs 8 x hybrid-pko      -34.3 bb/100 [-36.1, -32.5]
+hybrid-zero vs 8 x nm44         -3.42 bb/100 [-4.17, -2.67]
+nm44 vs 8 x hybrid-zero         +7.15 bb/100 [+6.46, +7.83]
+hybrid-pko vs 8 x nm44          -2.80 bb/100 [-3.51, -2.09]
+nm44 vs 8 x hybrid-pko          +4.00 bb/100 [+3.35, +4.65]
+fold to an all-in pre-flop, nm44: {'with jam-any at the table': 0.868, 'defenders only': 0.792}
+fold to an all-in pre-flop, hybrid-zero: {'with jam-any at the table': 0.694, 'defenders only': 0.509}
+fold to an all-in pre-flop, hybrid-pko: {'with jam-any at the table': 0.734, 'defenders only': 0.557}
+done
