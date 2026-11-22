@@ -1,0 +1,17 @@
+[Unit]
+Description=Research pipeline: runs merged research/pipeline/runs/*.json on the lab (scripts/pipeline.py poll)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=LAB_USER
+WorkingDirectory=LAB_HOME/research
+Environment=PIPELINE_REPO=LAB_HOME/pipeline/poker-analysis
+ExecStart=/usr/bin/python3 scripts/pipeline.py poll --every 120
+Nice=5
+Restart=on-failure
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target
