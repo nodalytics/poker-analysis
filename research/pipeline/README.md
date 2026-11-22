@@ -42,6 +42,41 @@ One run at a time. A run is refused when the lab has less than 25 GB of disk fre
 | `train.minutes` | training time, 10 to 720 |
 | `train.gpu` | `any` (the first free: PRO 6000, then 4090, then 3090), `pro6000`, `4090` or `3090` |
 | `train.args` | options of `scripts/ninemax_selfplay.py` over nm25's settings (`--early 0.25` is `"early": 0.25`; a flag is `true`, `false` drops one of nm25's) |
+| `train.opponents` | extra opponents in the training population (below) |
+
+#### Training opponents
+
+The stronger and more varied the opponents a network trains against, the less it can get away with habits that
+only work against itself. `train.opponents` adds, to nm25's rule players, past snapshots and exploiters:
+
+| Field | Adds |
+|---|---|
+| `versions` | earlier networks, frozen: a list (`["nm43", "nm17"]`) or `"auto"`: the 10 newest that read the same inputs, from nm17 on |
+| `generated` | that many generated styles (`seed` picks them): the network's own running average with its tendencies pushed, so each is a strong player with a leak, and it gets stronger as training goes |
+| `archetypes` | the five archetypes as styles: nit, station, maniac, shover, loose-passive |
+| `human` | styles fitted to real player types from 2009 online hands (below); built automatically the first time a run asks for them |
+
+With `--pfsp` (opponents picked by how often they beat the network) the hardest of them come up most. Example:
+`"opponents": {"versions": "auto", "generated": 12, "archetypes": true, "human": true}`.
+
+#### Human styles
+
+`scripts/human_styles.py` turns published hand histories into opponents, in three steps the pipeline runs by
+itself when `results/human_styles/styles.json` is missing:
+1. **players:** each player's VPIP, PFR, 3-bet, post-flop aggression and fold to a bet, from 150,000 hands of each
+   of the 27 HandHQ stakes (2009, six or more players): 4,633 players with 500 hands or more.
+2. **types:** the players in 8 types by k-means (`types.json`): from nits (VPIP 16%, folding to 64% of bets) and
+   tight-aggressive regulars (most hands) to loose-passive (36%) and loose-aggressive (51%) players.
+3. **fit:** for each type, the style of nm25 whose own statistics come closest (`styles.json`, with each type's
+   target and what the style achieves). The fit is approximate: nm25's styles fold to bets less than the tightest
+   humans do. The humans played ~100bb cash games, the networks 10-25bb tournaments.
+
+The `styles` check plays them too with `"human": true`.
+
+#### After every run
+
+The pipeline re-runs the version consistency report (`scripts/ninemax_consistency.py`: every version on the same
+spots, the new one included) into `results/ninemax/consistency.json`.
 
 nm25's settings (`BASE_TRAIN` in `scripts/pipeline.py`): `--tourney --no-open-limp --menu mtt --depths 10,25
 --ante 1 --short 0.5`, population training with the rule players (`--pool reg,reg,tag,maniac,station
@@ -55,7 +90,7 @@ Every check must pass for `adopted`. Each has an `id` (your name for it) and a `
 |---|---|---|---|
 | `seqtest` | sequential duplicate match, the run vs 8 copies of `against` (`seqtest.py`) | `against`, `early` (share of early-stage tables, 0-1), `max` deals, `alpha`, `margin` | `pass`: `ahead` (stops for a difference, ahead), `equivalent_or_ahead`, or `not_behind` (not stopped behind, and not ending below -0.25) |
 | `opponents` | the run and `baseline` each against 8 copies of rule players that play nothing like it, on the same deals (`pipeline_opponents.py`) | `against` (some of `reg`, `tag`, `maniac`, `station`, `random`), `baseline`, `hands`, `tolerance` | it is no more than `tolerance` bb/100 below the baseline against every one |
-| `styles` | generated opponents: nm25-like players with their tendencies pushed by random amounts (looser, tighter, more aggressive, folding more or less to bets, shoving, bluffing weak hands), plus five archetypes (nit, station, maniac, shover, loose-passive); the run and `baseline` each against 8 copies of every one, on the same deals | `count` (generated, 0-60), `seed` (the same seed is the same crowd for every run), `hands`, `baseline`, `worst_tolerance`, `mean_tolerance` | it is within `worst_tolerance` of the baseline against its worst style, and within `mean_tolerance` on average |
+| `styles` | generated opponents: nm25-like players with their tendencies pushed by random amounts (looser, tighter, more aggressive, folding more or less to bets, shoving, bluffing weak hands), plus five archetypes (nit, station, maniac, shover, loose-passive); the run and `baseline` each against 8 copies of every one, on the same deals | `count` (generated, 0-60), `seed` (the same seed is the same crowd for every run), `hands`, `baseline`, `worst_tolerance`, `mean_tolerance`, `human` (also the human-fitted styles) | it is within `worst_tolerance` of the baseline against its worst style, and within `mean_tolerance` on average |
 | `consistency` | where the run decides differently from `reference` on the same few thousand spots, by street, position, stack, facing a bet and players seated, with the most disputed spots (`ninemax_consistency.py`) | `reference`, `deals` | always: it is a report for the reviewer, not a gate |
 | `bluffers` | scripted bluffers in one seat vs 8 copies of the run (`ninemax_hybrid.py`) | `bluffers` (some of `jam-any`, `jam-40`, `raise-any`), `early`, `unit` (`chips` or `equity`) | every bluffer loses (95% interval below 0) |
 | `exploit` | a learner trains for `minutes` to beat the run (`ninemax_eval.py exploit`) | `minutes`, `limit` | the exploiter's last reading is at most `limit` bb/100 |

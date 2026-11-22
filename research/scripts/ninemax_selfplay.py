@@ -644,6 +644,42 @@ def set_mode(stacks="100", tourney=False, depths=None, open_limp=True, ante=0.0,
     FEAT["early"] = float(early or 0.0)
 
 
+def extra_pool(args, avg, nfeat, buckets, dev):
+    """The population's extra members: styles (pipeline_opponents.Style around the network's running average, so a
+    style is a strong player with a human-shaped leak that improves as training goes) and earlier networks, frozen."""
+    out, names = [], []
+    if args.pool_styles:
+        from pipeline_opponents import ARCHETYPES, KEYS, Style, styles
+
+        for part in args.pool_styles.split(","):
+            kind, *rest = part.split(":")
+            if kind == "archetypes":
+                params = dict(ARCHETYPES)
+            elif kind == "generated":
+                k, seed = int(rest[0]), int(rest[1]) if len(rest) > 1 else 2026
+                params = {n: p for n, p in styles(k, seed).items() if n not in ARCHETYPES}
+            elif kind == "human":
+                fitted = json.load(open(":".join(rest)))["styles"]
+                params = {st["id"]: tuple(st["params"][key] for key in KEYS) for st in fitted}
+            else:
+                raise SystemExit(f"--pool-styles: unknown kind {kind!r}")
+            out += [Style(avg, p) for p in params.values()]
+            names += list(params)
+    for r in [x for x in args.pool_nets.split(",") if x]:
+        cfg = json.load(open(os.path.join(r, "config.json")))
+        if cfg["nfeat"] != nfeat or cfg.get("buckets", buckets) != buckets:
+            print(f"--pool-nets: {r} reads other inputs, left out", flush=True)
+            continue
+        m = NineNet(cfg["nfeat"], cfg["actions"], cfg.get("buckets", buckets), arch=cfg.get("arch", "mlp"),
+                    players=args.players, belief=cfg.get("belief_weight", 0) > 0).to(dev)  # fmt: skip
+        m.load_state_dict(torch.load(os.path.join(r, "checkpoint.pt"), map_location=dev, weights_only=True)["avg"])
+        out.append(m.requires_grad_(False).eval())
+        names.append(os.path.basename(r))
+    if out:
+        print(f"population extras ({len(out)}): {', '.join(names)}", flush=True)
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("out")
@@ -688,6 +724,10 @@ def main():
     )
     ap.add_argument("--pool-share", type=float, default=0.0, help="share of each batch played against the population")
     ap.add_argument("--pool", default="tag,maniac,station,random", help="rule opponents in the population")
+    ap.add_argument("--pool-styles", default="",
+                    help="styles in the population, played by the network's own average (so they get stronger with it): "
+                         "generated:K[:SEED], archetypes, human:PATH (human_styles.py fit), comma-separated")  # fmt: skip
+    ap.add_argument("--pool-nets", default="", help="earlier networks in the population, frozen: comma-separated runs")
     ap.add_argument("--pool-snapshots", type=int, default=5, help="past checkpoints kept in the population")
     # the league (after AlphaStar, Vinyals et al. 2019): opponents picked by how hard they are (prioritised fictitious
     # self-play), a league exploiter that hunts the whole population, and retired exploiters kept frozen
@@ -792,6 +832,7 @@ def main():
     opt_x = torch.optim.Adam(expl.parameters(), lr=args.lr) if expl is not None else None
     adv_scale_x, last_reset = 1.0, time.time()
     rules = [x for x in args.pool.split(",") if x] if args.pool else []
+    extra = extra_pool(args, avg, nfeat, buckets, dev)  # styles and earlier networks: stronger, more varied opponents
     snaps, frozen = [], []
     lexp = copy.deepcopy(avg).requires_grad_(True) if args.league_share > 0 else None
     opt_l = torch.optim.Adam(lexp.parameters(), lr=args.lr) if lexp is not None else None
@@ -807,7 +848,7 @@ def main():
         z = torch.log(dist["pnet"].float().clamp(min=1e-6)) + (q - q.max(1, keepdim=True).values) / args.distill_tau
         dist["target"] = torch.softmax(masked(z, dist["legal"]), 1)
         print(f"distillation: {len(q)} positions from {len(shards)} shards, tau {args.distill_tau}", flush=True)
-    pool = (rules or None) if args.pool_share > 0 else None
+    pool = (rules + extra or None) if args.pool_share > 0 else None
     json.dump({**vars(args), "nfeat": nfeat, "actions": menu.A, "buckets": buckets}, open(os.path.join(args.out, "config.json"), "w"),
               indent=1)  # fmt: skip
     log = open(os.path.join(args.out, "progress.log"), "a", buffering=1)
@@ -983,7 +1024,7 @@ def main():
             prev = copy.deepcopy(avg)
             if pool is not None and args.pool_snapshots:
                 snaps = (snaps + [copy.deepcopy(avg).requires_grad_(False)])[-args.pool_snapshots :]
-                pool = rules + frozen + snaps
+                pool = rules + extra + frozen + snaps
             if expl is not None and time.time() - last_reset >= args.exploit_reset * 60:
                 if pool is not None:  # the old exploiters stay in the population, frozen
                     frozen.append(copy.deepcopy(expl).requires_grad_(False))
@@ -993,7 +1034,7 @@ def main():
                         opt_l, adv_scale_l = torch.optim.Adam(lexp.parameters(), lr=args.lr), 1.0
                     if args.max_frozen:
                         frozen = frozen[-args.max_frozen :]
-                    pool = rules + frozen + snaps
+                    pool = rules + extra + frozen + snaps
                 expl.load_state_dict(avg.state_dict())
                 opt_x = torch.optim.Adam(expl.parameters(), lr=args.lr)
                 adv_scale_x, last_reset = 1.0, time.time()

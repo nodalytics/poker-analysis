@@ -8,6 +8,13 @@
   "gpu": "any",
   "args": {
    "early": 0.25
+  },
+  "opponents": {
+   "versions": "auto",
+   "generated": 12,
+   "seed": 2026,
+   "archetypes": true,
+   "human": true
   }
  },
  "checks": [
@@ -62,7 +69,8 @@
    "hands": 5000,
    "baseline": "nm25",
    "worst_tolerance": 3.0,
-   "mean_tolerance": 0.5
+   "mean_tolerance": 0.5,
+   "human": true
   },
   {
    "id": "robust",

@@ -87,6 +87,7 @@ def main():
     ap.add_argument("--styles", type=int, default=0, help="also this many generated styles, and the archetypes")
     ap.add_argument("--style-seed", type=int, default=2026)
     ap.add_argument("--no-rules", action="store_true", help="only the styles, not --against")
+    ap.add_argument("--human", default="", help="also the human-fitted styles in this file (human_styles.py fit)")
     a = ap.parse_args()
     dev = "cuda"
     dealer, menu, B = setup(a, dev)
@@ -95,6 +96,9 @@ def main():
     out, seed0 = {}, dealer.seed
     opps = {} if a.no_rules else {r: r for r in a.against.split(",")}
     params = styles(a.styles, a.style_seed) if a.styles else {}
+    if a.human:  # opponents shaped like real player types
+        for st in json.load(open(a.human))["styles"]:
+            params[st["id"]] = tuple(st["params"][k] for k in KEYS)
     opps.update({n: Style(base, p) for n, p in params.items()})
     for k, (rule, opp) in enumerate(opps.items()):
         row = {"style": dict(zip(KEYS, params[rule]))} if rule in params else {}

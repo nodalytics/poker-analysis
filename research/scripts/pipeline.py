@@ -55,12 +55,32 @@ CHECKS = {
     "exploit": {"minutes", "limit"},
     "bluffers": {"early", "unit", "bluffers", "pass"},
     "opponents": {"against", "hands", "baseline", "tolerance"},
-    "styles": {"count", "seed", "hands", "baseline", "worst_tolerance", "mean_tolerance"},
+    "styles": {"count", "seed", "hands", "baseline", "worst_tolerance", "mean_tolerance", "human"},
     "consistency": {"reference", "deals"},  # a report: where the run decides differently from the reference
 }
 SEQ_PASS = {"ahead", "not_behind", "equivalent_or_ahead"}
 BLUFFERS = {"jam-any", "jam-40", "raise-any"}
 RULE_PLAYERS = {"reg", "tag", "maniac", "station", "random"}
+HUMAN = os.path.join("results", "human_styles", "styles.json")  # opponents fitted to real player types
+OPPONENTS = {"versions", "generated", "seed", "archetypes", "human"}
+
+
+def auto_versions(init, keep=10):
+    """Earlier networks that read init's inputs, newest first: nm17 onwards, with a checkpoint (stdlib only)."""
+    ref = json.load(open(os.path.join(HERE, "blueprint", init, "config.json")))
+    same = lambda c: all(c.get(k) == ref.get(k) for k in ("nfeat", "actions", "abs", "menu")) and all(  # noqa: E731
+        bool(c.get(k)) == bool(ref.get(k)) for k in ("tourney", "texture", "bounty"))  # fmt: skip
+    found = []
+    for d in glob.glob(os.path.join(HERE, "blueprint", "nm*")):
+        n = os.path.basename(d)
+        if not NAME.match(n) or int(n[2:]) < 17 or n == init or not os.path.exists(os.path.join(d, "checkpoint.pt")):
+            continue
+        try:
+            if same(json.load(open(os.path.join(d, "config.json")))):
+                found.append(n)
+        except (OSError, ValueError):
+            pass
+    return sorted(found, key=lambda n: -int(n[2:]))[:keep]
 
 
 def seq_pass(verdict, bb100, rule):
@@ -120,6 +140,19 @@ def validate(path, flags=None):
     m = t.get("minutes", BASE_TRAIN["minutes"])
     if not isinstance(m, (int, float)) or not 10 <= m <= MAX_MINUTES:
         errs.append(f"train.minutes {m!r}: 10 to {MAX_MINUTES}")
+    o = t.get("opponents")
+    if o is not None:
+        if not isinstance(o, dict) or set(o) - OPPONENTS:
+            errs.append(f"train.opponents: an object with some of {sorted(OPPONENTS)}")
+        else:
+            v = o.get("versions", [])
+            if not (v == "auto" or (isinstance(v, list) and all(NAME.match(str(x)) for x in v))):
+                errs.append('train.opponents.versions: "auto" or a list of run names')
+            if not isinstance(o.get("generated", 0), int) or not 0 <= o.get("generated", 0) <= 40:
+                errs.append("train.opponents.generated: 0 to 40 generated styles")
+            for k in ("archetypes", "human"):
+                if not isinstance(o.get(k, False), bool):
+                    errs.append(f"train.opponents.{k}: true or false")
     if t.get("gpu", "any") not in ("any", "pro6000", "4090", "3090"):
         errs.append("train.gpu: any, pro6000, 4090 or 3090")
     for k, v in (t.get("args") or {}).items():
@@ -274,11 +307,46 @@ class Run:
                 raise Stopped("stopped")
             time.sleep(120)
 
+    def human_styles(self):
+        """Opponents fitted to real player types (human_styles.py), built from the hand histories when missing."""
+        if os.path.exists(os.path.join(HERE, HUMAN)):
+            return
+        R = os.path.join("results", "human_styles")
+        os.makedirs(os.path.join(HERE, R), exist_ok=True)
+        dirs = sorted(glob.glob(os.path.expanduser("~/datasets/phh-dataset/data/handhq/*NLH*")))
+        if not dirs:
+            raise RuntimeError("no hand histories in ~/datasets/phh-dataset/data/handhq for the human styles")
+        self.save(status="preparing", stage="human styles: reading the hand histories")
+        self.sh([sys.executable, "scripts/human_styles.py", "players", *dirs, "--out", f"{R}/players.json"],
+                "human_styles.log", timeout_min=240)  # fmt: skip
+        self.sh([PY, "scripts/human_styles.py", "types", "--players", f"{R}/players.json", "--out", f"{R}/types.json"],
+                "human_styles.log", timeout_min=30)  # fmt: skip
+        gpu, gname = self.pick_gpu()
+        self.save(status="preparing", stage=f"human styles: fitting a style to each player type on the {gname}")
+        self.sh([PY, "scripts/human_styles.py", "fit", "--types", f"{R}/types.json", "--out", HUMAN],
+                "human_styles.log", gpu, timeout_min=360)  # fmt: skip
+
     def train(self):
         t = self.r["train"]
         args = dict(BASE_TRAIN, minutes=t.get("minutes", BASE_TRAIN["minutes"]))
         for k, v in (t.get("args") or {}).items():
             args[k] = v
+        o = t.get("opponents") or {}
+        styles = []
+        if o.get("generated"):
+            styles.append(f"generated:{o['generated']}:{o.get('seed', 2026)}")
+        if o.get("archetypes"):
+            styles.append("archetypes")
+        if o.get("human"):
+            self.human_styles()
+            styles.append(f"human:{HUMAN}")
+        if styles:
+            args["pool-styles"] = ",".join(styles)
+        versions = auto_versions(t.get("init", "nm25")) if o.get("versions") == "auto" else o.get("versions", [])
+        if versions:
+            args["pool-nets"] = ",".join(f"blueprint/{v}" for v in versions)
+        if o:
+            self.save(opponents={"styles": styles, "versions": versions})
         out = os.path.join("blueprint", self.name)
         if os.path.exists(os.path.join(HERE, out, "checkpoint.pt")) and self.state.get("trained"):
             return
@@ -360,6 +428,9 @@ class Run:
             cmd = [PY, "scripts/pipeline_opponents.py", run, "--baseline", f"blueprint/{base}", "--no-rules",
                    "--styles", str(c.get("count", 12)), "--style-seed", str(c.get("seed", 2026)),
                    "--hands", str(c.get("hands", 5000)), "--out", out]  # fmt: skip
+            if c.get("human", False):
+                self.human_styles()
+                cmd += ["--human", HUMAN]
             self.sh(cmd, f"{cid}.log", gpu, timeout_min=240)
             res = json.load(open(out))
             diffs = {k: v["difference"] for k, v in res.items()}
@@ -389,10 +460,21 @@ class Run:
             self.save(status="done", stage="done", verdict=verdict, finished=now())
             self.write_result()
             self.report()
+            self.refresh_consistency()
+            self.save(status="done", stage="done")  # waiting for a GPU for the report must not read as unfinished
         except Stopped as e:
             self.save(status="stopped", stage=str(e))
         except Exception as e:  # noqa: BLE001  (any failure is recorded, and the poller goes on to the next recipe)
             self.save(status="failed", stage=f"{type(e).__name__}: {e}")
+
+    def refresh_consistency(self):
+        """After every run: every version against the same spots again, the new one included (a report; best effort)."""
+        try:
+            gpu, _ = self.pick_gpu()
+            self.sh([PY, "scripts/ninemax_consistency.py", "--out", "results/ninemax/consistency.json"],
+                    "consistency_all.log", gpu, timeout_min=60)  # fmt: skip
+        except Exception as e:  # noqa: BLE001
+            self.save(consistency=f"not refreshed: {type(e).__name__}")
 
     def write_result(self):
         res = {
