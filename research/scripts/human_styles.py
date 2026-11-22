@@ -250,7 +250,7 @@ def cmd_fit(a):
     dealer, menu, B = setup(a, dev)
     base, _ = load(a.baseline, B, dev)
     lo = (-2, -2, -2, -2.5, -1.5, 0, 0.8)
-    hi = (2, 2, 2, 2, 2.5, 1, 1.5)
+    hi = (2, 2, 2, 4.5, 2.5, 1, 1.5)  # post_fold to 4.5: humans fold to 60-70% of bets, nm25 to 39%
     clip = lambda p: tuple(round(min(max(x, l_), h_), 3) for x, l_, h_ in zip(p, lo, hi))  # noqa: E731
     own = measure(dealer, menu, base, Style(base, (0, 0, 0, 0, 0, 0, 1)), a.deals, dev)
     out = {"baseline": a.baseline, "baseline_stats": own, "deals": a.deals, "styles": []}
