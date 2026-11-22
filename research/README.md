@@ -14,6 +14,7 @@ Agents: read [`AGENTS.md`](AGENTS.md) first (models, lab rules, sandboxes, media
 | `docs/` | Write-ups, one per study, dated |
 | `pipeline/` | The research pipeline: run files (`runs/`), the model pipeline's recipes (`recipes/`) and the lab service (`deploy/`) |
 | `scripts/` | Test harnesses (`llm_test.py`, `dc_agent_test.py`, `browser_agent_test.py`) |
+| `ragflow/` | RAGFlow, the document retrieval engine, hosted on the lab at https://ragflow.stbfarm.org: scripts, nginx site, notes |
 | `sandboxes/` | Docker builds for the sealed test environments, the Windows GUI VM, and Ollama setup (`sandboxes/ollama/`) |
 | `results/raw/` | JSON output from each run, including every model answer and tool call |
 | `results/logs/` | Console logs from each run |
