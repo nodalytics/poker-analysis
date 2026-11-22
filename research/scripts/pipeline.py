@@ -56,12 +56,22 @@ CHECKS = {
     "bluffers": {"early", "unit", "bluffers", "pass"},
     "opponents": {"against", "hands", "baseline", "tolerance"},
     "styles": {"count", "seed", "hands", "baseline", "worst_tolerance", "mean_tolerance", "human"},
-    "consistency": {"reference", "deals"},  # a report: where the run decides differently from the reference
+    "consistency": {"reference", "deals"},
+    "exploiters": {"profiles", "minutes", "limit"},  # a report: where the run decides differently from the reference
 }
 SEQ_PASS = {"ahead", "not_behind", "equivalent_or_ahead"}
 BLUFFERS = {"jam-any", "jam-40", "raise-any"}
 RULE_PLAYERS = {"reg", "tag", "maniac", "station", "random"}
-HUMAN = os.path.join("results", "human_styles", "styles.json")  # opponents fitted to real player types
+HUMAN = os.path.join("results", "human_styles", "styles.json")
+# exploiters that attack differently: a copy of the target (the standard reading), one that keeps trying odd moves,
+# one that learns fast and commits, and one that starts from an older, different network and searches elsewhere
+EXPLOITERS = [
+    {"id": "copy", "lr": 3e-4, "entropy": 0.003},
+    {"id": "explore", "lr": 3e-4, "entropy": 0.02},
+    {"id": "fast", "lr": 1e-3, "entropy": 0.003},
+    {"id": "outsider", "lr": 3e-4, "entropy": 0.003, "init": "nm17"},
+]
+EXPLOITER_KEYS = {"id", "lr", "entropy", "init", "minutes"}  # opponents fitted to real player types
 OPPONENTS = {"versions", "generated", "seed", "archetypes", "human"}
 
 
@@ -208,6 +218,22 @@ def validate(path, flags=None):
                 errs.append(f"{where}.baseline: a run name such as nm25")
             if not isinstance(c.get("tolerance"), (int, float)) or c["tolerance"] < 0:
                 errs.append(f"{where}.tolerance: how far below the baseline it may fall against each, bb/100")
+        if c["type"] == "exploiters":
+            if not isinstance(c.get("limit"), (int, float)):
+                errs.append(f"{where}.limit: the most any exploiter may win, bb/100")
+            if not 5 <= c.get("minutes", 30) <= 120:
+                errs.append(f"{where}.minutes: 5 to 120")
+            for j, x in enumerate(c.get("profiles", EXPLOITERS)):
+                if (
+                    not isinstance(x, dict)
+                    or set(x) - EXPLOITER_KEYS
+                    or not re.match(r"^[a-z0-9-]{2,20}$", str(x.get("id")))
+                ):
+                    errs.append(f"{where}.profiles[{j}]: an id and some of {sorted(EXPLOITER_KEYS - {'id'})}")
+                elif "init" in x and not NAME.match(str(x["init"])):
+                    errs.append(f"{where}.profiles[{j}].init: a run name such as nm17")
+                elif not 1e-5 <= x.get("lr", 3e-4) <= 1e-2 or not 0 <= x.get("entropy", 0.003) <= 0.1:
+                    errs.append(f"{where}.profiles[{j}]: lr 1e-5 to 1e-2, entropy 0 to 0.1")
         if c["type"] == "consistency" and not NAME.match(str(c.get("reference", "nm25"))):
             errs.append(f"{where}.reference: a run name such as nm25")
         if c["type"] == "styles":
@@ -409,6 +435,27 @@ class Run:
             return ok, ", ".join(
                 f"vs {k} {v['run'][0]:+.1f} ({base} {v['baseline'][0]:+.1f})" for k, v in res.items()
             ) + (f"; each within {c['tolerance']:.1f} of {base}")
+        if (
+            typ == "exploiters"
+        ):  # a battery: different ways of attacking the run, each a lower bound on its exploitability
+            got = {}
+            for x in c.get("profiles", EXPLOITERS):
+                gpu, gname = self.pick_gpu()
+                self.save(status="checking", stage=f"check {cid}: exploiter {x['id']} on the {gname}")
+                d = os.path.join(self.dir, f"{cid}_{x['id']}")
+                mins = x.get("minutes", c.get("minutes", 30))
+                cmd = [PY, "scripts/ninemax_eval.py", "exploit", run, "--out", d, "--minutes", str(mins),
+                       "--eval-minutes", "10", "--menu", "mtt", "--lib", "blueprint/libbp7.so",
+                       "--lr", str(x.get("lr", 3e-4)), "--entropy", str(x.get("entropy", 0.003))]  # fmt: skip
+                if x.get("init"):
+                    cmd += ["--init", f"blueprint/{x['init']}"]
+                self.sh(cmd, f"{cid}.log", gpu, timeout_min=mins + 30)
+                lines = [y for y in open(os.path.join(d, "exploit.log")) if "learner vs 8 x target" in y]
+                got[x["id"]] = float(re.search(r"target: ([+-][0-9.]+)", lines[-1]).group(1))
+            json.dump(got, open(out, "w"), indent=1)
+            worst = max(got, key=got.get)
+            return got[worst] <= c["limit"], (", ".join(f"{k} {v:+.1f}" for k, v in got.items())
+                                              + f"; the best ({worst}) at most {c['limit']:+.1f}")  # fmt: skip
         if typ == "consistency":  # a report, never a gate: where the run decides differently from the reference
             ref = c.get("reference", "nm25")
             cmd = [PY, "scripts/ninemax_consistency.py", "--reference", f"blueprint/{ref}", "--runs", run,

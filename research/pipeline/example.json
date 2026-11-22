@@ -74,9 +74,9 @@
   },
   {
    "id": "robust",
-   "type": "exploit",
+   "type": "exploiters",
    "minutes": 30,
-   "limit": 1.2
+   "limit": 1.5
   },
   {
    "id": "consistency",

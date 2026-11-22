@@ -93,12 +93,16 @@ def cross(args, dev):
 
 def exploit(args, dev):
     dealer, menu, B = setup(args, dev)
+    start = load(args.init, B, dev)[0] if args.init else None  # before the target: load() sets the game
     target, hands = load(args.runs[0], B, dev)
-    hero = copy.deepcopy(target).requires_grad_(True).train()
+    # the learner starts as a copy of the target, or of another network (--init): from elsewhere it searches
+    # another part of the strategy space, and can find holes a copy of the target walks past
+    hero = copy.deepcopy(start if start is not None else target).requires_grad_(True).train()
     opt = torch.optim.Adam(hero.parameters(), lr=args.lr)
     os.makedirs(args.out, exist_ok=True)
     log = open(os.path.join(args.out, "exploit.log"), "a", buffering=1)
-    log.write(f"target {args.runs[0]} ({hands / 1e6:.0f} M hands), lr {args.lr}, batch {args.batch}\n")
+    log.write(f"target {args.runs[0]} ({hands / 1e6:.0f} M hands), lr {args.lr}, batch {args.batch}, "
+              f"entropy {args.entropy}, start {args.init or 'the target'}\n")  # fmt: skip
     P = dealer.P
     t0 = last = time.time()
     played, adv_scale, steps = 0, 1.0, 0
@@ -174,6 +178,7 @@ def main():
     ap.add_argument("--chunks", type=int, default=3, help="exploit: hero seats drawn per batch")
     ap.add_argument("--lr", type=float, default=3e-4)
     ap.add_argument("--entropy", type=float, default=0.003)
+    ap.add_argument("--init", default="", help="exploit: start the learner from this run instead of the target")
     args = ap.parse_args()
     if args.mode == "exploit" and (len(args.runs) != 1 or not args.out):
         ap.error("exploit takes one RUN and --out DIR")
