@@ -1,0 +1,19 @@
+{
+ "name": "nm44",
+ "question": "Does training against a league (opponents picked by how hard they are, a league exploiter that hunts the whole population, retired exploiters kept frozen) make nm25 harder to exploit and stronger against players unlike itself, without losing to nm25?",
+ "why": "A teammate's review (2026-11-22): identical bots may exploit predictable patterns in each other, and the bot is tested mostly against copies of itself. nm25 trained against itself, five rule players and one exploiter reset hourly. The league shrank 6-max cash's exploitable hole (nm28 +11.0 to nm35 +7.0 to nm37 +5.6) but was never tried in 9-max tournaments; nm41-nm43 all read above nm25's exploiter figure.",
+ "train": {"init": "nm25", "minutes": 360, "gpu": "any", "args": {"league-share": 0.15, "pfsp": 2, "max-frozen": 8, "pool-share": 0.4}},
+ "checks": [
+  {"id": "no-harm", "type": "seqtest", "against": "nm25", "early": 0, "pass": "not_behind", "max": 40000, "looks": 8, "alpha": 0.025, "margin": 0.5,
+   "why": "it must not lose to nm25 in nm25's own game"},
+  {"id": "other-players", "type": "opponents", "against": ["reg", "tag", "maniac", "station"], "baseline": "nm25", "hands": 20000, "tolerance": 1.0,
+   "why": "no worse than nm25 against the rule players"},
+  {"id": "styles", "type": "styles", "count": 20, "seed": 2026, "hands": 5000, "baseline": "nm25", "worst_tolerance": 2.0, "mean_tolerance": 0.0,
+   "why": "the league's purpose: at least as good as nm25 on average across 25 generated players, and never far behind"},
+  {"id": "bluffs", "type": "bluffers", "early": 0, "unit": "equity", "bluffers": ["jam-any", "jam-40", "raise-any"], "pass": "all_lose",
+   "why": "bluff jams and raises must lose prize equity against it, as against nm25"},
+  {"id": "robust", "type": "exploit", "minutes": 30, "limit": 1.2,
+   "why": "the limit nm43 was held to: nm25's +0.2 plus 1"}
+ ],
+ "adopt": "all"
+}
