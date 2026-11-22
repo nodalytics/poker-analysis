@@ -56,6 +56,7 @@ CHECKS = {
     "bluffers": {"early", "unit", "bluffers", "pass"},
     "opponents": {"against", "hands", "baseline", "tolerance"},
     "styles": {"count", "seed", "hands", "baseline", "worst_tolerance", "mean_tolerance"},
+    "consistency": {"reference", "deals"},  # a report: where the run decides differently from the reference
 }
 SEQ_PASS = {"ahead", "not_behind", "equivalent_or_ahead"}
 BLUFFERS = {"jam-any", "jam-40", "raise-any"}
@@ -174,6 +175,8 @@ def validate(path, flags=None):
                 errs.append(f"{where}.baseline: a run name such as nm25")
             if not isinstance(c.get("tolerance"), (int, float)) or c["tolerance"] < 0:
                 errs.append(f"{where}.tolerance: how far below the baseline it may fall against each, bb/100")
+        if c["type"] == "consistency" and not NAME.match(str(c.get("reference", "nm25"))):
+            errs.append(f"{where}.reference: a run name such as nm25")
         if c["type"] == "styles":
             if not isinstance(c.get("count", 12), int) or not 0 <= c.get("count", 12) <= 60:
                 errs.append(f"{where}.count: 0 to 60 generated styles (the 5 archetypes are always played)")
@@ -338,6 +341,20 @@ class Run:
             return ok, ", ".join(
                 f"vs {k} {v['run'][0]:+.1f} ({base} {v['baseline'][0]:+.1f})" for k, v in res.items()
             ) + (f"; each within {c['tolerance']:.1f} of {base}")
+        if typ == "consistency":  # a report, never a gate: where the run decides differently from the reference
+            ref = c.get("reference", "nm25")
+            cmd = [PY, "scripts/ninemax_consistency.py", "--reference", f"blueprint/{ref}", "--runs", run,
+                   "--deals", str(c.get("deals", 4000)), "--out", out]  # fmt: skip
+            self.sh(cmd, f"{cid}.log", gpu, timeout_min=60)
+            res = json.load(open(out))
+            d = res["vs_reference"]["distance"][self.name]
+            flips = res["vs_reference"]["different_top_action"][self.name]
+            by = {g: max(rows, key=lambda r: r["vs_reference"].get(self.name, 0)) for g, rows in res["groups"].items()}
+            most = ", ".join(f"{g} {r['group']} {r['vs_reference'][self.name]:.3f}" for g, r in by.items())
+            return (
+                True,
+                f"report: distance from {ref} {d:.3f}, a different top action in {flips:.1%} of spots; most in {most}",
+            )
         if typ == "styles":  # generated opponents: the baseline with its tendencies pushed, many times over
             base = c.get("baseline", "nm25")
             cmd = [PY, "scripts/pipeline_opponents.py", run, "--baseline", f"blueprint/{base}", "--no-rules",

@@ -1,0 +1,1575 @@
+{
+ "reference": "blueprint/nm25",
+ "versions": [
+  "nm25",
+  "nm26",
+  "nm27",
+  "nm36",
+  "nm38",
+  "nm40",
+  "nm42",
+  "nm43"
+ ],
+ "skipped": [],
+ "spots": 35505,
+ "deals": 4000,
+ "overall": {
+  "disagreement": 0.0525,
+  "split": 0.0536
+ },
+ "vs_reference": {
+  "distance": {
+   "nm25": 0.0,
+   "nm26": 0.0515,
+   "nm27": 0.0566,
+   "nm36": 0.0264,
+   "nm38": 0.0511,
+   "nm40": 0.0407,
+   "nm42": 0.055,
+   "nm43": 0.0615
+  },
+  "different_top_action": {
+   "nm25": 0.0,
+   "nm26": 0.052,
+   "nm27": 0.0569,
+   "nm36": 0.0242,
+   "nm38": 0.049,
+   "nm40": 0.0362,
+   "nm42": 0.0566,
+   "nm43": 0.0639
+  }
+ },
+ "groups": {
+  "street": [
+   {
+    "group": "river",
+    "spots": 206,
+    "disagreement": 0.2207,
+    "split": 0.2661,
+    "vs_reference": {
+     "nm26": 0.2036,
+     "nm27": 0.2706,
+     "nm36": 0.1662,
+     "nm38": 0.2301,
+     "nm40": 0.1935,
+     "nm42": 0.2104,
+     "nm43": 0.2375
+    }
+   },
+   {
+    "group": "turn",
+    "spots": 382,
+    "disagreement": 0.1496,
+    "split": 0.2184,
+    "vs_reference": {
+     "nm26": 0.1418,
+     "nm27": 0.1707,
+     "nm36": 0.1058,
+     "nm38": 0.1435,
+     "nm40": 0.1082,
+     "nm42": 0.1556,
+     "nm43": 0.1356
+    }
+   },
+   {
+    "group": "flop",
+    "spots": 1046,
+    "disagreement": 0.117,
+    "split": 0.139,
+    "vs_reference": {
+     "nm26": 0.1096,
+     "nm27": 0.1482,
+     "nm36": 0.0671,
+     "nm38": 0.1007,
+     "nm40": 0.0902,
+     "nm42": 0.142,
+     "nm43": 0.1167
+    }
+   },
+   {
+    "group": "pre-flop",
+    "spots": 33871,
+    "disagreement": 0.0484,
+    "split": 0.0478,
+    "vs_reference": {
+     "nm26": 0.0477,
+     "nm27": 0.0512,
+     "nm36": 0.0234,
+     "nm38": 0.0474,
+     "nm40": 0.0375,
+     "nm42": 0.0503,
+     "nm43": 0.0579
+    }
+   }
+  ],
+  "position": [
+   {
+    "group": "BB",
+    "spots": 4551,
+    "disagreement": 0.0704,
+    "split": 0.0756,
+    "vs_reference": {
+     "nm26": 0.0654,
+     "nm27": 0.0801,
+     "nm36": 0.0382,
+     "nm38": 0.0616,
+     "nm40": 0.0578,
+     "nm42": 0.0787,
+     "nm43": 0.0747
+    }
+   },
+   {
+    "group": "SB",
+    "spots": 4432,
+    "disagreement": 0.0653,
+    "split": 0.0766,
+    "vs_reference": {
+     "nm26": 0.066,
+     "nm27": 0.0737,
+     "nm36": 0.0347,
+     "nm38": 0.0645,
+     "nm40": 0.0559,
+     "nm42": 0.0736,
+     "nm43": 0.0659
+    }
+   },
+   {
+    "group": "CO",
+    "spots": 4013,
+    "disagreement": 0.0494,
+    "split": 0.0484,
+    "vs_reference": {
+     "nm26": 0.0487,
+     "nm27": 0.0497,
+     "nm36": 0.0236,
+     "nm38": 0.0518,
+     "nm40": 0.0391,
+     "nm42": 0.0514,
+     "nm43": 0.0587
+    }
+   },
+   {
+    "group": "UTG",
+    "spots": 3493,
+    "disagreement": 0.0491,
+    "split": 0.0466,
+    "vs_reference": {
+     "nm26": 0.0472,
+     "nm27": 0.057,
+     "nm36": 0.0253,
+     "nm38": 0.0452,
+     "nm40": 0.0352,
+     "nm42": 0.0413,
+     "nm43": 0.0615
+    }
+   },
+   {
+    "group": "HJ",
+    "spots": 3870,
+    "disagreement": 0.0486,
+    "split": 0.0489,
+    "vs_reference": {
+     "nm26": 0.0467,
+     "nm27": 0.0518,
+     "nm36": 0.022,
+     "nm38": 0.0464,
+     "nm40": 0.0357,
+     "nm42": 0.0501,
+     "nm43": 0.0603
+    }
+   },
+   {
+    "group": "BTN",
+    "spots": 4092,
+    "disagreement": 0.0478,
+    "split": 0.0489,
+    "vs_reference": {
+     "nm26": 0.0491,
+     "nm27": 0.0469,
+     "nm36": 0.0241,
+     "nm38": 0.0493,
+     "nm40": 0.0403,
+     "nm42": 0.0555,
+     "nm43": 0.0561
+    }
+   },
+   {
+    "group": "LJ",
+    "spots": 3777,
+    "disagreement": 0.0466,
+    "split": 0.0449,
+    "vs_reference": {
+     "nm26": 0.0451,
+     "nm27": 0.0474,
+     "nm36": 0.0218,
+     "nm38": 0.0448,
+     "nm40": 0.0321,
+     "nm42": 0.0491,
+     "nm43": 0.0593
+    }
+   },
+   {
+    "group": "MP",
+    "spots": 3679,
+    "disagreement": 0.0452,
+    "split": 0.0418,
+    "vs_reference": {
+     "nm26": 0.0452,
+     "nm27": 0.0462,
+     "nm36": 0.0219,
+     "nm38": 0.045,
+     "nm40": 0.0317,
+     "nm42": 0.0439,
+     "nm43": 0.0569
+    }
+   },
+   {
+    "group": "UTG+1",
+    "spots": 3598,
+    "disagreement": 0.0446,
+    "split": 0.0416,
+    "vs_reference": {
+     "nm26": 0.044,
+     "nm27": 0.0493,
+     "nm36": 0.0218,
+     "nm38": 0.0462,
+     "nm40": 0.0321,
+     "nm42": 0.0421,
+     "nm43": 0.0566
+    }
+   }
+  ],
+  "stack": [
+   {
+    "group": "25bb+",
+    "spots": 6448,
+    "disagreement": 0.0856,
+    "split": 0.0952,
+    "vs_reference": {
+     "nm26": 0.0814,
+     "nm27": 0.0911,
+     "nm36": 0.0447,
+     "nm38": 0.0902,
+     "nm40": 0.0645,
+     "nm42": 0.0857,
+     "nm43": 0.1027
+    }
+   },
+   {
+    "group": "18-25bb",
+    "spots": 4750,
+    "disagreement": 0.0557,
+    "split": 0.0567,
+    "vs_reference": {
+     "nm26": 0.056,
+     "nm27": 0.0601,
+     "nm36": 0.0282,
+     "nm38": 0.0565,
+     "nm40": 0.0427,
+     "nm42": 0.0573,
+     "nm43": 0.0641
+    }
+   },
+   {
+    "group": "12-18bb",
+    "spots": 7251,
+    "disagreement": 0.0482,
+    "split": 0.0501,
+    "vs_reference": {
+     "nm26": 0.0476,
+     "nm27": 0.0526,
+     "nm36": 0.0244,
+     "nm38": 0.048,
+     "nm40": 0.0395,
+     "nm42": 0.0524,
+     "nm43": 0.0543
+    }
+   },
+   {
+    "group": "under 12bb",
+    "spots": 17056,
+    "disagreement": 0.041,
+    "split": 0.0385,
+    "vs_reference": {
+     "nm26": 0.0405,
+     "nm27": 0.0443,
+     "nm36": 0.0198,
+     "nm38": 0.0361,
+     "nm40": 0.0318,
+     "nm42": 0.0439,
+     "nm43": 0.0482
+    }
+   }
+  ],
+  "facing a bet": [
+   {
+    "group": "no",
+    "spots": 1061,
+    "disagreement": 0.1754,
+    "split": 0.233,
+    "vs_reference": {
+     "nm26": 0.164,
+     "nm27": 0.2121,
+     "nm36": 0.1051,
+     "nm38": 0.1569,
+     "nm40": 0.1331,
+     "nm42": 0.2047,
+     "nm43": 0.1754
+    }
+   },
+   {
+    "group": "yes",
+    "spots": 34444,
+    "disagreement": 0.0488,
+    "split": 0.0481,
+    "vs_reference": {
+     "nm26": 0.048,
+     "nm27": 0.0518,
+     "nm36": 0.0239,
+     "nm38": 0.0478,
+     "nm40": 0.0379,
+     "nm42": 0.0504,
+     "nm43": 0.058
+    }
+   }
+  ],
+  "seated": [
+   {
+    "group": "2",
+    "spots": 368,
+    "disagreement": 0.194,
+    "split": 0.2419,
+    "vs_reference": {
+     "nm26": 0.1747,
+     "nm27": 0.1973,
+     "nm36": 0.0781,
+     "nm38": 0.1652,
+     "nm40": 0.17,
+     "nm42": 0.2746,
+     "nm43": 0.1911
+    }
+   },
+   {
+    "group": "3-5",
+    "spots": 1629,
+    "disagreement": 0.0923,
+    "split": 0.1045,
+    "vs_reference": {
+     "nm26": 0.0909,
+     "nm27": 0.1008,
+     "nm36": 0.047,
+     "nm38": 0.0862,
+     "nm40": 0.087,
+     "nm42": 0.1005,
+     "nm43": 0.1047
+    }
+   },
+   {
+    "group": "6-8",
+    "spots": 2399,
+    "disagreement": 0.0601,
+    "split": 0.0626,
+    "vs_reference": {
+     "nm26": 0.0616,
+     "nm27": 0.0632,
+     "nm36": 0.032,
+     "nm38": 0.0637,
+     "nm40": 0.0498,
+     "nm42": 0.06,
+     "nm43": 0.0777
+    }
+   },
+   {
+    "group": "9",
+    "spots": 31109,
+    "disagreement": 0.0482,
+    "split": 0.048,
+    "vs_reference": {
+     "nm26": 0.0472,
+     "nm27": 0.0521,
+     "nm36": 0.0242,
+     "nm38": 0.0469,
+     "nm40": 0.0361,
+     "nm42": 0.0497,
+     "nm43": 0.0564
+    }
+   }
+  ]
+ },
+ "most_disputed": [
+  {
+   "street": "river",
+   "position": "BB",
+   "stack_bb": 21.6,
+   "facing_a_bet": false,
+   "seated": 9,
+   "hand": "A2o",
+   "cards": "Ah 2c",
+   "board": "Qs 9d 9h Jh Ks",
+   "disagreement": 0.674,
+   "choices": {
+    "nm25": {
+     "check/call": 0.058,
+     "bet/raise 1": 0.834,
+     "bet/raise 2": 0.099
+    },
+    "nm26": {
+     "check/call": 0.744,
+     "bet/raise 2": 0.066,
+     "all-in": 0.163
+    },
+    "nm27": {
+     "check/call": 0.966
+    },
+    "nm36": {
+     "check/call": 0.321,
+     "bet/raise 1": 0.19,
+     "bet/raise 2": 0.281,
+     "all-in": 0.207
+    },
+    "nm38": {
+     "bet/raise 2": 0.776,
+     "all-in": 0.205
+    },
+    "nm40": {
+     "check/call": 0.854,
+     "bet/raise 1": 0.107
+    },
+    "nm42": {
+     "bet/raise 1": 0.159,
+     "bet/raise 2": 0.369,
+     "all-in": 0.446
+    },
+    "nm43": {
+     "check/call": 0.06,
+     "all-in": 0.933
+    }
+   }
+  },
+  {
+   "street": "flop",
+   "position": "SB",
+   "stack_bb": 16.8,
+   "facing_a_bet": true,
+   "seated": 7,
+   "hand": "98s",
+   "cards": "8h 9h",
+   "board": "6h 5h 3d",
+   "disagreement": 0.648,
+   "choices": {
+    "nm25": {
+     "fold": 0.94
+    },
+    "nm26": {
+     "fold": 0.921,
+     "all-in": 0.055
+    },
+    "nm27": {
+     "fold": 0.133,
+     "check/call": 0.599,
+     "all-in": 0.267
+    },
+    "nm36": {
+     "fold": 0.41,
+     "check/call": 0.321,
+     "all-in": 0.269
+    },
+    "nm38": {
+     "all-in": 0.963
+    },
+    "nm40": {
+     "fold": 0.052,
+     "check/call": 0.087,
+     "all-in": 0.861
+    },
+    "nm42": {
+     "fold": 0.081,
+     "check/call": 0.916
+    },
+    "nm43": {
+     "check/call": 0.879,
+     "all-in": 0.105
+    }
+   }
+  },
+  {
+   "street": "river",
+   "position": "MP",
+   "stack_bb": 15.8,
+   "facing_a_bet": false,
+   "seated": 9,
+   "hand": "84o",
+   "cards": "4d 8s",
+   "board": "9s 8h 6d Td Kd",
+   "disagreement": 0.61,
+   "choices": {
+    "nm25": {
+     "bet/raise 1": 0.713,
+     "bet/raise 2": 0.272
+    },
+    "nm26": {
+     "check/call": 0.924
+    },
+    "nm27": {
+     "check/call": 0.927,
+     "bet/raise 1": 0.058
+    },
+    "nm36": {
+     "check/call": 0.645,
+     "bet/raise 1": 0.279,
+     "bet/raise 2": 0.053
+    },
+    "nm38": {
+     "bet/raise 2": 0.148,
+     "all-in": 0.831
+    },
+    "nm40": {
+     "check/call": 0.682,
+     "bet/raise 1": 0.293
+    },
+    "nm42": {
+     "check/call": 0.099,
+     "bet/raise 1": 0.771,
+     "bet/raise 2": 0.081
+    },
+    "nm43": {
+     "check/call": 0.388,
+     "all-in": 0.542
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "BTN",
+   "stack_bb": 23.1,
+   "facing_a_bet": true,
+   "seated": 5,
+   "hand": "ATo",
+   "cards": "Ah Ts",
+   "board": "",
+   "disagreement": 0.607,
+   "choices": {
+    "nm25": {
+     "fold": 0.975
+    },
+    "nm26": {
+     "check/call": 0.17,
+     "all-in": 0.805
+    },
+    "nm27": {
+     "check/call": 0.801,
+     "all-in": 0.194
+    },
+    "nm36": {
+     "fold": 0.916
+    },
+    "nm38": {
+     "fold": 0.981
+    },
+    "nm40": {
+     "fold": 0.296,
+     "check/call": 0.21,
+     "all-in": 0.494
+    },
+    "nm42": {
+     "fold": 0.967
+    },
+    "nm43": {
+     "fold": 0.053,
+     "all-in": 0.93
+    }
+   }
+  },
+  {
+   "street": "river",
+   "position": "BB",
+   "stack_bb": 28.1,
+   "facing_a_bet": false,
+   "seated": 9,
+   "hand": "A2s",
+   "cards": "Ac 2c",
+   "board": "3c Ks Kc 6h Qd",
+   "disagreement": 0.606,
+   "choices": {
+    "nm25": {
+     "bet/raise 1": 0.627,
+     "bet/raise 2": 0.221,
+     "all-in": 0.134
+    },
+    "nm26": {
+     "check/call": 0.819,
+     "bet/raise 1": 0.101,
+     "bet/raise 2": 0.067
+    },
+    "nm27": {
+     "check/call": 0.958
+    },
+    "nm36": {
+     "check/call": 0.068,
+     "bet/raise 1": 0.565,
+     "bet/raise 2": 0.345
+    },
+    "nm38": {
+     "bet/raise 1": 0.081,
+     "bet/raise 2": 0.913
+    },
+    "nm40": {
+     "check/call": 0.935
+    },
+    "nm42": {
+     "bet/raise 1": 0.376,
+     "bet/raise 2": 0.305,
+     "all-in": 0.271
+    },
+    "nm43": {
+     "check/call": 0.864,
+     "all-in": 0.061
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "BB",
+   "stack_bb": 7.7,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "KJo",
+   "cards": "Jh Kd",
+   "board": "",
+   "disagreement": 0.604,
+   "choices": {
+    "nm25": {
+     "fold": 0.986
+    },
+    "nm26": {
+     "fold": 0.939
+    },
+    "nm27": {
+     "check/call": 0.093,
+     "all-in": 0.901
+    },
+    "nm36": {
+     "fold": 0.386,
+     "check/call": 0.478,
+     "all-in": 0.136
+    },
+    "nm38": {
+     "fold": 0.081,
+     "check/call": 0.7,
+     "all-in": 0.219
+    },
+    "nm40": {
+     "fold": 0.077,
+     "check/call": 0.32,
+     "all-in": 0.603
+    },
+    "nm42": {
+     "all-in": 0.929
+    },
+    "nm43": {
+     "fold": 0.074,
+     "all-in": 0.897
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "BB",
+   "stack_bb": 46.9,
+   "facing_a_bet": true,
+   "seated": 8,
+   "hand": "74o",
+   "cards": "7h 4s",
+   "board": "",
+   "disagreement": 0.59,
+   "choices": {
+    "nm25": {
+     "fold": 0.981
+    },
+    "nm26": {
+     "all-in": 0.971
+    },
+    "nm27": {
+     "bet/raise 1": 0.065,
+     "all-in": 0.918
+    },
+    "nm36": {
+     "fold": 0.929
+    },
+    "nm38": {
+     "all-in": 0.948
+    },
+    "nm40": {
+     "fold": 0.673,
+     "bet/raise 1": 0.14,
+     "all-in": 0.174
+    },
+    "nm42": {
+     "fold": 0.125,
+     "bet/raise 1": 0.637,
+     "all-in": 0.23
+    },
+    "nm43": {
+     "fold": 0.521,
+     "all-in": 0.438
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "HJ",
+   "stack_bb": 3.5,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "A4o",
+   "cards": "4d Ah",
+   "board": "",
+   "disagreement": 0.59,
+   "choices": {
+    "nm25": {
+     "bet/raise 3": 0.918
+    },
+    "nm26": {
+     "bet/raise 1": 0.105,
+     "bet/raise 2": 0.647,
+     "bet/raise 3": 0.185,
+     "all-in": 0.062
+    },
+    "nm27": {
+     "fold": 0.09,
+     "all-in": 0.863
+    },
+    "nm36": {
+     "fold": 0.102,
+     "bet/raise 2": 0.082,
+     "bet/raise 3": 0.761
+    },
+    "nm38": {
+     "bet/raise 2": 0.08,
+     "bet/raise 3": 0.728,
+     "all-in": 0.183
+    },
+    "nm40": {
+     "fold": 0.192,
+     "bet/raise 2": 0.174,
+     "bet/raise 3": 0.501,
+     "all-in": 0.129
+    },
+    "nm42": {
+     "bet/raise 1": 0.316,
+     "bet/raise 2": 0.371,
+     "bet/raise 3": 0.313
+    },
+    "nm43": {
+     "bet/raise 1": 0.2,
+     "bet/raise 2": 0.492,
+     "all-in": 0.273
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "UTG+1",
+   "stack_bb": 13.4,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "99",
+   "cards": "9h 9c",
+   "board": "",
+   "disagreement": 0.579,
+   "choices": {
+    "nm25": {
+     "fold": 0.996
+    },
+    "nm26": {
+     "fold": 0.111,
+     "check/call": 0.652,
+     "all-in": 0.237
+    },
+    "nm27": {
+     "check/call": 0.834,
+     "all-in": 0.165
+    },
+    "nm36": {
+     "fold": 0.922,
+     "check/call": 0.073
+    },
+    "nm38": {
+     "check/call": 0.889,
+     "all-in": 0.109
+    },
+    "nm40": {
+     "fold": 0.195,
+     "check/call": 0.598,
+     "all-in": 0.207
+    },
+    "nm42": {
+     "check/call": 0.187,
+     "all-in": 0.808
+    },
+    "nm43": {
+     "check/call": 0.953
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "SB",
+   "stack_bb": 4.3,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "QJs",
+   "cards": "Qc Jc",
+   "board": "",
+   "disagreement": 0.575,
+   "choices": {
+    "nm25": {
+     "fold": 0.087,
+     "all-in": 0.874
+    },
+    "nm26": {
+     "all-in": 0.965
+    },
+    "nm27": {
+     "all-in": 0.984
+    },
+    "nm36": {
+     "fold": 0.181,
+     "all-in": 0.804
+    },
+    "nm38": {
+     "fold": 0.992
+    },
+    "nm40": {
+     "all-in": 0.961
+    },
+    "nm42": {
+     "fold": 0.859,
+     "all-in": 0.123
+    },
+    "nm43": {
+     "check/call": 0.909,
+     "all-in": 0.086
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "SB",
+   "stack_bb": 18.3,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "QJs",
+   "cards": "Qc Jc",
+   "board": "",
+   "disagreement": 0.571,
+   "choices": {
+    "nm25": {
+     "check/call": 0.233,
+     "bet/raise 1": 0.255,
+     "all-in": 0.504
+    },
+    "nm26": {
+     "bet/raise 1": 0.708,
+     "all-in": 0.207
+    },
+    "nm27": {
+     "fold": 0.388,
+     "check/call": 0.607
+    },
+    "nm36": {
+     "fold": 0.332,
+     "check/call": 0.296,
+     "bet/raise 1": 0.134,
+     "all-in": 0.238
+    },
+    "nm38": {
+     "fold": 0.923
+    },
+    "nm40": {
+     "fold": 0.056,
+     "check/call": 0.349,
+     "bet/raise 1": 0.216,
+     "all-in": 0.379
+    },
+    "nm42": {
+     "check/call": 0.141,
+     "bet/raise 1": 0.626,
+     "all-in": 0.219
+    },
+    "nm43": {
+     "fold": 0.361,
+     "check/call": 0.618
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "BTN",
+   "stack_bb": 3.2,
+   "facing_a_bet": true,
+   "seated": 6,
+   "hand": "T9o",
+   "cards": "Td 9c",
+   "board": "",
+   "disagreement": 0.571,
+   "choices": {
+    "nm25": {
+     "fold": 0.74,
+     "bet/raise 3": 0.236
+    },
+    "nm26": {
+     "fold": 0.115,
+     "bet/raise 3": 0.776,
+     "all-in": 0.051
+    },
+    "nm27": {
+     "bet/raise 2": 0.151,
+     "bet/raise 3": 0.621,
+     "all-in": 0.199
+    },
+    "nm36": {
+     "fold": 0.844,
+     "bet/raise 3": 0.083,
+     "all-in": 0.052
+    },
+    "nm38": {
+     "bet/raise 2": 0.11,
+     "bet/raise 3": 0.856
+    },
+    "nm40": {
+     "fold": 0.591,
+     "bet/raise 2": 0.06,
+     "bet/raise 3": 0.275,
+     "all-in": 0.067
+    },
+    "nm42": {
+     "bet/raise 1": 0.097,
+     "bet/raise 2": 0.355,
+     "bet/raise 3": 0.546
+    },
+    "nm43": {
+     "bet/raise 2": 0.226,
+     "bet/raise 3": 0.069,
+     "all-in": 0.631
+    }
+   }
+  },
+  {
+   "street": "river",
+   "position": "BTN",
+   "stack_bb": 27.1,
+   "facing_a_bet": false,
+   "seated": 9,
+   "hand": "K6o",
+   "cards": "Ks 6d",
+   "board": "As 8h Ac 2c 7s",
+   "disagreement": 0.568,
+   "choices": {
+    "nm25": {
+     "check/call": 0.147,
+     "bet/raise 1": 0.163,
+     "bet/raise 2": 0.63,
+     "all-in": 0.061
+    },
+    "nm26": {
+     "bet/raise 2": 0.327,
+     "all-in": 0.655
+    },
+    "nm27": {
+     "check/call": 0.806,
+     "bet/raise 1": 0.164
+    },
+    "nm36": {
+     "check/call": 0.195,
+     "bet/raise 1": 0.078,
+     "bet/raise 2": 0.4,
+     "all-in": 0.327
+    },
+    "nm38": {
+     "check/call": 0.666,
+     "bet/raise 1": 0.064,
+     "bet/raise 2": 0.233
+    },
+    "nm40": {
+     "check/call": 0.052,
+     "bet/raise 2": 0.255,
+     "all-in": 0.679
+    },
+    "nm42": {
+     "check/call": 0.938,
+     "bet/raise 1": 0.055
+    },
+    "nm43": {
+     "check/call": 0.965
+    }
+   }
+  },
+  {
+   "street": "turn",
+   "position": "HJ",
+   "stack_bb": 13.2,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "99",
+   "cards": "9c 9h",
+   "board": "Jd 5h 6s 4c",
+   "disagreement": 0.567,
+   "choices": {
+    "nm25": {
+     "fold": 0.218,
+     "check/call": 0.766
+    },
+    "nm26": {
+     "fold": 0.77,
+     "check/call": 0.096,
+     "all-in": 0.135
+    },
+    "nm27": {
+     "fold": 0.072,
+     "all-in": 0.887
+    },
+    "nm36": {
+     "fold": 0.122,
+     "check/call": 0.874
+    },
+    "nm38": {
+     "fold": 0.914,
+     "check/call": 0.076
+    },
+    "nm40": {
+     "fold": 0.555,
+     "check/call": 0.289,
+     "all-in": 0.156
+    },
+    "nm42": {
+     "fold": 0.152,
+     "check/call": 0.693,
+     "all-in": 0.155
+    },
+    "nm43": {
+     "fold": 0.984
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "MP",
+   "stack_bb": 6.4,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "QTs",
+   "cards": "Ts Qs",
+   "board": "",
+   "disagreement": 0.562,
+   "choices": {
+    "nm25": {
+     "bet/raise 3": 0.093,
+     "all-in": 0.865
+    },
+    "nm26": {
+     "fold": 0.839,
+     "all-in": 0.083
+    },
+    "nm27": {
+     "bet/raise 1": 0.058,
+     "bet/raise 2": 0.062,
+     "bet/raise 3": 0.055,
+     "all-in": 0.804
+    },
+    "nm36": {
+     "fold": 0.385,
+     "bet/raise 3": 0.092,
+     "all-in": 0.515
+    },
+    "nm38": {
+     "fold": 0.9,
+     "all-in": 0.062
+    },
+    "nm40": {
+     "fold": 0.161,
+     "bet/raise 1": 0.058,
+     "bet/raise 2": 0.21,
+     "bet/raise 3": 0.259,
+     "all-in": 0.312
+    },
+    "nm42": {
+     "fold": 0.223,
+     "bet/raise 2": 0.051,
+     "bet/raise 3": 0.674
+    },
+    "nm43": {
+     "fold": 0.652,
+     "all-in": 0.337
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "BTN",
+   "stack_bb": 9.9,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "KQs",
+   "cards": "Kd Qd",
+   "board": "",
+   "disagreement": 0.561,
+   "choices": {
+    "nm25": {
+     "fold": 0.183,
+     "bet/raise 1": 0.787
+    },
+    "nm26": {
+     "fold": 0.932
+    },
+    "nm27": {
+     "fold": 0.752,
+     "check/call": 0.246
+    },
+    "nm36": {
+     "fold": 0.054,
+     "bet/raise 1": 0.848,
+     "all-in": 0.074
+    },
+    "nm38": {
+     "fold": 0.818,
+     "bet/raise 1": 0.089,
+     "all-in": 0.053
+    },
+    "nm40": {
+     "fold": 0.382,
+     "bet/raise 1": 0.454,
+     "all-in": 0.119
+    },
+    "nm42": {
+     "check/call": 0.053,
+     "bet/raise 1": 0.746,
+     "all-in": 0.171
+    },
+    "nm43": {
+     "fold": 0.396,
+     "check/call": 0.59
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "LJ",
+   "stack_bb": 3.3,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "33",
+   "cards": "3c 3d",
+   "board": "",
+   "disagreement": 0.557,
+   "choices": {
+    "nm25": {
+     "bet/raise 3": 0.913
+    },
+    "nm26": {
+     "fold": 0.054,
+     "bet/raise 1": 0.068,
+     "bet/raise 2": 0.238,
+     "bet/raise 3": 0.582,
+     "all-in": 0.057
+    },
+    "nm27": {
+     "fold": 0.89,
+     "all-in": 0.1
+    },
+    "nm36": {
+     "fold": 0.232,
+     "bet/raise 3": 0.628,
+     "all-in": 0.111
+    },
+    "nm38": {
+     "fold": 0.164,
+     "bet/raise 2": 0.058,
+     "bet/raise 3": 0.553,
+     "all-in": 0.224
+    },
+    "nm40": {
+     "fold": 0.171,
+     "bet/raise 2": 0.187,
+     "bet/raise 3": 0.467,
+     "all-in": 0.142
+    },
+    "nm42": {
+     "bet/raise 1": 0.27,
+     "bet/raise 2": 0.382,
+     "bet/raise 3": 0.346
+    },
+    "nm43": {
+     "fold": 0.14,
+     "bet/raise 2": 0.053,
+     "all-in": 0.787
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "MP",
+   "stack_bb": 2.9,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "66",
+   "cards": "6s 6d",
+   "board": "",
+   "disagreement": 0.557,
+   "choices": {
+    "nm25": {
+     "fold": 0.838,
+     "bet/raise 2": 0.123
+    },
+    "nm26": {
+     "bet/raise 1": 0.277,
+     "bet/raise 2": 0.697
+    },
+    "nm27": {
+     "fold": 0.893,
+     "all-in": 0.073
+    },
+    "nm36": {
+     "fold": 0.602,
+     "bet/raise 2": 0.192,
+     "all-in": 0.167
+    },
+    "nm38": {
+     "fold": 0.353,
+     "bet/raise 2": 0.608
+    },
+    "nm40": {
+     "fold": 0.142,
+     "bet/raise 1": 0.148,
+     "bet/raise 2": 0.658,
+     "all-in": 0.053
+    },
+    "nm42": {
+     "fold": 0.061,
+     "bet/raise 1": 0.196,
+     "bet/raise 2": 0.741
+    },
+    "nm43": {
+     "bet/raise 1": 0.128,
+     "bet/raise 2": 0.159,
+     "all-in": 0.709
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "SB",
+   "stack_bb": 3.8,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "85s",
+   "cards": "5d 8d",
+   "board": "",
+   "disagreement": 0.557,
+   "choices": {
+    "nm25": {
+     "fold": 0.315,
+     "bet/raise 2": 0.087,
+     "bet/raise 3": 0.381,
+     "all-in": 0.166
+    },
+    "nm26": {
+     "fold": 0.389,
+     "check/call": 0.102,
+     "bet/raise 1": 0.097,
+     "bet/raise 2": 0.124,
+     "all-in": 0.288
+    },
+    "nm27": {
+     "fold": 0.905
+    },
+    "nm36": {
+     "fold": 0.451,
+     "all-in": 0.456
+    },
+    "nm38": {
+     "fold": 0.062,
+     "bet/raise 1": 0.097,
+     "bet/raise 2": 0.137,
+     "bet/raise 3": 0.195,
+     "all-in": 0.507
+    },
+    "nm40": {
+     "fold": 0.636,
+     "bet/raise 3": 0.058,
+     "all-in": 0.243
+    },
+    "nm42": {
+     "bet/raise 1": 0.177,
+     "bet/raise 2": 0.418,
+     "bet/raise 3": 0.402
+    },
+    "nm43": {
+     "fold": 0.094,
+     "all-in": 0.831
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "BB",
+   "stack_bb": 2.2,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "T6o",
+   "cards": "6h Td",
+   "board": "",
+   "disagreement": 0.554,
+   "choices": {
+    "nm25": {
+     "fold": 1.0
+    },
+    "nm26": {
+     "check/call": 0.991
+    },
+    "nm27": {
+     "check/call": 1.0
+    },
+    "nm36": {
+     "fold": 0.982
+    },
+    "nm38": {
+     "fold": 0.77,
+     "check/call": 0.23
+    },
+    "nm40": {
+     "fold": 0.152,
+     "check/call": 0.848
+    },
+    "nm42": {
+     "check/call": 0.994
+    },
+    "nm43": {
+     "fold": 0.999
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "BB",
+   "stack_bb": 1.6,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "T5s",
+   "cards": "5c Tc",
+   "board": "",
+   "disagreement": 0.549,
+   "choices": {
+    "nm25": {
+     "fold": 1.0
+    },
+    "nm26": {
+     "fold": 0.999
+    },
+    "nm27": {
+     "check/call": 0.997
+    },
+    "nm36": {
+     "fold": 0.972
+    },
+    "nm38": {
+     "fold": 0.092,
+     "check/call": 0.908
+    },
+    "nm40": {
+     "fold": 0.261,
+     "check/call": 0.739
+    },
+    "nm42": {
+     "fold": 0.998
+    },
+    "nm43": {
+     "check/call": 0.994
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "BTN",
+   "stack_bb": 24.9,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "A6s",
+   "cards": "Ad 6d",
+   "board": "",
+   "disagreement": 0.549,
+   "choices": {
+    "nm25": {
+     "fold": 0.959
+    },
+    "nm26": {
+     "fold": 0.528,
+     "bet/raise 1": 0.289,
+     "all-in": 0.153
+    },
+    "nm27": {
+     "bet/raise 1": 0.58,
+     "all-in": 0.416
+    },
+    "nm36": {
+     "fold": 0.862,
+     "bet/raise 1": 0.071,
+     "all-in": 0.051
+    },
+    "nm38": {
+     "bet/raise 1": 0.603,
+     "all-in": 0.356
+    },
+    "nm40": {
+     "fold": 0.373,
+     "bet/raise 1": 0.325,
+     "all-in": 0.287
+    },
+    "nm42": {
+     "fold": 0.938
+    },
+    "nm43": {
+     "fold": 0.059,
+     "bet/raise 1": 0.083,
+     "all-in": 0.846
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "HJ",
+   "stack_bb": 9.9,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "KJs",
+   "cards": "Kd Jd",
+   "board": "",
+   "disagreement": 0.548,
+   "choices": {
+    "nm25": {
+     "fold": 0.954
+    },
+    "nm26": {
+     "fold": 0.951
+    },
+    "nm27": {
+     "bet/raise 1": 0.161,
+     "all-in": 0.832
+    },
+    "nm36": {
+     "fold": 0.679,
+     "bet/raise 1": 0.186,
+     "all-in": 0.132
+    },
+    "nm38": {
+     "bet/raise 1": 0.162,
+     "all-in": 0.832
+    },
+    "nm40": {
+     "fold": 0.205,
+     "bet/raise 1": 0.26,
+     "all-in": 0.524
+    },
+    "nm42": {
+     "fold": 0.06,
+     "bet/raise 1": 0.094,
+     "all-in": 0.843
+    },
+    "nm43": {
+     "fold": 0.986
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "SB",
+   "stack_bb": 3.4,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "T5s",
+   "cards": "Th 5h",
+   "board": "",
+   "disagreement": 0.548,
+   "choices": {
+    "nm25": {
+     "fold": 0.999
+    },
+    "nm26": {
+     "check/call": 0.996
+    },
+    "nm27": {
+     "check/call": 0.999
+    },
+    "nm36": {
+     "fold": 0.959
+    },
+    "nm38": {
+     "fold": 1.0
+    },
+    "nm40": {
+     "fold": 0.4,
+     "check/call": 0.6
+    },
+    "nm42": {
+     "check/call": 0.998
+    },
+    "nm43": {
+     "fold": 0.913,
+     "check/call": 0.087
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "HJ",
+   "stack_bb": 4.6,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "A6o",
+   "cards": "6c Ah",
+   "board": "",
+   "disagreement": 0.548,
+   "choices": {
+    "nm25": {
+     "fold": 0.838,
+     "bet/raise 3": 0.065,
+     "all-in": 0.085
+    },
+    "nm26": {
+     "fold": 0.443,
+     "bet/raise 1": 0.077,
+     "bet/raise 2": 0.168,
+     "bet/raise 3": 0.218,
+     "all-in": 0.094
+    },
+    "nm27": {
+     "all-in": 0.919
+    },
+    "nm36": {
+     "fold": 0.294,
+     "bet/raise 3": 0.21,
+     "all-in": 0.45
+    },
+    "nm38": {
+     "fold": 0.677,
+     "all-in": 0.217
+    },
+    "nm40": {
+     "fold": 0.257,
+     "bet/raise 2": 0.155,
+     "bet/raise 3": 0.351,
+     "all-in": 0.187
+    },
+    "nm42": {
+     "bet/raise 1": 0.318,
+     "bet/raise 2": 0.427,
+     "bet/raise 3": 0.255
+    },
+    "nm43": {
+     "fold": 0.402,
+     "all-in": 0.557
+    }
+   }
+  }
+ ]
+}
