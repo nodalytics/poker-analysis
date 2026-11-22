@@ -50,6 +50,7 @@ BASE_TRAIN = {
     "kl": 0.3, "keep-hours": 2, "tourney": True, "no-open-limp": True, "menu": "mtt", "depths": "10,25", "ante": 1,
     "short": 0.5, "lib": "blueprint/libbp7.so", "abs": "blueprint/out",
 }  # fmt: skip
+# the fields each check type takes; consistency and opponent-model are reports (they always pass)
 CHECKS = {
     "seqtest": {"against", "early", "pass", "max", "looks", "alpha", "margin"},
     "exploit": {"minutes", "limit"},
@@ -58,12 +59,8 @@ CHECKS = {
     "styles": {"count", "seed", "hands", "baseline", "worst_tolerance", "mean_tolerance", "human"},
     "consistency": {"reference", "deals"},
     "exploiters": {"profiles", "minutes", "limit"},
-    "patterns": {
-        "baseline",
-        "hands",
-        "limit",
-        "mine",
-    },  # a report: where the run decides differently from the reference
+    "patterns": {"baseline", "hands", "limit", "mine"},
+    "opponent-model": {"hands", "seeds", "samples"},
 }
 SEQ_PASS = {"ahead", "not_behind", "equivalent_or_ahead"}
 BLUFFERS = {"jam-any", "jam-40", "raise-any"}
@@ -460,6 +457,28 @@ class Run:
             return ok, ", ".join(
                 f"vs {k} {v['run'][0]:+.1f} ({base} {v['baseline'][0]:+.1f})" for k, v in res.items()
             ) + (f"; each within {c['tolerance']:.1f} of {base}")
+        if typ == "opponent-model":  # Kestrel itself with the run: none, search, search with the opponent model
+            kdir = os.path.join(self.dir, "kestrel_model")
+            if not os.path.exists(os.path.join(kdir, "net.json")):
+                self.save(status="checking", stage=f"check {cid}: exporting {self.name} for Kestrel")
+                os.makedirs(kdir, exist_ok=True)
+                self.sh([PY, "scripts/advisor_vectors.py", os.path.join(run, "checkpoint.pt"), "--out", kdir,
+                         "--vectors-out", os.path.join(kdir, "vectors.json"), "--hands", "4", "--icm", "10"],
+                        f"{cid}.log", timeout_min=30)  # fmt: skip
+            self.save(status="checking", stage=f"check {cid}: Kestrel against the test platform's bots, three ways")
+            cmd = [PY, "scripts/kestrel_opponent_check.py", "--model", kdir, "--hands", str(c.get("hands", 2000)),
+                   "--seeds", ",".join(str(x) for x in c.get("seeds", [1, 2])), "--samples", str(c.get("samples", 256)),
+                   "--python", PY, "--out", out]  # fmt: skip
+            self.sh(cmd, f"{cid}.log", timeout_min=600)
+            res = json.load(open(out))
+            arms = ", ".join(f"{k} {v['bb100']:+.1f}" for k, v in res["arms"].items())
+            gain = res.get("model_over_search", {})
+            g = (
+                f"; model over search {gain['bb100']:+.1f} [{gain['ci95'][0]:+.1f}, {gain['ci95'][1]:+.1f}]"
+                if gain
+                else ""
+            )
+            return True, f"report: {arms} bb/100{g}"
         if typ == "patterns":  # what people found works against the bot: each must win at most limit against the run
             if c.get("mine", True):
                 self.mine_patterns()

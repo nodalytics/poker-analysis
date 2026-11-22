@@ -87,6 +87,16 @@
    "limit": 0.0
   },
   {
+   "id": "opponent-model",
+   "type": "opponent-model",
+   "hands": 2000,
+   "seeds": [
+    1,
+    2
+   ],
+   "samples": 256
+  },
+  {
    "id": "consistency",
    "type": "consistency",
    "reference": "nm25",
