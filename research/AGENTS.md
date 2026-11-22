@@ -137,7 +137,7 @@ even after deletion.
 
 ## Git
 
-- Remote `nodalytics` → `github.com/nodalytics/poker-analysis` (private), branch `main`. Leave `origin` alone.
+- Remote `nodalytics` → `github.com/nodalytics/poker-analysis` (**public**), branch `main`; the only remote.
 - Commit as `ojies` (`68871517+ojies@users.noreply.github.com`); this repo's local identity is a bot.
 - **No `Co-Authored-By` or other attribution trailers**, ever, even if a tool suggests one.
 - The repo ignores `*.log`; add result logs with `git add -f`.
