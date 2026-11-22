@@ -1,8 +1,8 @@
 # Poker Analysis
 
 Poker research and tools: Texas hold'em only. The current goal is a strong, hard-to-exploit bot for **9-max
-tournaments (MTT)**: ICM, 10–25 big-blind stacks, push/fold. There is also a tournament analysis toolkit, an MCP
-server for it, and a desktop study advisor.
+tournaments (MTT)**: ICM, 10–25 big-blind stacks, push/fold. Older work (a tournament analysis toolkit, its MCP
+server and a Python study advisor) is in `archive/`.
 
 Progress is live on the watch page, **Poker AI Watch** (https://poker.stbfarm.org). It shows the training runs, the
 search, the poker-sense checks and the ICM push/fold results.
@@ -15,7 +15,7 @@ device; see [`kestrel/README.md`](kestrel/README.md).
 
 | Path | Contents |
 |---|---|
-| `archive/` | The milestone-1 tournament toolkit, kept for reference: `src/` (cards and hand evaluation, equity, ICM and bubble factor, stack categories and push/fold ranges, the analyzer, a solver wrapper), its MCP server (`mcp_server.py`, `requirements-mcp.txt`), the terminal menu, Flask GUI and demo (`poker_tool.py`, `poker_gui.py`, `demo_milestone1.py`), and `tests/` |
+| `archive/` | The milestone-1 tournament toolkit, kept for reference: `src/` (cards and hand evaluation, equity, ICM and bubble factor, stack categories and push/fold ranges, the analyzer, a solver wrapper), its MCP server (`mcp_server.py`, `requirements-mcp.txt`), the terminal menu, Flask GUI and demo (`poker_tool.py`, `poker_gui.py`, `demo_milestone1.py`), `tests/`, and the Python study advisor (`advisor/`, replaced by Kestrel's apps) |
 | `kestrel/` | Kestrel: the C++ bot and advisor (engine, connectors, server, web and desktop apps, Docker deployment) |
 | `research/` | The research: the bots, the solvers, the evaluations and their write-ups (below) |
 
@@ -26,7 +26,6 @@ device; see [`kestrel/README.md`](kestrel/README.md).
 | `scripts/ninemax_*.py` | The 9-max neural route: the GPU table engine, population self-play training, evaluation, search at play time, poker-sense checks, ICM push/fold checks, export, and the watch server |
 | `scripts/icm.py`, `scripts/icm_pushfold.py` | ICM equity (Malmuth-Harville), random tournament tables, and push/fold equilibria under ICM |
 | `blueprint/` | C++ CFR solvers and tools: the heads-up blueprint, best response, re-solving, card abstraction, and the dealing library used by the 9-max engine |
-| `advisor/` | The study advisor (hand review, spots, trainer); being rewritten in C++/Qt 6 with capture-only session recording |
 | `models/` | Exported networks in half precision with a manifest (`models/README.md`); large packs are GitHub releases |
 | `web/` | The watch page (served by `scripts/ninemax_watch.py`) |
 | `docs/` | Write-ups, one per study, dated |
@@ -58,5 +57,5 @@ LLM evaluations (local models as agents, the arena ladder, GUI control) are also
 
 ## Rules
 
-- No bots, OCR or real-time assistance on real-money poker sites. The advisor is for study away from the table.
+- No bots, OCR or real-time assistance on real-money poker sites. Kestrel's advice is for study and its own bot tables, not real-money play.
 - Never commit credentials or keys; the repo is public. Machine addresses and logins go in `.secrets/` (ignored).

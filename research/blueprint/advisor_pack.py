@@ -1,4 +1,4 @@
-"""Build the blueprint data pack the advisor app ships: about 85 MB instead of 0.8 GB.
+"""Build the heads-up blueprint data pack Kestrel reads (--pack): about 85 MB instead of 0.8 GB.
 
     tree.tsv, meta.txt                     the betting tree and abstraction size
     avg.u8                                 the average strategy, each (node, bucket) normalised and stored in 8 bits
