@@ -1,6 +1,7 @@
 # Kestrel's container images: built from kestrel/Dockerfile, self-tested inside the image (nm17's vectors, nm30's
 # bounties and nm37's 6-max cash, as ctest runs them), then pushed to ghcr.io. The lab runs these images
-# (kestrel/docker/compose.yml). Images share the account's storage quota with build artifacts: keep a few.
+# (kestrel/docker/compose.yml). The test platform's image is built here only to check it builds: it is not published,
+# deploy.sh builds it on the lab. Images share the account's storage quota with build artifacts: keep a few.
 name: kestrel-docker
 on:
   push:
@@ -19,7 +20,6 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       IMAGE: ghcr.io/${{ github.repository_owner }}/kestrel
-      PLATFORM_IMAGE: ghcr.io/${{ github.repository_owner }}/kestrel-testplatform
     steps:
       - uses: actions/checkout@v4
       - name: heads-up data pack (for the self-test; not in the image)
@@ -55,16 +55,10 @@ jobs:
           esac
           for t in $tags; do
             docker tag kestrel:ci "$IMAGE:$t" && docker push -q "$IMAGE:$t"
-            docker tag kestrel-testplatform:ci "$PLATFORM_IMAGE:$t" && docker push -q "$PLATFORM_IMAGE:$t"
           done
       - name: keep the newest images only
         uses: actions/delete-package-versions@v5
         with:
           package-name: kestrel
-          package-type: container
-          min-versions-to-keep: 6
-      - uses: actions/delete-package-versions@v5
-        with:
-          package-name: kestrel-testplatform
           package-type: container
           min-versions-to-keep: 6
