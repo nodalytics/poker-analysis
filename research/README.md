@@ -1,6 +1,6 @@
-# LLM research
+# Research
 
-Local LLM evaluations run on the lab, with the scripts, sandboxes and raw results needed to rerun them.
+The research behind the bots (9-max networks, the heads-up blueprint, solvers, evaluations) and the local LLM agent studies, with the scripts, sandboxes and raw results needed to rerun them; the runs are on the lab.
 
 Python is managed with uv: `uv sync`, then `uv run python scripts/<name>.py`.
 
