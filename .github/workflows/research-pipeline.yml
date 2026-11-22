@@ -1,0 +1,55 @@
+# The research pipeline's gate on GitHub (research/pipeline/README.md): every run file in research/pipeline/runs/ is
+# checked on each pull request and push. A file the pull request adds must also have a name not used before. The lab
+# does the running: it reads main by itself (scripts/pipeline.py poll) and needs nothing from this workflow, so this
+# runs on GitHub's machines only, with no secrets, and a pull request from a fork can reach nothing.
+name: research-pipeline
+on:
+  pull_request:
+    paths: ["research/pipeline/runs/**", "research/scripts/pipeline.py", ".github/workflows/research-pipeline.yml"]
+  push:
+    branches: [main]
+    paths: ["research/pipeline/runs/**", "research/scripts/pipeline.py", ".github/workflows/research-pipeline.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: research
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: every run file
+        run: |
+          shopt -s nullglob
+          files=(pipeline/runs/*.json)
+          if [ ${#files[@]} -eq 0 ]; then echo "no run files"; exit 0; fi
+          python3 scripts/pipeline.py validate "${files[@]}"
+      - name: the run files this pull request adds use new names
+        if: github.event_name == 'pull_request'
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          added=$(git diff --name-only --diff-filter=A "$BASE"...HEAD -- pipeline/runs/ | sed 's|^research/||' | grep '\.json$' || true)
+          if [ -z "$added" ]; then echo "no new run files"; exit 0; fi
+          echo "$added" | xargs python3 scripts/pipeline.py validate --new
+          {
+            echo "### Runs this pull request adds"
+            echo "Merging starts them on the lab, one at a time (research/pipeline/README.md):"
+            echo "$added" | sed 's|^|- |'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: what the lab will run
+        if: github.event_name == 'push'
+        run: |
+          {
+            echo "### Merged runs"
+            echo "The lab fetches main every two minutes and starts any run below without a state yet; progress on the dashboard (Pipeline)."
+            for f in pipeline/runs/*.json; do [ -e "$f" ] && echo "- $(basename "$f" .json)"; done
+          } >> "$GITHUB_STEP_SUMMARY"

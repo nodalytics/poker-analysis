@@ -495,6 +495,14 @@ def main():
                     return self.send(results())
                 if u.path == "/api/info":  # what each run is and where it stands
                     return self.send({os.path.basename(r): info(r) for r in runs()})
+                if u.path == "/api/pipeline":  # the pipeline's runs (scripts/pipeline.py), newest first
+                    states = []
+                    for f in glob.glob(os.path.join("results", "pipeline", "*", "state.json")):
+                        try:
+                            states.append(json.load(open(f)))
+                        except ValueError:  # being rewritten this instant
+                            pass
+                    return self.send(sorted(states, key=lambda s: s.get("started") or "", reverse=True))
                 if u.path == "/api/runs":
                     return self.send({os.path.basename(r): curves(r) for r in runs()})
                 if u.path == "/api/snapshots":  # the recorded checkpoints of a run

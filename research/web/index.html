@@ -97,6 +97,8 @@
     <p class="muted">Target: <b>9-max tournaments (MTT)</b>, with ICM. nm25 is the champion (nm20 fine-tuned: 10–25bb, a big-blind ante, half the final tables short-handed), shipped to Kestrel as mtt9 version 2; nm17 was the champion before it. nm10–nm20 are tournament runs; nm1–nm9 and nm11 are earlier cash runs, kept for reference. Tournament results are in ICM-equity chips, not comparable with cash.</p>
     <div class="totals" id="totals"></div>
     <div class="runs-wrap"><table class="runs" id="runsTable"></table></div>
+    <h2>Pipeline <span class="muted">(runs merged into main: the lab trains and judges each one by itself; pipeline/README.md)</span></h2>
+    <div class="runs-wrap"><table class="runs" id="pipeTable"><tr><td class="muted">no pipeline runs yet</td></tr></table></div>
     <h2>How it is learning <span class="muted">(1-vs-8 duplicate results, bb/100; x = hands trained)</span></h2>
     <div class="legend" id="legend"></div>
     <div class="charts" id="charts"></div>
@@ -259,6 +261,21 @@ async function refreshInfo() {
       <th class="num" title="2,000 bot_sim sessions against bots, clones and personas">Real tables</th><th>Snapshots</th></tr>` + rows;
   } catch (e) { /* the charts report the connection */ }
 }
+async function refreshPipeline() {
+  try {
+    const runs = await get("/api/pipeline");
+    if (!runs.length) return;
+    const rows = runs.map((s) => {
+      const checks = Object.entries(s.checks || {}).map(([k, c]) => `<div>${c.pass ? "✓" : "✗"} <b>${esc(k)}</b> ${esc(c.result)}</div>`).join("");
+      const verdict = s.verdict ? `<b>${esc(s.verdict)}</b>` : "";
+      const report = /^https:\/\/github\.com\//.test(s.report || "") ? ` · <a href="${esc(s.report)}">results PR</a>` : (s.report ? ` · ${esc(s.report)}` : "");
+      return `<tr><td><span class="dot ${esc(s.status)}"></span><b>${esc(s.name)}</b></td><td class="wrap">${esc(s.question)}</td>
+        <td>${esc(s.status)}</td><td class="wrap">${esc(s.stage)}</td><td class="wrap">${checks || "–"}</td><td>${verdict}${report}</td>
+        <td class="muted">${esc((s.commit || "").slice(0, 7))}<br>${esc(s.updated || "")}</td></tr>`;
+    }).join("");
+    $("pipeTable").innerHTML = `<tr><th>Run</th><th>Question</th><th>Status</th><th>Stage</th><th>Checks</th><th>Verdict</th><th>Commit · updated</th></tr>` + rows;
+  } catch (e) { /* the charts report the connection */ }
+}
 const pct = (v) => v === null || v === undefined ? "–" : (100 * v).toFixed(0) + "%";
 async function refreshResults() {
   try {
@@ -319,6 +336,7 @@ async function refreshResults() {
 }
 async function refreshCharts() {
   refreshInfo();
+  refreshPipeline();
   refreshResults();
   try {
     const runs = await get("/api/runs");
@@ -504,7 +522,7 @@ $("liveRun").onchange = $("liveOpp").onchange = () => { if (liveOn) { C.stop(); 
   await refreshCharts();
   await loadSnapshots(false);
   // every minute: the charts, the snapshots and the results (new evaluations appear without a reload)
-  setInterval(async () => { await refreshCharts(); await loadSnapshots(true); await refreshResults(); }, 60000);
+  setInterval(async () => { await refreshCharts(); await loadSnapshots(true); await refreshResults(); await refreshPipeline(); }, 60000);
 })();
 </script>
 </body>

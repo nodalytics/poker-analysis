@@ -1,4 +1,82 @@
-# Model pipeline
+# The research pipeline
+
+Two parts: **runs** (`runs/`, `scripts/pipeline.py`) train and judge a network on the lab when a pull request is
+merged; the **model pipeline** (`recipes/`, `scripts/model_pipeline.py`) packages an adopted network for Kestrel.
+
+## Runs
+
+Train, test, judge and report a 9-max network without logging in to the lab. **A recipe merged into `main` is a
+run**: the lab picks it up, trains it, runs every check the recipe lists, writes the verdict and opens a pull
+request with the results. Progress shows on the dashboard (https://poker.stbfarm.org, "Pipeline").
+
+### Propose a run
+
+1. Copy [`example.json`](example.json) to `runs/<name>.json`. The name is `nm` and a number not used before
+   (the last ones are in `../models/manifest.json` and `../results/prereg/`).
+2. Say what it asks (`question`) and why (`why`), what to train (`train`), and how it is judged (`checks`).
+3. Open a pull request. CI checks the recipe (`scripts/pipeline.py validate`); a reviewer reads it.
+4. Merge it. Within two minutes the lab starts the run. The merge commit is the pre-registration: the checks
+   and their pass rules cannot change once it runs, and a failed run is reported, not re-run until it passes.
+5. When it finishes, the lab opens a pull request titled `<name>: adopted` or `<name>: not adopted` with the
+   results (`results/pipeline/<name>/`, `results/prereg/<name>.result.json`). Merge it to keep the record. An adopted
+   network then ships through the model pipeline below.
+
+One run at a time. A run is refused when the lab has less than 25 GB of disk free.
+
+### The run file
+
+```json
+{
+ "name": "nm44",
+ "question": "What the run answers, in a sentence.",
+ "why": "What made us ask: a finding, a player's report, a leak.",
+ "train": {"init": "nm25", "minutes": 360, "gpu": "any", "args": {"early": 0.25}},
+ "checks": [ ... ],
+ "adopt": "all"
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `train.init` | the run it starts from (its `blueprint/<init>/checkpoint.pt`) |
+| `train.minutes` | training time, 10 to 720 |
+| `train.gpu` | `any` (the first free: PRO 6000, then 4090, then 3090), `pro6000`, `4090` or `3090` |
+| `train.args` | options of `scripts/ninemax_selfplay.py` over nm25's settings (`--early 0.25` is `"early": 0.25`; a flag is `true`, `false` drops one of nm25's) |
+
+nm25's settings (`BASE_TRAIN` in `scripts/pipeline.py`): `--tourney --no-open-limp --menu mtt --depths 10,25
+--ante 1 --short 0.5`, population training with the rule players (`--pool reg,reg,tag,maniac,station
+--pool-share 0.5`) and an exploiter in training (`--exploit-share 0.25`), NeuRD with a KL pull of 0.3.
+
+#### Checks
+
+Every check must pass for `adopted`. Each has an `id` (your name for it) and a `type`:
+
+| Type | What it does | Fields | Passes when |
+|---|---|---|---|
+| `seqtest` | sequential duplicate match, the run vs 8 copies of `against` (`seqtest.py`) | `against`, `early` (share of early-stage tables, 0-1), `max` deals, `alpha`, `margin` | `pass`: `ahead` (stops for a difference, ahead), `equivalent_or_ahead`, or `not_behind` (not stopped behind, and not ending below -0.25) |
+| `opponents` | the run and `baseline` each against 8 copies of rule players that play nothing like it, on the same deals (`pipeline_opponents.py`) | `against` (some of `reg`, `tag`, `maniac`, `station`, `random`), `baseline`, `hands`, `tolerance` | it is no more than `tolerance` bb/100 below the baseline against every one |
+| `styles` | generated opponents: nm25-like players with their tendencies pushed by random amounts (looser, tighter, more aggressive, folding more or less to bets, shoving, bluffing weak hands), plus five archetypes (nit, station, maniac, shover, loose-passive); the run and `baseline` each against 8 copies of every one, on the same deals | `count` (generated, 0-60), `seed` (the same seed is the same crowd for every run), `hands`, `baseline`, `worst_tolerance`, `mean_tolerance` | it is within `worst_tolerance` of the baseline against its worst style, and within `mean_tolerance` on average |
+| `bluffers` | scripted bluffers in one seat vs 8 copies of the run (`ninemax_hybrid.py`) | `bluffers` (some of `jam-any`, `jam-40`, `raise-any`), `early`, `unit` (`chips` or `equity`) | every bluffer loses (95% interval below 0) |
+| `exploit` | a learner trains for `minutes` to beat the run (`ninemax_eval.py exploit`) | `minutes`, `limit` | the exploiter's last reading is at most `limit` bb/100 |
+
+Matches against copies of nm25 alone only say how a run does against nm25. A good run file also has
+`opponents` and `styles` checks and an `exploit` check, so a run cannot pass by learning to beat its own family.
+
+### On the lab
+
+The service (`deploy/research-pipeline.service`, installed with `sudo sh pipeline/deploy/install.sh` from
+`~/research`) runs `scripts/pipeline.py poll`. It fetches `main` from GitHub every two minutes (the repo is
+public: it needs no access to fetch). Before a run it copies `main`'s code (`scripts/`, `pipeline/`, `web/`)
+over the lab's copy, so the code that runs is the merged code; results on the lab are never overwritten. Nothing on GitHub can send the lab a command: it only reads `main`.
+
+- State and logs: `results/pipeline/<name>/` (`state.json`, `train.log`, one `.json` and `.log` per check).
+- Status: `python3 scripts/pipeline.py status`.
+- Stop a run: `touch results/pipeline/<name>/STOP`.
+- Rerun the checks of a run whose training finished: `python3 scripts/pipeline.py run pipeline/runs/<name>.json --from checks`.
+- Results pull requests need a token in `~/.config/research-pipeline/token` (mode 600): a fine-grained token
+  for this repository with Contents and Pull requests read and write. Without it the results stay on the lab.
+
+## The model pipeline: shipping a network
 
 From a recipe to a model Kestrel can install: `scripts/model_pipeline.py`. Its docstring has the full usage.
 
@@ -25,7 +103,7 @@ The package holds:
 
 Recipes live in `recipes/`. `mtt9.yaml` is nm17's recipe.
 
-## First run (2026-11-14): nm17 shipped as mtt9 version 1
+### First run (2026-11-14): nm17 shipped as mtt9 version 1
 
 `gate blueprint/nm17 --snapshot avg_12h.pt` passed all five gates:
 

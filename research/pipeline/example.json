@@ -1,0 +1,75 @@
+{
+ "name": "nm99",
+ "question": "Does adding early-stage tables (25% of tables, winner-take-all payouts) make a network that plays early stages better without giving up anything at final tables, bubbles and in the money?",
+ "why": "An example recipe: nm43's registration written as a pipeline recipe. Copy it to recipes/<name>.json, change the name, the question and the training, and open a pull request.",
+ "train": {
+  "init": "nm25",
+  "minutes": 360,
+  "gpu": "any",
+  "args": {
+   "early": 0.25
+  }
+ },
+ "checks": [
+  {
+   "id": "no-harm",
+   "type": "seqtest",
+   "against": "nm25",
+   "early": 0,
+   "pass": "not_behind",
+   "max": 40000,
+   "alpha": 0.025,
+   "margin": 0.5
+  },
+  {
+   "id": "early-gain",
+   "type": "seqtest",
+   "against": "nm25",
+   "early": 1,
+   "pass": "ahead",
+   "max": 40000,
+   "alpha": 0.025,
+   "margin": 0.5
+  },
+  {
+   "id": "bluffs",
+   "type": "bluffers",
+   "early": 1,
+   "unit": "chips",
+   "bluffers": [
+    "jam-any",
+    "jam-40"
+   ],
+   "pass": "all_lose"
+  },
+  {
+   "id": "other-players",
+   "type": "opponents",
+   "against": [
+    "reg",
+    "tag",
+    "maniac",
+    "station"
+   ],
+   "baseline": "nm25",
+   "tolerance": 2.0
+  },
+  {
+   "id": "styles",
+   "type": "styles",
+   "count": 20,
+   "seed": 2026,
+   "hands": 5000,
+   "baseline": "nm25",
+   "worst_tolerance": 3.0,
+   "mean_tolerance": 0.5
+  },
+  {
+   "id": "robust",
+   "type": "exploit",
+   "minutes": 30,
+   "limit": 1.2
+  }
+ ],
+ "adopt": "all"
+}
