@@ -1,5 +1,5 @@
 # Kestrel on the lab: the server (web app, advice, bot sessions) and the test platform its bot plays.
-#   KESTREL_PACK=~/llm-research/blueprint/pack docker compose -f kestrel/docker/compose.yml up -d
+#   KESTREL_PACK=~/research/blueprint/pack docker compose -f kestrel/docker/compose.yml up -d
 # The web app is on the lab's 127.0.0.1:8890 only; reach it with  ssh -N -L 8890:127.0.0.1:8890 <lab>  and open the
 # access link that  docker compose ... exec kestrel cat /data/config/kestrel/token  gives (http://localhost:8890/?token=...).
 name: kestrel

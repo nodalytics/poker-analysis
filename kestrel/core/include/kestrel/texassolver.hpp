@@ -1,6 +1,6 @@
 // TexasSolver (github.com/bupticybee/TexasSolver, AGPL-3.0) as an external program: Kestrel writes its input script,
 // runs console_solver, reads the solved tree back. Run as a separate process, never linked, so Kestrel's licence
-// stays its own. The same script as llm-research/scripts/poker_agents.py (_solve).
+// stays its own. The same script as research/scripts/poker_agents.py (_solve).
 #pragma once
 #include <string>
 #include <vector>

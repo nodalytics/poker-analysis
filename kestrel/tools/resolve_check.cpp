@@ -1,5 +1,5 @@
 // kestrel_resolve_check --vectors FILE --run DIR [--abs DIR] [--iters 500]: Kestrel's safe river re-solve against
-// the Python bot's (libresolve) on the same logged river decisions (llm-research/scripts/kestrel_hu_vectors.py
+// the Python bot's (libresolve) on the same logged river decisions (research/scripts/kestrel_hu_vectors.py
 // --resolve). Compares the re-solved strategy at our hand, action by action. Tolerance 5e-3: Kestrel normalises the
 // blueprint in double precision and libresolve in single, and 500 CFR+ iterations carry that into the third decimal.
 #include <chrono>

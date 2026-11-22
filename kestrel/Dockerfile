@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Kestrel's server (kestreld) with the 9-max networks, the web app and the self-test, for the lab and CI.
-# Build from the repo root (the networks live in llm-research/models):
+# Build from the repo root (the networks live in research/models):
 #   docker build -f kestrel/Dockerfile -t kestrel .
 # The heads-up data pack (80 MB) is not in the image: mount it at /data/pack (heads-up tables need it, and so does
 # the self-test).
@@ -10,12 +10,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends g++ cmake ninja
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
 COPY kestrel/ kestrel/
-COPY llm-research/models/ninemax/nm25/net.bin llm-research/models/ninemax/nm25/net.json llm-research/models/ninemax/nm25/
-COPY llm-research/models/ninemax/nm17/net.bin llm-research/models/ninemax/nm17/net.json llm-research/models/ninemax/nm17/
-COPY llm-research/models/ninemax/nm30/net.bin llm-research/models/ninemax/nm30/net.json llm-research/models/ninemax/nm30/
-COPY llm-research/models/ninemax/nm37/net.bin llm-research/models/ninemax/nm37/net.json llm-research/models/ninemax/nm37/
+COPY research/models/ninemax/nm25/net.bin research/models/ninemax/nm25/net.json research/models/ninemax/nm25/
+COPY research/models/ninemax/nm17/net.bin research/models/ninemax/nm17/net.json research/models/ninemax/nm17/
+COPY research/models/ninemax/nm30/net.bin research/models/ninemax/nm30/net.json research/models/ninemax/nm30/
+COPY research/models/ninemax/nm37/net.bin research/models/ninemax/nm37/net.json research/models/ninemax/nm37/
 # portable x86-64 code (no -march=native): CI builds the image on one machine and the lab runs it on another
-RUN cmake -S kestrel -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DKESTREL_QT=OFF -DKESTREL_DATA=/src/llm-research \
+RUN cmake -S kestrel -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DKESTREL_QT=OFF -DKESTREL_DATA=/src/research \
           -DCMAKE_INSTALL_PREFIX=/opt/kestrel \
     && cmake --build build \
     && cmake --install build \

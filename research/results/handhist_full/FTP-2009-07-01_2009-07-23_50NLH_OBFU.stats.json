@@ -1,0 +1,14 @@
+{
+ "source": "~/datasets/phh-dataset/data/handhq/FTP-2009-07-01_2009-07-23_50NLH_OBFU",
+ "hands": 520255,
+ "players": {
+  "50NL": {
+   "hands": 3180503,
+   "vpip": 0.24,
+   "pfr": 0.12,
+   "three_bet": 0.048,
+   "aggression": 2.66,
+   "fold_to_bet": 0.558
+  }
+ }
+}

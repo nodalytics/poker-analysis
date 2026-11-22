@@ -1,4 +1,4 @@
-// Installed models: packages from llm-research/scripts/model_pipeline.py (a <name>/ folder with model.json, the
+// Installed models: packages from research/scripts/model_pipeline.py (a <name>/ folder with model.json, the
 // weights, net.bin/net.json and test vectors), checked file by file against the sha256 in model.json.
 #pragma once
 #include <string>

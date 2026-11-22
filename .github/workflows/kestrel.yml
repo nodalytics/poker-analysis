@@ -1,6 +1,6 @@
 # Kestrel (kestrel/): build and self-test on Linux, macOS and Windows on every change, and publish a GitHub Release
-# with the packaged builds when a tag kestrel-v<version> is pushed (e.g. git tag kestrel-v0.1.0 && git push
-# nodalytics kestrel-v0.1.0). The self-test replays the Python reference (9-max network, ICM, the heads-up
+# with the packaged builds when a tag kestrel-v<version> is pushed; the kestrel-release workflow (run by hand) tags and
+# starts this. The self-test replays the Python reference (9-max network, ICM, the heads-up
 # blueprint on 1,160 logged Slumbot decisions); a build that does not reproduce it is not packaged.
 name: kestrel
 on:
@@ -56,8 +56,8 @@ jobs:
         run: |
           gh release download headsup-pack-run2 --repo "$GITHUB_REPOSITORY" --pattern 'headsup-pack-run2.tar.zst' \
             --dir pack-download
-          mkdir -p llm-research/blueprint
-          zstd -dc pack-download/headsup-pack-run2.tar.zst | tar -x -C llm-research/blueprint/
+          mkdir -p research/blueprint
+          zstd -dc pack-download/headsup-pack-run2.tar.zst | tar -x -C research/blueprint/
 
       - name: version
         id: v

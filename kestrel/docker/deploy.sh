@@ -4,7 +4,7 @@
 #   sh kestrel/docker/deploy.sh [--local] [TAG]        TAG: main (default), a version (0.4.0) or sha-abc1234
 set -eu
 cd "$(dirname "$0")"
-export KESTREL_PACK="${KESTREL_PACK:-$HOME/llm-research/blueprint/pack}"
+export KESTREL_PACK="${KESTREL_PACK:-$HOME/research/blueprint/pack}"
 if [ "${1:-}" = "--local" ]; then
   shift
   (cd ../.. && docker build -q -f kestrel/Dockerfile -t kestrel:local . && \
