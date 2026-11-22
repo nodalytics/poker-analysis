@@ -1,0 +1,9 @@
+{
+ "final_bb100": 0.3,
+ "log": [
+  "0.0 min 0 hands  learner vs 8 x target: +0.2 bb/100 [-0.2, +0.7]\n",
+  "10.0 min 33896427 hands 2069 steps entropy 0.069  learner vs 8 x target: +0.8 bb/100 [+0.3, +1.3]\n",
+  "20.0 min 67776471 hands 4137 steps entropy 0.047  learner vs 8 x target: +1.0 bb/100 [+0.5, +1.5]\n",
+  "30.0 min 101378004 hands 6188 steps entropy 0.063  learner vs 8 x target: +0.3 bb/100 [-0.3, +0.9]\n"
+ ]
+}
