@@ -247,7 +247,7 @@ empty seats. A competitive entry needs a short 6-max cash run of the 9-max train
 request-response), a `structured` codec for its JSON actions, and the 6-max engine.
 
 **poker-pi, 2026-11-14.** A FastAPI tournament server for bots (MIT), cloned and run on the lab in its own venv at
-`127.0.0.1:8794` (its default port is 8000, the lab's another service tunnel, so `POKER_PORT` is always set), reached
+`127.0.0.1:8794` (its default port is 8000, which another service on the lab uses, so `POKER_PORT` is always set), reached
 from this machine through the SSH connection. A bot long-polls `GET /turn?wait=25` (a 204 with no body when nothing is
 due), gets the whole table (seats, stacks, the hand's event log with stacks at its start, legal moves) and answers
 with the turn's id. Every player posts the ante. The connector needed four general features, now in the structured

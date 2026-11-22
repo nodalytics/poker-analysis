@@ -46,8 +46,8 @@ Ollama setup (install, serve, models, tool templates) is in `sandboxes/ollama/`.
 - The address, login and key are not in the repo: they are in `../.secrets/lab.env` (the `.secrets/` folder is ignored by
   git), which sets `LAB` (user@host) and `LAB_KEY` (the key file): `. .secrets/lab.env` from the repo root. Log in with
   `ssh -o IdentitiesOnly=yes -i "$LAB_KEY" "$LAB"`. No sudo.
-- **It runs the live another service terminal** (`another service's container`). Never stop, restart, rebuild or exec into it,
-  and never bind the lab's port **8000**, which is the another service tunnel.
+- **Other services run there.** Never stop, restart, rebuild or exec into a container you did not start, and never
+  bind the lab's port **8000**, which another service uses.
 - GPUs: RTX PRO 6000 (96GB), RTX 4090, RTX 3090. Ollama keeps one model loaded at a time.
 - Bind every new service to `127.0.0.1` and reach it through an SSH tunnel.
 - Run long jobs detached (`setsid nohup ... &`) and write results to a file. Never `pkill -f` in the same SSH
@@ -87,7 +87,6 @@ Ollama setup (install, serve, models, tool templates) is in `sandboxes/ollama/`.
   that is not reproducible from this repo.
 - No activation tools, KMS emulators (AutoKMS, KMSAuto) or key generators: piracy, and common malware carriers.
   Use the evaluation rebuild, or a real licence applied with `slmgr /ipk` when there is one.
-- Not another service: leave another service out of the VM until asked.
 
 ## Arena: chess and poker ladder (`scripts/arena.py`)
 

@@ -7,7 +7,7 @@ services:
   kestrel:
     image: ${KESTREL_IMAGE:-kestrel:local}
     restart: unless-stopped
-    ports: ["127.0.0.1:8890:8890"]  # never 8000 (the another service) and not 8790 (the training dashboard)
+    ports: ["127.0.0.1:8890:8890"]  # never 8000 (another service's) and not 8790 (the training dashboard)
     volumes:
       - kestrel-data:/data              # kestrel.db, sessions, the access token: kept across new images
       - ${KESTREL_PACK:?set KESTREL_PACK to the heads-up data pack}:/data/pack:ro

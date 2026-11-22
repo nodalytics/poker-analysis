@@ -14,7 +14,7 @@
 # ~/windows11/oem holds oem/install.bat (CRLF line endings). It runs once, at the end of a fresh install,
 # and sets up Windows-MCP; to rerun it, delete storage/data.img and start again (the ISO is reused).
 # Windows-MCP listens on the guest's port 8000 with no authentication; it is published only on the lab's
-# 127.0.0.1:8765, because the lab's own port 8000 is the another service tunnel.
+# 127.0.0.1:8765, because the lab's own port 8000 is another service's.
 set -eu
 mkdir -p ~/windows11/storage ~/windows11/oem
 docker run -d --name win11-gui --env-file ~/windows11/credentials.env \
