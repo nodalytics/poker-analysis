@@ -280,7 +280,7 @@ class Lab:
 
     def hands(self, net, menu, n=48, keep=8, opp="self"):
         """Play n deals; keep the `keep` most eventful ones (plus one quiet one) as replayable hands."""
-        from ninemax_selfplay import features
+        from ninemax_selfplay import board_of, features
 
         P = 9
         bk, rk, cd = self.dealer.deal(n, cards=True)
@@ -288,6 +288,7 @@ class Lab:
         T = Tables(n, P, menu, "cpu", stacks=stacks)
         if pay is not None:
             T.pay, T.eq0 = pay.float(), icm(T.stack.float(), pay).float()
+        T.board = board_of(cd, P, "cpu")  # the board cards: networks with texture inputs (nm41) read them
         # with a rule opponent: the network's seat at each table, a random seated one (short tables have empty seats)
         hero = torch.multinomial((T.stack > 0).float(), 1).squeeze(1)
         steps = [[] for _ in range(n)]
