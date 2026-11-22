@@ -1,5 +1,5 @@
 // Safe river re-solving (Brown & Sandholm 2017, with the re-solve gadget of Burch, Johanson & Bowling 2014): a port
-// of llm-research/blueprint/resolve.cpp onto Kestrel's blueprint, so it runs on the data pack too.
+// of research/blueprint/resolve.cpp onto Kestrel's blueprint, so it runs on the data pack too.
 #include <algorithm>
 #include <stdexcept>
 #ifdef _OPENMP

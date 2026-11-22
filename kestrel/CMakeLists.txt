@@ -7,7 +7,7 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-set(KESTREL_DATA "${CMAKE_CURRENT_SOURCE_DIR}/../llm-research" CACHE PATH "directory holding models/ and blueprint/pack/")
+set(KESTREL_DATA "${CMAKE_CURRENT_SOURCE_DIR}/../research" CACHE PATH "directory holding models/ and blueprint/pack/")
 option(KESTREL_CORE_ONLY "the core and its checks only: no connectors, server or daemon (no OpenSSL needed)" OFF)
 option(KESTREL_STATIC "link the C and C++ runtimes statically (portable release binaries)" OFF)
 option(KESTREL_NATIVE "compile for this machine's CPU (faster re-solves; the binary may not run elsewhere)" OFF)

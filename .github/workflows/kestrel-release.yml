@@ -1,0 +1,78 @@
+# Release Kestrel by hand: Actions -> kestrel-release -> Run workflow, with the version (e.g. 0.4.0).
+#
+# It checks the version is the one the code reports (server.cpp VERSION and kestreld's MCP version) and that the tag
+# is new, creates the annotated tag kestrel-v<version> on the chosen commit (main by default) and pushes it, then
+# starts the two release builds on that tag:
+#   kestrel         builds and self-tests Linux, macOS and Windows, and publishes the GitHub Release with them
+#   kestrel-docker  builds and self-tests the images and pushes ghcr.io/nodalytics/kestrel:<version> and :latest
+# A tag pushed with the workflow's own token does not start other workflows by itself, so they are started here with
+# workflow_dispatch on the tag, which reads exactly as a tag push to them (github.ref is refs/tags/kestrel-v...).
+#
+# dry_run: only the checks, no tag. To redo a failed release, delete the tag and its release first (gh release
+# delete kestrel-vX --cleanup-tag), then run this again.
+name: kestrel-release
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, without the v (e.g. 0.4.0); must match server.cpp VERSION"
+        required: true
+      ref:
+        description: "Branch or commit to tag"
+        default: main
+      dry_run:
+        description: "Only check, do not tag"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write  # push the tag
+  actions: write  # start the build workflows
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      VERSION: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+      - name: check the version and the tag
+        run: |
+          set -eu
+          echo "$VERSION" | grep -Eqx '[0-9]+\.[0-9]+\.[0-9]+' || { echo "::error::version must be X.Y.Z, got $VERSION"; exit 1; }
+          code=$(sed -nE 's/.*constexpr const char\* VERSION = "([^"]+)".*/\1/p' kestrel/connectors/src/server.cpp)
+          mcp=$(sed -nE 's/.*mcp_stdio\(o\.port, "([^"]+)"\).*/\1/p' kestrel/tools/kestreld.cpp)
+          echo "server.cpp VERSION $code, kestreld MCP version $mcp"
+          [ "$code" = "$VERSION" ] || { echo "::error::server.cpp says $code, not $VERSION: bump it first"; exit 1; }
+          [ "$mcp" = "$VERSION" ] || { echo "::error::kestreld.cpp says $mcp, not $VERSION: bump it first"; exit 1; }
+          if git ls-remote --exit-code --tags origin "refs/tags/kestrel-v$VERSION" >/dev/null; then
+            echo "::error::kestrel-v$VERSION already exists"; exit 1
+          fi
+          last=$(git tag -l 'kestrel-v*' --sort=-v:refname | head -1)
+          echo "commit $(git rev-parse --short HEAD); last release ${last:-none}"
+          if [ -n "$last" ]; then
+            echo "### Changes since $last" >> "$GITHUB_STEP_SUMMARY"
+            git log --format='- %s' "$last"..HEAD -- kestrel >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: tag and push
+        if: ${{ !inputs.dry_run }}
+        run: |
+          set -eu
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "kestrel-v$VERSION" -m "Kestrel $VERSION"
+          git push origin "kestrel-v$VERSION"
+      - name: start the release builds on the tag
+        if: ${{ !inputs.dry_run }}
+        run: |
+          set -eu
+          gh workflow run kestrel.yml --ref "kestrel-v$VERSION"
+          gh workflow run kestrel-docker.yml --ref "kestrel-v$VERSION"
+          {
+            echo "### Tagged kestrel-v$VERSION"
+            echo "Started the builds: the release appears at https://github.com/$GITHUB_REPOSITORY/releases/tag/kestrel-v$VERSION when they pass."
+          } >> "$GITHUB_STEP_SUMMARY"

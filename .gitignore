@@ -17,4 +17,5 @@ tools/TexasSolver/
 sessions/
 kestrel.db
 # extracted from the Pluribus hands by scripts/human_clone.py extract; regenerate rather than commit
-llm-research/results/human_clones/*.npz
+research/results/human_clones/*.npz
+

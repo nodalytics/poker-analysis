@@ -1,0 +1,14 @@
+{
+ "source": "~/datasets/phh-dataset/data/handhq/ONG-2009-07-01_2009-07-23_400NLH_OBFU",
+ "hands": 984256,
+ "players": {
+  "400NL": {
+   "hands": 4642904,
+   "vpip": 0.294,
+   "pfr": 0.167,
+   "three_bet": 0.068,
+   "aggression": 2.26,
+   "fold_to_bet": 0.523
+  }
+ }
+}

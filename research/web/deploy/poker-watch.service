@@ -1,0 +1,17 @@
+[Unit]
+Description=9-max watch page server (research scripts/ninemax_watch.py, 127.0.0.1:8790)
+After=network.target
+
+[Service]
+Type=simple
+User=LAB_USER
+WorkingDirectory=LAB_HOME/research
+Environment=PYTHONPATH=scripts
+Environment=OMP_NUM_THREADS=2
+ExecStart=LAB_HOME/research/.venv-gpu/bin/python scripts/ninemax_watch.py --port 8790
+Nice=5
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

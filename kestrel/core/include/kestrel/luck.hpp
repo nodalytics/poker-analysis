@@ -1,5 +1,5 @@
 // Luck-adjusted results for heads-up sessions where both hands are shown at the end (Slumbot shows them): AIVAT's
-// chance-node corrections in the unbiased form of llm-research/scripts/aivat_lite.py, with exact equities.
+// chance-node corrections in the unbiased form of research/scripts/aivat_lite.py, with exact equities.
 //   all-in      both all-in before the river: the result becomes its expectation, equity x pot - our chips
 //   pre-flop    a control variate on our pre-flop equity against their actual hand (mean exactly 0.5 whatever
 //               anyone plays), slope per position fitted on the other half of the hands

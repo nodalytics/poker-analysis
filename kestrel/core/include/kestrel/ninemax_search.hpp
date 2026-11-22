@@ -1,4 +1,4 @@
-// Search at decision time for the 9-max networks: a port of llm-research/scripts/ninemax_search.py, which beat plain
+// Search at decision time for the 9-max networks: a port of research/scripts/ninemax_search.py, which beat plain
 // nm25 by +2 to +6 bb/100 against four kinds of opponent (paired, 4,000 deals each; docs/2026-11-15-what-the-models-
 // learn.md).
 //

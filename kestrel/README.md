@@ -5,7 +5,7 @@
 Kestrel is the C++ poker advisor and self-playing bot (phase D). It covers 9-max tournaments, with heads-up as a second mode. It plays by itself on platforms that offer a bot API, through connectors described in a file. It serves REST, WebSocket, TCP and MCP on `127.0.0.1`, with a web page and a Qt app on top.
 
 Design, boundary and order of work: [`docs/design.md`](docs/design.md). Kestrel stands alone at the repo root; the
-research that feeds it (training, the models, the Python reference) is in `llm-research/`.
+research that feeds it (training, the models, the Python reference) is in `research/`.
 
 ## Start it
 
@@ -32,23 +32,23 @@ Kestrel serves the same methods on four interfaces, all on this computer:
 
 ```
 kestreld check kestrel/connectors/slumbot.yaml        # what it talks to and which KESTREL_* variables it reads
-kestreld play kestrel/connectors/slumbot.yaml --hands 1000 --out sessions/slumbot --pack llm-research/blueprint/pack
+kestreld play kestrel/connectors/slumbot.yaml --hands 1000 --out sessions/slumbot --pack research/blueprint/pack
 kestreld list                                          # every connector in ~/.config/kestrel/connectors
-kestreld play kestrel/connectors/slumbot.yaml --hands 100 --out sessions/ts --pack llm-research/blueprint/pack \
+kestreld play kestrel/connectors/slumbot.yaml --hands 100 --out sessions/ts --pack research/blueprint/pack \
     --solver texassolver --texassolver tools/TexasSolver/build/console_solver \
     --texassolver-resources tools/TexasSolver/resources   # model + solver: the blueprint with TexasSolver
-kestreld serve --pack llm-research/blueprint/pack --connectors kestrel/connectors --web kestrel/web --assets kestrel/assets
+kestreld serve --pack research/blueprint/pack --connectors kestrel/connectors --web kestrel/web --assets kestrel/assets
                                                        # the web app at http://127.0.0.1:8790/ with live tables
 ```
 
 **9-max tables.** A table connector (`codec: structured`) is played by a 9-max model at 2–9 handed tables, any bet sizes. The test platform is a PokerKit tournament against rule bots on this computer:
 
 ```
-uv --project llm-research run python kestrel/testplatform/ninemax_platform.py &       # 127.0.0.1:8793
-kestreld play kestrel/connectors/testplatform.yaml --model llm-research/models/ninemax/nm25 \
-    --tournaments 20 --hands 100000 --out sessions/test9 --pack llm-research/blueprint/pack
-kestreld play kestrel/connectors/testplatform.yaml --model llm-research/models/ninemax/nm25 --solver search \
-    --search-samples 1024 --tournaments 20 --hands 100000 --out sessions/test9s --pack llm-research/blueprint/pack
+uv --project research run python kestrel/testplatform/ninemax_platform.py &       # 127.0.0.1:8793
+kestreld play kestrel/connectors/testplatform.yaml --model research/models/ninemax/nm25 \
+    --tournaments 20 --hands 100000 --out sessions/test9 --pack research/blueprint/pack
+kestreld play kestrel/connectors/testplatform.yaml --model research/models/ninemax/nm25 --solver search \
+    --search-samples 1024 --tournaments 20 --hands 100000 --out sessions/test9s --pack research/blueprint/pack
 ```
 
 **Search** (`--solver search` or `search-robust`, or the Solver box of a new 9-max table) plays nm25 with search at
@@ -155,11 +155,11 @@ Kestrel serves the name (`KESTREL_PUBLIC_HOSTS` in compose.yml) only with its ac
 
 ```
 cmake -S kestrel -B kestrel/build && cmake --build kestrel/build -j
-kestrel/build/kestrel_selftest --vectors kestrel/testdata --model llm-research/models/ninemax/nm17 \
-    --pack llm-research/blueprint/pack          # or: ctest --test-dir kestrel/build
+kestrel/build/kestrel_selftest --vectors kestrel/testdata --model research/models/ninemax/nm17 \
+    --pack research/blueprint/pack          # or: ctest --test-dir kestrel/build
 ```
 
-The self-test replays reference data written by the Python code in `llm-research/scripts/`: `advisor_vectors.py` for 9-max, and `kestrel_hu_vectors.py` for 1,160 logged Slumbot decisions. For each decision it checks:
+The self-test replays reference data written by the Python code in `research/scripts/`: `advisor_vectors.py` for 9-max, and `kestrel_hu_vectors.py` for 1,160 logged Slumbot decisions. For each decision it checks:
 - the actor and the street;
 - the legal actions and the raise sizes;
 - the features and the network's output.
@@ -168,7 +168,7 @@ It also checks the payoffs and ICM, and for heads-up the blueprint's node, bucke
 
 `ctest` also replays nm30's vectors (bounties) and nm37's (6-max cash, deep stacks, three empty seats).
 
-The data it reads (the network `models/ninemax/nm17/net.bin` and the heads-up pack `blueprint/pack/`) defaults to `../llm-research`. Set `-DKESTREL_DATA=...` to point elsewhere.
+The data it reads (the network `models/ninemax/nm17/net.bin` and the heads-up pack `blueprint/pack/`) defaults to `../research`. Set `-DKESTREL_DATA=...` to point elsewhere.
 
 | Path | Contents |
 |---|---|

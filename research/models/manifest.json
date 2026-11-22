@@ -1,0 +1,186 @@
+{
+ "champions": {
+  "9max-mtt": "nm25"
+ },
+ "headsup_pack": {
+  "archive_sha256": "736f292eae7e91bf18b12e899fdc0fedf58db00881d204a0fe866db610fc12e6",
+  "asset": "headsup-pack-run2.tar.zst",
+  "bytes": 29608249,
+  "files_sha256": {
+   "avg.u8": "6c4b247a52ad33f4fe9ec45a8e1e5a3d5b608e5d94a2887dae0d2351ee13fd82",
+   "bp.dll": "a34c301c5775479a6ca8277002527df50227ecab80224bd28a270ddf825af9a1",
+   "flop_buckets.u8": "e766b41c6a7cea365f7e7bd45d870298b0e5efba53472945d8d2187736b5644f",
+   "meta.txt": "c6e228ab31408fc11ba8aa8fb015ecd6e2b6a5896d150f8ad9e6e96404f82265",
+   "river_cuts.f32": "172e1d15ca9b525ca85c336c21f86893f7ed76bf3862f873de5524be5162b3d1",
+   "tree.tsv": "49512932c54aed4abdba936bfe97355415ba3d9d71d77ab50a54b0d343b8650e",
+   "turn_buckets.u8": "e20b6421fb2204a98893b243dbd91173ee508281057d37ab9b999105b2d0dcff"
+  },
+  "note": "LBR about +104 bb/100; run 7 read +104.5 [+84, +125] on 30,000 hands and did not beat it",
+  "release": "https://github.com/nodalytics/poker-analysis/releases/tag/headsup-pack-run2",
+  "source": "blueprint/run2 via blueprint/advisor_pack.py, 2026-11-08",
+  "unpack": "zstd -dc headsup-pack-run2.tar.zst | tar -x -C blueprint/   (from research/; gives blueprint/pack/)"
+ },
+ "ninemax": {
+  "nm10": {
+   "bytes": 4516705,
+   "hands_trained": 5134483456,
+   "minutes_trained": 1440.0,
+   "note": "MTT, 5-15bb and 20-50bb, no open-limp, mtt menu, 24h",
+   "path": "ninemax/nm10/avg_fp16.pt",
+   "sha256": {
+    "avg_fp16.pt": "6a55d54321233e05706cae1749322ce85c997c420b6d5ab24131349653cda830",
+    "config.json": "c3d5c72958151bcba1ba22d4da12ff769a53bd87421153a6f4dd51fc57d1f485"
+   },
+   "source": "blueprint/nm10",
+   "vs_tag_bb100": 31.2
+  },
+  "nm12": {
+   "bytes": 4516705,
+   "hands_trained": 5816352768,
+   "minutes_trained": 1440.0,
+   "note": "MTT, 10-25bb, no open-limp, mtt menu, 24h",
+   "path": "ninemax/nm12/avg_fp16.pt",
+   "sha256": {
+    "avg_fp16.pt": "fc585762fabeeb3f09fb855e6313f96f66235818328c217b69a2648e6b71ac54",
+    "config.json": "862c2c12a86aa1418e98db86586ae0ed9c48f36e3b642ec01f11b0e956152f33"
+   },
+   "source": "blueprint/nm12",
+   "vs_tag_bb100": 35.9
+  },
+  "nm13": {
+   "bytes": 4516705,
+   "hands_trained": 8523120640,
+   "minutes_trained": 720.0,
+   "note": "MTT 10-25bb, no ante, from nm12 with the tournament regular in the pool, 12h",
+   "path": "ninemax/nm13/avg_fp16.pt",
+   "sha256": {
+    "avg_fp16.pt": "59f7d916b458d90e6a797951aeb1928a2e0d039cec341fee68bb05d4e8421cd8",
+    "config.json": "2bccdfde69bada60065e5c4d8258d9f90d49847996266e952f17868b15ae1c32"
+   },
+   "source": "blueprint/nm13",
+   "vs_tag_bb100": 35.8
+  },
+  "nm14": {
+   "bytes": 4516705,
+   "hands_trained": 3055550464,
+   "minutes_trained": 720.0,
+   "note": "MTT 10-25bb, no ante, fresh, the tournament regular in the pool, 12h",
+   "path": "ninemax/nm14/avg_fp16.pt",
+   "sha256": {
+    "avg_fp16.pt": "6691523bd9546b0b096099b34ff8ffd0d0c6990e4d694527528b8efa2893d936",
+    "config.json": "0e9a49878c6db03bd3059572c759568c5361d497db81fc57206f616ffef7b5d7"
+   },
+   "source": "blueprint/nm14",
+   "vs_tag_bb100": 37.1
+  },
+  "nm15": {
+   "bytes": 4516705,
+   "hands_trained": 10954620928,
+   "minutes_trained": 720.0,
+   "note": "MTT 10-25bb, big-blind ante 1bb, from nm13, 12h",
+   "path": "ninemax/nm15/avg_fp16.pt",
+   "sha256": {
+    "avg_fp16.pt": "8aca4db6f3e37780f9685b1eebae6128e8a10f820fdd0bb2f69d00f4620137b9",
+    "config.json": "1edb522bc63d4d25786ae2df446011433c1e2deba1b4131578459553a5e8316a"
+   },
+   "source": "blueprint/nm15",
+   "vs_tag_bb100": 34.1
+  },
+  "nm16": {
+   "bytes": 4516705,
+   "hands_trained": 2679488512,
+   "minutes_trained": 720.0,
+   "note": "MTT 10-25bb, big-blind ante 1bb, fresh, 12h",
+   "path": "ninemax/nm16/avg_fp16.pt",
+   "sha256": {
+    "avg_fp16.pt": "ac822ad19ff40866a89c512da0fae34690944b3ee47a17717e7edc2508ece379",
+    "config.json": "5ecbafea7a2357673ad35f3768bc5f3637d81cb902bc39e3eddb83fc29fdf5f0"
+   },
+   "source": "blueprint/nm16",
+   "vs_tag_bb100": 33.4
+  },
+  "nm17": {
+   "bytes": 4516705,
+   "hands_trained": 10904567808,
+   "minutes_trained": 720.0,
+   "note": "MTT 10-25bb, big-blind ante 1bb, half the final tables 2-8 handed, from nm15 at 2.5h, 12h: the most complete tournament network",
+   "path": "ninemax/nm17/avg_fp16.pt",
+   "sha256": {
+    "avg_fp16.pt": "02e593cd84ef58836e42f5e73db530c012e9c56ba86648ad7b9a8b91ee2f7e69",
+    "config.json": "41b3e51afe1b347e1cd3afbb9a6de641c5ac29f500c51b0fb18509e997afc2af"
+   },
+   "source": "blueprint/nm17",
+   "vs_tag_bb100": 29.2
+  },
+  "nm25": {
+   "bytes": 4516705,
+   "hands_trained": 3833413632,
+   "minutes_trained": 360.0,
+   "note": "nm20 fine-tuned 6h: NeuRD bound 4, entropy 0.04, calling stations in the pool; MTT 10-25bb, big-blind ante, half the final tables 2-8 handed. Beats nm17 +1.0 [+0.4, +1.5] 1-vs-8, exploiter +0.2 after 30 min (nm17 +1.5)",
+   "path": "ninemax/nm25/avg_fp16.pt",
+   "sha256": {
+    "avg_fp16.pt": "2aa62dd020dc5eff39796bc7822fb275fb5300f77fe00a86af93ae64744cc1d5",
+    "config.json": "3a16370f5745494a6e550b7865dc25d44188ea1ccaf1153e6bd70a8abfc941fc"
+   },
+   "source": "blueprint/nm25 (pipeline/recipes/mtt9-nm25.yaml)",
+   "vs_tag_bb100": 31.9
+  },
+  "nm4": {
+   "bytes": 4487009,
+   "hands_trained": 1191608320,
+   "minutes_trained": 1440.0,
+   "note": "cash 100bb, NeuRD, 24 h; fresh 30-min exploiter +44 [+39, +50] (the least exploitable cash run); real tables +30.1 [+17, +44]",
+   "path": "ninemax/nm4/avg_fp16.pt",
+   "sha256": {
+    "avg_fp16.pt": "6b735220783eb9b6f019eb6f031d92a87466087daa9378446b0478814829ca9d",
+    "config.json": "81b11fcccd61a38dac1545101365256acb5be9dc87c7e55ddf1b3ec743199d05"
+   },
+   "source": "blueprint/nm4",
+   "vs_tag_bb100": 195.4
+  },
+  "nm30": {
+   "bytes": 4525921,
+   "hands_trained": 2928902144,
+   "minutes_trained": 480.0,
+   "note": "PKO tournaments 10-25bb, bounty 0.5 (conserved equity); exploiter +0.8 [-0.1, +1.8]; calls wider as the bounty grows (42.9/44.0/46.0%)",
+   "path": "ninemax/nm30/avg_fp16.pt",
+   "sha256": {
+    "avg_fp16.pt": "2b37b0960f5f790b5245c099cbb03cc4e27b7140622fdca734d465b9aaa6b9ff",
+    "config.json": "62baacba583c8e3bfa56608034a06ed0d67b63599b9e30513c74856b01b57386"
+   },
+   "source": "blueprint/nm30",
+   "vs_tag_bb100": 19.0
+  },
+  "nm37": {
+   "bytes": 4497249,
+   "hands_trained": 6576275456,
+   "minutes_trained": 720.0,
+   "note": "6-max cash 50-250bb, league training (experimental); exploiter +5.6 [-0.3, +11.6], nm28 +11.0",
+   "path": "ninemax/nm37/avg_fp16.pt",
+   "sha256": {
+    "avg_fp16.pt": "d4a77a969953e1f16673c5ddeb299848e493e185303bedf24ee5bd77109702b4",
+    "config.json": "d7bddd4e0b230138bfb0ff1878eb647eceea03e7ef7daefddd6f2a56c0417d99"
+   },
+   "source": "blueprint/nm37",
+   "vs_tag_bb100": 48.5
+  }
+ },
+ "releases": {
+  "model-mtt9-v1": {
+   "asset": "mtt9-1.tar.gz",
+   "game": "9max-mtt",
+   "gates_passed": true,
+   "name": "mtt9",
+   "sha256": "3665b5b46c4e8c06acd1e41fc21be92b8edc0f00e4c8369e89862c73bb4a40d3",
+   "version": "1"
+  },
+  "model-mtt9-v2": {
+   "asset": "mtt9-2.tar.gz",
+   "game": "9max-mtt",
+   "gates_passed": true,
+   "name": "mtt9",
+   "sha256": "9c74b91e0783cb15f7467b8e922af43a57846f532973d892d5809b0b4029de42",
+   "version": "2"
+  }
+ }
+}

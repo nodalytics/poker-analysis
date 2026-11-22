@@ -3,7 +3,7 @@
 !kestrel/
 kestrel/build/
 kestrel/build-*/
-!llm-research/models/ninemax/nm25/net.*
-!llm-research/models/ninemax/nm17/net.*
-!llm-research/models/ninemax/nm30/net.*
-!llm-research/models/ninemax/nm37/net.*
+!research/models/ninemax/nm25/net.*
+!research/models/ninemax/nm17/net.*
+!research/models/ninemax/nm30/net.*
+!research/models/ninemax/nm37/net.*

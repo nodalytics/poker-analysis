@@ -2,9 +2,9 @@
 
 **Kestrel** is the advisor's new name (2026-11-14), after the small hawk that hovers, watches and strikes. The
 daemon is `kestreld` and the app is `Kestrel`; Kestrel is a standalone project at the repo root (`kestrel/`); the research that feeds it (training, models, the
-Python reference) stays in `llm-research/`.
+Python reference) stays in `research/`.
 
-Phase D of [`llm-research/docs/2026-11-11-next-phases.md`](../../llm-research/docs/2026-11-11-next-phases.md), widened on 2026-11-14: besides advising, the
+Phase D of [`research/docs/2026-11-11-next-phases.md`](../../research/docs/2026-11-11-next-phases.md), widened on 2026-11-14: besides advising, the
 advisor **plays by itself** on platforms that offer a bot API, through **connectors described in a file** (YAML or
 JSON) that are added after the build, without recompiling. You give it a connector file and a session plan, start
 it, and leave it: it plays, logs every hand, and reports results with confidence intervals.
@@ -25,7 +25,7 @@ it reads, before it runs.
 | Part | What | Depends on |
 |---|---|---|
 | `core/` (library) | Card and hand types; the single-table game state (a port of `ninemax_engine.Tables`: menus, legality, the big-blind ante, empty seats, side pots); ICM (`icm.py`); the push/fold charts (`results/ninemax/icm_pushfold*.json`); the 9-max network's features and forward pass (a port of `features()` and `NineNet`); bucket lookup through `bp` (`bp_bucket`); the heads-up blueprint through `bp` | C++20, nlohmann/json, and the 7-card evaluator and hand indexer at the pinned commits the trainer uses |
-| `engines` | One interface, `decide(state) -> action distribution`. The router picks by game: 9-max tournament at 25bb or less goes to the tournament network (`models/ninemax/nm17`), or push/fold at 10bb or less; deep heads-up cash goes to the heads-up blueprint pack, which played Slumbot level or slightly ahead: +12.4 bb/100 [−16, +41], and +30.9 [−10, +72] with the defence floor, 5,000 hands each, luck-adjusted (`llm-research/docs/2026-11-08-blueprint-speed-accuracy.md`) | core |
+| `engines` | One interface, `decide(state) -> action distribution`. The router picks by game: 9-max tournament at 25bb or less goes to the tournament network (`models/ninemax/nm17`), or push/fold at 10bb or less; deep heads-up cash goes to the heads-up blueprint pack, which played Slumbot level or slightly ahead: +12.4 bb/100 [−16, +41], and +30.9 [−10, +72] with the defence floor, 5,000 hands each, luck-adjusted (`research/docs/2026-11-08-blueprint-speed-accuracy.md`) | core |
 | `api/` | Kestrel's own **local API** (REST, WebSocket, TCP, MCP; see below), bound to `127.0.0.1`: `POST /v1/decide`, `GET /v1/health`, `GET/POST /v1/connectors`, `POST /v1/sessions` (start), `GET /v1/sessions/{id}` (progress, bb/100 with an interval), `DELETE /v1/sessions/{id}` (stop) | cpp-httplib, IXWebSocket, standalone asio, nlohmann/json |
 | `connectors/` | The runtime that reads connector files and plays sessions over HTTP, WebSocket or MCP | cpp-httplib (with OpenSSL for https), yaml-cpp |
 | `kestreld` | The headless daemon: the API plus the session runner. **Set and forget** runs here | the above |
@@ -95,7 +95,7 @@ Modern and sleek, as one design across the web page and the app:
 - **As a server:** `kestreld --mcp` serves the advisor's own tools (`decide`, `icm_equity`, `pushfold`,
   `start_session`, `session_status`, `stop_session`, `list_connectors`). Any MCP client, an LLM agent among them,
   can then ask for advice or run sessions. It binds `127.0.0.1` only. The repo's Python MCP server
-  (`../mcp_server.py`) stays the toolkit reference.
+  (`../archive/mcp_server.py`) stays the toolkit reference.
 
 The same boundary applies: an MCP connector is still an API connector, under the same `real_money` and
 `bots_permitted` rules.
@@ -235,7 +235,7 @@ lab normally, so its documentation was read from the lab (`https://docs.openpoke
 - **Rules:** a free account connects one public bot; same-owner bots may not sit together; no extra accounts,
   collusion or chip dumping.
 
-**Account:** the dashboard signs in by a magic link emailed to the address. The user chose the account's email, so
+**Account:** the dashboard signs in by a magic link emailed to the address. The user chose the address, so
 the user signs in, creates a bot with **Self Host**, and puts its key on the lab as `KESTREL_OPENPOKER_KEY`; Kestrel
 plays Open Poker from the lab.
 
@@ -286,12 +286,12 @@ API like the others.
 
 Search is a play-time technique: Libratus and Pluribus re-solved the spot in front of them when it was their turn,
 and that is where it pays. It belongs in Kestrel, not only in training.
-- **Heads-up:** the safe river re-solve (`llm-research/blueprint/resolve.cpp`, already C++) is linked into Kestrel
+- **Heads-up:** the safe river re-solve (`research/blueprint/resolve.cpp`, already C++) is linked into Kestrel
   next. It is solved from the start of the river with both blueprint ranges, and its gadget keeps every opponent
   hand at or below its blueprint value. It is off by default until it measures better than the blueprint against
   Slumbot or LBR.
 - **9-max tournaments (in Kestrel 2026-11-16, solvers `search` and `search-robust`):** a C++ port of
-  `llm-research/scripts/ninemax_search.py` (`core/src/ninemax_search.cpp`), checked with `kestrel_search_match`:
+  `research/scripts/ninemax_search.py` (`core/src/ninemax_search.cpp`), checked with `kestrel_search_match`:
   nm25 tables drawn as in training, 4,000 deals, the hero in every seat of every deal once plain and once with
   search, the gain scored deal by deal (bb/100 of ICM equity, 95% interval):
 
@@ -387,7 +387,7 @@ compared on the same platform.
 The networks train on deals from `bp_deal_n`: a partial Fisher–Yates with one seeded splitmix64 stream per deal, so
 deals are fast and reproducible. On 4,000,000 nine-handed deals it matched exact odds in every test: positions,
 repeated cards, starting-hand classes, seven-card categories, independence, and seeds (lowest p = 0.07;
-`llm-research/scripts/dealer_check.py`). Provably fair shuffles such as CoinPoker's prove a real-money deal to its
+`research/scripts/dealer_check.py`). Provably fair shuffles such as CoinPoker's prove a real-money deal to its
 players and add nothing to training. Kestrel itself never deals: the platform does.
 
 ## Order of work

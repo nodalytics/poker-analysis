@@ -463,7 +463,7 @@ void SpotPage::ask() {
                         dark_(), [this, h](const QString& t) {
                             answer_->setHtml(h + "<p style='margin-top:10px'><b>Prize equity at the start of the hand</b></p>" + t +
                                              "<p style='color:gray'>The model reads Malmuth-Harville; Malmuth-Weitzman is shown "
-                                             "for comparison (llm-research/docs/2026-11-15-tournament-equity-models.md).</p>");
+                                             "for comparison (research/docs/2026-11-15-tournament-equity-models.md).</p>");
                         });
     });
 }
