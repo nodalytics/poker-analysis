@@ -11,6 +11,8 @@ Environment=PIPELINE_REPO=LAB_HOME/pipeline/poker-analysis
 ExecStart=/usr/bin/python3 scripts/pipeline.py poll --every 120
 Nice=5
 Restart=on-failure
+# a restart (or a new install) stops the poller only: a run in progress keeps going, and the poller skips it
+KillMode=process
 RestartSec=60
 
 [Install]

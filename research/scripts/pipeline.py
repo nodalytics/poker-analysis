@@ -550,7 +550,12 @@ class Run:
 
 
 def cmd_run(a):
-    Run(a.recipe).go(a.start)
+    errs = validate(a.recipe)
+    run = Run(a.recipe, commit=a.commit)
+    if errs:
+        run.save(status="failed", stage="invalid run file: " + "; ".join(errs))
+        return
+    run.go(a.start)
 
 
 def cmd_poll(a):
@@ -576,14 +581,13 @@ def cmd_poll(a):
                 subprocess.run(["rsync", "-a", *code, os.path.join(repo, "research") + "/", HERE + "/"], check=True)
                 name = todo[0]
                 path = os.path.join(HERE, "pipeline", "runs", f"{name}.json")
-                errs = validate(path)
-                run = Run(path, commit=sha[:12])
-                if errs:
-                    run.save(status="failed", stage="invalid recipe: " + "; ".join(errs))
-                else:
-                    log.write(f"{now()} start {name} at {sha[:12]}\n")
-                    run.go()
-                    log.write(f"{now()} {name}: {run.state.get('status')} {run.state.get('verdict', '')}\n")
+                log.write(f"{now()} start {name} at {sha[:12]}\n")
+                # a fresh process, so the run uses the code just merged, not the code this service started with
+                subprocess.run([sys.executable, os.path.join(HERE, "scripts", "pipeline.py"), "run", path,
+                                "--commit", sha[:12]], cwd=HERE)  # fmt: skip
+                st = os.path.join(HERE, "results", "pipeline", name, "state.json")
+                s = json.load(open(st)) if os.path.exists(st) else {}
+                log.write(f"{now()} {name}: {s.get('status')} {s.get('verdict', '')}\n")
                 continue
         except Exception as e:  # noqa: BLE001  (a network blip must not end the service)
             log.write(f"{now()} poll error: {type(e).__name__}: {e}\n")
@@ -607,6 +611,7 @@ def main():
     r = sub.add_parser("run")
     r.add_argument("recipe")
     r.add_argument("--from", dest="start", choices=("train", "checks"), default="train")
+    r.add_argument("--commit", default=None, help="the merge commit it runs at (set by poll)")
     p = sub.add_parser("poll")
     p.add_argument("--every", type=int, default=120, help="seconds between fetches")
     sub.add_parser("status")

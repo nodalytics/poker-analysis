@@ -116,6 +116,8 @@ Matches against copies of nm25 alone only say how a run does against nm25. A goo
    ```
    Without it the results stay on the lab, and the dashboard's Pipeline panel says so. Never commit or paste it.
 
+After a change to `pipeline/deploy/` or the poll loop, run step 1 again; a run in progress is not stopped.
+
 Check it: `systemctl status research-pipeline` (running), `tail ~/research/results/pipeline/poll.log` (errors, if
 any), and the Pipeline panel on the dashboard.
 
