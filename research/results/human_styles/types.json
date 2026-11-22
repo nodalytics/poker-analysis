@@ -1,0 +1,125 @@
+{
+ "players": 4633,
+ "k": 8,
+ "spread": {
+  "vpip": 0.0749,
+  "pfr": 0.0572,
+  "three_bet": 0.031,
+  "aggression": 0.4019,
+  "fold_to_bet": 0.0835
+ },
+ "types": [
+  {
+   "centre": {
+    "vpip": 0.202,
+    "pfr": 0.152,
+    "three_bet": 0.056,
+    "aggression": 3.13,
+    "fold_to_bet": 0.603
+   },
+   "players": 967,
+   "share_players": 0.209,
+   "share_hands": 0.242,
+   "name": "tight-aggressive, hyper-aggressive after the flop",
+   "id": "human1"
+  },
+  {
+   "centre": {
+    "vpip": 0.194,
+    "pfr": 0.132,
+    "three_bet": 0.046,
+    "aggression": 2.1,
+    "fold_to_bet": 0.519
+   },
+   "players": 808,
+   "share_players": 0.174,
+   "share_hands": 0.162,
+   "name": "tight-aggressive",
+   "id": "human2"
+  },
+  {
+   "centre": {
+    "vpip": 0.161,
+    "pfr": 0.077,
+    "three_bet": 0.026,
+    "aggression": 2.39,
+    "fold_to_bet": 0.639
+   },
+   "players": 778,
+   "share_players": 0.168,
+   "share_hands": 0.153,
+   "name": "nit",
+   "id": "human3"
+  },
+  {
+   "centre": {
+    "vpip": 0.259,
+    "pfr": 0.198,
+    "three_bet": 0.085,
+    "aggression": 2.75,
+    "fold_to_bet": 0.513
+   },
+   "players": 599,
+   "share_players": 0.129,
+   "share_hands": 0.14,
+   "name": "tight-aggressive",
+   "id": "human4"
+  },
+  {
+   "centre": {
+    "vpip": 0.156,
+    "pfr": 0.106,
+    "three_bet": 0.039,
+    "aggression": 4.66,
+    "fold_to_bet": 0.702
+   },
+   "players": 564,
+   "share_players": 0.122,
+   "share_hands": 0.133,
+   "name": "tight-aggressive (nitty), hyper-aggressive after the flop",
+   "id": "human5"
+  },
+  {
+   "centre": {
+    "vpip": 0.206,
+    "pfr": 0.177,
+    "three_bet": 0.093,
+    "aggression": 4.92,
+    "fold_to_bet": 0.617
+   },
+   "players": 412,
+   "share_players": 0.089,
+   "share_hands": 0.105,
+   "name": "tight-aggressive, hyper-aggressive after the flop",
+   "id": "human6"
+  },
+  {
+   "centre": {
+    "vpip": 0.361,
+    "pfr": 0.118,
+    "three_bet": 0.029,
+    "aggression": 1.74,
+    "fold_to_bet": 0.513
+   },
+   "players": 378,
+   "share_players": 0.082,
+   "share_hands": 0.048,
+   "name": "loose-passive",
+   "id": "human7"
+  },
+  {
+   "centre": {
+    "vpip": 0.512,
+    "pfr": 0.369,
+    "three_bet": 0.148,
+    "aggression": 2.57,
+    "fold_to_bet": 0.506
+   },
+   "players": 127,
+   "share_players": 0.027,
+   "share_hands": 0.016,
+   "name": "loose-aggressive",
+   "id": "human8"
+  }
+ ]
+}

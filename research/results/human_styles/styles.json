@@ -1,0 +1,254 @@
+{
+ "baseline": "blueprint/nm25",
+ "baseline_stats": {
+  "hands": 5471,
+  "vpip": 0.19228660208371412,
+  "pfr": 0.1356242003290075,
+  "three_bet": 0.07442748091603053,
+  "aggression": 1.4473684210526316,
+  "fold_to_bet": 0.3933333333333333
+ },
+ "deals": 1500,
+ "styles": [
+  {
+   "id": "human1",
+   "name": "tight-aggressive, hyper-aggressive after the flop",
+   "share_hands": 0.242,
+   "target": {
+    "vpip": 0.202,
+    "pfr": 0.152,
+    "three_bet": 0.056,
+    "aggression": 3.13,
+    "fold_to_bet": 0.603
+   },
+   "params": {
+    "pre_loose": -0.036,
+    "pre_aggr": -1.639,
+    "post_aggr": -0.724,
+    "post_fold": 4.248,
+    "shove": 1.066,
+    "bluff": 0.517,
+    "temp": 1.5
+   },
+   "achieved": {
+    "hands": 16474,
+    "vpip": 0.203,
+    "pfr": 0.137,
+    "three_bet": 0.082,
+    "aggression": 3.05,
+    "fold_to_bet": 0.545
+   },
+   "loss": 1.249
+  },
+  {
+   "id": "human2",
+   "name": "tight-aggressive",
+   "share_hands": 0.162,
+   "target": {
+    "vpip": 0.194,
+    "pfr": 0.132,
+    "three_bet": 0.046,
+    "aggression": 2.1,
+    "fold_to_bet": 0.519
+   },
+   "params": {
+    "pre_loose": -1.154,
+    "pre_aggr": -1.058,
+    "post_aggr": 0.649,
+    "post_fold": 2.977,
+    "shove": -0.76,
+    "bluff": 0.329,
+    "temp": 1.385
+   },
+   "achieved": {
+    "hands": 16479,
+    "vpip": 0.161,
+    "pfr": 0.103,
+    "three_bet": 0.061,
+    "aggression": 2.881,
+    "fold_to_bet": 0.425
+   },
+   "loss": 2.569
+  },
+  {
+   "id": "human3",
+   "name": "nit",
+   "share_hands": 0.153,
+   "target": {
+    "vpip": 0.161,
+    "pfr": 0.077,
+    "three_bet": 0.026,
+    "aggression": 2.39,
+    "fold_to_bet": 0.639
+   },
+   "params": {
+    "pre_loose": -0.724,
+    "pre_aggr": -1.252,
+    "post_aggr": -0.124,
+    "post_fold": 3.048,
+    "shove": -1.364,
+    "bluff": 0,
+    "temp": 1.5
+   },
+   "achieved": {
+    "hands": 16430,
+    "vpip": 0.175,
+    "pfr": 0.107,
+    "three_bet": 0.057,
+    "aggression": 1.576,
+    "fold_to_bet": 0.436
+   },
+   "loss": 8.266
+  },
+  {
+   "id": "human4",
+   "name": "tight-aggressive",
+   "share_hands": 0.14,
+   "target": {
+    "vpip": 0.259,
+    "pfr": 0.198,
+    "three_bet": 0.085,
+    "aggression": 2.75,
+    "fold_to_bet": 0.513
+   },
+   "params": {
+    "pre_loose": 1.539,
+    "pre_aggr": 0.066,
+    "post_aggr": 0.042,
+    "post_fold": 3.819,
+    "shove": 0.154,
+    "bluff": 0,
+    "temp": 0.971
+   },
+   "achieved": {
+    "hands": 16430,
+    "vpip": 0.277,
+    "pfr": 0.207,
+    "three_bet": 0.106,
+    "aggression": 2.441,
+    "fold_to_bet": 0.517
+   },
+   "loss": 0.652
+  },
+  {
+   "id": "human5",
+   "name": "tight-aggressive (nitty), hyper-aggressive after the flop",
+   "share_hands": 0.133,
+   "target": {
+    "vpip": 0.156,
+    "pfr": 0.106,
+    "three_bet": 0.039,
+    "aggression": 4.66,
+    "fold_to_bet": 0.702
+   },
+   "params": {
+    "pre_loose": -0.335,
+    "pre_aggr": -1.575,
+    "post_aggr": 2,
+    "post_fold": 4.5,
+    "shove": -1.5,
+    "bluff": 0.024,
+    "temp": 1.5
+   },
+   "achieved": {
+    "hands": 16468,
+    "vpip": 0.182,
+    "pfr": 0.107,
+    "three_bet": 0.056,
+    "aggression": 4.121,
+    "fold_to_bet": 0.559
+   },
+   "loss": 3.415
+  },
+  {
+   "id": "human6",
+   "name": "tight-aggressive, hyper-aggressive after the flop",
+   "share_hands": 0.105,
+   "target": {
+    "vpip": 0.206,
+    "pfr": 0.177,
+    "three_bet": 0.093,
+    "aggression": 4.92,
+    "fold_to_bet": 0.617
+   },
+   "params": {
+    "pre_loose": -0.098,
+    "pre_aggr": -0.097,
+    "post_aggr": 1.352,
+    "post_fold": 2.301,
+    "shove": 0.55,
+    "bluff": 0,
+    "temp": 1.319
+   },
+   "achieved": {
+    "hands": 16416,
+    "vpip": 0.231,
+    "pfr": 0.168,
+    "three_bet": 0.096,
+    "aggression": 3.589,
+    "fold_to_bet": 0.503
+   },
+   "loss": 2.645
+  },
+  {
+   "id": "human7",
+   "name": "loose-passive",
+   "share_hands": 0.048,
+   "target": {
+    "vpip": 0.361,
+    "pfr": 0.118,
+    "three_bet": 0.029,
+    "aggression": 1.74,
+    "fold_to_bet": 0.513
+   },
+   "params": {
+    "pre_loose": 1.979,
+    "pre_aggr": -0.607,
+    "post_aggr": -1.654,
+    "post_fold": 1.554,
+    "shove": -0.181,
+    "bluff": 0.992,
+    "temp": 0.999
+   },
+   "achieved": {
+    "hands": 16464,
+    "vpip": 0.263,
+    "pfr": 0.183,
+    "three_bet": 0.093,
+    "aggression": 1.492,
+    "fold_to_bet": 0.439
+   },
+   "loss": 8.157
+  },
+  {
+   "id": "human8",
+   "name": "loose-aggressive",
+   "share_hands": 0.016,
+   "target": {
+    "vpip": 0.512,
+    "pfr": 0.369,
+    "three_bet": 0.148,
+    "aggression": 2.57,
+    "fold_to_bet": 0.506
+   },
+   "params": {
+    "pre_loose": 1.523,
+    "pre_aggr": 1.432,
+    "post_aggr": -0.247,
+    "post_fold": 2.067,
+    "shove": -1.5,
+    "bluff": 0.732,
+    "temp": 1.5
+   },
+   "achieved": {
+    "hands": 16467,
+    "vpip": 0.44,
+    "pfr": 0.359,
+    "three_bet": 0.177,
+    "aggression": 1.879,
+    "fold_to_bet": 0.493
+   },
+   "loss": 2.437
+  }
+ ]
+}
