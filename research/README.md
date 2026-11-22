@@ -4,11 +4,15 @@ The research behind the bots (9-max networks, the heads-up blueprint, solvers, e
 
 Python is managed with uv: `uv sync`, then `uv run python scripts/<name>.py`.
 
+**Running an experiment:** add a run file and open a pull request; once merged, the lab trains and judges it by
+itself. How, and how the lab's side is switched on: [`pipeline/README.md`](pipeline/README.md).
+
 Agents: read [`AGENTS.md`](AGENTS.md) first (models, lab rules, sandboxes, media limits, git). `CLAUDE.md` imports it.
 
 | Path | Contents |
 |---|---|
 | `docs/` | Write-ups, one per study, dated |
+| `pipeline/` | The research pipeline: run files (`runs/`), the model pipeline's recipes (`recipes/`) and the lab service (`deploy/`) |
 | `scripts/` | Test harnesses (`llm_test.py`, `dc_agent_test.py`, `browser_agent_test.py`) |
 | `sandboxes/` | Docker builds for the sealed test environments, the Windows GUI VM, and Ollama setup (`sandboxes/ollama/`) |
 | `results/raw/` | JSON output from each run, including every model answer and tool call |
