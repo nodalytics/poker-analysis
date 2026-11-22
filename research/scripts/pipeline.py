@@ -683,8 +683,10 @@ def stranded():
             # training survives its poller (its own session): resume from the checks once it has written a checkpoint
             trainer = subprocess.run(["pgrep", "-f", f"ninemax_selfplay.py blueprint/{s['name']} "],
                                      capture_output=True).returncode == 0  # fmt: skip
-            if trainer:
-                continue  # still training: look again later
+            runner = subprocess.run(["pgrep", "-f", f"pipeline.py run .*runs/{s['name']}.json"],
+                                    capture_output=True).returncode == 0  # fmt: skip
+            if trainer or runner:
+                continue  # still training, or a run process is on it (one started by hand): look again later
             ck = os.path.join(HERE, "blueprint", s["name"], "checkpoint.pt")
             out.append((s["name"], "checks" if (s.get("trained") or os.path.exists(ck)) else "train"))
     return out
