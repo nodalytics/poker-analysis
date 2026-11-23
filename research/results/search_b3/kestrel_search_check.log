@@ -1,0 +1,20 @@
+bounty
+  ok   nm30 12bb vs 30bb: Q(fold) -1.300000, the trainer's reward -1.300000 (plain ICM -0.300000)
+  ok   nm30 30bb vs 12bb: Q(fold) -1.300000, the trainer's reward -1.300000 (plain ICM -0.300000)
+  ok   nm30 20bb vs 20bb: Q(fold) -1.300000, the trainer's reward -1.300000 (plain ICM -0.300000)
+  ok   nm25 12bb vs 30bb: Q(fold) -0.600000, the trainer's reward -0.600000 (plain ICM -0.600000)
+  ok   nm25 30bb vs 12bb: Q(fold) -0.600000, the trainer's reward -0.600000 (plain ICM -0.600000)
+  ok   nm25 20bb vs 20bb: Q(fold) -0.600000, the trainer's reward -0.600000 (plain ICM -0.600000)
+ess
+    spot ess 28.1 of 256: searched
+    spot ess 34.7 of 256: searched
+    spot ess 35.7 of 256: searched
+    spot ess 37.8 of 256: searched
+    spot ess 21.7 of 256: searched
+    spot ess 29.8 of 256: searched
+  ok   floor 1.01: the network's policy (fell_back); floor 0: one greedy move (12 of 12)
+crn
+  6 spots x 8 searches, 256 samples, 48 move pairs, same deals: var of Q(a) - Q(b) independent 0.4293, crn 0.3470 bb^2 (ratio of means 0.808, per-pair geometric mean 0.800)
+all search checks pass
+
+

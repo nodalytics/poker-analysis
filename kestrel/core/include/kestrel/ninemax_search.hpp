@@ -5,7 +5,8 @@
 // At our decision: deal the unknown cards many times (the opponents' hands and the rest of the board), weight each deal
 // by how likely the network was to take every action each opponent took with those cards (their ranges as the network
 // sees them), try each legal action and play every deal to the end with the network for everyone (all of them in
-// lockstep, one batched forward pass a step), and score the results as the network trains: the change in ICM equity.
+// lockstep, one batched forward pass a step, the same random draws for every action), and score the results as the
+// network trains: the change in prize equity (ICM, and the knockout term in a bounty game: end_equity).
 // Greedy: the action with the best weighted value. Robust (after Pluribus): every deal is played four times, the
 // opponents continuing as the network or the network tilted towards folding, calling or raising, and an action is
 // worth its worst case of the four.
@@ -35,7 +36,15 @@ struct SearchConfig {
     // so an opponent seen for a few hands changes nothing.
     std::vector<OpponentTilt> tilts;
     double exploit_weight = 0.0;
-    uint64_t seed = 1;
+    // common random numbers: every rollout step draws one uniform per deal, shared by every candidate move and
+    // continuation, so Q(a) - Q(b) is a paired comparison (false: one draw per rollout, as before 2026-11-23)
+    bool crn = true;
+    // the ESS floor, as a share of the samples: below it the values rest on too few deals, and the result is the
+    // network's own policy (SearchResult::fell_back); 0 turns it off. As ninemax_search.py's MIN_ESS.
+    double min_ess = 0.02;
+    uint64_t seed = 1;           // the deals (and, without crn, the rollouts)
+    uint64_t rollout_seed = 0;   // the rollouts' own draws (0: from seed, and without crn the deals' stream as
+                                 // before); another value keeps the deals and draws new rollouts
 };
 
 // one opponent decision earlier in the hand, as the network saw it: the table's features, the legal moves, the street,
@@ -51,6 +60,7 @@ struct SearchResult {
     std::vector<double> q;      // each legal slot's value, big blinds of ICM equity (NaN: not legal)
     double ess = 0;             // effective number of deals after the weights
     int samples = 0;
+    bool fell_back = false;     // the ESS was below the floor: policy is the network's own
 };
 
 // throws std::invalid_argument when the cards cannot be dealt (repeated cards, a board over 5, the hero not seated)

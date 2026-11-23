@@ -26,6 +26,16 @@ struct TourneyCtx {
 // is eventually collected by someone, in proportion to chips), as the trainer values it (ninemax_selfplay.start_equity)
 std::vector<double> start_equity(const std::vector<double>& stacks, const TourneyCtx& ctx);
 
+// each seat's equity at the end of a hand that started with stacks and paid payoff (chips): ICM on the regular prizes of
+// the stacks after it and, with bounties, the knockout term (each bust's bounty to the winner(s) of the pot that took
+// its last chips: half in cash, half onto the collector's own head; the bounties still in play by chip share), as the trainer rewards
+// it (ninemax_selfplay.end_equity). Without bounties: icm(end_stacks(stacks, payoff), ctx.pay).
+// contrib, folded, ranks: the finished hand's (Table::contrib, Table::folded, the showdown ranks, lower is better), which
+// decide who collects each bust's bounty: the winner(s) of the pot that took the player's last chips (knockouts).
+std::vector<double> end_equity(const std::vector<double>& stacks, const std::vector<double>& payoff, const TourneyCtx& ctx,
+                               const std::vector<int64_t>& contrib, const std::vector<uint8_t>& folded,
+                               const std::vector<int>& ranks);
+
 std::vector<float> features(const Table& T, const NetInfo& info, const TourneyCtx* ctx);
 
 float strength(const NetInfo& info, int street, int bucket);

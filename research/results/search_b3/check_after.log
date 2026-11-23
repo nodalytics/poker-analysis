@@ -1,0 +1,33 @@
+1. board
+  ok   search, 3-card board: every features call has a board (3 of 3)
+  ok   search: the samples keep the real 3 board cards and deal the rest
+  ok   search, 3-card board: every features call has a board (11 of 11)
+  ok   search: the samples keep the real 3 board cards and deal the rest
+  ok   search, 3-card board: every features call has a board (15 of 15)
+  ok   search: the samples keep the real 3 board cards and deal the rest
+  ok   search, 3-card board: every features call has a board (16 of 16)
+  ok   search: the samples keep the real 3 board cards and deal the rest
+  ok   match: the board reaches the texture inputs (90 calls)
+  ok   nm25 (no texture inputs): Q bit-identical with and without the board
+2. bounty
+  nm30: 4000 station hands (237 with a bust): |search - trainer| max 0.00e+00 bb; old search score max |gap| 14.585 bb, mean 1.6642 bb
+  ok   nm30: search's score equals the trainer's reward
+  nm25: 4000 station hands (224 with a bust): |search - trainer| max 0.00e+00 bb; old search score max |gap| 0.000 bb, mean 0.0000 bb
+  ok   nm25: search's score equals the trainer's reward
+  ok   nm25 (no bounties): the score is bit-identical to the old ICM score
+3. crn and 4. ess
+  24 spots x 24 searches, 256 samples, 135 move pairs; var of Q(a) - Q(b):
+    same deals (rollout noise): mean independent 0.0762, crn 0.0614 bb^2 (ratio of means 0.805); per pair ratio median 0.780, geometric mean 0.563, lower in 67% of pairs
+    fresh deals (all noise)   : mean independent 0.2097, crn 0.1714 bb^2 (ratio of means 0.817); per pair ratio median 0.946, geometric mean 0.829, lower in 60% of pairs
+  ok   crn: one uniform per (deal, step) shared by every move (20 steps, 711 rows reuse a draw, up to 4 moves)
+  ESS share of the samples per spot: p10 0.080, p25 0.120, median 0.257, p75 0.690
+    ESS share 0.02-0.05: 1 spots, argmax agreement across repeats 1.00
+    ESS share 0.05-0.20: 9 spots, argmax agreement across repeats 0.74
+    ESS share 0.20-1.01: 14 spots, argmax agreement across repeats 0.76
+  ok   ess floor 0.02: fallback rate 0.000 over 48 decisions; fallen-back decisions play the network's policy, the rest the greedy argmax
+  ok   ess floor 0.2568845093871156: fallback rate 0.521 over 48 decisions; fallen-back decisions play the network's policy, the rest the greedy argmax
+  ok   ess floor 0.0: fallback rate 0.000 over 48 decisions; fallen-back decisions play the network's policy, the rest the greedy argmax
+  ok   ess floor 1.01: fallback rate 1.000 over 48 decisions; fallen-back decisions play the network's policy, the rest the greedy argmax
+  match, 300 deals x 9 seats: 95 decisions searched; ESS share p1 0.008, p5 0.010, p10 0.015, median 0.123; below the floor 0.02: 13.68% (at 0.05: 29.47%, at 0.1: 43.16%)
+all search checks pass
+exit 0 seconds 128

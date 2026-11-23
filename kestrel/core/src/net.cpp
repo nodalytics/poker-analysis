@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <cstring>
 #include <fstream>
+#include <limits>
 #include <numeric>
 #include <stdexcept>
 
@@ -383,6 +384,39 @@ std::vector<double> start_equity(const std::vector<double>& stacks, const Tourne
     double pool = 0;  // every bounty, shared by chips (ninemax_selfplay.start_equity): the equities keep the money whole
     for (double b : ctx.bounty) pool += b;
     for (size_t j = 0; j < eq.size() && !ctx.bounty.empty(); ++j) eq[j] += pool * stacks[j] / std::max(total, 1.0);
+    return eq;
+}
+
+std::vector<double> end_equity(const std::vector<double>& stacks, const std::vector<double>& payoff, const TourneyCtx& ctx,
+                               const std::vector<int64_t>& contrib, const std::vector<uint8_t>& folded,
+                               const std::vector<int>& ranks) {
+    const auto end = end_stacks(stacks, payoff);
+    auto eq = icm(end, ctx.pay);
+    if (ctx.bounty.empty()) return eq;
+    const size_t P = stacks.size();
+    auto bty = [&](size_t j) { return j < ctx.bounty.size() ? ctx.bounty[j] : 0.0; };
+    std::vector<double> left(P), alive(P), k(P, 0.0);
+    std::vector<uint8_t> busted(P, 0);
+    double pool = 0, chips = 0;
+    for (size_t j = 0; j < P; ++j) busted[j] = stacks[j] > 0 && stacks[j] + payoff[j] <= 0.5;
+    // knockouts (ninemax_selfplay.knockouts): a busted player's bounty, half in cash, to the best live hand(s) among
+    // the players who put in at least as much as it did, split between ties (the pot that took its last chips)
+    for (size_t i = 0; i < P; ++i) {
+        if (!busted[i]) continue;
+        int best = std::numeric_limits<int>::max(), n = 0;
+        for (size_t j = 0; j < P; ++j)
+            if (!folded[j] && contrib[j] >= contrib[i]) best = std::min(best, ranks[j]);
+        for (size_t j = 0; j < P; ++j) n += !folded[j] && contrib[j] >= contrib[i] && ranks[j] == best;
+        for (size_t j = 0; j < P; ++j)
+            if (!folded[j] && contrib[j] >= contrib[i] && ranks[j] == best) k[j] += bty(i) / std::max(n, 1) / 2;
+    }
+    for (size_t j = 0; j < P; ++j) {
+        left[j] = (busted[j] ? 0.0 : bty(j)) + k[j];
+        alive[j] = busted[j] ? 0.0 : end[j];
+        eq[j] += k[j];
+    }
+    for (size_t j = 0; j < P; ++j) pool += left[j], chips += alive[j];
+    for (size_t j = 0; j < P; ++j) eq[j] += pool * alive[j] / std::max(chips, 1.0);
     return eq;
 }
 

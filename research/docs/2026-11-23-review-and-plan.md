@@ -206,3 +206,33 @@ against players who never fold; adding stations and other non-folding styles to 
 | B8 | `advisor_pack` refuses a distribution-aware (OCHS) abstraction by name, reads `.u16` tables, and refuses river labels not ordered by hand strength | `scripts/advisor_pack_check.py`: FileNotFoundError on all three cases → refused, packed exactly, refused |
 | B9 | `--resolve-floor on|off` (`kestreld serve` and `play`, `settings.json` `resolve_floor`); default on | `kestrel_hu_check`, 40 re-solved river spots facing a bet: floored 6 with the default, 0 with it off |
 | server | malformed input is a 400 (exception handler plus typed checks), `/v1/admin/shutdown` refuses a public Host, the token is compared in constant time | `kestrel/tools/server_check.sh`: 11 failures (500s, and shutdown 200 through `kestrel.test`) → all pass |
+
+**B3, search** (Python `scripts/ninemax_search.py`, Kestrel `core/src/ninemax_search.cpp`; checks
+`scripts/ninemax_search_check.py` and `kestrel_search_check` (a ctest), logs in `results/search_b3/`). On the old
+search the Python check fails 9 checks; on the new one all pass.
+
+| Defect | Fix | Check, before → after |
+|---|---|---|
+| board dropped (texture nets) | the samples carry their dealt board (`deal_fixed` returns the cards); `match()` and the distillation tables carry the real one | nm41's texture inputs saw a board in 0 of 43 search calls and never in match → every call; nm25's Q bit-identical with and without the board |
+| bounties ignored | rollouts scored with the trainer's own reward (`end_equity`, factored out of `play()`; C++ `end_equity` beside `start_equity`); `with_pay` uses `start_equity`, so the network's equity inputs match training too | nm30, 4,000 hands: gap to the trainer's reward up to 14.6 bb (mean 1.66) → 0; nm25 bit-identical to the old score |
+| rollout draws independent per move | one uniform per (sample, step), shared by every move and continuation, inverse-CDF sampling (`--no-crn`: the old draws); C++ the same (`SearchConfig::crn`, `rollout_seed`) | the draws are shared (checked on them); variance below |
+| ESS never acted on | below `min_ess` x samples (default 0.02) the decision is the network's own policy, and counted (`ess_fallback`; C++ `fell_back`, `ess_fallback` in the advice) | no floor → fallen-back decisions play the network's policy exactly, the rest greedy |
+
+Common random numbers, nm25, 24 spots x 24 searches of 256 samples, mean variance of Q(a) − Q(b) over 135 move pairs:
+with the same deals (rollout noise only) 0.0762 → 0.0614 bb² (x0.81, lower in 67% of pairs); with fresh deals (all
+of search's noise) 0.2097 → 0.1714 (x0.82, lower in 60%). On the old search, where both arms are the same algorithm,
+the same reading gave x1.10 and x1.05 (lower in 47% and 41%). A real but modest gain: most of the noise is the deals
+and their weights, which were already shared, and after different moves the players face different spots, so shared
+draws couple them only loosely.
+
+Kestrel (`kestrel_search_check`, `results/search_b3/kestrel_search_check.log`): folding to a heads-up shove, whose
+value is exact, read −0.30 bb against the trainer's −1.30 on nm30 before (plain ICM) and −1.30 after; nm25 −0.60
+both. With the same deals, CRN took the rollout variance of Q(a) − Q(b) from 0.429 to 0.347 bb² (x0.81; 6 spots x 8
+searches, 48 pairs), the same as Python. Texture inputs do not exist in Kestrel's features (no Kestrel model has
+them), so the board item is Python only.
+
+ESS: in a 300-deal nm25 match (95 decisions searched at 256 samples) the ESS share's 1st, 5th and 10th percentiles are
+0.008, 0.010 and 0.015 (median 0.12). The floor of 0.02 (5 effective deals of 256, 20 of Kestrel's 1,024) sends 13.7%
+of searched decisions back to the network; 0.05 would send 29% and 0.1 43%. 0.02 is the conservative choice: it removes
+only decisions whose values rest on a handful of deals. Whether it helps in play is not measured yet: run
+`ninemax_search.py` with `--min-ess 0` and with the default on the same seed, and compare with `search_paired.py`.

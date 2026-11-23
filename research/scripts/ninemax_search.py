@@ -13,6 +13,14 @@ At a decision after the flop in a pot of at most three players, the network's ow
 
 This is a one-step improvement against opponents who play the network's strategy, not a re-solve of the subgame.
 
+Since 2026-11-23 (B3 of docs/2026-11-23-review-and-plan.md, checked by ninemax_search_check.py):
+- the samples and the match tables carry their board, so a texture network (--texture) sees it in search too;
+- rollouts are scored with the trainer's own reward (ninemax_selfplay.end_equity), the knockout term included;
+- common random numbers: the rollouts draw one uniform per (sample, step), shared by every candidate move (and
+  continuation), and sample by inverse CDF, so Q(a) - Q(b) is a paired comparison (--no-crn: the old draws);
+- an ESS floor: when the weighted samples rest on fewer than --min-ess of them, the decision is the network's own
+  policy (counted in ess_fallback).
+
 --robust (version 2, after Pluribus): the opponents may respond. Every sample is rolled out four times, the
 opponents continuing with the network or with the network biased towards folding, calling or raising (that
 action type's probabilities times --bias, renormalised; the hero always continues with the network), and an
@@ -46,10 +54,9 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-from icm import end_stacks, icm
 from ninemax_engine import BB, Dealer, Menu, Tables, strength
 from ninemax_eval import load
-from ninemax_selfplay import FEAT, context, features, masked
+from ninemax_selfplay import FEAT, board_of, context, end_equity, features, masked, start_equity
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FIELDS = ("stack", "contrib", "folded", "allin", "acted", "bet", "last_raise", "raises", "street", "pre_raises", "hist",
@@ -70,19 +77,20 @@ def take(T, idx):
 
 
 def with_pay(T, pay):
-    """Attach tournament payouts (or nothing for cash) and the ICM equity at the start of the hand."""
+    """Attach tournament payouts (or nothing for cash) and the equity at the start of the hand, as the trainer does
+    (start_equity: ICM, plus each player's chip share of the bounties in a knockout game)."""
     if pay is not None:
-        T.pay, T.eq0 = pay.float(), icm(T.stack.float(), pay).float()
+        T.pay, T.eq0 = pay.float(), start_equity(T.stack, pay)
     return T
 
 
 def result(T, ranks):
-    """Every player's result of finished hands in big blinds: chips (cash) or the ICM equity change in chips at the
-    table's average chip value (tournament), as in training."""
+    """Every player's result of finished hands in big blinds: chips (cash) or the prize-equity change in chips at the
+    table's average chip value (tournament), exactly the trainer's reward (end_equity: ICM and, with bounties, the
+    knockout term)."""
     u = T.payoffs(ranks)
     if hasattr(T, "pay"):
-        eq1 = icm(end_stacks(T.stack, u), T.pay).float()
-        u = (eq1 - T.eq0) * T.stack.sum(1, keepdim=True).float()
+        u = (end_equity(T, u, ranks) - T.eq0) * T.stack.sum(1, keepdim=True).float()
     return u.float() / BB
 
 
@@ -110,23 +118,49 @@ def biased(pr, kind, factor):
 
 
 def deal_fixed(dealer, n, fixed):
-    """n deals keeping the cards of fixed (np.int32 [2P + 5], -1 = deal): buckets [n, P, 4] and ranks [n, P]."""
+    """n deals keeping the cards of fixed (np.int32 [2P + 5], -1 = deal): buckets [n, P, 4], ranks [n, P] and the
+    cards [n, 2P + 5] (hole cards by seat, then the board: texture networks read the board)."""
     P = dealer.P
     bk = np.zeros((n, P, 4), np.int32)
     rk = np.zeros((n, P), np.int32)
+    cd = np.zeros((n, 2 * P + 5), np.int32)
     dealer.seed += 1
     fx = np.ascontiguousarray(fixed, dtype=np.int32)
-    dealer.lib.bp_deal_fixed(n, P, dealer.seed, fx.ctypes.data, bk.ctypes.data, rk.ctypes.data, None)
+    dealer.lib.bp_deal_fixed(n, P, dealer.seed, fx.ctypes.data, bk.ctypes.data, rk.ctypes.data, cd.ctypes.data)
     t = lambda a: torch.tensor(a, device=dealer.dev, dtype=torch.long)  # noqa: E731
-    return t(bk), t(rk)
+    return t(bk), t(rk), cd
+
+
+def pick(pr, draws, key):
+    """Inverse-CDF sampling: one action per row of pr [n, A] from the uniforms draws[key] (key [n]: the row's sample,
+    decision * N + deal). Rows with the same key (the same deal under different candidate moves or continuations) get
+    the same uniform, so their draws are coupled: that pairs the rollouts of different moves."""
+    u = draws[key]
+    c = pr.cumsum(1)
+    a = (c <= u[:, None] * c[:, -1:]).sum(1)
+    last = pr.shape[1] - 1 - (pr > 0).flip(1).float().argmax(1)  # the last action with probability > 0
+    return torch.minimum(a, last)
+
+
+# The ESS floor, as a share of the samples. ESS counts the deals the weighted values effectively rest on, and a value
+# from k effective deals has a standard error of about sd / sqrt(k). 0.02 is 5 effective deals of 256 (20 of Kestrel's
+# 1,024): conservative, it removes only values resting on a handful of deals. In a 300-deal nm25 match it sent 13.7% of
+# searched decisions back to the network (0.05: 29%, 0.1: 43%; ninemax_search_check.py, docs/2026-11-23-review-and-
+# plan.md B3). Its effect on play is not measured yet.
+MIN_ESS = 0.02
 
 
 class Search:
-    def __init__(self, net, dealer, menu, samples=256, mode="greedy", tau=1.0, chunk=16, robust=False, bias=5.0):
+    def __init__(self, net, dealer, menu, samples=256, mode="greedy", tau=1.0, chunk=16, robust=False, bias=5.0,
+                 crn=True, min_ess=MIN_ESS):  # fmt: skip
         self.net, self.dealer, self.menu = net, dealer, menu
         self.N, self.mode, self.tau, self.chunk = samples, mode, tau, chunk
         self.robust, self.bias = robust, bias
+        self.crn = crn  # common random numbers: every candidate move's rollouts use the same draws per (deal, step)
+        self.min_ess = min_ess  # below this share of the samples, the decision is the network's own policy
         self.ess = []
+        self.calls = 0  # searches so far (seeds the rollout draws with the deals' seed)
+        self.fallback = []  # per decision searched: True when the ESS floor returned the network's policy
         self.trace = None  # a list to receive (Q, network policy) of every decision searched (distillation data)
         import ctypes
 
@@ -151,6 +185,10 @@ class Search:
         RK = torch.cat([d[1] for d in deals])
         st = None if stacks is None else stacks.repeat_interleave(N, 0)
         R = with_pay(Tables(M * N, P, self.menu, dev, stacks=st), None if pay is None else pay.repeat_interleave(N, 0))
+        R.board = board_of(np.concatenate([d[2] for d in deals]), P, dev)  # each sample's board (texture networks)
+        gen = torch.Generator(device=dev)  # the rollouts' draws: one uniform per (sample, step), shared by every move
+        gen.manual_seed(self.dealer.seed * 1_000_003 + self.calls)
+        self.calls += 1
         # 1. replay the hand, weighting each sample by the opponents' actions
         L = max(len(h) for h in hists)
         seat = torch.full((M, L), -1, dtype=torch.long, device=dev)
@@ -173,7 +211,8 @@ class Search:
             R.step(r, a_t)
         assert bool((R.actor == hero).all()), "not the hero's turn after the replay"
         w = torch.softmax(logw.view(M, N), 1)  # [M, N]
-        self.ess.extend((1 / (w**2).sum(1)).tolist())  # effective sample size of each decision's weighted samples
+        ess = 1 / (w**2).sum(1)  # effective sample size of each decision's weighted samples
+        self.ess.extend(ess.tolist())
         root = torch.arange(M, device=dev) * N
         pnet, legal = net_probs(self.net, self.dealer, R, root, BK)  # hero's own bucket is the same in every sample
         # 2. every legal action on every sample, then rollouts with the network
@@ -191,7 +230,11 @@ class Search:
             if self.robust:
                 opp = U.actor[g] != hero
                 pr[opp] = biased(pr[opp], kind[g][opp], self.bias)
-            U.step(g, torch.multinomial(pr, 1).squeeze(1))
+            if self.crn:  # rollout row k plays sample idx[k] of R: the same uniform for every move and continuation
+                draws = torch.rand(M * N, generator=gen, device=dev)
+                U.step(g, pick(pr, draws, idx[g]))
+            else:
+                U.step(g, torch.multinomial(pr, 1).squeeze(1))
         u = result(U, RU)[:, hero].view(C, -1, N)  # [C, K, N] in big blinds (ICM equity for a tournament)
         q = (u * w[pairs[:, 0]][None]).sum(2).min(0).values  # the worst continuation for the hero
         Q = torch.full(legal.shape, -1e9, device=dev)
@@ -199,9 +242,13 @@ class Search:
         if self.trace is not None:
             self.trace.append((Q.clone(), pnet.clone()))
         if self.mode == "greedy":
-            return F.one_hot(Q.argmax(1), legal.shape[1]).float()
-        z = torch.log(pnet.clamp(min=1e-12)) + (Q - Q.max(1, keepdim=True).values) / self.tau
-        return torch.softmax(masked(z, legal), 1)
+            out = F.one_hot(Q.argmax(1), legal.shape[1]).float()
+        else:
+            z = torch.log(pnet.clamp(min=1e-12)) + (Q - Q.max(1, keepdim=True).values) / self.tau
+            out = torch.softmax(masked(z, legal), 1)
+        low = ess < self.min_ess * N  # too few effective samples: the values are noise, keep the network's policy
+        self.fallback.extend(low.tolist())
+        return torch.where(low[:, None], pnet, out)
 
 
 def match(net, search, dealer, menu, n, dev, max_live=3, first_street=1, opp_bias=0, bias=5.0):
@@ -214,6 +261,7 @@ def match(net, search, dealer, menu, n, dev, max_live=3, first_street=1, opp_bia
     searched = 0
     for h in range(P):
         T = with_pay(Tables(n, P, menu, dev, stacks=stacks), pay)
+        T.board = board_of(cd, P, dev)  # texture networks read the board (None of them: unused)
         hist = [[] for _ in range(n)]
         while not bool(T.done.all()):
             g = (~T.done).nonzero().squeeze(1)
@@ -259,6 +307,9 @@ def main():
     ap.add_argument("--robust", action="store_true", help="the opponents may switch continuation strategy (Pluribus)")
     ap.add_argument("--bias", type=float, default=5.0, help="how strongly a continuation strategy is biased")
     ap.add_argument("--opp-bias", choices=BIASES, default="net", help="the match's opponents play this strategy")
+    ap.add_argument("--min-ess", type=float, default=MIN_ESS,
+                    help="below this share of --samples effective samples, play the network's own policy (0: never)")  # fmt: skip
+    ap.add_argument("--no-crn", action="store_true", help="independent rollout draws per move (before 2026-11-23)")
     ap.add_argument("--out")
     ap.add_argument(
         "--per-deal", help="save each deal's result (bb/100, .npy) for paired comparisons on the same deals"
@@ -272,7 +323,9 @@ def main():
     d = os.path.dirname(a.run) if a.run.endswith(".pt") else a.run
     menu = Menu(json.load(open(os.path.join(d, "config.json"))).get("menu", "medium"), dev)
     dealer = Dealer(a.lib, a.abs, 9, B, dev, seed=a.seed)
-    search = Search(net, dealer, menu, a.samples, a.mode, a.tau, a.chunk, a.robust, a.bias) if a.samples else None
+    search = None
+    if a.samples:
+        search = Search(net, dealer, menu, a.samples, a.mode, a.tau, a.chunk, a.robust, a.bias, not a.no_crn, a.min_ess)
     t0 = time.time()
     per, searched = match(net, search, dealer, menu, a.hands, dev, a.max_live, 0 if a.preflop else 1,
                           BIASES.index(a.opp_bias), a.bias)  # fmt: skip
@@ -281,12 +334,13 @@ def main():
     m, sd = float(per.mean()), float(per.std())
     lo, hi = m - 1.96 * sd / math.sqrt(len(per)), m + 1.96 * sd / math.sqrt(len(per))
     res = {"run": a.run, "hands_trained": hands, "hands": a.hands, "samples": a.samples, "mode": a.mode,
-           "tau": a.tau, "robust": a.robust, "bias": a.bias, "opp_bias": a.opp_bias, "max_live": a.max_live, "preflop": a.preflop, "tourney": FEAT["tourney"], "searched_decisions": searched, "bb100": round(m, 1),
+           "tau": a.tau, "robust": a.robust, "crn": not a.no_crn, "min_ess": a.min_ess, "bias": a.bias, "opp_bias": a.opp_bias, "max_live": a.max_live, "preflop": a.preflop, "tourney": FEAT["tourney"], "searched_decisions": searched, "bb100": round(m, 1),
            "ci95": [round(lo, 1), round(hi, 1)], "seconds": round(time.time() - t0)}  # fmt: skip
     if search is not None and search.ess:
         e = torch.tensor(search.ess)
         res["ess_median"] = round(float(e.median()), 1)  # out of --samples
         res["ess_p10"] = round(float(torch.quantile(e, 0.1)), 1)
+        res["ess_fallback"] = round(sum(search.fallback) / len(search.fallback), 4)  # share played by the network
     print(json.dumps(res), flush=True)
     if a.out:
         json.dump(res, open(a.out, "w"), indent=1)

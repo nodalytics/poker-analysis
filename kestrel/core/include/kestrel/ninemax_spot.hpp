@@ -66,6 +66,7 @@ struct NMAdvice {
     bool searched = false;  // the advice came from search (a SearchConfig was given and the spot qualifies)
     int samples = 0;
     double ess = 0;      // search: the effective number of deals after weighting by the opponents' actions
+    bool ess_fallback = false;  // search: the ESS was below the floor, so the options are the network's own policy
     std::string error;   // set when the spot could not be replayed
     std::vector<float> embedding;  // the spot as the network sees it (kEmbedDim numbers, length 1): for similar spots
     nlohmann::json view;  // the table as replayed: seats, positions, stacks and the pot in big blinds, the hand's log
