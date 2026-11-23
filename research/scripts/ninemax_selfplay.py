@@ -547,16 +547,32 @@ def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None,
         reg, bty = split_pay(T.pay)
         end = end_stacks(T.stack, u)
         eq1 = icm(end, reg).float()
-        if bty is not None:  # knockouts: the hand's biggest winner collects every bust's bounty, half in cash
-            busted = (T.stack > 0) & (T.stack.double() + u <= 0.5)
-            won = (bty * busted.float()).sum(1)
-            k = F.one_hot(u.argmax(1), T.P).float() * won[:, None] / 2
+        if bty is not None:  # knockouts: each bust's bounty, half in cash, to whoever took the player's last chips
+            busted, k = knockouts(T, u, rk, bty)
             left = torch.where(busted, torch.zeros_like(bty), bty) + k
             alive = torch.where(busted, torch.zeros_like(end), end).float()
             # the bounties still in play, by chip share (as start_equity): the money stays whole
             eq1 = eq1 + k + left.sum(1, keepdim=True) * alive / alive.sum(1, keepdim=True).clamp(min=1)
         u = (eq1 - T.eq0) * T.stack.sum(1, keepdim=True).float()
     return u, rec
+
+
+def knockouts(T, u, ranks, bty):
+    """The players a finished hand busts [G, P] bool, and the bounty cash each seat collects [G, P]: half of every
+    busted player's bounty (the other half goes onto the collector's own head). A bounty belongs to whoever won the
+    pot that took the player's last chips: the pot level at its contribution, contested by the live players who put
+    in at least as much (as Tables.payoffs settles it), split equally between tied winners. A busted player is
+    all in and live, so it contests that level itself and some player always wins it. (Until 2026-11-23 the hand's
+    biggest winner, u.argmax, took every bounty: wrong on ties and when another player won a bigger side pot.)"""
+    busted = (T.stack > 0) & (T.stack.double() + u <= 0.5)
+    c = T.contrib
+    elig = ~T.folded[:, None, :] & (c[:, None, :] >= c[:, :, None])  # [G, busted i, collector j]
+    big = torch.iinfo(torch.int32).max
+    r = ranks[:, None, :].expand(-1, T.P, -1).masked_fill(~elig, big)
+    takers = elig & (r == r.min(2, keepdim=True).values)
+    share = bty * busted.float() / takers.sum(2).clamp(min=1).float()
+    k = (share[:, :, None] * takers.float()).sum(1) / 2
+    return busted, k
 
 
 def seats_used(P):
