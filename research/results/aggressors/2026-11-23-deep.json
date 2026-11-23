@@ -1,0 +1,223 @@
+{
+ "hands": 20000,
+ "defenders": [
+  "nm25",
+  "nm43",
+  "nm44"
+ ],
+ "seed": 11,
+ "depths": [
+  [
+   25.0,
+   60.0
+  ]
+ ],
+ "results": {
+  "icm equity jam-any vs 8 x nm25": [
+   -112.27,
+   -120.32,
+   -104.23
+  ],
+  "icm chips jam-any vs 8 x nm25": [
+   -22.94,
+   -32.73,
+   -13.15
+  ],
+  "icm equity jam-40 vs 8 x nm25": [
+   -29.48,
+   -32.96,
+   -26.0
+  ],
+  "icm chips jam-40 vs 8 x nm25": [
+   1.17,
+   -3.37,
+   5.71
+  ],
+  "icm equity raise-any vs 8 x nm25": [
+   -7.19,
+   -8.55,
+   -5.82
+  ],
+  "icm chips raise-any vs 8 x nm25": [
+   -8.53,
+   -10.58,
+   -6.48
+  ],
+  "icm equity jam-any vs 8 x nm43": [
+   -110.07,
+   -117.97,
+   -102.17
+  ],
+  "icm chips jam-any vs 8 x nm43": [
+   -16.88,
+   -26.63,
+   -7.13
+  ],
+  "icm equity jam-40 vs 8 x nm43": [
+   -30.59,
+   -34.11,
+   -27.08
+  ],
+  "icm chips jam-40 vs 8 x nm43": [
+   5.26,
+   0.66,
+   9.86
+  ],
+  "icm equity raise-any vs 8 x nm43": [
+   -7.01,
+   -8.39,
+   -5.64
+  ],
+  "icm chips raise-any vs 8 x nm43": [
+   -10.05,
+   -12.19,
+   -7.91
+  ],
+  "icm equity jam-any vs 8 x nm44": [
+   -114.13,
+   -121.84,
+   -106.41
+  ],
+  "icm chips jam-any vs 8 x nm44": [
+   -32.0,
+   -41.6,
+   -22.4
+  ],
+  "icm equity jam-40 vs 8 x nm44": [
+   -31.64,
+   -35.02,
+   -28.27
+  ],
+  "icm chips jam-40 vs 8 x nm44": [
+   -0.91,
+   -5.34,
+   3.52
+  ],
+  "icm equity raise-any vs 8 x nm44": [
+   -9.83,
+   -11.21,
+   -8.45
+  ],
+  "icm chips raise-any vs 8 x nm44": [
+   -6.93,
+   -9.04,
+   -4.81
+  ],
+  "early equity jam-any vs 8 x nm25": [
+   -362.3,
+   -378.64,
+   -345.96
+  ],
+  "early chips jam-any vs 8 x nm25": [
+   -362.38,
+   -378.55,
+   -346.2
+  ],
+  "early equity jam-40 vs 8 x nm25": [
+   -82.35,
+   -90.06,
+   -74.65
+  ],
+  "early chips jam-40 vs 8 x nm25": [
+   -81.89,
+   -89.55,
+   -74.24
+  ],
+  "early equity raise-any vs 8 x nm25": [
+   -38.98,
+   -43.45,
+   -34.51
+  ],
+  "early chips raise-any vs 8 x nm25": [
+   -35.94,
+   -40.36,
+   -31.53
+  ],
+  "early equity jam-any vs 8 x nm43": [
+   -240.98,
+   -254.68,
+   -227.27
+  ],
+  "early chips jam-any vs 8 x nm43": [
+   -249.58,
+   -263.42,
+   -235.73
+  ],
+  "early equity jam-40 vs 8 x nm43": [
+   -55.36,
+   -61.82,
+   -48.9
+  ],
+  "early chips jam-40 vs 8 x nm43": [
+   -56.54,
+   -63.02,
+   -50.06
+  ],
+  "early equity raise-any vs 8 x nm43": [
+   -21.46,
+   -24.75,
+   -18.17
+  ],
+  "early chips raise-any vs 8 x nm43": [
+   -20.33,
+   -23.54,
+   -17.11
+  ],
+  "early equity jam-any vs 8 x nm44": [
+   -276.68,
+   -290.22,
+   -263.15
+  ],
+  "early chips jam-any vs 8 x nm44": [
+   -270.86,
+   -284.39,
+   -257.33
+  ],
+  "early equity jam-40 vs 8 x nm44": [
+   -63.73,
+   -70.16,
+   -57.3
+  ],
+  "early chips jam-40 vs 8 x nm44": [
+   -69.5,
+   -75.88,
+   -63.13
+  ],
+  "early equity raise-any vs 8 x nm44": [
+   -31.89,
+   -35.06,
+   -28.71
+  ],
+  "early chips raise-any vs 8 x nm44": [
+   -31.27,
+   -34.41,
+   -28.12
+  ]
+ },
+ "fold_to_allin": {
+  "icm nm25": {
+   "with jam-any at the table": 0.914,
+   "defenders only": 0.798
+  },
+  "icm nm43": {
+   "with jam-any at the table": 0.92,
+   "defenders only": 0.81
+  },
+  "icm nm44": {
+   "with jam-any at the table": 0.915,
+   "defenders only": 0.805
+  },
+  "early nm25": {
+   "with jam-any at the table": 0.777,
+   "defenders only": 0.497
+  },
+  "early nm43": {
+   "with jam-any at the table": 0.831,
+   "defenders only": 0.602
+  },
+  "early nm44": {
+   "with jam-any at the table": 0.813,
+   "defenders only": 0.512
+  }
+ }
+}

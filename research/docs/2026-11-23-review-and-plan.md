@@ -132,3 +132,46 @@ A1, A2 and the B fixes run in parallel (A on the PRO 6000 and the 3090, while a 
 only, hours), then nm45 (6 hours of training plus checks). nm46 waits on A3. The heads-up work is independent.
 Every run goes through `research/pipeline` with its `nmXX.json` registered before it starts; no re-reading of a
 failed run except as a new, stated registration.
+
+## 5. Results so far (2026-11-23)
+
+**A1, the exploiter baseline** (30-minute exploiter, pipeline settings, seeds 7-10, two seeds on the PRO 6000 and
+two on the 3090 per model; logs in `results/exploit_baseline/`):
+
+| Model | Final readings | Mean | SD |
+|---|---|---|---|
+| nm25 | +1.1, +0.8, +0.4, +0.7 | **+0.75** | 0.29 |
+| nm44 | +0.7, +0.4, +0.7, +0.2 | **+0.50** | 0.24 |
+| nm43 | +1.4, +1.2, +0.9, +1.8 | **+1.32** | 0.38 |
+
+nm25's reference was +0.2; on four seeds it is +0.75, so "nm25 + 1" limits were set from a low draw. nm44 is the
+hardest of the three to exploit; nm43 is still about 0.6 above nm25. Limits are now stated against these means.
+
+**A0, the early-shove rule** (`results/early_shove/`). The documented +0.21 bb/100 had no saved result. Re-run with
+the default command it read −0.50 (z −2.66, "difference" at the sixth look). Five replicates on separate seeds,
+40,000 deals each, with a control (nm25 against itself, no rule):
+
+| | Mean | Range |
+|---|---|---|
+| nm25 with the rule | −0.11 | −0.33 to +0.11 |
+| control, no rule | −0.04 | −0.24 to +0.16 |
+
+The rule is neutral: +0.21 and −0.50 were single draws from a spread the control shows too. Kestrel keeps it. Lesson
+for every single sequential match: `seqtest.py` seeds the deals but not the context or the action sampling, so one run
+is one draw; claims near the boundary need replicates.
+
+**A tester's report: "it folds to almost all pre-flop aggression"** (`scripts/ninemax_aggressor_check.py`,
+`results/aggressors/`). One scripted aggressor seat against eight copies, by duplicate, 20,000 deals x 9 seatings,
+in prize equity and in chips, bb/100 for the aggressor:
+
+| Stage, depth | jam any two | jam top 40% | 3x raise or 3-bet any two | nm25 folds facing an all-in |
+|---|---|---|---|---|
+| ICM tables, 10-25bb | −49.2 equity, **+7.9 chips** | −11.1, **+10.9 chips** | −12.3, −15.5 | 87% |
+| early stage, 10-25bb | −137.2, −140.5 | −25.7, −24.8 | −26.9, −25.8 | 71% |
+| ICM tables, 25-60bb | −112.3, −22.9 | −29.5, +1.2 | −7.2, −8.5 | 91% |
+| early stage, 25-60bb | −362.3, −362.4 | −82.4, −81.9 | −39.0, −35.9 | 78% |
+
+nm25 does fold to most all-ins, and at short ICM tables a jammer wins **chips** against it, which is what a player at
+the table sees. But every aggressor loses **prize equity** at every stage and depth: the folds are correct, and calling
+more would cost money. nm43 and nm44 read the same within a few bb/100. A thinking human picking spots could do better
+than these scripts; the learning exploiter (+0.75 on nm25) is the measure of that, and it is small.
