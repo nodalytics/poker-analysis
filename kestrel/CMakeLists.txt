@@ -45,6 +45,9 @@ add_executable(kestrel_selftest tools/selftest.cpp)
 target_link_libraries(kestrel_selftest PRIVATE kestrel_core)
 add_executable(kestrel_resolve_check tools/resolve_check.cpp)
 target_link_libraries(kestrel_resolve_check PRIVATE kestrel_core)
+add_executable(kestrel_hu_check tools/hu_check.cpp)  # heads-up engine checks the parity vectors cannot see
+target_link_libraries(kestrel_hu_check PRIVATE kestrel_core)
+target_compile_definitions(kestrel_hu_check PRIVATE KESTREL_TESTDATA="${CMAKE_CURRENT_SOURCE_DIR}/testdata")
 if(OpenMP_CXX_FOUND)  # search against the network alone, paired (a research check, not shipped)
   add_executable(kestrel_search_match tools/search_match.cpp)
   target_link_libraries(kestrel_search_match PRIVATE kestrel_core OpenMP::OpenMP_CXX)
@@ -131,6 +134,11 @@ enable_testing()
 add_test(NAME selftest
          COMMAND kestrel_selftest --vectors ${CMAKE_CURRENT_SOURCE_DIR}/testdata
                  --model ${KESTREL_DATA}/models/ninemax/nm17 --pack ${KESTREL_DATA}/blueprint/pack)
+add_test(NAME hu_check  # off-tree mappings stable within a hand, TexasSolver's effective stack, the re-solve floor switch
+         COMMAND kestrel_hu_check --pack ${KESTREL_DATA}/blueprint/pack)
+if(TARGET kestreld AND UNIX)  # a local kestreld probed with curl: malformed input is a 400, shutdown refuses a public Host
+  add_test(NAME server_check COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/server_check.sh $<TARGET_FILE:kestreld>)
+endif()
 add_test(NAME selftest_pko  # progressive knockouts: bounty features and equity, against nm30 (the PKO model) and its vectors
          COMMAND kestrel_selftest --vectors ${CMAKE_CURRENT_SOURCE_DIR}/testdata
                  --nine-max ${CMAKE_CURRENT_SOURCE_DIR}/testdata/vectors_nm30.json

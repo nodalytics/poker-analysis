@@ -100,7 +100,21 @@ int HUBlueprint::child(int node, std::initializer_list<const char*> labels) cons
     return -1;
 }
 
-int HUBlueprint::map_raise(int node, double x, bool det) {
+namespace {
+uint64_t mix64(uint64_t z) {  // splitmix64's finaliser
+    z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9ULL;
+    z = (z ^ (z >> 27)) * 0x94d049bb133111ebULL;
+    return z ^ (z >> 31);
+}
+uint64_t fnv1a(const std::string& s) {
+    uint64_t h = 0xcbf29ce484222325ULL;
+    for (unsigned char c : s) h = (h ^ c) * 0x100000001b3ULL;
+    return h;
+}
+}  // namespace
+
+// draw: the pseudo-harmonic mapping's uniform draw for this bet, a pure function of the hand so far (see decide)
+int HUBlueprint::map_raise(int node, double x, bool det, double draw) const {
     const Node& n = nodes_[node];
     int p = n.player;
     std::vector<std::pair<double, int>> c;
@@ -120,7 +134,7 @@ int HUBlueprint::map_raise(int node, double x, bool det) {
         if (A <= x && x <= B) {  // pseudo-harmonic mapping (Ganzfried & Sandholm)
             double pa = ((B - x) * (1 + A)) / std::max((B - A) * (1 + x), 1e-9);
             if (det) return pa >= 0.5 ? c[k].second : c[k + 1].second;
-            return std::uniform_real_distribution<double>(0, 1)(rng_) < pa ? c[k].second : c[k + 1].second;
+            return draw < pa ? c[k].second : c[k + 1].second;
         }
     }
     return c.back().second;
@@ -132,6 +146,10 @@ HUAnswer HUBlueprint::decide(const HUSpot& s, bool det, int64_t round_to) {
     int node = 0;
     std::vector<Step> history;
     double bets[2] = {50, 100}, pot = 0;
+    // an off-tree bet keeps one mapping for the whole hand (the Python bot caches it per betting history): its draw is
+    // a hash of everything known when it was made (our seat and cards, the board and the betting up to it) and this
+    // engine's salt, so every replay of the hand maps it to the same child while different hands still draw afresh
+    std::string sig = std::to_string(s.me) + "|" + std::to_string(s.hole[0]) + "," + std::to_string(s.hole[1]);
     auto rnd = [&](int64_t v) {
         return round_to > 0 ? double(std::llround(double(v) / double(round_to)) * round_to) : double(v);
     };
@@ -140,7 +158,10 @@ HUAnswer HUBlueprint::decide(const HUSpot& s, bool det, int64_t round_to) {
             pot += bets[0] + bets[1];
             bets[0] = bets[1] = 0;
         }
+        sig += "/";
+        for (int k = 0; k < kBoardN[si] && k < int(s.board.size()); ++k) sig += std::to_string(s.board[k]) + ",";
         for (const HUAction& a : s.streets[si]) {
+            sig += std::to_string(a.player) + a.kind + std::to_string(a.to) + ";";
             const Node& n = nodes_[node];
             if (n.kind != 0 || n.player != a.player) return ans;
             int p = a.player, before = node;
@@ -153,7 +174,8 @@ HUAnswer HUBlueprint::decide(const HUSpot& s, bool det, int64_t round_to) {
                 double to = rnd(a.to);
                 double x = frac(to, bets[1 - p], bets[p], pot + bets[0] + bets[1]);
                 bets[p] = to;
-                node = map_raise(node, x, det);
+                const double draw = double(mix64(fnv1a(sig) ^ salt_) >> 11) * 0x1.0p-53;
+                node = map_raise(node, x, det, draw);
             }
             if (node < 0) return ans;
             const auto& ch = nodes_[before].children;
@@ -211,7 +233,7 @@ HUAnswer HUBlueprint::decide(const HUSpot& s, bool det, int64_t round_to) {
     tot = 0;
     for (auto& v : st) tot += v = v < purify_ ? 0.0 : v;
     for (auto& v : st) v = tot > 0 ? v / tot : 1.0 / double(k);
-    ans.floored = defence_floor(s, history, n, st);
+    if (!ans.resolved || resolve_floor_) ans.floored = defence_floor(s, history, n, st);
     for (size_t j = 0; j < k; ++j) {
         if (st[j] <= 0) continue;
         const std::string& l = n.labels[j];
@@ -372,7 +394,9 @@ bool HUBlueprint::texassolver(const HUSpot& s, const std::vector<Step>& history,
         bool oop_is_me = s.me == 1;  // the big blind acts first after the flop
         sp.range_oop = oop_is_me ? rm : ro, sp.range_ip = oop_is_me ? ro : rm;
         sp.pot = std::round(double(s.pot - s.my_bet - s.their_bet) / unit);
-        sp.eff = std::round(double(s.my_stack + s.my_bet) / unit);
+        // effective stack: the smaller of the two players' chips at the start of the street (behind + this street's
+        // bet), as the Python bot's resolve(); a short opponent caps every bet
+        sp.eff = std::round(double(std::min(s.my_stack + s.my_bet, s.their_stack + s.their_bet)) / unit);
         auto tree = texassolver_solve(ts_, sp);
         if (tree.is_null()) return false;
         if (ts_trees_.size() > 32) ts_trees_.clear();

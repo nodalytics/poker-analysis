@@ -43,7 +43,8 @@ int usage() {
                  "       kestreld db [--db FILE] stats|sessions|import DIR...   the database (default\n"
                  "                     ~/.local/share/kestrel/kestrel.db); import: session folders' hands.jsonl\n"
                  "       kestreld play CONNECTOR --hands N --out DIR [--pack DIR] [--model M]\n"
-                 "                     [--solver none|kestrel-river|texassolver] [--resolve-iters N]\n"
+                 "                     [--solver none|kestrel-river|texassolver] [--resolve-iters N] [--resolve-floor on|off]\n"
+                 "                     (texassolver is the UNSAFE re-solve, LBR +996: for study, never for play)\n"
                  "                     [--texassolver BIN --texassolver-resources DIR] [--seed S] [--max-errors E]\n"
                  "                     table connectors (codec structured): --model <9-max model folder> [--tournaments N]\n"
                  "                     [--solver none|search|search-robust|search-exploit] [--search-samples 1024]\n"
@@ -52,7 +53,8 @@ int usage() {
                  "       kestreld start                   the same without opening the browser (the desktop app runs it)\n"
                  "       kestreld serve [--port P] [--lan on|off] [--pack DIR] [--models DIR] [--connectors DIR]...\n"
                  "                      [--web DIR] [--assets DIR] [--default-model nm25]\n"
-                 "                      [--out DIR] [--resolve-iters N] [--search-samples N] [--db FILE|off]\n"
+                 "                      [--out DIR] [--resolve-iters N] [--resolve-floor on|off] [--search-samples N]\n"
+                 "                      [--db FILE|off]\n"
                  "                      [--texassolver BIN --texassolver-resources DIR]\n"
                  "                      [--public-host NAME]... (served under that domain: token only) [--config DIR]\n");
     return 2;
@@ -211,6 +213,7 @@ ServeOptions defaults(const char* argv0) {
             str("texassolver_bin", o.ts_bin), str("texassolver_resources", o.ts_resources);
             str("sessions_dir", o.out), str("pack", o.pack), str("db", o.db);
             if (st.contains("db") && st["db"].is_boolean() && !st["db"].get<bool>()) o.db.clear();  // "db": false
+            if (st.contains("resolve_floor") && st["resolve_floor"].is_boolean()) o.resolve_floor = st["resolve_floor"].get<bool>();
         }
     }
     return o;
@@ -346,6 +349,7 @@ int main(int argc, char** argv) {
             else if (a == "--out") o.out = v;
             else if (a == "--models") o.extra_models.push_back(v);
             else if (a == "--resolve-iters") o.resolve_iters = std::stoi(v);
+            else if (a == "--resolve-floor") o.resolve_floor = v == "on" || v == "1" || v == "true";
             else if (a == "--search-samples") o.search_samples = std::clamp(std::stoi(v), 1024, 4096);
             else if (a == "--texassolver") o.ts_bin = v;
             else if (a == "--texassolver-resources") o.ts_resources = v;
@@ -393,6 +397,7 @@ int main(int argc, char** argv) {
         int iters = 500, samples = 1024;
         std::string db_path = (data_dir() / "kestrel.db").string();
         TexasSolverConfig ts;
+        bool resolve_floor = true;
         for (int k = 3; k + 1 < argc; k += 2) {
             std::string a = argv[k], v = argv[k + 1];
             if (a == "--hands") plan.hands = std::stoi(v);
@@ -404,6 +409,7 @@ int main(int argc, char** argv) {
             else if (a == "--tournaments") plan.tournaments = std::stoi(v);
             else if (a == "--solver") plan.solver = v;
             else if (a == "--resolve-iters") iters = std::stoi(v);
+            else if (a == "--resolve-floor") resolve_floor = v == "on" || v == "1" || v == "true";
             else if (a == "--search-samples") samples = std::clamp(std::stoi(v), 1024, 4096);
             else if (a == "--db") db_path = v == "off" ? "" : v;
             else if (a == "--texassolver") ts.bin = v;
@@ -458,7 +464,7 @@ int main(int argc, char** argv) {
         if (plan.solver != "none" && plan.solver != "kestrel-river" && plan.solver != "texassolver")
             throw std::runtime_error("solver " + plan.solver + " is not available");
         HUBlueprint engine(pack);
-        if (plan.solver == "kestrel-river") engine.set_resolve(iters);
+        if (plan.solver == "kestrel-river") engine.set_resolve(iters), engine.set_resolve_floor(resolve_floor);
         if (plan.solver == "texassolver") engine.set_texassolver(ts);
         auto s = run_session(spec, plan, engine, progress, &g_stop);
         opponents.flush();

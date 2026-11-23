@@ -10,6 +10,7 @@ struct ServeOptions {
     std::string models;                     // installed model packages (kestreld models install)
     std::vector<std::string> extra_models;  // more folders of models, e.g. the ones shipped beside the program
     int resolve_iters = 500;
+    bool resolve_floor = true;  // the defence floor on kestrel-river's re-solved spots (off: purified re-solve only)
     int search_samples = 1024;  // 9-max search (solvers search, search-robust): deals of the unknown cards a decision
     std::string ts_bin, ts_resources;  // TexasSolver's console_solver and resources/, if installed
     int ts_threads = 8;
