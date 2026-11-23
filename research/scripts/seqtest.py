@@ -73,6 +73,15 @@ def simulate(K=8, alpha=0.05, margin=0.5, sd=1.0, n_max=40000, reps=20000, seed=
     return {"K": K, "alpha": alpha, "C": round(C, 4), "margin_bb100": margin, "n_max": n_max, "sd": sd, "rows": rows}
 
 
+def run_lib(run):
+    """The bucket library a run was trained with (its config.json), libbp7 (nm25's) where it says nothing."""
+    try:
+        cfg = json.load(open(os.path.join(run, "config.json")))
+    except (OSError, ValueError):
+        cfg = {}
+    return os.path.join(ROOT, cfg.get("lib") or os.path.join("blueprint", "libbp7.so"))
+
+
 def match(a_run, b_run, n_max, K, alpha, margin, dev="cuda", early_shove_bb=0.0, early=None):
     """A sequential duplicate match: a vs 8 copies of b, stage by stage on fresh deals."""
     import torch
@@ -82,7 +91,7 @@ def match(a_run, b_run, n_max, K, alpha, margin, dev="cuda", early_shove_bb=0.0,
     from ninemax_selfplay import BB, FEAT, board_of, context, play
 
     bounds, C = boundaries(K, alpha)
-    dealer = run_dealer(a_run, os.path.join(ROOT, "blueprint", "libbp7.so"), None, 9, 0, dev, 2026, "/tmp/seqtest")
+    dealer = run_dealer(a_run, run_lib(a_run), None, 9, 0, dev, 2026, "/tmp/seqtest")  # a's library and abstraction
     b, _ = load(b_run, dealer.B, dev)
     a, _ = load(a_run, dealer.B, dev)  # last: load() sets the game from the config, and the match is in a's game
     if early is not None:  # the share of early-stage tables, instead of a's own (ninemax_selfplay --early)

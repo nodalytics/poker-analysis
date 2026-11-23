@@ -5,10 +5,10 @@
 name: research-pipeline
 on:
   pull_request:
-    paths: ["research/pipeline/runs/**", "research/scripts/pipeline.py", ".github/workflows/research-pipeline.yml"]
+    paths: ["research/pipeline/runs/**", "research/scripts/pipeline.py", "research/scripts/pipeline_check.py", "research/scripts/seqtest.py", "research/pipeline/example.json", ".github/workflows/research-pipeline.yml"]
   push:
     branches: [main]
-    paths: ["research/pipeline/runs/**", "research/scripts/pipeline.py", ".github/workflows/research-pipeline.yml"]
+    paths: ["research/pipeline/runs/**", "research/scripts/pipeline.py", "research/scripts/pipeline_check.py", "research/scripts/seqtest.py", "research/pipeline/example.json", ".github/workflows/research-pipeline.yml"]
 
 permissions:
   contents: read
@@ -26,6 +26,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: the pipeline's own checks (validation, the run's game, exploiter seeds)
+        run: python3 scripts/pipeline_check.py
       - name: every run file
         run: |
           shopt -s nullglob

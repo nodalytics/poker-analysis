@@ -53,7 +53,7 @@ BASE_TRAIN = {
 # the fields each check type takes; consistency and opponent-model are reports (they always pass)
 CHECKS = {
     "seqtest": {"against", "early", "pass", "max", "looks", "alpha", "margin"},
-    "exploit": {"minutes", "limit"},
+    "exploit": {"minutes", "limit", "seeds"},
     "bluffers": {"early", "unit", "bluffers", "pass"},
     "opponents": {"against", "hands", "baseline", "tolerance"},
     "styles": {"count", "seed", "hands", "baseline", "worst_tolerance", "mean_tolerance", "human"},
@@ -94,6 +94,31 @@ def auto_versions(init, keep=10):
         except (OSError, ValueError):
             pass
     return sorted(found, key=lambda n: -int(n[2:]))[:keep]
+
+
+def is_int(x):
+    return isinstance(x, int) and not isinstance(x, bool)
+
+
+def is_num(x):
+    return isinstance(x, (int, float)) and not isinstance(x, bool)
+
+
+def game_args(run):
+    """The menu, bucket library and abstraction a run was trained with, from its config.json, as ninemax_eval.py
+    options: the exploiters must play the run's own game. nm25's (mtt, libbp7, blueprint/out) where it says nothing."""
+    try:
+        cfg = json.load(open(os.path.join(HERE, run, "config.json")))
+    except (OSError, ValueError):
+        cfg = {}
+    return ["--menu", cfg.get("menu") or "mtt", "--lib", cfg.get("lib") or "blueprint/libbp7.so",
+            "--abs", cfg.get("abs") or "blueprint/out"]  # fmt: skip
+
+
+def exploiter_reading(d):
+    """The final reading of an exploiter run (its exploit.log's last 'learner vs 8 x target' line), and the lines."""
+    lines = [x for x in open(os.path.join(d, "exploit.log")) if "learner vs 8 x target" in x]
+    return float(re.search(r"target: ([+-][0-9.]+)", lines[-1]).group(1)), lines
 
 
 def seq_pass(verdict, bb100, rule):
@@ -207,6 +232,25 @@ def validate(path, flags=None):
                 errs.append(f"{where}.limit: the largest exploiter result allowed, bb/100")
             if not 5 <= c.get("minutes", 30) <= 120:
                 errs.append(f"{where}.minutes: 5 to 120")
+            if not is_int(c.get("seeds", 1)) or not 1 <= c.get("seeds", 1) <= 8:
+                errs.append(f"{where}.seeds: 1 to 8 exploiter runs (seeds 7, 8, ...), judged on their mean")
+        if c["type"] == "patterns":
+            if not NAME.match(str(c.get("baseline", "nm25"))):
+                errs.append(f"{where}.baseline: a run name such as nm25")
+            if not is_int(c.get("hands", 10000)) or not 1000 <= c.get("hands", 10000) <= 200000:
+                errs.append(f"{where}.hands: 1,000 to 200,000 hands a pattern")
+            if not is_num(c.get("limit", 0.0)):
+                errs.append(f"{where}.limit: the most any pattern may win, bb/100")
+            if not isinstance(c.get("mine", True), bool):
+                errs.append(f"{where}.mine: true or false")
+        if c["type"] == "opponent-model":
+            if not is_int(c.get("hands", 500)) or not 10 <= c.get("hands", 500) <= 20000:
+                errs.append(f"{where}.hands: 10 to 20,000 hands per arm and seed")
+            sd = c.get("seeds", [1, 2])
+            if not isinstance(sd, list) or not 1 <= len(sd) <= 10 or not all(is_int(x) and x >= 0 for x in sd):
+                errs.append(f"{where}.seeds: a list of 1 to 10 platform seeds (non-negative integers)")
+            if not is_int(c.get("samples", 64)) or not 1 <= c.get("samples", 64) <= 4096:
+                errs.append(f"{where}.samples: 1 to 4,096 search samples a decision")
         if c["type"] == "bluffers":
             if not set(c.get("bluffers", [])) <= BLUFFERS or not c.get("bluffers"):
                 errs.append(f"{where}.bluffers: some of {sorted(BLUFFERS)}")
@@ -430,15 +474,31 @@ class Run:
                 v = "inconclusive"
             ok = seq_pass(v, last, p)
             return ok, f"{v} after {res['deals']:,} deals: {last:+.2f} bb/100 (needs {p.replace('_', ' ')})"
-        if typ == "exploit":
-            d = os.path.join(self.dir, f"{cid}_exploiter")
-            cmd = [PY, "scripts/ninemax_eval.py", "exploit", run, "--out", d, "--minutes", str(c.get("minutes", 30)),
-                   "--eval-minutes", "10", "--menu", "mtt", "--lib", "blueprint/libbp7.so"]  # fmt: skip
-            self.sh(cmd, f"{cid}.log", gpu, timeout_min=c.get("minutes", 30) + 30)
-            lines = [x for x in open(os.path.join(d, "exploit.log")) if "learner vs 8 x target" in x]
-            m = float(re.search(r"target: ([+-][0-9.]+)", lines[-1]).group(1))
-            json.dump({"final_bb100": m, "log": lines}, open(out, "w"), indent=1)
-            return m <= c["limit"], f"exploiter wins {m:+.1f} bb/100 (limit {c['limit']:+.1f})"
+        if typ == "exploit":  # one exploiter per seed (7, 8, ...), judged on the mean of their final readings
+            n = c.get("seeds", 1)
+            runs, logs = [], {}
+            for seed in range(7, 7 + n):
+                d = os.path.join(self.dir, f"{cid}_exploiter" + (f"_s{seed}" if n > 1 else ""))
+                cmd = [PY, "scripts/ninemax_eval.py", "exploit", run, "--out", d, "--minutes", str(c.get("minutes", 30)),
+                       "--eval-minutes", "10", *game_args(run)]  # fmt: skip
+                if n > 1:
+                    cmd += ["--seed", str(seed)]
+                    self.save(status="checking", stage=f"check {cid} (exploit, seed {seed}) on the {gname}")
+                self.sh(cmd, f"{cid}.log", gpu, timeout_min=c.get("minutes", 30) + 30)
+                m, lines = exploiter_reading(d)
+                runs.append({"seed": seed, "final_bb100": m})
+                logs[str(seed)] = lines
+            if n == 1:  # the result as before seeds existed
+                json.dump({"final_bb100": m, "log": lines}, open(out, "w"), indent=1)
+                return m <= c["limit"], f"exploiter wins {m:+.1f} bb/100 (limit {c['limit']:+.1f})"
+            xs = [r["final_bb100"] for r in runs]
+            mean = sum(xs) / n
+            sd = (sum((x - mean) ** 2 for x in xs) / (n - 1)) ** 0.5
+            json.dump({"final_bb100": mean, "mean_bb100": mean, "sd_bb100": sd, "runs": runs, "log": logs},
+                      open(out, "w"), indent=1)  # fmt: skip
+            each = ", ".join(f"{x:+.1f}" for x in xs)
+            return mean <= c["limit"], (f"exploiters win {mean:+.1f} bb/100 on average over {n} seeds ({each}; "
+                                        f"SD {sd:.1f}) (limit {c['limit']:+.1f})")  # fmt: skip
         if typ == "bluffers":
             cmd = [PY, "scripts/ninemax_hybrid.py", "--post", run, "--early", str(c.get("early", 0)), "--out", out]
             self.sh(cmd, f"{cid}.log", gpu, timeout_min=120)
@@ -503,13 +563,12 @@ class Run:
                 d = os.path.join(self.dir, f"{cid}_{x['id']}")
                 mins = x.get("minutes", c.get("minutes", 30))
                 cmd = [PY, "scripts/ninemax_eval.py", "exploit", run, "--out", d, "--minutes", str(mins),
-                       "--eval-minutes", "10", "--menu", "mtt", "--lib", "blueprint/libbp7.so",
+                       "--eval-minutes", "10", *game_args(run),
                        "--lr", str(x.get("lr", 3e-4)), "--entropy", str(x.get("entropy", 0.003))]  # fmt: skip
                 if x.get("init"):
                     cmd += ["--init", f"blueprint/{x['init']}"]
                 self.sh(cmd, f"{cid}.log", gpu, timeout_min=mins + 30)
-                lines = [y for y in open(os.path.join(d, "exploit.log")) if "learner vs 8 x target" in y]
-                got[x["id"]] = float(re.search(r"target: ([+-][0-9.]+)", lines[-1]).group(1))
+                got[x["id"]] = exploiter_reading(d)[0]
             json.dump(got, open(out, "w"), indent=1)
             worst = max(got, key=got.get)
             return got[worst] <= c["limit"], (", ".join(f"{k} {v:+.1f}" for k, v in got.items())
