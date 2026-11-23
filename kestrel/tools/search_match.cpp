@@ -5,7 +5,7 @@
 // tables, bubbles and in-the-money tables, --depths average stacks, --short of the final tables short-handed).
 //
 //   kestrel_search_match --model DIR --pack DIR [--deals 2000] [--samples 1024] [--robust] [--opp-bias net|fold|call|raise]
-//                        [--depths 10,25] [--short 0.5] [--seed 1]
+//                        [--depths 10,25] [--short 0.5] [--seed 1] [--no-crn] [--min-ess 0.02]
 #include <omp.h>
 
 #include <algorithm>
@@ -77,7 +77,7 @@ void tilt(std::vector<float>& p, int kind, double factor) {
 
 struct Played {
     double result = 0;  // the hero's ICM equity change, big blinds
-    int searched = 0;
+    int searched = 0, fallen = 0;
     double ms = 0, ess = 0;
 };
 
@@ -121,7 +121,16 @@ Played play(const Net& net, const Game& g, const std::vector<int>& deck, int her
                 auto r = ninemax_search(net, T, g.ctx, hist, hero, {deck[2 * hero], deck[2 * hero + 1]}, board, c);
                 out.ms += std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
                 out.ess += r.ess, ++out.searched;
-                act = int(std::max_element(r.policy.begin(), r.policy.end()) - r.policy.begin());
+                if (r.fell_back) {  // below the ESS floor: the network's policy, with this decision's draw
+                    double acc = 0;
+                    for (int a = 0; a < int(r.policy.size()) && act < 0; ++a)
+                        if (L[a] && (acc += r.policy[a]) >= x) act = a;
+                    for (int a = 0; a < int(r.policy.size()) && act < 0; ++a)
+                        if (L[a]) act = a;
+                    ++out.fallen;
+                } else {
+                    act = int(std::max_element(r.policy.begin(), r.policy.end()) - r.policy.begin());
+                }
             }
         }
         if (act < 0) {
@@ -158,11 +167,16 @@ int main(int argc, char** argv) {
             sc.robust = true;
             continue;
         }
+        if (a == "--no-crn") {  // independent rollout draws per move (the search before 2026-11-23)
+            sc.crn = false;
+            continue;
+        }
         ++k;
         if (a == "--model") model = v;
         else if (a == "--pack") pack = v;
         else if (a == "--deals") deals = std::stoi(v);
         else if (a == "--samples") sc.samples = std::stoi(v);
+        else if (a == "--min-ess") sc.min_ess = std::stod(v);
         else if (a == "--seed") seed = std::stoull(v);
         else if (a == "--short") short_share = std::stod(v);
         else if (a == "--depths") lo = std::stod(v.substr(0, v.find(','))), hi = std::stod(v.substr(v.find(',') + 1));
@@ -174,7 +188,7 @@ int main(int argc, char** argv) {
     Net net(model);
     const int P = net.info().players;
     std::vector<double> plain(deals, 0.0), with(deals, 0.0), ms(deals, 0.0), ess(deals, 0.0);
-    std::vector<int> searched(deals);
+    std::vector<int> searched(deals), fallen(deals);
     auto t0 = std::chrono::steady_clock::now();
     int done = 0;
 #pragma omp parallel for schedule(dynamic, 1)
@@ -193,7 +207,7 @@ int main(int argc, char** argv) {
             ++seats;
             plain[n] += play(net, g, deck, hero, false, sc, opp, s + hero).result;
             auto r = play(net, g, deck, hero, true, sc, opp, s + hero);
-            with[n] += r.result, searched[n] += r.searched, ms[n] += r.ms, ess[n] += r.ess;
+            with[n] += r.result, searched[n] += r.searched, ms[n] += r.ms, ess[n] += r.ess, fallen[n] += r.fallen;
         }
         plain[n] /= seats, with[n] /= seats;
 #pragma omp critical
@@ -210,14 +224,16 @@ int main(int argc, char** argv) {
     std::vector<double> gain(deals);
     for (int n = 0; n < deals; ++n) gain[n] = with[n] - plain[n];
     const int S = std::accumulate(searched.begin(), searched.end(), 0);
+    const int FB = std::accumulate(fallen.begin(), fallen.end(), 0);
     const double MS = std::accumulate(ms.begin(), ms.end(), 0.0), ES = std::accumulate(ess.begin(), ess.end(), 0.0);
     auto a = stat(plain), b = stat(with), c = stat(gain);
     static const char* kinds[] = {"net", "fold", "call", "raise"};
     std::printf("{\"model\": \"%s\", \"deals\": %d, \"samples\": %d, \"robust\": %s, \"opp_bias\": \"%s\", "
                 "\"plain_bb100\": [%.2f, %.2f, %.2f], \"search_bb100\": [%.2f, %.2f, %.2f], "
                 "\"gain_bb100\": [%.2f, %.2f, %.2f], \"searched\": %d, \"ms_per_search\": %.1f, \"ess_mean\": %.1f, "
-                "\"threads\": %d}\n",
+                "\"crn\": %s, \"min_ess\": %g, \"ess_fallback\": %d, \"threads\": %d}\n",
                 model.c_str(), deals, sc.samples, sc.robust ? "true" : "false", kinds[opp], a[0], a[1], a[2], b[0], b[1],
-                b[2], c[0], c[1], c[2], S, S ? MS / S : 0.0, S ? ES / S : 0.0, omp_get_max_threads());
+                b[2], c[0], c[1], c[2], S, S ? MS / S : 0.0, S ? ES / S : 0.0, sc.crn ? "true" : "false", sc.min_ess, FB,
+                omp_get_max_threads());
     return 0;
 }

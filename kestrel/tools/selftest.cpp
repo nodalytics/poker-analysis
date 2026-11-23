@@ -210,7 +210,7 @@ int main(int argc, char** argv) {
     std::vector<float> BF, BS, BL, BLg;
     std::vector<int> BK, BSt;
     std::vector<float> BV;
-    int searched = 0;
+    int searched = 0, fallen = 0;
     const double cb = 40;  // platform chips per big blind
     for (int hand = 0; hand < 300; ++hand) {
         const int n = 2 + hand % 8;
@@ -287,8 +287,13 @@ int main(int argc, char** argv) {
                 auto sa = ninemax_decide(net, sp, &sc);
                 int ones = 0;
                 bool fine = sa.error.empty();
-                for (auto& o : sa.options) ones += o.prob == 1.0, fine = fine && (!sa.searched || std::isfinite(o.q));
-                fine = fine && (!sa.searched || (ones == 1 && sa.ess >= 1 && sa.ess <= 64.0001));
+                for (auto& o : sa.options) {
+                    ones += o.prob == 1.0, fine = fine && (!sa.searched || std::isfinite(o.q));
+                    if (sa.ess_fallback) fine = fine && std::fabs(o.prob - (L[o.slot] ? p[o.slot] : 0.0)) < 1e-5;
+                }
+                fine = fine && (!sa.searched || ((ones == 1 || sa.ess_fallback) && sa.ess >= 1 && sa.ess <= 64.0001));
+                fine = fine && (!sa.searched || sa.ess_fallback == (sa.ess < sc.min_ess * 64));
+                fallen += sa.ess_fallback;
                 srch.eq(fine, 1, w + " " + sa.error);
                 searched += sa.searched;
             }
@@ -313,6 +318,7 @@ int main(int argc, char** argv) {
             bval.cmp(v[i], BV[i], "row " + std::to_string(i));
         }
         srch.eq(searched > 5, 1, "searched decisions: " + std::to_string(searched));
+        std::printf("9max search: %d searched, %d below the ESS floor (the network's policy)\n", searched, fallen);
     }
     bool ok = true;
     std::printf("kestrel self-test: %zu 9-max hands, %d ICM cases, %d heads-up decisions, %d with the defence floor "

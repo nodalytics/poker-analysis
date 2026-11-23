@@ -136,18 +136,22 @@ SearchResult ninemax_search(const Net& net, const Table& T, const TourneyCtx& ct
     double chips = 0;
     for (int s = 0; s < P; ++s) chips += double(T.stack[s]);
     const bool tourney = !ctx.pay.empty();
-    const std::vector<double> eq0 = tourney ? icm(std::vector<double>(T.stack.begin(), T.stack.end()), ctx.pay)
-                                            : std::vector<double>(P, 0.0);
+    const std::vector<double> st0(T.stack.begin(), T.stack.end());
+    const std::vector<double> eq0 = tourney ? start_equity(st0, ctx) : std::vector<double>(P, 0.0);
     constexpr size_t kChunk = 2048;
     std::vector<size_t> live;
     std::vector<float> F, st, lg;
     std::vector<int> bk, street;
     std::uniform_real_distribution<double> u01(0, 1);
+    std::vector<double> draw(N);  // common random numbers: this step's uniform for each deal
+    std::mt19937_64 roll(cfg.rollout_seed ? cfg.rollout_seed : cfg.seed * 0x9E3779B97F4A7C15ULL + 1);
     for (int guard = 0; guard < 200; ++guard) {
         live.clear();
         for (size_t r = 0; r < R; ++r)
             if (!tabs[r].done()) live.push_back(r);
         if (live.empty()) break;
+        if (cfg.crn)
+            for (auto& x : draw) x = u01(roll);
         for (size_t c0 = 0; c0 < live.size(); c0 += kChunk) {
             const int B = int(std::min(kChunk, live.size() - c0));
             F.resize(size_t(B) * nf), st.resize(B), lg.resize(size_t(B) * A), bk.resize(size_t(B) * 4), street.resize(B);
@@ -181,7 +185,7 @@ SearchResult ninemax_search(const Net& net, const Table& T, const TourneyCtx& ct
                     if (z > 0)
                         for (int a = 0; a < A; ++a) p[a] = float(p[a] / z);
                 }
-                double x = u01(rng), acc = 0;
+                double x = cfg.crn ? draw[r % N] : u01(cfg.rollout_seed ? roll : rng), acc = 0;
                 int pick = 1;
                 for (int a = 0; a < A; ++a)
                     if (legal[i][a] && (acc += p[a]) >= x) {
@@ -207,8 +211,7 @@ SearchResult ninemax_search(const Net& net, const Table& T, const TourneyCtx& ct
                 auto pay = U.payoffs(deals[n].rank);
                 double r;
                 if (tourney) {
-                    auto eq1 = icm(end_stacks(std::vector<double>(T.stack.begin(), T.stack.end()), pay), ctx.pay);
-                    r = (eq1[hero] - eq0[hero]) * chips / double(BB);
+                    r = (end_equity(st0, pay, ctx)[hero] - eq0[hero]) * chips / double(BB);
                 } else {
                     r = pay[hero] / double(BB);
                 }
@@ -218,6 +221,17 @@ SearchResult ninemax_search(const Net& net, const Table& T, const TourneyCtx& ct
             else profiled = v;
         }
         res.q[moves[m]] = exploit ? (1 - cfg.exploit_weight) * worst + cfg.exploit_weight * profiled : worst;
+    }
+    if (res.ess < cfg.min_ess * N) {  // too few effective deals: the values are noise, keep the network's policy
+        std::array<int, 4> hb{0, 0, 0, 0};
+        const int s0 = T.street();
+        for (int k = 0; k <= s0; ++k) hb[k] = deals[0].bk[hero][k];  // the hero's cards are the same in every deal
+        std::vector<float> out;
+        float v;
+        net.forward(features(T, info, tourney ? &ctx : nullptr), hb, s0, strength(info, s0, hb[s0]), out, v);
+        res.policy = net.policy(out, L);
+        res.fell_back = true;
+        return res;
     }
     int best = moves[0];
     for (int a : moves)

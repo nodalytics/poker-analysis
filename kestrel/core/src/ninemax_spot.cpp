@@ -46,7 +46,7 @@ json NMAdvice::to_json() const {
     json j = {{"options", o}, {"value_bb", value_bb}, {"translated", translated}};
     if (!error.empty()) j["error"] = error;
     if (!view.is_null()) j["view"] = view;
-    if (searched) j["searched"] = true, j["samples"] = samples, j["ess"] = ess;
+    if (searched) j["searched"] = true, j["samples"] = samples, j["ess"] = ess, j["ess_fallback"] = ess_fallback;
     return j;
 }
 
@@ -213,7 +213,7 @@ NMAdvice ninemax_decide(const Net& net, const NMSpot& sp, const SearchConfig* se
             }
             auto r = ninemax_search(net, T, ctx, hist, me, {cards[0], cards[1]}, bd, sc);
             p = r.policy, q = r.q;
-            adv.searched = true, adv.samples = r.samples, adv.ess = r.ess;
+            adv.searched = true, adv.samples = r.samples, adv.ess = r.ess, adv.ess_fallback = r.fell_back;
         } catch (const std::invalid_argument&) {  // a spot search cannot deal: the network's own policy
         }
     }

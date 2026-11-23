@@ -386,4 +386,25 @@ std::vector<double> start_equity(const std::vector<double>& stacks, const Tourne
     return eq;
 }
 
+std::vector<double> end_equity(const std::vector<double>& stacks, const std::vector<double>& payoff, const TourneyCtx& ctx) {
+    const auto end = end_stacks(stacks, payoff);
+    auto eq = icm(end, ctx.pay);
+    if (ctx.bounty.empty()) return eq;
+    const size_t P = stacks.size();
+    const size_t top = size_t(std::max_element(payoff.begin(), payoff.end()) - payoff.begin());  // first on ties, as argmax
+    auto bty = [&](size_t j) { return j < ctx.bounty.size() ? ctx.bounty[j] : 0.0; };
+    std::vector<double> left(P), alive(P);
+    double won = 0, pool = 0, chips = 0;
+    for (size_t j = 0; j < P; ++j) {
+        const bool busted = stacks[j] > 0 && stacks[j] + payoff[j] <= 0.5;
+        if (busted) won += bty(j);
+        left[j] = busted ? 0.0 : bty(j);
+        alive[j] = busted ? 0.0 : end[j];
+    }
+    left[top] += won / 2, eq[top] += won / 2;
+    for (size_t j = 0; j < P; ++j) pool += left[j], chips += alive[j];
+    for (size_t j = 0; j < P; ++j) eq[j] += pool * alive[j] / std::max(chips, 1.0);
+    return eq;
+}
+
 }

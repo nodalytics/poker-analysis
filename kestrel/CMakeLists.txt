@@ -49,6 +49,8 @@ if(OpenMP_CXX_FOUND)  # search against the network alone, paired (a research che
   add_executable(kestrel_search_match tools/search_match.cpp)
   target_link_libraries(kestrel_search_match PRIVATE kestrel_core OpenMP::OpenMP_CXX)
 endif()
+add_executable(kestrel_search_check tools/search_check.cpp)  # search's bounty scoring, ESS floor and CRN (B3)
+target_link_libraries(kestrel_search_check PRIVATE kestrel_core)
 set(KESTREL_BINARIES kestrel_selftest)
 
 if(NOT KESTREL_CORE_ONLY)
@@ -139,6 +141,9 @@ add_test(NAME selftest_cash6  # 6-max cash (no ICM, deep stacks, three empty sea
          COMMAND kestrel_selftest --vectors ${CMAKE_CURRENT_SOURCE_DIR}/testdata
                  --nine-max ${CMAKE_CURRENT_SOURCE_DIR}/testdata/vectors_nm37.json
                  --model ${KESTREL_DATA}/models/ninemax/nm37 --pack ${KESTREL_DATA}/blueprint/pack)
+
+add_test(NAME search_check  # search: the trainer's reward with bounties (nm30), the ESS floor, CRN (nm25)
+         COMMAND kestrel_search_check --data ${KESTREL_DATA} --spots 2 --repeats 4)
 
 include(GNUInstallDirs)
 install(TARGETS ${KESTREL_BINARIES} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
