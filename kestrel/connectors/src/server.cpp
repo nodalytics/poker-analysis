@@ -60,8 +60,12 @@ json solvers_json(const ServeOptions& o) {
                         {{"name", "kestrel-river"}, {"about", "safe river re-solve (CFR+ with the gadget), heads-up"},
                          {"available", true}},
                         {{"name", "texassolver"},
-                         {"about", ts ? "TexasSolver on the turn and river from the blueprint's ranges, heads-up"
-                                      : "TexasSolver: " + why},
+                         {"about", std::string(ts ? "TexasSolver on the turn and river from the blueprint's ranges, heads-up"
+                                                  : "TexasSolver: " + why) +
+                                       ". UNSAFE re-solve, for study only: no safety gadget, so an opponent who deviates "
+                                       "exploits it (LBR's edge measured +996, against +105 for kestrel-river); keep it "
+                                       "off for play"},
+                         {"unsafe", true},
                          {"available", ts}},
                         {{"name", "search"},
                          {"about", "9-max: search at decision time, " + std::to_string(o.search_samples) +
@@ -92,7 +96,7 @@ struct Engines {
         auto& e = by_key[model + "+" + solver];
         if (!e) {
             e = std::make_shared<HUBlueprint>(o.pack);
-            if (solver == "kestrel-river") e->set_resolve(o.resolve_iters);
+            if (solver == "kestrel-river") e->set_resolve(o.resolve_iters), e->set_resolve_floor(o.resolve_floor);
             if (solver == "texassolver") e->set_texassolver(ts_config(o));
         }
         return e;
@@ -317,6 +321,23 @@ void reply(httplib::Response& res, const json& j, int status = 200) {
     res.set_content(j.dump(), "application/json");
 }
 
+// a secret compared in time that does not depend on where the strings first differ
+bool same_secret(const std::string& a, const std::string& b) {
+    unsigned char d = a.size() == b.size() ? 0 : 1;
+    const std::string& x = a.size() == b.size() ? b : a;  // equal lengths: compare with b; else a with itself
+    for (size_t k = 0; k < a.size(); ++k) d |= static_cast<unsigned char>(a[k] ^ x[k]);
+    return d == 0;
+}
+
+// a table id from the route (digits only, so only overflow can fail): -1 when it is out of range
+int table_id(const std::string& digits) {
+    try {
+        return std::stoi(digits);
+    } catch (const std::exception&) {
+        return -1;
+    }
+}
+
 }
 
 int serve(const ServeOptions& o) {
@@ -328,6 +349,23 @@ int serve(const ServeOptions& o) {
         pack_problem = "the heads-up data pack is not installed (looked in " + o.pack + ")";
     httplib::Server srv;
     g_srv = &srv;
+    // a handler that throws on malformed input (a JSON field of the wrong type, a number out of range) answers 400 with
+    // the reason; anything else is still a 500
+    srv.set_exception_handler([](const httplib::Request&, httplib::Response& res, std::exception_ptr ep) {
+        try {
+            std::rethrow_exception(ep);
+        } catch (const json::exception& e) {
+            reply(res, {{"error", std::string("bad request: ") + e.what()}}, 400);
+        } catch (const std::invalid_argument& e) {
+            reply(res, {{"error", std::string("bad request: ") + e.what()}}, 400);
+        } catch (const std::out_of_range& e) {
+            reply(res, {{"error", std::string("bad request: ") + e.what()}}, 400);
+        } catch (const std::exception& e) {
+            reply(res, {{"error", e.what()}}, 500);
+        } catch (...) {
+            reply(res, {{"error", "internal error"}}, 500);
+        }
+    });
 
     srv.Get("/v1/health", [&](const httplib::Request&, httplib::Response& res) {
         std::lock_guard<std::mutex> lk(hub.mu);
@@ -416,8 +454,11 @@ int serve(const ServeOptions& o) {
     });
 
     // the desktop app restarts the server after changing settings; only from this computer
+    // (a request through a public host name is never from this computer, even when its proxy runs here)
     srv.Post("/v1/admin/shutdown", [&](const httplib::Request& req, httplib::Response& res) {
-        if (req.remote_addr != "127.0.0.1" && req.remote_addr != "::1")
+        const auto host = req.get_header_value("Host");
+        const bool via_public = std::find(o.public_hosts.begin(), o.public_hosts.end(), host) != o.public_hosts.end();
+        if ((req.remote_addr != "127.0.0.1" && req.remote_addr != "::1") || via_public)
             return reply(res, {{"error", "only from this computer"}}, 403);
         reply(res, {{"stopping", true}});
         std::thread([&srv] {
@@ -442,7 +483,13 @@ int serve(const ServeOptions& o) {
 
     srv.Post("/v1/sessions", [&](const httplib::Request& req, httplib::Response& res) {
         json body = json::parse(req.body, nullptr, false);
-        if (body.is_discarded() || !body.contains("connector")) return reply(res, {{"error", "need connector"}}, 400);
+        if (body.is_discarded() || !body.is_object() || !body.contains("connector") || !body["connector"].is_string())
+            return reply(res, {{"error", "need connector (a name)"}}, 400);
+        for (const char* k : {"model", "solver"})
+            if (body.contains(k) && !body[k].is_string()) return reply(res, {{"error", std::string(k) + " must be a string"}}, 400);
+        for (const char* k : {"hands", "tournaments"})
+            if (body.contains(k) && !body[k].is_number_integer())
+                return reply(res, {{"error", std::string(k) + " must be a whole number"}}, 400);
         std::string name = body["connector"];
         int hands = std::clamp(body.value("hands", 100), 1, 1000000);
         std::vector<std::string> errors;
@@ -684,8 +731,10 @@ int serve(const ServeOptions& o) {
     srv.Post(R"(/v1/practice/(\d+)/act)", [&](const httplib::Request& req, httplib::Response& res) {
         std::shared_ptr<TableRun> t;
         {
+            const int id = table_id(req.matches[1]);
+            if (id < 0) return reply(res, {{"error", "table id out of range"}}, 400);
             std::lock_guard<std::mutex> lk(hub.mu);
-            auto it = hub.tables.find(std::stoi(req.matches[1]));
+            auto it = hub.tables.find(id);
             if (it == hub.tables.end()) return reply(res, {{"error", "no such table"}}, 404);
             t = it->second;
         }
@@ -782,8 +831,10 @@ int serve(const ServeOptions& o) {
     });
 
     srv.Get(R"(/v1/sessions/(\d+))", [&](const httplib::Request& req, httplib::Response& res) {
+        const int id = table_id(req.matches[1]);
+        if (id < 0) return reply(res, {{"error", "table id out of range"}}, 400);
         std::lock_guard<std::mutex> lk(hub.mu);
-        auto it = hub.tables.find(std::stoi(req.matches[1]));
+        auto it = hub.tables.find(id);
         if (it == hub.tables.end()) return reply(res, {{"error", "no such table"}}, 404);
         json j = table_json(*it->second);
         j["state"] = it->second->state;
@@ -792,8 +843,10 @@ int serve(const ServeOptions& o) {
     });
 
     srv.Delete(R"(/v1/sessions/(\d+))", [&](const httplib::Request& req, httplib::Response& res) {
+        const int id = table_id(req.matches[1]);
+        if (id < 0) return reply(res, {{"error", "table id out of range"}}, 400);
         std::lock_guard<std::mutex> lk(hub.mu);
-        auto it = hub.tables.find(std::stoi(req.matches[1]));
+        auto it = hub.tables.find(id);
         if (it == hub.tables.end()) return reply(res, {{"error", "no such table"}}, 404);
         it->second->stop = true;
         it->second->wait_cv.notify_all();
@@ -802,9 +855,21 @@ int serve(const ServeOptions& o) {
 
     srv.Get("/v1/events", [&](const httplib::Request& req, httplib::Response& res) {
         long from = 0;
-        if (req.has_header("Last-Event-ID")) from = std::stol(req.get_header_value("Last-Event-ID"));
-        else if (req.has_param("from")) from = std::stol(req.get_param_value("from"));
-        else {
+        auto number = [](const std::string& v, long& out) {
+            try {
+                size_t used = 0;
+                out = std::stol(v, &used);
+                return used == v.size();
+            } catch (const std::exception&) {
+                return false;
+            }
+        };
+        if (req.has_header("Last-Event-ID")) {
+            if (!number(req.get_header_value("Last-Event-ID"), from))
+                return reply(res, {{"error", "Last-Event-ID must be an event number"}}, 400);
+        } else if (req.has_param("from")) {
+            if (!number(req.get_param_value("from"), from)) return reply(res, {{"error", "from must be an event number"}}, 400);
+        } else {
             std::lock_guard<std::mutex> lk(hub.mu);
             from = hub.seq;
         }
@@ -864,7 +929,7 @@ int serve(const ServeOptions& o) {
                 auto k = c.find("kestrel_token=");
                 if (k != std::string::npos) got = c.substr(k + 14, c.find(';', k) == std::string::npos ? std::string::npos : c.find(';', k) - k - 14);
             }
-            if (got != token) return deny("this device needs the access link (with its token)");
+            if (!same_secret(got, token)) return deny("this device needs the access link (with its token)");
             if (req.has_param("token")) {  // remember the device, and drop the token from the address bar
                 res.set_header("Set-Cookie", "kestrel_token=" + token + "; Path=/; HttpOnly; SameSite=Strict; Max-Age=31536000" +
                                                   std::string(public_host ? "; Secure" : ""));
@@ -880,10 +945,11 @@ int serve(const ServeOptions& o) {
             return deny("JSON bodies only");
         return httplib::Server::HandlerResponse::Unhandled;
     });
-    srv.Get("/v1/network", [&, token, addrs](const httplib::Request& req, httplib::Response& res) {
+    srv.Get("/v1/network", [&, token, addrs, publics](const httplib::Request& req, httplib::Response& res) {
         bool loopback = req.remote_addr == "127.0.0.1" || req.remote_addr == "::1";
+        const bool via_public = std::find(publics.begin(), publics.end(), req.get_header_value("Host")) != publics.end();
         json urls = json::array();
-        if (loopback)  // the access links are shown on this computer only
+        if (loopback && !via_public)  // the access links are shown on this computer only (not through a proxy here)
             for (auto& ip : addrs) urls.push_back("http://" + ip + ":" + std::to_string(o.port) + "/?token=" + token);
         reply(res, {{"lan", !token.empty()}, {"links", urls}});
     });

@@ -239,44 +239,70 @@ int main(int argc, char** argv) {
     return 0;
   }
   std::atomic<uint64_t> iters(done);
-  std::atomic<bool> stop(false);
+  // Workers update R and A lock-free (Hogwild, as before). The discount and the checkpoint rescale or read every entry,
+  // so they run only while every worker is parked: the master raises `sync`, each thread finishes its iteration and
+  // meets the others at a barrier, the threads discount their own slices, the master saves, and all resume. Normal
+  // iterations pay one relaxed load of the flag.
+  std::atomic<bool> sync(false), stop(false);
+  bool do_disc = false, do_ckpt = false;  // set by the master before it raises `sync`
   double t0 = omp_get_wtime(), last_ckpt = t0, last_disc = t0;
   int disc_round = 0;
+  float fp = 1, fn = 1, fa = 1;
   FILE* log = fopen((out + "/progress.log").c_str(), "a");
 #pragma omp parallel num_threads(threads)
   {
-    Rng rng(std::random_device{}() ^ (uint64_t)omp_get_thread_num() * 0x9E3779B97F4A7C15ULL);
+    const int tid = omp_get_thread_num(), nt = omp_get_num_threads();
+    Rng rng(std::random_device{}() ^ (uint64_t)tid * 0x9E3779B97F4A7C15ULL);
     Board* b = new Board;
     Arena ar;
     ar.buf.resize(ARENA);
     std::vector<float> ones(1326, 1.0f), res(1326);
-    while (!stop) {
+    for (;;) {
+      if (sync.load(std::memory_order_acquire)) {
+#pragma omp barrier
+        if (do_disc) {  // every thread rescales its own slice: no worker is writing
+          uint64_t lo = total * (uint64_t)tid / nt, hi = total * (uint64_t)(tid + 1) / nt;
+          for (uint64_t i = lo; i < hi; ++i) {
+            R[i] *= R[i] > 0 ? fp : fn;
+            A[i] *= fa;
+          }
+        }
+#pragma omp barrier
+        if (tid == 0) {
+          double now = omp_get_wtime();
+          if (do_ckpt) {  // a consistent snapshot: the tables and the iteration count of the same moment
+            uint64_t it = iters.load();
+            if (save(out + "/regret.f32", R, total) && save(out + "/avg.f32", A, total))
+              std::ofstream(out + "/iterations.txt") << it << "\n";
+            fprintf(log, "%.1f min %lu vector iterations %.1f it/s\n", (now - t0) / 60, it, (it - done) / (now - t0));
+            fflush(log);
+          }
+          do_disc = do_ckpt = false;
+          sync.store(false, std::memory_order_release);
+        }
+#pragma omp barrier
+        if (stop.load()) break;
+        continue;
+      }
       deal_board(rng, *b);
       for (int trav = 0; trav < 2; ++trav) cfr(0, trav, *b, ones.data(), ones.data(), res.data(), ar);
       iters.fetch_add(2);
-#pragma omp master
-      {
+      if (tid == 0) {
         double now = omp_get_wtime();
         if ((now - t0) / 60 >= minutes) stop.store(true);
         if (prune_after >= 0 && (now - t0) / 60 >= prune_after) PRUNE_ON.store(true);
         if (dcfr && now - last_disc >= dcfr_seconds) {
           ++disc_round;
           double t = disc_round, pa = std::pow(t, 1.5);
-          float fp = (float)(pa / (pa + 1)), fn = 0.5f, fa = (float)std::pow(t / (t + 1), 2.0);
-          for (uint64_t i = 0; i < total; ++i) {
-            R[i] *= R[i] > 0 ? fp : fn;
-            A[i] *= fa;
-          }
+          fp = (float)(pa / (pa + 1)), fn = 0.5f, fa = (float)std::pow(t / (t + 1), 2.0);
+          do_disc = true;
           last_disc = now;
         }
         if (now - last_ckpt >= ckpt * 60 || stop.load()) {
-          uint64_t it = iters.load();
-          if (save(out + "/regret.f32", R, total) && save(out + "/avg.f32", A, total))
-            std::ofstream(out + "/iterations.txt") << it << "\n";
-          fprintf(log, "%.1f min %lu vector iterations %.1f it/s\n", (now - t0) / 60, it, (it - done) / (now - t0));
-          fflush(log);
+          do_ckpt = true;
           last_ckpt = now;
         }
+        if (do_disc || do_ckpt) sync.store(true, std::memory_order_release);
       }
     }
   }

@@ -195,3 +195,14 @@ against players who never fold; adding stations and other non-folding styles to 
 **B1 smoke test:** 10 minutes of training on the fixed seating with nm44's settings (league, exploiter, short tables;
 `results/paired_opponents/smoke_seating_progress.log`): 38,000 hands a second, no errors, checkpoint written, exploiter
 −0.2 and −0.1. Its station result fell from +125.9 to +117.9 within the 10 minutes, the same direction as nm44's.
+
+**B5-B9, heads-up and Kestrel fixes** (each with a check that failed before it):
+
+| Item | Fix | Check, before → after |
+|---|---|---|
+| B5 | TexasSolver's effective stack is `min(mine + my bet, theirs + their bet)`, as Python's; `texassolver` is labelled unsafe (`"unsafe": true` in `/v1/engines`, `kestrel/docs/design.md`) | `kestrel_hu_check`: unequal stacks (19,800 vs 4,800) gave `set_effective_stack 396` → 96. With ACPC's equal stacks it never mattered |
+| B6 | the off-tree mapping's draw is a hash of the hand so far (our cards, the board, the betting up to the bet) and a per-engine salt, so a hand keeps one mapping and hands still differ | `kestrel_hu_check`, `det=false`, one hand replayed 26 times: 4 of 56 flop bet sizes stable → 56 of 56; across 40 other hands 51 sizes still reach two or more nodes |
+| B7 | `mccfr_vec`: the master raises a flag, all threads park at a barrier, discount their own slices, the master saves, all resume | lab, abs_200g2, 8 threads, 1 minute, DCFR every 5 s: before, the last checkpoint holds 544 iterations but training stopped at 558 (the save raced the workers); after, 534 and 534. Both resume from their checkpoint. Throughput the same within noise (8.2-9.3 it/s). A race cannot be shown numerically beyond that; TSan would also flag the deliberate lock-free (Hogwild) regret updates |
+| B8 | `advisor_pack` refuses a distribution-aware (OCHS) abstraction by name, reads `.u16` tables, and refuses river labels not ordered by hand strength | `scripts/advisor_pack_check.py`: FileNotFoundError on all three cases → refused, packed exactly, refused |
+| B9 | `--resolve-floor on|off` (`kestreld serve` and `play`, `settings.json` `resolve_floor`); default on | `kestrel_hu_check`, 40 re-solved river spots facing a bet: floored 6 with the default, 0 with it off |
+| server | malformed input is a 400 (exception handler plus typed checks), `/v1/admin/shutdown` refuses a public Host, the token is compared in constant time | `kestrel/tools/server_check.sh`: 11 failures (500s, and shutdown 200 through `kestrel.test`) → all pass |

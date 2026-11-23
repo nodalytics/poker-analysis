@@ -53,6 +53,9 @@ class HUBlueprint {
                          const std::string& abs = "");
     // safe re-solving of river spots: CFR+ iterations (0 = off) and the gadget's minimum opponent reach
     void set_resolve(int iters, double min_reach = 0.02) { resolve_iters_ = iters, min_reach_ = min_reach; }
+    // the defence floor on top of a re-solved strategy: on by default (LBR +105 with it, +146 without; it voids the
+    // re-solve's formal safety guarantee). Off, the re-solve is only purified (the Python bot's BLUEPRINT_SAFE_FLOOR=0)
+    void set_resolve_floor(bool on) { resolve_floor_ = on; }
     // TexasSolver on the turn and river, from both players' blueprint ranges (as the Python bot's resolve())
     void set_texassolver(const TexasSolverConfig& c) { ts_ = c, use_ts_ = true; }
     HUAnswer decide(const HUSpot& spot, bool deterministic = false, int64_t round_to = 0);
@@ -68,7 +71,7 @@ class HUBlueprint {
         std::vector<int> children;
     };
     static double frac(double to, double their, double mine, double pot);
-    int map_raise(int node, double x, bool deterministic);
+    int map_raise(int node, double x, bool deterministic, double draw) const;
     int child(int node, std::initializer_list<const char*> labels) const;
     struct Step {
         int node, child, player, board_n;
@@ -90,7 +93,9 @@ class HUBlueprint {
     bool river_resolve(int root, int target, const std::vector<int>& board, const std::vector<double>& r0,
                        const std::vector<double>& r1, std::vector<float>& out) const;
     double purify_;
-    std::mt19937_64 rng_{97};
+    // per engine, so off-tree mappings differ between runs (within a hand they are fixed: see decide)
+    uint64_t salt_ = (uint64_t(std::random_device{}()) << 32) ^ std::random_device{}();
+    bool resolve_floor_ = true;
     std::mutex mu_;
 };
 
