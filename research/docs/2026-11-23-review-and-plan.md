@@ -236,3 +236,14 @@ ESS: in a 300-deal nm25 match (95 decisions searched at 256 samples) the ESS sha
 of searched decisions back to the network; 0.05 would send 29% and 0.1 43%. 0.02 is the conservative choice: it removes
 only decisions whose values rest on a handful of deals. Whether it helps in play is not measured yet: run
 `ninemax_search.py` with `--min-ess 0` and with the default on the same seed, and compare with `search_paired.py`.
+
+**Merged 2026-11-23 (B1-B9 all in `main`).** Two notes from the merge:
+- B3's `end_equity` (the trainer's end-of-hand equity, now shared with search) still gave every bounty to the hand's
+  biggest winner; on merging it uses B2's `knockouts`, and Kestrel's C++ `end_equity` was ported to the same rule, so
+  search scores bounty games exactly as the trainer rewards them. Kestrel's ctest passes 6/6 on the merged code
+  (selftest, hu_check, server_check, selftest_pko, selftest_cash6, search_check); the PKO, seating and search checks
+  pass on the lab.
+- Common random numbers reduce the noise between moves only on the same deals (x0.73-0.81); with fresh deals the
+  ratio read x0.82 in one run and x1.12 in another, so treat CRN as a small gain at best: the deals, already shared,
+  are the main noise. The ESS floor's effect on win rate is still to be measured (a paired match with and without it).
+
