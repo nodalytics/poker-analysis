@@ -23,7 +23,7 @@ import torch
 from ninemax_engine import Menu, Tables, run_dealer, strength
 from ninemax_eval import load
 from ninemax_search import NBOARD, Search, net_probs, with_pay
-from ninemax_selfplay import context, features
+from ninemax_selfplay import board_of, context, features
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -69,6 +69,7 @@ def main():
         bk, rk, cd = dealer.deal(n, cards=True)
         stacks, pay = context(n, P, dev)
         T = with_pay(Tables(n, P, menu, dev, stacks=stacks), pay)
+        T.board = board_of(cd, P, dev)  # texture networks read the board
         h = int(torch.randint(P, ()).item())  # this batch's hero seat
         hist = [[] for _ in range(n)]
         with torch.no_grad():

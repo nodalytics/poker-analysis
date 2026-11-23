@@ -544,19 +544,27 @@ def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None,
     u = T.payoffs(rk)
     # tournament: the change in prize equity, in chips at the table's average chip value
     if pay is not None and not chips:
-        reg, bty = split_pay(T.pay)
-        end = end_stacks(T.stack, u)
-        eq1 = icm(end, reg).float()
-        if bty is not None:  # knockouts: the hand's biggest winner collects every bust's bounty, half in cash
-            busted = (T.stack > 0) & (T.stack.double() + u <= 0.5)
-            won = (bty * busted.float()).sum(1)
-            k = F.one_hot(u.argmax(1), T.P).float() * won[:, None] / 2
-            left = torch.where(busted, torch.zeros_like(bty), bty) + k
-            alive = torch.where(busted, torch.zeros_like(end), end).float()
-            # the bounties still in play, by chip share (as start_equity): the money stays whole
-            eq1 = eq1 + k + left.sum(1, keepdim=True) * alive / alive.sum(1, keepdim=True).clamp(min=1)
-        u = (eq1 - T.eq0) * T.stack.sum(1, keepdim=True).float()
+        u = (end_equity(T.stack, u, T.pay) - T.eq0) * T.stack.sum(1, keepdim=True).float()
     return u, rec
+
+
+def end_equity(stacks, u, pay):
+    """Each player's equity at the end of a hand (prize-money shares, the counterpart of start_equity): ICM on the
+    regular prizes of the stacks after the hand's payoffs u [G, P] (chips) and, with bounties, the knockout term. The
+    trainer's reward is (end_equity - start_equity) in chips at the table's average chip value; search scores its
+    rollouts with the same (ninemax_search.result)."""
+    reg, bty = split_pay(pay)
+    end = end_stacks(stacks, u)
+    eq1 = icm(end, reg).float()
+    if bty is not None:  # knockouts: the hand's biggest winner collects every bust's bounty, half in cash
+        busted = (stacks > 0) & (stacks.double() + u <= 0.5)
+        won = (bty * busted.float()).sum(1)
+        k = F.one_hot(u.argmax(1), stacks.shape[1]).float() * won[:, None] / 2
+        left = torch.where(busted, torch.zeros_like(bty), bty) + k
+        alive = torch.where(busted, torch.zeros_like(end), end).float()
+        # the bounties still in play, by chip share (as start_equity): the money stays whole
+        eq1 = eq1 + k + left.sum(1, keepdim=True) * alive / alive.sum(1, keepdim=True).clamp(min=1)
+    return eq1
 
 
 def seats_used(P):
