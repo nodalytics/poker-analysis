@@ -66,9 +66,9 @@ seating waste, the search defects, and the Kestrel heads-up bugs. Its roadmap (f
 nm25, judged partly on a one-caller push/fold chart) does not follow from them.
 
 nm44 (the league) passed four of five checks and failed **other-players** on one opponent: station +98.9 against
-nm25's +126.3, with a tolerance of 1.0 bb/100. Against a calling station at 20,000 hands that tolerance is far
-inside the noise (nm44's own training evals against station swung +36 to +121). The check, not only the network,
-needs fixing.
+nm25's +126.3, with a tolerance of 1.0 bb/100. ~~Against a calling station at 20,000 hands that tolerance is far
+inside the noise.~~ **Corrected the same day:** the two networks play the same deals, so the difference is paired, and
+its interval is about ±2 bb/100 (section 5). nm44's station gap is real; the check lacked an interval, not precision.
 
 ## 3. The plan
 
@@ -175,3 +175,23 @@ nm25 does fold to most all-ins, and at short ICM tables a jammer wins **chips** 
 the table sees. But every aggressor loses **prize equity** at every stage and depth: the folds are correct, and calling
 more would cost money. nm43 and nm44 read the same within a few bb/100. A thinking human picking spots could do better
 than these scripts; the learning exploiter (+0.75 on nm25) is the measure of that, and it is small.
+
+**A2, the paired other-players check** (`scripts/pipeline_opponents.py` now reports `difference_ci`;
+`results/paired_opponents/`). nm44 minus nm25, 1-vs-8 against each rule player, 20,000 deals x 9 seatings, seeds 13-15:
+
+| Against 8 x | Seed 13 | Seed 14 | Seed 15 |
+|---|---|---|---|
+| reg | −0.40 [−1.04, +0.24] | −0.38 [−1.05, +0.29] | −0.55 [−1.23, +0.12] |
+| tag | −1.05 [−1.84, −0.26] | −0.48 [−1.27, +0.32] | −0.53 [−1.30, +0.25] |
+| maniac | −3.35 [−4.32, −2.38] | −3.31 [−4.24, −2.38] | −3.23 [−4.20, −2.26] |
+| station | **−27.40 [−29.20, −25.60]** | **−27.44 [−29.14, −25.73]** | **−28.56 [−30.36, −26.76]** |
+
+nm44's failure stands: the league costs about 22% of nm25's win against calling stations and a little against
+maniacs, while making it the hardest of the three to exploit (+0.50). So **nm44 is not re-judged into adoption**, and
+the planned "nm44 re-judged" run is dropped. nm45 (the league on fixed seating) must keep nm25's station win rate,
+judged on this paired interval, not only tie nm25 and resist the exploiter. A league trained against itself loses value
+against players who never fold; adding stations and other non-folding styles to the league's pool is the obvious lever.
+
+**B1 smoke test:** 10 minutes of training on the fixed seating with nm44's settings (league, exploiter, short tables;
+`results/paired_opponents/smoke_seating_progress.log`): 38,000 hands a second, no errors, checkpoint written, exploiter
+−0.2 and −0.1. Its station result fell from +125.9 to +117.9 within the 10 minutes, the same direction as nm44's.
