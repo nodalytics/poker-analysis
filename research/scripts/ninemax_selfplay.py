@@ -565,6 +565,21 @@ def seats_used(P):
     return [0, 1] + list(range(P - (k - 2), P)) if k < P else list(range(P))
 
 
+def seated_mask(stacks, G, P, dev):
+    """[G, P] bool: the seats a player sits in (stack > 0); every seat when the mode has no stacks (100bb cash)."""
+    return stacks > 0 if stacks is not None else torch.ones(G, P, dtype=torch.bool, device=dev)
+
+
+def split_seats(seated):
+    """For population tables: per table, a random 1 .. n-1 of its n seated players for the opponent, the rest for the
+    net (both always play). Returns [R, P] bool, True where the opponent sits; empty seats are never chosen."""
+    R, P = seated.shape
+    n = seated.sum(1, keepdim=True)
+    k = torch.minimum(1 + (torch.rand(R, 1, device=seated.device) * (n - 1)).long(), (n - 1).clamp(min=1))
+    order = torch.rand(R, P, device=seated.device).masked_fill(~seated, 2.0).argsort(1).argsort(1)  # rank, seated first
+    return seated & (order < k)
+
+
 def luck_means(dealer, n=1 << 20):
     """E[strength on street t | bucket on street t-1], t = 1..3, and E[pre-flop strength], from n independent deals
     (cached on the dealer): what the card-luck control variates subtract."""
@@ -884,15 +899,18 @@ def main():
         pols = [net] + ([expl] if expl is not None else []) + ([lexp] if n_l else []) + (pool or [])
         first = len(pols) - len(pool or [])
         lid = 2 if expl is not None else 1  # the league exploiter's policy index
-        if n_x:  # the exploiter in a seat where players sit (6-max: never one of the always-empty early seats)
-            occupied = torch.tensor(seats_used(args.players), device=dev)
-            assign[torch.arange(n_x, device=dev), occupied[torch.randint(len(occupied), (n_x,), device=dev)]] = 1
-        occupied = torch.tensor(seats_used(args.players), device=dev)
+        # the tables' stacks first, so every seat given to the exploiters or the population is one a player sits in
+        # (short tables and 6-max leave seats empty, stack 0; an empty seat never acts and wins nothing)
+        ctx_t = context(args.batch, args.players, dev, prioritized=True)
+        seated = seated_mask(ctx_t[0], args.batch, args.players, dev)
+        if n_x:  # the exploiter in a seat where a player sits
+            rows = torch.arange(n_x, device=dev)
+            assign[rows, torch.multinomial(seated[rows].float(), 1).squeeze(1)] = 1
         for c in range(args.chunks if n_l else 0):  # league exploiter tables: one seat it, the rest one member or net
             rows = torch.arange(n_x + c * n_l // args.chunks, n_x + (c + 1) * n_l // args.chunks, device=dev)
             opp = int(torch.randint(len(pool) + 1, ()).item())
             assign[rows] = 0 if opp == len(pool) else first + opp
-            assign[rows, occupied[torch.randint(len(occupied), (len(rows),), device=dev)]] = lid
+            assign[rows, torch.multinomial(seated[rows].float(), 1).squeeze(1)] = lid
         if args.pfsp > 0 and pool:  # harder opponents more often: weight (1 - p_win)^pfsp
             p_win = torch.tensor([torch.sigmoid(torch.tensor(score.get(id(m), 0.0) / 0.5)).item() for m in pool])
             weights = (1 - p_win).clamp(min=1e-3) ** args.pfsp
@@ -903,18 +921,15 @@ def main():
             rows = slice(n_x + n_l + c * n_pop // args.chunks, n_x + n_l + (c + 1) * n_pop // args.chunks)
             opp = first + int(torch.multinomial(weights, 1).item())
             chunk_opp.append((rows, opp))
-            k = int(torch.randint(1, args.players, ()).item())  # the net holds k seats, chosen at random
-            theirs = torch.randperm(args.players, device=dev)[k:]
-            assign[rows, theirs] = opp
+            assign[rows] = torch.where(split_seats(seated[rows]), opp, assign[rows])
         learner = [net] + ([expl] if expl is not None else []) + ([lexp] if n_l else [])
         learner = learner if len(learner) > 1 else net
-        ctx_t = context(args.batch, args.players, dev, prioritized=True) if PRIORITY else None
         u, rec = play(dealer, menu, pols, bk, rk, record=True, dev=dev, learner=learner, assign=assign, ctx=ctx_t,
                       board=board_of(cd, args.players, dev))  # fmt: skip
         g, i, f, legal, mybk, street, s, a, who = (torch.cat([r[k] for r in rec]) for k in range(9))
         with torch.no_grad():  # PFSP: the network's result against each chunk's opponent
             for rows, opp in chunk_opp:
-                mine = assign[rows] == 0
+                mine = (assign[rows] == 0) & seated[rows]  # the net's seats where it plays
                 if bool(mine.any()):
                     r = float((u[rows][mine] / BB).mean())
                     key = id(pols[opp])
