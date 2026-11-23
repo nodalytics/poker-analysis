@@ -3,7 +3,9 @@
 Matches against copies of nm25 (seqtest) only say how a network does against nm25; a change can win there and lose
 to people who play differently. Here RUN and BASELINE each sit 1-vs-8 against eight copies of each rule player
 (reg, tag, maniac, station, random: ninemax_selfplay.rule_probs), by duplicate on the same deals and in RUN's game.
-The pipeline's "opponents" check passes when RUN is no more than its tolerance below BASELINE against every one.
+Both sit on the same deals, stacks and payouts, so the difference is paired deal by deal and carries its own 95%
+interval ("difference_ci"), much narrower than the two results' own intervals. The pipeline's "opponents" check passes
+when RUN is no more than its tolerance below BASELINE against every one.
 
 --styles K: also K generated opponents (and the named archetypes below). Each is the baseline network with its
 tendencies pushed by random amounts, drawn from --style-seed so every run meets the same crowd: how loose and how
@@ -18,6 +20,7 @@ Usage (lab, from research):
 
 import argparse
 import json
+import math
 import random
 
 import torch
@@ -102,15 +105,19 @@ def main():
     opps.update({n: Style(base, p) for n, p in params.items()})
     for k, (rule, opp) in enumerate(opps.items()):
         row = {"style": dict(zip(KEYS, params[rule]))} if rule in params else {}
+        per = {}
         for who, pol in (("run", net), ("baseline", base)):
             dealer.seed = seed0 + 1000 * k  # the dealer moves its seed on every deal: the same cards for both
             torch.manual_seed(a.seed + k)  # and the same stacks, payouts and rule-player draws
-            m, lo, hi = duplicate(dealer, menu, pol, opp, a.hands, dev)
+            m, lo, hi, per[who] = duplicate(dealer, menu, pol, opp, a.hands, dev, per_deal=True)
             row[who] = [round(float(x), 2) for x in (m, lo, hi)]
-        row["difference"] = round(row["run"][0] - row["baseline"][0], 2)
+        d = per["run"] - per["baseline"]  # paired: the same deals, deal by deal (bb)
+        md, sd = float(d.mean()) * 100, float(d.std()) / math.sqrt(len(d)) * 100
+        row["difference"] = round(md, 2)
+        row["difference_ci"] = [round(md - 1.96 * sd, 2), round(md + 1.96 * sd, 2)]
         out[rule] = row
         print(f"vs 8 x {rule:<8} run {row['run'][0]:+8.2f}  baseline {row['baseline'][0]:+8.2f}  "
-              f"difference {row['difference']:+.2f} bb/100", flush=True)  # fmt: skip
+              f"difference {row['difference']:+.2f} {row['difference_ci']} bb/100", flush=True)  # fmt: skip
         json.dump(out, open(a.out, "w"), indent=1)
 
 

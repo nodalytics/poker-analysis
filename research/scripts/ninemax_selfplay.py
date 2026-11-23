@@ -612,10 +612,12 @@ def card_luck(dealer, bk):
     return x
 
 
-def duplicate(dealer, menu, hero, villain, n, dev, cv=False, chips=False):
+def duplicate(dealer, menu, hero, villain, n, dev, cv=False, chips=False, per_deal=False):
     """Hero in each seat in turn against P-1 copies of villain, on the same n deals: hero's bb/100 and 95% CI.
     cv: also the estimate with card-luck control variates (card_luck: the hero's luck in each seating, per street,
-    regressed out by least squares) and its interval, as (m, lo, hi, m_cv, lo_cv, hi_cv)."""
+    regressed out by least squares) and its interval, as (m, lo, hi, m_cv, lo_cv, hi_cv). per_deal: also the hero's
+    result on every deal (bb, a numpy array), as (m, lo, hi, x), so two heroes on the same deals can be compared deal by
+    deal (a paired difference and its interval)."""
     P = dealer.P
     bk, rk, cd = dealer.deal(n, cards=FEAT["texture"])
     board = board_of(cd, P, dev)
@@ -633,6 +635,8 @@ def duplicate(dealer, menu, hero, villain, n, dev, cv=False, chips=False):
             xs.append(luck[:, seat, :] * seated)  # the hero's luck in this seating (none in an empty seat)
     x = (per / P).cpu().numpy()  # hero's average over the seats, per deal
     m, se = x.mean() * 100, x.std() / math.sqrt(len(x)) * 100
+    if per_deal:
+        return m, m - 1.96 * se, m + 1.96 * se, x
     if not cv:
         return m, m - 1.96 * se, m + 1.96 * se
     X = torch.cat(xs, 1).cpu().double().numpy()  # [n, 4 P]: every seating's luck terms, each with mean 0
