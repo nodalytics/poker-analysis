@@ -19,3 +19,6 @@ kestrel.db
 # extracted from the Pluribus hands by scripts/human_clone.py extract; regenerate rather than commit
 research/results/human_clones/*.npz
 
+
+# agent worktrees (Claude Code isolation)
+.claude/worktrees/
