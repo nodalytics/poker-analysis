@@ -359,7 +359,8 @@ Before the subgame, the opponent chooses per holding to enter or to take $\mathr
 $$\sum_h \tilde r_o(h) \max\big(v_o(h), \mathrm{CBV}(h)\big), \qquad \tilde r_o(h) = \max\big(r_o(h),\ 0.02 \max_{h'} r_o(h')\big).$$
 
 The floor matters: an opponent who deviates earlier can arrive with holdings the blueprint never brings here, and
-with zero weight the re-solve would ignore them. Without it, the worst single-hand gain was +808; with it, +1.4.
+with zero weight the re-solve would ignore them. Without it, the worst single-hand gain is +718 (+808 in the first
+measurement; re-run 2026-11-23 on the same 200 spots); with it, +1.4.
 
 **Measured on 200 river spots** (1,000 iterations, exact best responses in the subgame):
 
