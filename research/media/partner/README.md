@@ -29,7 +29,6 @@ committed results; every chart names its source.
 | 04 | [Solver advice tests](04-advice-tests.png) | Advising the LLM helped in the first run, but not reliably |
 | 05 | [Why: models ignore advice](05-models-ignore-advice.png) | Told "SHOVE", most models still don't, so the solver now acts directly |
 | 06 | [Tina+](06-tina-plus.png) | Fixing the simulated human's weaknesses: 1.6x the prize money over 60 tournaments |
-| 07 | [Trading arena](07-trading.png) | The paper's regime gate adds nothing after costs; the model's own judgement does |
 | 08 | [Self-learning ladder](08-self-learning-ladder.png) | Models that rewrite their own skill notes: one clear learner after 58 rounds |
 | 10 | [AlphaPoker](10-alphapoker.png) | AlphaGo search and plain self-play RL stay beatable; averaging self-play (CFR) converges to 0.3 |
 | 11 | [Player styles (PCA)](11-pca-styles.png) | Two components explain 80% of how 2,624 real players differ; style does not mark winners |

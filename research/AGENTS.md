@@ -53,8 +53,7 @@ Ollama setup (install, serve, models, tool templates) is in `sandboxes/ollama/`.
 - Run long jobs detached (`setsid nohup ... &`) and write results to a file. Never `pkill -f` in the same SSH
   command that started the job: the pattern matches the command line itself and kills the session.
 - Analyse results on your own machine, not on the lab.
-- **Other people's jobs run there too** (`deriv_quotes.py`, `deriv_xproduct.py`, `poker_gui.py` were running on
-  2026-11-05). Leave every process you did not start alone.
+- **Other people's jobs run there too.** Leave every process you did not start alone.
 - Ollama there runs with `OLLAMA_CONTEXT_LENGTH=8192` and up to 6 models resident; without the context cap
   Qwen2.5-VL took 55GB instead of 22GB.
 - In a remote command, `a && b && setsid nohup c &` backgrounds the whole chain and holds the SSH session

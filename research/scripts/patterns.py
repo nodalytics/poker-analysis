@@ -1,7 +1,7 @@
 """Pattern scanner: detect behaviour patterns in how models and players play and act.
 
-Usage: uv run python scripts/patterns.py [ARENA_DIR] [OUT_PREFIX] [TRADING_DIR]
-       (defaults: results/arena, results/patterns/latest, results/trading) -> OUT_PREFIX.md and OUT_PREFIX.json
+Usage: uv run python scripts/patterns.py [ARENA_DIR] [OUT_PREFIX]
+       (defaults: results/arena, results/patterns/latest) -> OUT_PREFIX.md and OUT_PREFIX.json
 
 Detectors (each finding carries counts and evidence, so it can be checked by hand):
   chess  repetition (moves into a position seen before), shuffles (a piece moved straight back), openings,
@@ -10,8 +10,6 @@ Detectors (each finding carries counts and evidence, so it can be checked by han
   poker  VPIP (voluntarily put money in), PFR (preflop raise), aggression factor (raises / calls after the flop),
          fold to a raise, all-in rate, favourite raise sizes, VPIP by position, tilt (VPIP in the 3 hands after
          losing 50+ chips vs otherwise), and the nearest personality for every model (by VPIP, PFR, aggression).
-  trading trades per episode, long bias, win rate, mean R, holding time, how trades end, and for the model given
-         the paper's method: entries while the regime said stay out, and entries against the method's signal.
   agents tool-call loops (same tool and arguments 3+ times in a row), answers with no tool call, failed tasks
          whose answer still asserted a number, and tool-argument errors, across results/raw.
 Detections are descriptive. With few games most rates are noisy; the report gives the counts behind each rate.
@@ -296,70 +294,6 @@ def scan_poker(arena):
     return {"players": players}
 
 
-# ---------------------------------------------------------------------------------------------- trading
-def scan_trading(tdir):
-    if not os.path.isdir(tdir):
-        return {"players": []}
-    agg = collections.defaultdict(lambda: collections.defaultdict(float))
-    compliance = collections.Counter()
-    for ep in sorted(glob.glob(os.path.join(tdir, "episodes", "*"))):
-        tf = os.path.join(ep, "trades.json")
-        if not os.path.exists(tf):
-            continue
-        data = json.load(open(tf))
-        for e, trades in data["trades"].items():
-            a = agg[e]
-            a["episodes"] += 1
-            a["total_r"] += data["totals"][e]
-            for x in trades:
-                a["trades"] += 1
-                a["longs"] += x["dir"] == "long"
-                a["wins"] += x["r"] > 0
-                a[f"exit_{x['why'].replace(' ', '_')}"] += 1
-                hold = (pd_time(x["exit_time"]) - pd_time(x["entry_time"])).total_seconds() / 3600
-                a["hold_hours"] += hold
-        dec = os.path.join(ep, "decisions.jsonl")
-        if os.path.exists(dec):
-            for line in open(dec):
-                r = json.loads(line)
-                if r["entrant"].endswith("#paper") and r["action"] in ("long", "short"):
-                    compliance["entries"] += 1
-                    compliance["entries_when_adverse"] += int(not r["regime"])
-                    compliance["entries_against_signal"] += int(
-                        r["signal"] in ("long", "short") and r["signal"] != r["action"]
-                    )
-    players = []
-    for e, a in sorted(agg.items()):
-        n = a["trades"]
-        players.append(
-            {
-                "entrant": short(e),
-                "episodes": int(a["episodes"]),
-                "total_r": round(a["total_r"], 2),
-                "trades_per_episode": round(n / max(1, a["episodes"]), 1),
-                "long_share": rate(a["longs"], n),
-                "win_rate": rate(a["wins"], n),
-                "mean_r": round(a["total_r"] / n, 3) if n else None,
-                "mean_hold_hours": round(a["hold_hours"] / n, 1) if n else None,
-                "exits": {k[5:]: int(v) for k, v in a.items() if k.startswith("exit_")},
-            }
-        )
-    paper = None
-    if compliance["entries"]:
-        paper = {
-            "entries": compliance["entries"],
-            "entered_when_regime_adverse": rate(compliance["entries_when_adverse"], compliance["entries"]),
-            "entered_against_method_signal": rate(compliance["entries_against_signal"], compliance["entries"]),
-        }
-    return {"players": players, "paper_model_compliance": paper}
-
-
-def pd_time(s):
-    import datetime as dt
-
-    return dt.datetime.fromisoformat(str(s).replace("Z", "+00:00"))
-
-
 # ---------------------------------------------------------------------------------------------- agents
 def scan_agents():
     found = []
@@ -469,31 +403,6 @@ def report(res):
             "above the small-bet mean is a sizing tell: bet size gives the hand away.",
             "",
         ]
-    tr = res.get("trading", {})
-    if tr.get("players"):
-        L += [
-            "## Trading",
-            "",
-            "| Entrant | Episodes | Total R | Trades/episode | Long share | Win rate | Mean R | Mean hold (h) | Exits |",
-            "|---|---|---|---|---|---|---|---|---|",
-        ]
-        g = lambda v: "–" if v is None else f"{v:.0%}"  # noqa: E731
-        for q in sorted(tr["players"], key=lambda q: -q["total_r"]):
-            L.append(
-                f"| {q['entrant']} | {q['episodes']} | {q['total_r']:+.2f} | {q['trades_per_episode']} | {g(q['long_share'])} | "
-                f"{g(q['win_rate'])} | {q['mean_r'] if q['mean_r'] is not None else '–'} | "
-                f"{q['mean_hold_hours'] if q['mean_hold_hours'] is not None else '–'} | "
-                f"{', '.join(f'{k} {v}' for k, v in q['exits'].items())} |"
-            )
-        pc = tr.get("paper_model_compliance")
-        if pc:
-            L += [
-                "",
-                f"The model given the paper's method entered {pc['entries']} times: "
-                f"{g(pc['entered_when_regime_adverse'])} while the method said stay out (adverse regime), "
-                f"{g(pc['entered_against_method_signal'])} against the method's signal.",
-            ]
-        L.append("")
     a = res["agents"]
     if a["findings"]:
         L += [
@@ -515,11 +424,9 @@ if __name__ == "__main__":
     arena = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, "results", "arena")
     prefix = sys.argv[2] if len(sys.argv) > 2 else os.path.join(ROOT, "results", "patterns", "latest")
     os.makedirs(os.path.dirname(prefix), exist_ok=True)
-    tdir = sys.argv[3] if len(sys.argv) > 3 else os.path.join(ROOT, "results", "trading")
     res = {
         "chess": scan_chess(arena),
         "poker": scan_poker(arena),
-        "trading": scan_trading(tdir),
         "agents": scan_agents(),
     }
     json.dump(res, open(prefix + ".json", "w"), indent=1)

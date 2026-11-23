@@ -230,32 +230,6 @@ def tina_plus():
     )
 
 
-def trading():
-    rows = [
-        ("Qwen given the paper's method", 0.542, 0.105, 0.979, BLUE),
-        ("Qwen alone", 0.367, -0.335, 1.097, GREY),
-        ("Paper's rule (K-means gate)", -0.009, -0.411, 0.389, GREY),
-        ("Paper's signals, random gate", -0.063, -0.527, 0.430, GREY),
-        ("Random trader", -0.491, -1.077, 0.074, GREY),
-        ("Buy and hold", -0.541, -1.272, 0.207, GREY),
-    ]
-    fig, ax = plt.subplots(figsize=(10, 3.9))
-    ax.axvline(0, color=INK2, lw=1, ls="--")
-    for i, (n, m, lo, hi, col) in enumerate(reversed(rows)):
-        ax.plot([lo, hi], [i, i], color=col, lw=2.5, solid_capstyle="round")
-        ax.scatter([m], [i], s=70, color=col, edgecolor=SURFACE, linewidth=2, zorder=3)
-        ax.text(hi + 0.04, i, f"{m:+.2f}R", va="center", fontsize=10)
-    ax.set_yticks(range(len(rows)), [r[0] for r in reversed(rows)])
-    ax.set_xlabel("mean R per 3-day window after costs, 95% interval (46 windows, EURUSD and BTC/USD)")
-    ax.grid(axis="y", visible=False)
-    ax.set_title("Trading arena: the paper's regime gate adds nothing; the model's judgement does")
-    save(
-        fig,
-        "07-trading.png",
-        "Windows overlap in time, so intervals are optimistic. Source: results/trading/summary_46.txt",
-    )
-
-
 def ladder():
     rows = [
         ("Tiger-Gemma 9B", 41, 48),
@@ -404,7 +378,6 @@ if __name__ == "__main__":
         advice_tests,
         obedience,
         tina_plus,
-        trading,
         ladder,
         alphapoker,
         pca_styles,

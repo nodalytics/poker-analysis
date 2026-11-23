@@ -62,27 +62,6 @@ Endings: adjudicated 23, fivefold_repetition 6, checkmate 3
 
 Strength: 0 high card, 1 pair, 2 two pair, 3+ better, at the moment of the bet. A big-bet mean well above the small-bet mean is a sizing tell: bet size gives the hand away.
 
-## Trading
-
-| Entrant | Episodes | Total R | Trades/episode | Long share | Win rate | Mean R | Mean hold (h) | Exits |
-|---|---|---|---|---|---|---|---|---|
-| qwen2.5vl#paper | 6 | +9.97 | 3.5 | 86% | 67% | 0.475 | 6.3 | target 4, flat 14, episode_end 3 |
-| qwen2.5vl#learn | 6 | +6.03 | 5.2 | 87% | 48% | 0.195 | 16.1 | flat 12, target 8, stop 8, episode_end 3 |
-| Tiger-Gemma-9B-v3#frozen | 6 | +5.91 | 4.2 | 100% | 48% | 0.236 | 22.5 | stop 11, target 9, episode_end 5 |
-| buy_hold | 6 | +5.85 | 4.2 | 100% | 48% | 0.234 | 22.5 | stop 11, target 9, episode_end 5 |
-| Tiger-Gemma-9B-v3#learn | 6 | +5.85 | 4.2 | 100% | 48% | 0.234 | 22.5 | stop 11, target 9, episode_end 5 |
-| wizard-vicuna-uncensored#frozen | 6 | +5.85 | 4.2 | 100% | 48% | 0.234 | 22.5 | stop 11, target 9, episode_end 5 |
-| wizard-vicuna-uncensored#learn | 6 | +5.85 | 4.2 | 100% | 48% | 0.234 | 22.5 | stop 11, target 9, episode_end 5 |
-| qwen2.5vl#frozen | 6 | +4.24 | 8.0 | 83% | 38% | 0.088 | 10.1 | flat 37, stop 2, target 6, episode_end 3 |
-| paper_random_gate | 6 | +2.13 | 2.7 | 88% | 44% | 0.133 | 20.2 | stop 7, target 5, episode_end 4 |
-| paper_rule | 6 | +1.23 | 2.3 | 86% | 43% | 0.088 | 29.0 | episode_end 4, reverse 1, stop 6, target 3 |
-| flat | 6 | +0.00 | 0.0 | – | – | – | – |  |
-| Big-Tiger-Gemma-27B-v3#frozen | 6 | -2.53 | 4.0 | 100% | 38% | -0.105 | 20.7 | stop 13, target 7, episode_end 4 |
-| Big-Tiger-Gemma-27B-v3#learn | 6 | -4.25 | 2.5 | 100% | 27% | -0.284 | 15.4 | stop 6, target 2, episode_end 2, flat 5 |
-| random_trader | 6 | -4.59 | 2.2 | 38% | 31% | -0.353 | 25.6 | target 2, episode_end 4, stop 7 |
-
-The model given the paper's method entered 21 times: 0% while the method said stay out (adverse regime), 0% against the method's signal.
-
 ## Agent tests
 
 Counts: tool errors 13, loop 10, failed but asserted a number 4, answered with no tool call 2

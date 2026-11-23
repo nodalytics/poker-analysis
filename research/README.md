@@ -24,9 +24,8 @@ Studies:
 
 - [2026-11-05 — Local "uncensored" LLM evaluation](docs/2026-11-05-local-llm-evaluation.md):
   speed and refusals, Desktop Commander control, browser control; why Mistral Large was dropped.
-- [2026-11-05 — Ladders, trading and Windows GUI control](docs/2026-11-05-arena-trading-gui.md): learners vs
-  frozen twins at chess and poker, simulated and algorithmic players, the paper's trading method after costs,
-  and Windows-MCP results.
+- [2026-11-05 — Ladders and Windows GUI control](docs/2026-11-05-arena-gui.md): learners vs
+  frozen twins at chess and poker, simulated and algorithmic players, and Windows-MCP results.
 - [2026-11-05 — The solver stack under the LLM](docs/2026-11-05-solver-stack.md): solver advice makes every model
   play better (p 0.003-0.021); preflop charts heads-up and multi-way, multi-way Monte Carlo, the solver library and
   flop network, and human baselines from published hand histories.
