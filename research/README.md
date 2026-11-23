@@ -29,6 +29,9 @@ Studies:
 - [2026-11-05 — The solver stack under the LLM](docs/2026-11-05-solver-stack.md): solver advice makes every model
   play better (p 0.003-0.021); preflop charts heads-up and multi-way, multi-way Monte Carlo, the solver library and
   flop network, and human baselines from published hand histories.
+- [2026-11-23 — LLMs that play poker: six outside sources](docs/2026-11-23-llm-poker-literature.md): PokerSkill,
+  PokerBench (paper and arena), Husky Hold'em Bench and a screen-reading LLM bot, read against our results; the best
+  LLM agent loses 5.7 bb/100 to an equilibrium bot, and solver agreement is not play strength.
 
 - [Play-money and practice poker platforms](docs/poker-play-money-platforms.md): candidates for testing agents
   outside our own tables, and which ones allow bots.
