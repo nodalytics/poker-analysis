@@ -33,6 +33,9 @@ Studies:
   PokerBench (paper and arena), Husky Hold'em Bench and a screen-reading LLM bot, read against our results; the best
   LLM agent loses 5.7 bb/100 to an equilibrium bot, and solver agreement is not play strength.
 
+- [Ideas](ideas/README.md): techniques researched for our problems (old and new), each as a ranked proposal with its
+  cheapest test, before anything is run.
+
 - [Play-money and practice poker platforms](docs/poker-play-money-platforms.md): candidates for testing agents
   outside our own tables, and which ones allow bots.
 - [Poker platforms with an API for agents](docs/poker-api-platforms.md): bot arenas and engines, and the

@@ -72,8 +72,9 @@ least one old and one recent technique when both apply, and say plainly when the
 
 ## 5. Deliver
 
-- Write the result to `research/docs/YYYY-MM-DD-<topic>.md`, with a sources table and the ranked proposals. Index it
-  in `research/README.md`, and commit it (publish-safety).
+- Write the result to `research/ideas/YYYY-MM-DD-<topic>.md`, with a sources table and the ranked proposals. Add a
+  row to `research/ideas/README.md` (date, topic, top proposal, status), and commit both (publish-safety). Experiment
+  write-ups stay in `research/docs/`. When a proposal is run, link its result from the idea's row and mark it tested.
 - Tell the user the top two or three proposals, each with its cheapest test. Then offer to register and run the first
   one.
 - Nothing from this skill changes what Kestrel plays until it passes a registered test.
