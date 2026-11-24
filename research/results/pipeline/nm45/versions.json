@@ -1,0 +1,732 @@
+{
+ "reference": "blueprint/nm25",
+ "versions": [
+  "nm25",
+  "nm45"
+ ],
+ "skipped": [],
+ "spots": 35505,
+ "deals": 4000,
+ "overall": {
+  "disagreement": 0.0537,
+  "split": 0.0541
+ },
+ "vs_reference": {
+  "distance": {
+   "nm25": 0.0,
+   "nm45": 0.0537
+  },
+  "different_top_action": {
+   "nm25": 0.0,
+   "nm45": 0.0541
+  }
+ },
+ "groups": {
+  "street": [
+   {
+    "group": "river",
+    "spots": 206,
+    "disagreement": 0.1846,
+    "split": 0.2087,
+    "vs_reference": {
+     "nm45": 0.1846
+    }
+   },
+   {
+    "group": "turn",
+    "spots": 382,
+    "disagreement": 0.1399,
+    "split": 0.2435,
+    "vs_reference": {
+     "nm45": 0.1399
+    }
+   },
+   {
+    "group": "flop",
+    "spots": 1046,
+    "disagreement": 0.1131,
+    "split": 0.1348,
+    "vs_reference": {
+     "nm45": 0.1131
+    }
+   },
+   {
+    "group": "pre-flop",
+    "spots": 33871,
+    "disagreement": 0.0501,
+    "split": 0.0486,
+    "vs_reference": {
+     "nm45": 0.0501
+    }
+   }
+  ],
+  "position": [
+   {
+    "group": "SB",
+    "spots": 4432,
+    "disagreement": 0.0698,
+    "split": 0.0792,
+    "vs_reference": {
+     "nm45": 0.0698
+    }
+   },
+   {
+    "group": "BB",
+    "spots": 4551,
+    "disagreement": 0.0672,
+    "split": 0.0681,
+    "vs_reference": {
+     "nm45": 0.0672
+    }
+   },
+   {
+    "group": "BTN",
+    "spots": 4092,
+    "disagreement": 0.0541,
+    "split": 0.0511,
+    "vs_reference": {
+     "nm45": 0.0541
+    }
+   },
+   {
+    "group": "HJ",
+    "spots": 3870,
+    "disagreement": 0.0503,
+    "split": 0.0535,
+    "vs_reference": {
+     "nm45": 0.0503
+    }
+   },
+   {
+    "group": "LJ",
+    "spots": 3777,
+    "disagreement": 0.0488,
+    "split": 0.0503,
+    "vs_reference": {
+     "nm45": 0.0488
+    }
+   },
+   {
+    "group": "CO",
+    "spots": 4013,
+    "disagreement": 0.0485,
+    "split": 0.0503,
+    "vs_reference": {
+     "nm45": 0.0485
+    }
+   },
+   {
+    "group": "UTG",
+    "spots": 3493,
+    "disagreement": 0.0475,
+    "split": 0.0467,
+    "vs_reference": {
+     "nm45": 0.0475
+    }
+   },
+   {
+    "group": "UTG+1",
+    "spots": 3598,
+    "disagreement": 0.0469,
+    "split": 0.0406,
+    "vs_reference": {
+     "nm45": 0.0469
+    }
+   },
+   {
+    "group": "MP",
+    "spots": 3679,
+    "disagreement": 0.0439,
+    "split": 0.0391,
+    "vs_reference": {
+     "nm45": 0.0439
+    }
+   }
+  ],
+  "stack": [
+   {
+    "group": "25bb+",
+    "spots": 6448,
+    "disagreement": 0.0862,
+    "split": 0.0954,
+    "vs_reference": {
+     "nm45": 0.0862
+    }
+   },
+   {
+    "group": "18-25bb",
+    "spots": 4750,
+    "disagreement": 0.0574,
+    "split": 0.0577,
+    "vs_reference": {
+     "nm45": 0.0574
+    }
+   },
+   {
+    "group": "12-18bb",
+    "spots": 7251,
+    "disagreement": 0.0483,
+    "split": 0.0492,
+    "vs_reference": {
+     "nm45": 0.0483
+    }
+   },
+   {
+    "group": "under 12bb",
+    "spots": 17056,
+    "disagreement": 0.0426,
+    "split": 0.0396,
+    "vs_reference": {
+     "nm45": 0.0426
+    }
+   }
+  ],
+  "facing a bet": [
+   {
+    "group": "no",
+    "spots": 1061,
+    "disagreement": 0.1641,
+    "split": 0.2253,
+    "vs_reference": {
+     "nm45": 0.1641
+    }
+   },
+   {
+    "group": "yes",
+    "spots": 34444,
+    "disagreement": 0.0503,
+    "split": 0.0489,
+    "vs_reference": {
+     "nm45": 0.0503
+    }
+   }
+  ],
+  "seated": [
+   {
+    "group": "2",
+    "spots": 368,
+    "disagreement": 0.1586,
+    "split": 0.1766,
+    "vs_reference": {
+     "nm45": 0.1586
+    }
+   },
+   {
+    "group": "3-5",
+    "spots": 1629,
+    "disagreement": 0.1083,
+    "split": 0.1265,
+    "vs_reference": {
+     "nm45": 0.1083
+    }
+   },
+   {
+    "group": "6-8",
+    "spots": 2399,
+    "disagreement": 0.0692,
+    "split": 0.0663,
+    "vs_reference": {
+     "nm45": 0.0692
+    }
+   },
+   {
+    "group": "9",
+    "spots": 31109,
+    "disagreement": 0.0484,
+    "split": 0.048,
+    "vs_reference": {
+     "nm45": 0.0484
+    }
+   }
+  ]
+ },
+ "most_disputed": [
+  {
+   "street": "pre-flop",
+   "position": "BB",
+   "stack_bb": 1.9,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "42s",
+   "cards": "4c 2c",
+   "board": "",
+   "disagreement": 0.996,
+   "choices": {
+    "nm25": {
+     "fold": 0.999
+    },
+    "nm45": {
+     "check/call": 0.998
+    }
+   }
+  },
+  {
+   "street": "flop",
+   "position": "BB",
+   "stack_bb": 40.2,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "Q6o",
+   "cards": "Qh 6d",
+   "board": "4h 8d Th",
+   "disagreement": 0.995,
+   "choices": {
+    "nm25": {
+     "check/call": 0.998
+    },
+    "nm45": {
+     "fold": 0.996
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "BB",
+   "stack_bb": 1.5,
+   "facing_a_bet": true,
+   "seated": 8,
+   "hand": "92o",
+   "cards": "2h 9d",
+   "board": "",
+   "disagreement": 0.994,
+   "choices": {
+    "nm25": {
+     "check/call": 0.999
+    },
+    "nm45": {
+     "fold": 0.995
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "BB",
+   "stack_bb": 2.7,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "93o",
+   "cards": "9h 3c",
+   "board": "",
+   "disagreement": 0.993,
+   "choices": {
+    "nm25": {
+     "check/call": 0.999
+    },
+    "nm45": {
+     "fold": 0.995
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "CO",
+   "stack_bb": 14.0,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "77",
+   "cards": "7h 7c",
+   "board": "",
+   "disagreement": 0.989,
+   "choices": {
+    "nm25": {
+     "fold": 0.997
+    },
+    "nm45": {
+     "check/call": 0.993
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "SB",
+   "stack_bb": 3.1,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "K3o",
+   "cards": "3s Kd",
+   "board": "",
+   "disagreement": 0.989,
+   "choices": {
+    "nm25": {
+     "fold": 0.991
+    },
+    "nm45": {
+     "check/call": 0.998
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "HJ",
+   "stack_bb": 16.3,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "ATo",
+   "cards": "Td Ah",
+   "board": "",
+   "disagreement": 0.985,
+   "choices": {
+    "nm25": {
+     "fold": 0.986
+    },
+    "nm45": {
+     "bet/raise 1": 0.599,
+     "all-in": 0.396
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "HJ",
+   "stack_bb": 2.6,
+   "facing_a_bet": true,
+   "seated": 5,
+   "hand": "K8o",
+   "cards": "8d Kc",
+   "board": "",
+   "disagreement": 0.977,
+   "choices": {
+    "nm25": {
+     "fold": 0.977
+    },
+    "nm45": {
+     "bet/raise 1": 0.161,
+     "bet/raise 2": 0.833
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "SB",
+   "stack_bb": 32.6,
+   "facing_a_bet": true,
+   "seated": 6,
+   "hand": "KJo",
+   "cards": "Jc Ks",
+   "board": "",
+   "disagreement": 0.975,
+   "choices": {
+    "nm25": {
+     "fold": 0.977
+    },
+    "nm45": {
+     "bet/raise 1": 0.587,
+     "all-in": 0.373
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "UTG+1",
+   "stack_bb": 2.5,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "A6s",
+   "cards": "Ac 6c",
+   "board": "",
+   "disagreement": 0.975,
+   "choices": {
+    "nm25": {
+     "fold": 0.975
+    },
+    "nm45": {
+     "bet/raise 1": 0.155,
+     "bet/raise 2": 0.843
+    }
+   }
+  },
+  {
+   "street": "turn",
+   "position": "BB",
+   "stack_bb": 21.2,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "A2o",
+   "cards": "2d As",
+   "board": "3s Ah 3c Qh",
+   "disagreement": 0.973,
+   "choices": {
+    "nm25": {
+     "fold": 0.975
+    },
+    "nm45": {
+     "check/call": 0.998
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "BTN",
+   "stack_bb": 3.0,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "K9s",
+   "cards": "Kh 9h",
+   "board": "",
+   "disagreement": 0.973,
+   "choices": {
+    "nm25": {
+     "check/call": 0.996
+    },
+    "nm45": {
+     "fold": 0.977
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "SB",
+   "stack_bb": 26.9,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "KTo",
+   "cards": "Tc Ks",
+   "board": "",
+   "disagreement": 0.97,
+   "choices": {
+    "nm25": {
+     "fold": 0.856,
+     "check/call": 0.059,
+     "bet/raise 1": 0.08
+    },
+    "nm45": {
+     "all-in": 0.975
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "BTN",
+   "stack_bb": 6.8,
+   "facing_a_bet": true,
+   "seated": 4,
+   "hand": "A7s",
+   "cards": "7d Ad",
+   "board": "",
+   "disagreement": 0.966,
+   "choices": {
+    "nm25": {
+     "fold": 0.999
+    },
+    "nm45": {
+     "check/call": 0.967
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "LJ",
+   "stack_bb": 15.6,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "Q8s",
+   "cards": "8h Qh",
+   "board": "",
+   "disagreement": 0.965,
+   "choices": {
+    "nm25": {
+     "check/call": 0.974
+    },
+    "nm45": {
+     "fold": 0.977
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "BTN",
+   "stack_bb": 32.0,
+   "facing_a_bet": true,
+   "seated": 8,
+   "hand": "A4s",
+   "cards": "4c Ac",
+   "board": "",
+   "disagreement": 0.965,
+   "choices": {
+    "nm25": {
+     "fold": 0.929
+    },
+    "nm45": {
+     "all-in": 0.983
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "MP",
+   "stack_bb": 4.5,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "K8s",
+   "cards": "Kc 8c",
+   "board": "",
+   "disagreement": 0.965,
+   "choices": {
+    "nm25": {
+     "fold": 0.965
+    },
+    "nm45": {
+     "bet/raise 2": 0.723,
+     "bet/raise 3": 0.214
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "BB",
+   "stack_bb": 2.6,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "Q3o",
+   "cards": "Qd 3s",
+   "board": "",
+   "disagreement": 0.965,
+   "choices": {
+    "nm25": {
+     "check/call": 0.99
+    },
+    "nm45": {
+     "fold": 0.972
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "BB",
+   "stack_bb": 5.9,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "T9s",
+   "cards": "Td 9d",
+   "board": "",
+   "disagreement": 0.964,
+   "choices": {
+    "nm25": {
+     "fold": 0.999
+    },
+    "nm45": {
+     "check/call": 0.965
+    }
+   }
+  },
+  {
+   "street": "river",
+   "position": "HJ",
+   "stack_bb": 13.2,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "99",
+   "cards": "9c 9h",
+   "board": "Jd 5h 6s 4c 7d",
+   "disagreement": 0.963,
+   "choices": {
+    "nm25": {
+     "check/call": 0.973
+    },
+    "nm45": {
+     "fold": 0.991
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "BB",
+   "stack_bb": 9.0,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "AQs",
+   "cards": "Ah Qh",
+   "board": "",
+   "disagreement": 0.963,
+   "choices": {
+    "nm25": {
+     "check/call": 0.988
+    },
+    "nm45": {
+     "fold": 0.975
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "SB",
+   "stack_bb": 10.9,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "A9s",
+   "cards": "Ac 9c",
+   "board": "",
+   "disagreement": 0.961,
+   "choices": {
+    "nm25": {
+     "bet/raise 1": 0.796,
+     "all-in": 0.194
+    },
+    "nm45": {
+     "fold": 0.965
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "BB",
+   "stack_bb": 16.5,
+   "facing_a_bet": true,
+   "seated": 3,
+   "hand": "32o",
+   "cards": "2s 3c",
+   "board": "",
+   "disagreement": 0.96,
+   "choices": {
+    "nm25": {
+     "check/call": 0.979
+    },
+    "nm45": {
+     "fold": 0.981
+    }
+   }
+  },
+  {
+   "street": "river",
+   "position": "CO",
+   "stack_bb": 38.3,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "AQo",
+   "cards": "Ac Qh",
+   "board": "4c 7h 2d 5c Td",
+   "disagreement": 0.957,
+   "choices": {
+    "nm25": {
+     "fold": 0.056,
+     "bet/raise 1": 0.291,
+     "all-in": 0.641
+    },
+    "nm45": {
+     "check/call": 0.97
+    }
+   }
+  },
+  {
+   "street": "pre-flop",
+   "position": "UTG+1",
+   "stack_bb": 11.5,
+   "facing_a_bet": true,
+   "seated": 9,
+   "hand": "AKo",
+   "cards": "Kc Ah",
+   "board": "",
+   "disagreement": 0.956,
+   "choices": {
+    "nm25": {
+     "fold": 0.84,
+     "check/call": 0.137
+    },
+    "nm45": {
+     "bet/raise 1": 0.257,
+     "all-in": 0.723
+    }
+   }
+  }
+ ]
+}
