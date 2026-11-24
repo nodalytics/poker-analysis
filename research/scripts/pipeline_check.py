@@ -3,7 +3,8 @@
     config.json, nm25's (mtt, libbp7, blueprint/out) when it says nothing; seqtest takes the library the same way;
   - validate() checks the values of the patterns and opponent-model checks, not only their field names;
   - the exploit check's seeds: one exploiter per seed (7, 8, ...), judged on the mean of their final readings, each
-    reading, the mean and the SD in the result; without seeds, one exploiter and the result exactly as before.
+    reading, the mean and the SD in the result; without seeds, one exploiter and the result exactly as before;
+  - the opponents check's rule: "point" judges the difference, "interval" its paired 95% interval's lower end.
 No exploiter runs: Run.sh is replaced by a stand-in that writes the exploiter's log.
 
   python3 scripts/pipeline_check.py          (seconds; exits 1 on a failure)
@@ -157,8 +158,47 @@ def check_game_and_seeds(tmp):
         pipeline.HERE = here
 
 
+class FakeOpponents(FakeRun):
+    """A Run whose opponents step writes a given pipeline_opponents.py result."""
+
+    def __init__(self, d, name, table):
+        super().__init__(d, name, {})
+        self.table = table
+
+    def sh(self, args, log, gpu=None, timeout_min=None):
+        self.cmds.append(list(args))
+        json.dump(self.table, open(args[args.index("--out") + 1], "w"))
+
+
+def check_opponents_rule(tmp):
+    def row(diff, ci):
+        return {"run": [100.0 + diff, 0, 0], "baseline": [100.0, 0, 0], "difference": diff, "difference_ci": ci}
+
+    # nm44's station reading (seed 13) and a small, noisy gap
+    nm44 = {"reg": row(-0.40, [-1.04, 0.24]), "station": row(-27.40, [-29.2, -25.6])}
+    noisy = {"reg": row(-0.40, [-1.04, 0.24]), "station": row(-0.50, [-2.30, 1.30])}
+    tight = {"reg": row(-0.40, [-1.04, 0.24]), "station": row(-0.50, [-1.20, 0.20])}
+    base = {"id": "other-players", "type": "opponents", "against": ["reg", "station"], "hands": 1000, "tolerance": 2.0}
+    for table, rule, want, what in (
+        (nm44, "point", False, "nm44's station gap fails the point rule"),
+        (nm44, "interval", False, "nm44's station gap fails the interval rule"),
+        (noisy, "point", True, "a -0.5 gap passes the point rule at tolerance 2"),
+        (noisy, "interval", False, "a -0.5 gap whose interval reaches -2.3 fails the interval rule"),
+        (tight, "interval", True, "a -0.5 gap whose interval stays above -2 passes the interval rule"),
+    ):
+        r = FakeOpponents(tmp, "nm98", table)
+        ok, text = r.check(dict(base, rule=rule))
+        expect(ok == want, f"opponents {rule}: {what} ({text})")
+    errs = pipeline.validate(recipe(tmp, [dict(base, rule="median")]), pipeline.trainer_flags())
+    expect(any(".rule:" in e for e in errs), f"opponents.rule = 'median' is refused ({errs})")
+    errs = pipeline.validate(recipe(tmp, [dict(base, rule="interval")]), pipeline.trainer_flags())
+    expect(not errs, f"opponents.rule = 'interval' validates ({errs})")
+
+
 def main():
     flags = pipeline.trainer_flags()
+    with tempfile.TemporaryDirectory() as tmp:
+        check_opponents_rule(tmp)
     with tempfile.TemporaryDirectory() as tmp:
         check_validate(tmp, flags)
     with tempfile.TemporaryDirectory() as tmp:

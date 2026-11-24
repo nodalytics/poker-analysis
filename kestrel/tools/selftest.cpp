@@ -14,6 +14,7 @@
 #include "kestrel/icm.hpp"
 #include "kestrel/net.hpp"
 #include "kestrel/ninemax_spot.hpp"
+#include "kestrel/practice.hpp"
 #include "kestrel/buckets.hpp"
 #include "kestrel/table.hpp"
 
@@ -320,11 +321,26 @@ int main(int argc, char** argv) {
         srch.eq(searched > 5, 1, "searched decisions: " + std::to_string(searched));
         std::printf("9max search: %d searched, %d below the ESS floor (the network's policy)\n", searched, fallen);
     }
+    // a PKO model: whole practice tournaments with bounties, settled by the knockout rule (the winner(s) of the pot
+    // that took a player's last chips, split on ties); every bust's bounty must land somewhere, so the places' prizes
+    // and the bounty cash collected add up to the prize pool exactly
+    Check pko{"practice PKO: money", 1e-9};
+    if (info.feat_bounty > 0)
+        for (uint64_t seed : {1, 2, 3}) {
+            PracticeConfig pc;
+            pc.seed = seed, pc.bounty = 0.5;
+            PracticeTournament pt(net, pc, "selftest");
+            while (!pt.over() && pt.hands() < 2000) pt.play_hand([](const json&) {});
+            double total = 0;
+            for (auto& r : pt.standings()) total += r["prize"].get<double>();
+            pko.cmp(pt.over() ? total : -1, 1.0, "tournament " + std::to_string(seed) + ", " +
+                                                      std::to_string(pt.hands()) + " hands");
+        }
     bool ok = true;
     std::printf("kestrel self-test: %zu 9-max hands, %d ICM cases, %d heads-up decisions, %d with the defence floor "
                 "(%d floored), %d replayed platform decisions\n", V["hands"].size(), c, hc, fc, floored, rdec);
     for (Check* k : {&actor, &street, &legal, &targets, &feat, &str, &logit, &value, &done, &pay, &eq0, &icmc, &hturn,
-                     &hnode, &hbk, &hn, &hkind, &hprob, &hto, &fagree, &rturn, &rprob, &rto, &mwc, &bfwd, &bval, &srch}) {
+                     &hnode, &hbk, &hn, &hkind, &hprob, &hto, &fagree, &rturn, &rprob, &rto, &mwc, &bfwd, &bval, &srch, &pko}) {
         std::printf("  %-6s %-10s %6ld checks, worst error %.2e (tolerance %.0e)%s\n", k->bad ? "FAIL" : "ok",
                     k->name.c_str(), k->n, k->worst, k->tol, k->bad ? "" : "");
         if (k->bad) {

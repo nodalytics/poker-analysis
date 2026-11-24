@@ -247,3 +247,20 @@ only decisions whose values rest on a handful of deals. Whether it helps in play
   ratio read x0.82 in one run and x1.12 in another, so treat CRN as a small gain at best: the deals, already shared,
   are the main noise. The ESS floor's effect on win rate is still to be measured (a paired match with and without it).
 
+
+**A second audit, checked (2026-11-24).** A teammate's line-by-line audit of `kestrel/core/src/` and the training code
+lists six bugs; they are B5 (effective stack), B7 (mccfr_vec), B6 (off-tree mapping), B1 (seating), B2 (bounties) and
+B3 (search), described against the code before this plan's fixes, which were already in `main`. It adds two points:
+- Kestrel's practice tables still paid each knockout to the hand's biggest winner (the audit called this correct). They
+  now use the rule training and search use: the best live hand(s) among the players who covered the busted player,
+  split on ties. `kestrel_selftest` on a PKO model now plays three bounty practice tournaments and checks that the
+  prizes plus the bounty cash collected add up to the prize pool (worst error 1e-16).
+- `blueprint_bot.py`'s off-tree mapping cache cleared itself whole at 200,000 entries, which could re-draw an earlier
+  bet's reading in the middle of a hand. It now drops the least recently used half, so a reading the hand has used
+  is never dropped.
+
+**nm45 drafted.** `pipeline/runs/nm45.json`: the league (as nm44) on the fixed seating, with the five archetypes
+(nit, station, maniac, shover, loose-passive) added to its pool and the rule players' share back at nm25's 0.5. Its
+other-players check uses the new `"rule": "interval"`: on 100,000 paired hands, the lower end of the difference's 95%
+interval must be above -2.0 bb/100 against every rule player (nm44's station reading, -27.4 [-29.2, -25.6], fails it).
+The exploiter is judged on the mean of four seeds with a limit of +1.25 (nm25's +0.75 plus 0.5).

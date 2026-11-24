@@ -16,6 +16,7 @@ BLUEPRINT_LIB (libbp.so; blueprint/libbp.so). Units: the harness's chips are sca
 """
 
 import ctypes
+import itertools
 import json
 import os
 import random
@@ -168,11 +169,13 @@ class Blueprint:
                     # keyed by the action history so far (not id(state): Python reuses ids of discarded copies, and
                     # LBR's hypothetical bets then lent their reading to real ones)
                     key = (tuple(sig), round(x, 6))
-                    if key not in self._mapped:
-                        if len(self._mapped) > 200000:
-                            self._mapped.clear()
-                        self._mapped[key] = self.map_raise(node, x)
-                    node = self._mapped[key]
+                    # least recently used first out: every reading this hand has used was just touched, so a full
+                    # cache never drops one mid-hand (clearing it all could re-draw an earlier bet's reading)
+                    node = self._mapped.pop(key) if key in self._mapped else self.map_raise(node, x)
+                    self._mapped[key] = node
+                    if len(self._mapped) > 200000:
+                        for old in list(itertools.islice(self._mapped, 100000)):
+                            del self._mapped[old]
                 if node is None:
                     return None
                 history.append((before, self.nodes[before]["children"].index(node), p, board_n))
@@ -184,8 +187,6 @@ class Blueprint:
     def reach(self, history, player, board, blocked):
         """Weight of every holding for `player`: the product of the blueprint's probabilities of that player's actions
         so far, each read at the holding's bucket on the board dealt by then."""
-        import itertools
-
         deck = [r + s for r in "23456789TJQKA" for s in "cdhs"]
         combos = [a + b for a, b in itertools.combinations(deck, 2) if a not in blocked and b not in blocked]
         w = np.ones(len(combos))

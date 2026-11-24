@@ -55,7 +55,7 @@ CHECKS = {
     "seqtest": {"against", "early", "pass", "max", "looks", "alpha", "margin"},
     "exploit": {"minutes", "limit", "seeds"},
     "bluffers": {"early", "unit", "bluffers", "pass"},
-    "opponents": {"against", "hands", "baseline", "tolerance"},
+    "opponents": {"against", "hands", "baseline", "tolerance", "rule"},
     "styles": {"count", "seed", "hands", "baseline", "worst_tolerance", "mean_tolerance", "human"},
     "consistency": {"reference", "deals"},
     "exploiters": {"profiles", "minutes", "limit"},
@@ -265,6 +265,8 @@ def validate(path, flags=None):
                 errs.append(f"{where}.baseline: a run name such as nm25")
             if not isinstance(c.get("tolerance"), (int, float)) or c["tolerance"] < 0:
                 errs.append(f"{where}.tolerance: how far below the baseline it may fall against each, bb/100")
+            if c.get("rule", "point") not in ("point", "interval"):
+                errs.append(f"{where}.rule: point (the difference) or interval (its 95% interval's lower end)")
         if c["type"] == "exploiters":
             if not isinstance(c.get("limit"), (int, float)):
                 errs.append(f"{where}.limit: the most any exploiter may win, bb/100")
@@ -513,10 +515,15 @@ class Run:
                    "--against", ",".join(c["against"]), "--hands", str(c.get("hands", 20000)), "--out", out]  # fmt: skip
             self.sh(cmd, f"{cid}.log", gpu, timeout_min=180)
             res = json.load(open(out))
-            ok = all(v["difference"] >= -c["tolerance"] for v in res.values())
+            # "interval": the paired difference's 95% interval must lie above -tolerance, so a gap is
+            # ruled out rather than merely not seen; "point": the difference itself (nm44 and before)
+            lower = c.get("rule", "point") == "interval"
+            ok = all((v["difference_ci"][0] if lower else v["difference"]) >= -c["tolerance"] for v in res.values())
             return ok, ", ".join(
-                f"vs {k} {v['run'][0]:+.1f} ({base} {v['baseline'][0]:+.1f})" for k, v in res.items()
-            ) + (f"; each within {c['tolerance']:.1f} of {base}")
+                f"vs {k} {v['run'][0]:+.1f} ({base} {v['baseline'][0]:+.1f}, difference {v['difference']:+.2f} "
+                f"[{v['difference_ci'][0]:+.2f}, {v['difference_ci'][1]:+.2f}])"
+                for k, v in res.items()
+            ) + (f"; each {'interval ' if lower else ''}within {c['tolerance']:.1f} of {base}")
         if typ == "opponent-model":  # Kestrel itself with the run: none, search, search with the opponent model
             kdir = os.path.join(self.dir, "kestrel_model")
             if not os.path.exists(os.path.join(kdir, "net.json")):

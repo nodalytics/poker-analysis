@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <numeric>
 
 #include "kestrel/buckets.hpp"
@@ -261,11 +262,21 @@ void PracticeTournament::play_hand(const std::function<void(const json&)>& emit,
         players_[who[s]].chips = std::max<int64_t>(0, after[s]);
         if (players_[who[s]].chips == 0) busted.push_back(who[s]);
     }
-    if (!busted.empty() && beta > 0) {  // knockouts: the hand's biggest winner takes each bounty, half in cash
-        Player& k = players_[who[best]];
-        for (int b : busted) {
-            k.won += players_[b].bounty / 2, k.bounty += players_[b].bounty / 2;
-            players_[b].bounty = 0;
+    if (!busted.empty() && beta > 0) {
+        // knockouts, as training and search score them (end_equity): a busted player's bounty, half in cash and half
+        // onto the taker's head, to the best live hand(s) among the players who put in at least as much as it did
+        // (the pot that took its last chips), split between ties
+        for (int s = 0; s < 9; ++s) {
+            if (who[s] < 0 || players_[who[s]].chips > 0 || players_[who[s]].bounty <= 0) continue;
+            int top = std::numeric_limits<int>::max(), n = 0;
+            for (int j = 0; j < 9; ++j)
+                if (who[j] >= 0 && !T.folded[j] && T.contrib[j] >= T.contrib[s]) top = std::min(top, rank[j]);
+            for (int j = 0; j < 9; ++j) n += who[j] >= 0 && !T.folded[j] && T.contrib[j] >= T.contrib[s] && rank[j] == top;
+            const double half = players_[who[s]].bounty / 2 / std::max(n, 1);
+            for (int j = 0; j < 9; ++j)
+                if (who[j] >= 0 && !T.folded[j] && T.contrib[j] >= T.contrib[s] && rank[j] == top)
+                    players_[who[j]].won += half, players_[who[j]].bounty += half;
+            players_[who[s]].bounty = 0;
         }
     }
     if (!busted.empty()) {
