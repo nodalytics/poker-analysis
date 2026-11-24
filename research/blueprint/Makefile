@@ -13,7 +13,7 @@ CFLAGS = -O3 -march=native -std=c99 -Ideps/phe/cpp/include -Ideps/iso/src
 PHE_SRC = $(addprefix deps/phe/cpp/src/,evaluator7.c hash.c hashtable.c hashtable7.c dptables.c tables_bitwise.c)
 ISO_SRC = deps/iso/src/hand_index.c deps/iso/src/deck.c
 
-all: abstraction abstraction_pa check mccfr5 mccfr_vec br_vec preclass libbp2.so
+all: abstraction abstraction_pa check mccfr5 mccfr_vec br_vec resolve_turn preclass libbp2.so
 
 deps/phe deps/iso:
 	mkdir -p deps
@@ -40,6 +40,9 @@ br_vec: br_vec.cpp vec.hpp tree.hpp common.hpp deps/libdeps.a
 
 resolve: resolve.cpp vec.hpp tree.hpp common.hpp deps/libdeps.a
 	$(CXX) $(CXXFLAGS) resolve.cpp deps/libdeps.a -o $@
+
+resolve_turn: resolve_turn.cpp resolve.cpp vec.hpp tree.hpp common.hpp deps/libdeps.a
+	$(CXX) $(CXXFLAGS) resolve_turn.cpp deps/libdeps.a -o $@
 
 libresolve.so: resolve.cpp vec.hpp tree.hpp common.hpp deps/libdeps_pic.a
 	$(CXX) $(CXXFLAGS) -fPIC -shared -DRESOLVE_LIB resolve.cpp deps/libdeps_pic.a -o $@

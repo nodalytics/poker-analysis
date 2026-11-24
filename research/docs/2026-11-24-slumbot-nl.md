@@ -161,6 +161,33 @@ training; time 1,000 river solves first to replace the estimate with a measureme
 **First step either way:** arm C alone, a safe turn re-solve with exact rivers. It needs no network, it is the next
 step `model.md` already names, and it is the baseline every other arm is judged against.
 
+**Built (2026-11-24): `research/blueprint/resolve_turn.cpp`**, the safe turn re-solve with every river card exact (arm
+C), reusing `resolve.cpp`'s gadget, CFR+ and card handling. Turn nodes hold strategies over the 1,128 hands live on
+the 4-card board; each of the 48 river cards gets its own copy of every river node below, over that board's 1,081
+hands; a hand pair's value after the river deal is the mean over the 44 river cards that clash with neither hand, so
+turn folds and river results share one scale. An all-in before the river is a showdown averaged the same way. A turn
+subgame of the standard tree needs 37 MB at the median and 2.3 GB at the largest. Test mode compares five arms on
+turn spots reached by blueprint self-play, each scored by the opponent's exact best response over turn and river:
+blueprint; unsafe re-solve; safe re-solve (C); safe with our river play fixed to the blueprint while the opponent's
+river is re-solved (D, blueprint leaves valued pessimistically: the fair form); and safe with both rivers fixed (the
+naive form, which trusts the opponent not to deviate on the river).
+
+First run, 10 spots at 50 iterations (too few to converge; a check that it works), chips per hand pair:
+
+| Arm | Opponent's best response | Change vs blueprint | Worst single hand's gain over its blueprint value | Seconds a spot (1 core) |
+|---|---|---|---|---|
+| blueprint | +860 | | 0 | |
+| unsafe re-solve | -88 | -948 (se 300) | +2,190 | 46 |
+| safe re-solve | +631 | -229 (se 100) | +208 | 42 |
+| safe, both rivers fixed | +1,170 | +310 (se 79) | +567 | 25 |
+
+The unsafe re-solve looks best against the ranges it assumes and lets single opponent hands gain 2,190 over the
+blueprint, the known failure of trusting a range. The safe re-solve lowers the opponent's best response with a
+worst-hand gain that should fall toward 0 as iterations grow. Fixing both rivers to the blueprint makes the turn play
+worse than the blueprint's own: the turn solve assumes an opponent who never deviates on the river, and the best
+response does. Hence the fair arm D, added after this run. Queued on the lab: 100 spots at 200 iterations, then 20 at
+500 for convergence.
+
 **Expectations:** a re-solve over the same bet menu cannot fix a menu leak, so the turn re-solve should carry the wide
 tree's sizes too. Network error compounds street by street, and production Kestrel has no GPU path. DeepStack never
 claimed to beat Slumbot (DyypHoldem issue #4); the realistic best case is LBR lower by tens of bb/100.

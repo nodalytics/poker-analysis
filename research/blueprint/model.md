@@ -530,6 +530,7 @@ cd ~/research/blueprint && make -j            # pinned PokerHandEvaluator and ha
 ./mccfr_vec out runcyc --threads 8 --minutes 1440 --dcfr --flop-cycle --batch-boards 50   # Slumbot NL's sampling
 BLUEPRINT_TREE=wide ./mccfr_vec out runwide --threads 8 --minutes 1440 --dcfr                # + 0.25x and 4x pot bets
 ./br_vec out run2 --boards 2000 --eval-boards 1000 --purify 0.05
+./resolve_turn out run2 --test 100 --iters 200 --threads 6   # safe turn re-solve, every river card exact
 cd .. && .venv-gpu/bin/python scripts/mlp_selfplay.py blueprint/runmlp2 --kl 0.3 --magnet-tau 0.0003 --entropy 0.01
 sh blueprint/lbr_trend.sh blueprint/run6 3000 16
 ```
