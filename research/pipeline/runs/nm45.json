@@ -1,0 +1,27 @@
+{
+ "name": "nm45",
+ "question": "Does the league, re-trained on the fixed seating code with players who never fold in its pool, keep nm25's win rate against calling stations while staying as hard to exploit as nm25?",
+ "why": "nm44 (the league) passed four of five checks and failed against the calling station: a paired difference of -27.4 bb/100 [-29.2, -25.6] on seed 13, the same on seeds 14 and 15 (docs/2026-11-23-review-and-plan.md, section 5), about a fifth of nm25's +126 win against it. The league trains mostly against strong players who fold correctly, so it learns to bluff and value-bet thin against them; a station punishes that. nm44 also cut the rule players' share from nm25's 0.5 to 0.4 and trained on the seating bug (B1: 8.7% of opponent seats on empty chairs), both fixed here. Two other findings set the checks: the old other-players rule compared a point estimate with 1.0 bb/100 and had no interval (A2), and nm25's 30-minute exploiter reads +0.75 mean over four seeds (+1.1, +0.8, +0.4, +0.7; SD 0.29), not the single +0.2 earlier limits came from (A1).",
+ "train": {
+  "init": "nm25",
+  "minutes": 360,
+  "gpu": "any",
+  "args": {"league-share": 0.15, "pfsp": 2, "max-frozen": 8},
+  "opponents": {"archetypes": true}
+ },
+ "checks": [
+  {"id": "no-harm", "type": "seqtest", "against": "nm25", "early": 0, "pass": "not_behind", "max": 40000, "looks": 8, "alpha": 0.025, "margin": 0.5,
+   "why": "it must not lose to nm25 in nm25's own game"},
+  {"id": "other-players", "type": "opponents", "against": ["reg", "tag", "maniac", "station"], "baseline": "nm25", "hands": 100000, "tolerance": 2.0, "rule": "interval",
+   "why": "the check nm44 failed, now paired: on the same deals as nm25, the 95% interval of the difference must lie above -2.0 bb/100 against every rule player, so a station gap like nm44's is ruled out, not merely unseen. At 100,000 hands the station interval is about +/-0.8, so a network level with nm25 passes about 998 times in 1,000"},
+  {"id": "styles", "type": "styles", "count": 20, "seed": 2026, "hands": 5000, "baseline": "nm25", "worst_tolerance": 2.0, "mean_tolerance": 0.0,
+   "why": "the league's purpose: at least as good as nm25 on average across 25 generated players, and never far behind (unchanged from nm44)"},
+  {"id": "bluffs", "type": "bluffers", "early": 0, "unit": "equity", "bluffers": ["jam-any", "jam-40", "raise-any"], "pass": "all_lose",
+   "why": "bluff jams and raises must lose prize equity against it, as against nm25"},
+  {"id": "robust", "type": "exploit", "minutes": 30, "seeds": 4, "limit": 1.25,
+   "why": "judged on the mean of four seeds, as nm25's +0.75 was measured (A1); the limit is that plus 0.5, about two and a half standard errors of a difference of two four-seed means. nm43 (+1.32) would fail it, nm44 (+0.50) would pass"},
+  {"id": "versions", "type": "consistency", "reference": "nm25", "deals": 4000,
+   "why": "a report for the reviewer: where nm45 decides differently from nm25, especially facing bets"}
+ ],
+ "adopt": "all"
+}
