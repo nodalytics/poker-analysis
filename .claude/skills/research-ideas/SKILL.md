@@ -25,7 +25,7 @@ and hand back proposals that can be judged.
   - `2026-11-23-review-and-plan.md`, the current plan;
   - `2026-11-17-methods-from-other-fields.md`, `2026-11-17-model-mathematics.md` and
     `2026-11-15-what-the-models-learn.md`;
-  - the literature notes (`2026-11-23-llm-poker-literature.md`).
+  - the literature notes (`2026-11-23-llm-poker-literature.md`, `2026-11-24-slumbot-nl.md`).
 - **`research/results/prereg/*.result.json`:** what was tried, how it was judged and the verdict.
 - **`research/blueprint/model.md`:** the heads-up solvers and re-solving, with measurements.
 

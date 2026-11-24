@@ -32,6 +32,9 @@ Studies:
 - [2026-11-23 — LLMs that play poker: six outside sources](docs/2026-11-23-llm-poker-literature.md): PokerSkill,
   PokerBench (paper and arena), Husky Hold'em Bench and a screen-reading LLM bot, read against our results; the best
   LLM agent loses 5.7 bb/100 to an equilibrium bot, and solver agreement is not play strength.
+- [2026-11-24 — Slumbot NL, DyypHoldem and a reading list](docs/2026-11-24-slumbot-nl.md): Slumbot's 2013 design set
+  against our heads-up blueprint (11 first-bet sizes to our 4, buckets 10-20x ours, disk-based distributed CFR); DyypHoldem
+  (DeepStack in PyTorch) cannot run as published; AV-AIVAT is the paper to read next for cheaper checks.
 
 - [Ideas](ideas/README.md): techniques researched for our problems (old and new), each as a ranked proposal with its
   cheapest test, before anything is run.

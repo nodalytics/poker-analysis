@@ -82,7 +82,7 @@ A0, housekeeping first: copy the three lab-only LBR reports into `results/`, re-
 | A1 | **Exploiter baseline**: the 30-minute exploiter against nm25, nm43 and nm44, 4 seeds each, same game; report mean and spread across seeds, and judge on the mean, not a run's last line | every adoption limit rests on nm25's +0.2 from one setup; one nm43 run read +1.0, +0.7, +2.1 and was judged on the last |
 | A2 | **Paired other-players check**: the same deals for candidate and baseline (duplicate seating), a confidence interval on the difference, tolerance stated as an interval, not 1.0 bb/100; first measure the spread of the current check by running nm25 against itself on several seeds | the check that failed nm44 reports no interval; nm44's own checkpoints read +36 to +121 against the station |
 | A3 | **ICM reference that can be a target**: push/fold with up to two callers and real MTT payouts on the bubble; then play a chart pusher against nm25 at 10bb final tables, in prize equity | before training toward a chart, show the chart beats nm25 |
-| A4 | **Heads-up re-measure**: run2 against Slumbot, plain and with the safe re-solve, 20,000+ hands each, and record which re-solver ran | every heads-up "win" so far has an interval through zero |
+| A4 | **Heads-up re-measure**: run2 against Slumbot, plain and with the safe re-solve, 20,000+ hands each, and record which re-solver ran; log every Slumbot bet above 2x pot and our answer (our tree stops at 2x, Slumbot's first bets go to 50x; `2026-11-24-slumbot-nl.md`) | every heads-up "win" so far has an interval through zero |
 
 ### Phase B: the confirmed fixes (each with a test that fails before it)
 
@@ -347,3 +347,11 @@ therefore unpaired; a paired design would need the deals drawn from their own ge
 - The release pack stays 8-bit (`avg.u8`, 55 MB, against `avg.f32`'s 222 MB). Measured on run2's 20.3 M rows
   (`scripts/pack_u8_cost.py`): mean total variation 0.066%, 99th percentile 0.32%, worst 0.94%; the actions it rounds
   to zero hold 0.014% of the probability, and Kestrel drops every action under 5% before it plays.
+
+**Outside reading (2026-11-24).** `2026-11-24-slumbot-nl.md` reads Slumbot NL (Jackson, AAAI 2013 workshop) in full
+and checks DyypHoldem and the papers around Slumbot. Three items join the plan:
+- A4 logs Slumbot's overbets (above 2x pot) and our answers; Slumbot NL allows first bets up to 50x pot, our tree 2x.
+- `mccfr_vec` trial on a small blueprint, scored by LBR: about 50 boards an iteration instead of one, and boards walked
+  through a shuffled list of all boards instead of drawn at random (Slumbot NL's two sampling choices).
+- Read AV-AIVAT (Li, Chen, Huang 2026: luck correction with a test valid at any stopping time) and estimate how many
+  deals it would have saved on nm45's checks, which ran 40,000 deals for no-harm alone.
