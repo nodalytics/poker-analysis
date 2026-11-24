@@ -36,6 +36,22 @@ What it means for us:
   them at random, which removes short-run board-sampling bias (his example: too many boards containing a 5 overvalue
   every hand holding a 5).
 
+## What we adopt
+
+Checked against `research/blueprint/mccfr_vec.cpp` and Kestrel. Already have: one board per iteration with every hand
+updated at once (Public Chance Sampling), skipping 95% of negative-regret subtrees (regret-based pruning), and the
+pseudo-harmonic mapping for off-tree bets (`kestrel/core/src/headsup.cpp`).
+
+| # | Adopt | Why | Cost | Status |
+|---|---|---|---|---|
+| 1 | **Shuffled board cycle** in `mccfr_vec`: walk a permutation of all boards, split across threads, instead of each thread drawing its own (today `std::random_device` seeds per thread, so boards repeat and others wait) | Removes short-run board bias for free | Small code change; a run on a small blueprint scored by LBR | Adopt |
+| 2 | **Bet sizes over card buckets**: add a small first bet (0.25 pot) and overbets (4x, maybe 8x) to the heads-up tree, before any more buckets | Run 7's finer card abstraction did not lower LBR, which matches Jackson's judgement; our leak is folding 45-55% of bets faced, a betting-tree question | Tree grows; needs a fresh solve | Adopt after A4 shows how often Slumbot overbets |
+| 3 | Several boards per update | Jackson's reason was disk cost; in memory the gain is unclear | Trial only | Trial |
+| 4 | Board-first (hierarchical) buckets | Our distribution-aware buckets did not help | | Skip for now |
+| 5 | Disk-based, multi-machine solving | The lab has the memory | | Skip |
+| 6 | DyypHoldem code | No licence; models gone | | No. The idea (value networks at re-solve leaves) stays on the list for later |
+| 7 | AV-AIVAT luck correction for the 9-max checks | Could cut the 40,000-deal checks | Read first | Read next |
+
 ## DyypHoldem (checked 2026-11-24)
 
 `github.com/lucky72s/dyypholdem`: a Python/PyTorch port of DeepHoldem, which is the no-limit hold'em version of DeepStack
