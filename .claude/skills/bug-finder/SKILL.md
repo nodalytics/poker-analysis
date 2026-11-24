@@ -1,6 +1,6 @@
 ---
 name: bug-finder
-description: Find, verify and fix bugs in this repo's poker code — the 9-max trainer and engine (research/scripts/ninemax_*.py, icm.py, seqtest.py, pipeline*.py), the heads-up CFR solvers (research/blueprint/*.cpp) and Kestrel's C++ (kestrel/core, kestrel/connectors) — and check bug claims made by audits, reviews, PDFs or teammates. Use it whenever someone reports or suspects a bug, asks "is this a bug?", hands over an audit or code review to check, sees a result that looks wrong (a number that contradicts a doc, a check that fails or passes too easily, Python and Kestrel disagreeing), or asks to hunt for bugs before a training run. Every verdict is proved by running the real code, not by reading it.
+description: Find, verify and fix bugs in this repo's poker code — the 9-max trainer and engine (research/scripts/ninemax_*.py, icm.py, seqtest.py, pipeline*.py), the heads-up CFR solvers (research/blueprint/*.cpp) and Kestrel's C++ (kestrel/core, kestrel/connectors) — and check bug claims made by audits, reviews or PDFs. Use it whenever someone reports or suspects a bug, asks "is this a bug?", hands over an audit or code review to check, sees a result that looks wrong (a number that contradicts a doc, a check that fails or passes too easily, Python and Kestrel disagreeing), or asks to hunt for bugs before a training run. Every verdict is proved by running the real code, not by reading it.
 ---
 
 # Bug finder

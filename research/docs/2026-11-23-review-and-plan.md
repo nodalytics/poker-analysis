@@ -1,6 +1,6 @@
-# A teammate's audit, checked, and the plan that follows (2026-11-23)
+# An audit, checked, and the plan that follows (2026-11-23)
 
-A teammate's audit ("CFR precision and 9-max tournament refinement roadmap", 2026-11-23) proposed bug fixes in
+An audit ("CFR precision and 9-max tournament refinement roadmap", 2026-11-23) proposed bug fixes in
 `research/` and `kestrel/`, then five pre-registered runs (nm45-nm49). Before planning on it, every claim was checked
 against the code and the result files. The code claims are worth having. Several numbers were misread, the headline
 heads-up fix changes nothing, and the roadmap repeats the pattern its own summary warns against. This document
@@ -248,7 +248,7 @@ only decisions whose values rest on a handful of deals. Whether it helps in play
   are the main noise. The ESS floor's effect on win rate is still to be measured (a paired match with and without it).
 
 
-**A second audit, checked (2026-11-24).** A teammate's line-by-line audit of `kestrel/core/src/` and the training code
+**A second audit, checked (2026-11-24).** A line-by-line audit of `kestrel/core/src/` and the training code
 lists six bugs; they are B5 (effective stack), B7 (mccfr_vec), B6 (off-tree mapping), B1 (seating), B2 (bounties) and
 B3 (search), described against the code before this plan's fixes, which were already in `main`. It adds two points:
 - Kestrel's practice tables still paid each knockout to the hand's biggest winner (the audit called this correct). They

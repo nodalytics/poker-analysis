@@ -1,7 +1,7 @@
 {
  "name": "nm44",
  "question": "Does training against a league (opponents picked by how hard they are, a league exploiter that hunts the whole population, retired exploiters kept frozen) make nm25 harder to exploit and stronger against players unlike itself, without losing to nm25?",
- "why": "A teammate's review (2026-11-22): identical bots may exploit predictable patterns in each other, and the bot is tested mostly against copies of itself. nm25 trained against itself, five rule players and one exploiter reset hourly. The league shrank 6-max cash's exploitable hole (nm28 +11.0 to nm35 +7.0 to nm37 +5.6) but was never tried in 9-max tournaments; nm41-nm43 all read above nm25's exploiter figure.",
+ "why": "A review (2026-11-22) found that identical bots may exploit predictable patterns in each other, and the bot is tested mostly against copies of itself. nm25 trained against itself, five rule players and one exploiter reset hourly. The league shrank 6-max cash's exploitable hole (nm28 +11.0 to nm35 +7.0 to nm37 +5.6) but was never tried in 9-max tournaments; nm41-nm43 all read above nm25's exploiter figure.",
  "train": {"init": "nm25", "minutes": 360, "gpu": "any", "args": {"league-share": 0.15, "pfsp": 2, "max-frozen": 8, "pool-share": 0.4}},
  "checks": [
   {"id": "no-harm", "type": "seqtest", "against": "nm25", "early": 0, "pass": "not_behind", "max": 40000, "looks": 8, "alpha": 0.025, "margin": 0.5,

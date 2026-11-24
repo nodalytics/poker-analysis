@@ -1,6 +1,6 @@
 ---
 name: demo-recording
-description: Record a screen video of Kestrel playing, or of tests and checks running live, to show teammates, partners or reviewers what the engine does — using a local Kestrel server and a scripted headless-browser (Playwright) recording, converted to MP4, with every frame checked for secrets. Use it whenever someone asks for a demo, a video, a screen recording, "show him it working", proof that a test was run, or visual evidence for a review, even if they don't say Playwright.
+description: Record a screen video of Kestrel playing, or of tests and checks running live, to show partners or reviewers what the engine does — using a local Kestrel server and a scripted headless-browser (Playwright) recording, converted to MP4, with every frame checked for secrets. Use it whenever someone asks for a demo, a video, a screen recording, "show it working", proof that a test was run, or visual evidence for a review, even if they don't say Playwright.
 ---
 
 # Demo recordings
