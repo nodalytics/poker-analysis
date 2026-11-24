@@ -36,6 +36,8 @@ LLM evaluations (local models as agents, the arena ladder, GUI control) are also
 
 ## Read first
 
+- [`docs/architecture.md`](docs/architecture.md): how everything fits together, with drawings: training, the
+  pipeline, the heads-up route, Kestrel's modules, a decision's path, and build and deployment.
 - [`research/docs/2026-11-11-next-phases.md`](research/docs/2026-11-11-next-phases.md): the roadmap
   (phases A–D) and the decisions so far.
 - [`research/docs/2026-11-11-mtt-strategy.md`](research/docs/2026-11-11-mtt-strategy.md): what good
