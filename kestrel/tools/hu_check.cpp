@@ -4,8 +4,9 @@
 //  2. the TexasSolver spot's effective stack is the smaller of the two players' (stack behind + street bet), as the
 //     Python bot's resolve() (a stand-in console_solver records the input script Kestrel writes; POSIX only);
 //  3. the defence floor on re-solved river spots can be switched off (set_resolve_floor), and is on by default.
-// Usage: kestrel_hu_check --pack PACK_DIR [--resolve-iters N]
+// Usage: kestrel_hu_check --pack PACK_DIR [--resolve-iters N]   (100 by default; ctest runs 30, about 17 s)
 #include <algorithm>
+#include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
@@ -29,8 +30,12 @@ namespace fs = std::filesystem;
 namespace {
 
 int failures = 0;
+const auto t0 = std::chrono::steady_clock::now();
+double secs() { return std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count(); }
+
 void check(bool ok, const std::string& what) {
-    std::printf("  %-4s %s\n", ok ? "ok" : "FAIL", what.c_str());
+    std::printf("  %-4s %s  [%.1fs]\n", ok ? "ok" : "FAIL", what.c_str(), secs());
+    std::fflush(stdout);
     failures += !ok;
 }
 
@@ -153,10 +158,10 @@ int main(int argc, char** argv) {
     {
         std::ifstream vf(std::string(KESTREL_TESTDATA) + "/vectors_headsup_floor.json");
         nlohmann::json V = nlohmann::json::parse(vf);
-        HUBlueprint on(pack, 0.05, 0.9), off(pack, 0.05, 0.9);
-        on.set_resolve(resolve_iters);
-        off.set_resolve(resolve_iters);
-        off.set_resolve_floor(false);
+        // one engine: a spot is re-solved once (cached by its river history) and decided with the floor on, then off
+        HUBlueprint bp(pack, 0.05, 0.9);
+        bp.set_resolve(resolve_iters);
+        check(bp.resolve_floor(), "the floor is on in a new engine");
         int resolved = 0, floored_on = 0, floored_off = 0, tried = 0;
         for (auto& C : V["cases"]) {
             if (C["board"].size() != 5 || !C["legal"]["facing"].get<bool>()) continue;
@@ -164,7 +169,10 @@ int main(int argc, char** argv) {
             if (!acpc::spot(C["action"], C["pos"], C["hole"].get<std::vector<std::string>>(),
                             C["board"].get<std::vector<std::string>>(), g, sp))
                 continue;
-            auto a = on.decide(sp, true, 50), b = off.decide(sp, true, 50);
+            bp.set_resolve_floor(true);
+            auto a = bp.decide(sp, true, 50);
+            bp.set_resolve_floor(false);
+            auto b = bp.decide(sp, true, 50);
             if (!a.resolved) continue;
             ++resolved;
             floored_on += a.floored, floored_off += b.resolved && b.floored;

@@ -11,7 +11,7 @@ research that feeds it (training, the models, the Python reference) is in `resea
 
 Double-click `kestreld` (`kestreld.exe` on Windows) in the release's `bin/` folder, or run it with no arguments. It starts the app and opens it in your browser. If it's already running, it just opens it. On Linux, `share/kestrel/install-desktop.sh` adds Kestrel to the applications menu.
 
-It finds its web app, logo and connectors next to itself, and your own connectors and models in `~/.config/kestrel/connectors` and `~/.local/share/kestrel/models`. The heads-up data pack goes in `~/.local/share/kestrel/pack`, or set `KESTREL_PACK`.
+It finds its web app, logo and connectors next to itself, and your own connectors and models in `~/.config/kestrel/connectors` and `~/.local/share/kestrel/models`. The heads-up data pack goes in `~/.local/share/kestrel/pack`, or set `KESTREL_PACK`. It stores the strategy in 8 bits (`avg.u8`); against training's 32-bit `avg.f32` that moves a decision by 0.066% on average and at most 0.94%, below the 5% under which Kestrel drops an action anyway, so releases ship the 8-bit file. Put `avg.f32` in the pack folder and Kestrel reads it instead.
 
 **From other devices on your network:** Kestrel listens on all interfaces (0.0.0.0) when started by a double-click, `kestreld start` or the desktop app. The "On your network" button shows the links to open on a phone or another PC. Each link carries an access token, and devices without it are refused. The WebSocket and TCP interfaces stay on this computer. For this computer only, put `{"lan": false}` in `~/.config/kestrel/settings.json` (or untick it in the desktop app's Settings); `kestreld serve` listens on the network only with `--lan on`.
 

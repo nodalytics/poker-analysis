@@ -137,7 +137,7 @@ add_test(NAME selftest
          COMMAND kestrel_selftest --vectors ${CMAKE_CURRENT_SOURCE_DIR}/testdata
                  --model ${KESTREL_DATA}/models/ninemax/nm17 --pack ${KESTREL_DATA}/blueprint/pack)
 add_test(NAME hu_check  # off-tree mappings stable within a hand, TexasSolver's effective stack, the re-solve floor switch
-         COMMAND kestrel_hu_check --pack ${KESTREL_DATA}/blueprint/pack)
+         COMMAND kestrel_hu_check --pack ${KESTREL_DATA}/blueprint/pack --resolve-iters 30)  # 30: 17 s, not 100 s
 if(TARGET kestreld AND UNIX)  # a local kestreld probed with curl: malformed input is a 400, shutdown refuses a public Host
   add_test(NAME server_check COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/server_check.sh $<TARGET_FILE:kestreld>)
 endif()
@@ -176,6 +176,11 @@ foreach(m nm25 nm17 nm30 nm37)
           DESTINATION ${CMAKE_INSTALL_DATADIR}/kestrel/models/ninemax/${m} OPTIONAL)
 endforeach()
 option(KESTREL_SHIP_PACK "include the heads-up data pack (about 80 MB) in the install, so heads-up tables work out of the box" OFF)
+# The pack carries the 8-bit strategy (avg.u8, 55 MB), not training's avg.f32 (222 MB), on purpose. Measured on run2
+# (2026-11-24, all 20.3 M node-bucket rows): the 8-bit policy moves a row by 0.066% total variation on average (99th
+# percentile 0.32%, worst 0.94%), and the actions it rounds to zero carry 0.014% of the probability; Kestrel purifies
+# every action under 5% (HUBlueprint purify 0.05) before it plays, so those are dropped either way. Four times the
+# download for no measurable change. A local build reads avg.f32 when the pack folder has it (HUBlueprint prefers it).
 if(KESTREL_SHIP_PACK)
   foreach(f tree.tsv avg.u8 flop_buckets.u8 turn_buckets.u8 river_cuts.f32 meta.txt)
     install(FILES ${KESTREL_DATA}/blueprint/pack/${f} DESTINATION ${CMAKE_INSTALL_DATADIR}/kestrel/pack)

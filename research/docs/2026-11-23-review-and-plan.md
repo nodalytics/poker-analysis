@@ -332,3 +332,18 @@ floor stays (it costs nothing and keeps decisions resting on a handful of deals 
 worth more work. One finding about the method: the two arms' per-deal results are uncorrelated (r = −0.001 to 0.021,
 no deal identical), so "the same seed" does not give the same deals in `ninemax_search.py`. The intervals above are
 therefore unpaired; a paired design would need the deals drawn from their own generator, apart from search's draws.
+
+**Paired matches and four Kestrel follow-ups (2026-11-24).**
+- `ninemax_search.match` is paired now: the tables' stacks and payouts follow `--seed`, and every action is drawn
+  from `Draws`, one uniform per (deal, seat, step of the hand) from a generator of the match's own, apart from search's
+  rollout draws (torch's global generator, never seeded there, drew both before). `ninemax_search_check.py` part 5:
+  the network twice is identical on all 64 deals; search with the floor at 1.0 (always the network's policy) matches
+  the network on 100% of deals; with and without the floor, 92% of deals are identical and the per-deal correlation is
+  0.85 (0.00 in the match above). `ninemax_lbr.py` uses the same draws for its two arms, and its tables now carry the
+  board (texture networks read it).
+- Kestrel's settings page has the defence floor on re-solved river spots (on by default; `resolve_floor`).
+- `hu_check` re-solves each river spot once and decides it with the floor on and off from the cache, and ctest runs it
+  at 30 iterations: 18 s, from 103 s.
+- The release pack stays 8-bit (`avg.u8`, 55 MB, against `avg.f32`'s 222 MB). Measured on run2's 20.3 M rows
+  (`scripts/pack_u8_cost.py`): mean total variation 0.066%, 99th percentile 0.32%, worst 0.94%; the actions it rounds
+  to zero hold 0.014% of the probability, and Kestrel drops every action under 5% before it plays.

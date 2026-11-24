@@ -56,6 +56,7 @@ class HUBlueprint {
     // the defence floor on top of a re-solved strategy: on by default (LBR +105 with it, +146 without; it voids the
     // re-solve's formal safety guarantee). Off, the re-solve is only purified (the Python bot's BLUEPRINT_SAFE_FLOOR=0)
     void set_resolve_floor(bool on) { resolve_floor_ = on; }
+    bool resolve_floor() const { return resolve_floor_; }
     // TexasSolver on the turn and river, from both players' blueprint ranges (as the Python bot's resolve())
     void set_texassolver(const TexasSolverConfig& c) { ts_ = c, use_ts_ = true; }
     HUAnswer decide(const HUSpot& spot, bool deterministic = false, int64_t round_to = 0);

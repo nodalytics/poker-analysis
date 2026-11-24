@@ -8,6 +8,10 @@
            the variance of Q(a) - Q(b) over repeated searches of the same spots, with the same deals (rollout noise)
            and with fresh deals (all of search's noise), against independent draws (printed, not gated: run on the
            old search, where both arms are the same algorithm, it shows how far the reading moves by chance).
+5. paired  match() with the same seed plays the same deals, stacks and action draws: the network twice gives the
+           same per-deal results; search with the floor at 1.0 (always the network's policy) matches the network
+           deal for deal; search with and without the floor differ only on deals a searched decision changed (fails
+           before 2026-11-24, when the match's draws came from torch's unseeded global generator).
 4. ess     below the ESS floor the decision is the network's own policy (counted in Search.fallback); with the floor
            off it is the greedy argmax. Prints the ESS distribution, the fallback rate and how stable the argmax is
            by ESS (what the default floor rests on).
@@ -277,13 +281,39 @@ def part_crn_ess(dealer, B, dev, a):
           f"(at 0.05: {np.mean(e < 0.05):.2%}, at 0.1: {np.mean(e < 0.1):.2%})")  # fmt: skip
 
 
+def part_paired(dealer, B, dev, a):
+    """Two runs of match() with the same seed are paired deal by deal (5. in the module docstring)."""
+    print("paired: match() with the same seed", flush=True)
+    net, menu = model("nm25", dealer, B, dev)
+    n, seed = a.paired_hands, 777
+
+    def run(search):
+        dealer.seed = seed  # every arm starts from the same dealer state, as separate processes with --seed would
+        per, searched = ns.match(net, search, dealer, menu, n, dev, seed=seed)
+        return per.cpu().numpy().astype(np.float64), searched
+
+    base, _ = run(None)
+    again, _ = run(None)
+    check(np.array_equal(base, again), f"the network twice: identical on all {n} deals")
+    always, k = run(ns.Search(net, dealer, menu, 16, min_ess=1.0))
+    same = np.isclose(always, base, atol=1e-6).mean()
+    check(k > 0 and same > 0.99, f"search with the floor at 1.0 ({k} decisions, all the network's policy) matches "
+          f"the network on {same:.1%} of deals")  # fmt: skip
+    off, k = run(ns.Search(net, dealer, menu, 16, min_ess=0.0))
+    same = np.isclose(off, always, atol=1e-6).mean()
+    r = np.corrcoef(off, always)[0, 1]
+    check(r > 0.3, f"search with and without the floor: {same:.1%} of deals identical, per-deal "
+          f"correlation {r:.3f} ({k} decisions searched)")  # fmt: skip
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--spots", type=int, default=16)
     ap.add_argument("--samples", type=int, default=256)
     ap.add_argument("--repeats", type=int, default=16)
     ap.add_argument("--hands", type=int, default=300, help="the ESS survey's match")
-    ap.add_argument("--parts", default="board,bounty,crn")
+    ap.add_argument("--paired-hands", type=int, default=64, help="deals per arm in the paired part")
+    ap.add_argument("--parts", default="board,bounty,crn,paired")
     ap.add_argument("--lib", default=os.path.join(ROOT, "blueprint", "libbp7.so"))
     ap.add_argument("--abs", default=os.path.join(ROOT, "blueprint", "out"))
     a = ap.parse_args()
@@ -292,7 +322,7 @@ def main():
     B = int(open(os.path.join(a.abs, "meta.txt")).read().split()[1])
     set_mode(tourney=True)
     dealer = Dealer(a.lib, a.abs, 9, B, dev, seed=4242)
-    parts = {"board": part_board, "bounty": part_bounty, "crn": part_crn_ess}
+    parts = {"board": part_board, "bounty": part_bounty, "crn": part_crn_ess, "paired": part_paired}
     for p in a.parts.split(","):
         parts[p](dealer, B, dev, a)
     print("all search checks pass" if not FAILS else "FAIL:\n  " + "\n  ".join(FAILS))

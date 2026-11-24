@@ -756,6 +756,9 @@ QWidget* Window::settingsPage() {
     port_ = spin(1024, 65535), wsPort_ = spin(0, 65535), tcpPort_ = spin(0, 65535);
     resolveIters_ = spin(50, 20000), tsThreads_ = spin(1, 256), searchSamples_ = spin(1024, 4096);
     lan_ = new QCheckBox("Reach Kestrel from other devices on the network (they need the access link)");
+    resolveFloor_ = new QCheckBox("Defence floor on re-solved river spots");
+    resolveFloor_->setToolTip("On (recommended): facing a big river bet, a re-solved decision never folds a hand in the "
+                              "top P/(P+B) of its range (pot P, bet B). Off: the re-solve alone.");
     defaultModel_ = new QComboBox;
     tsBin_ = new QLineEdit, tsRes_ = new QLineEdit, sessionsDir_ = new QLineEdit, packDir_ = new QLineEdit, dbPath_ = new QLineEdit;
     for (auto* e : {tsBin_, tsRes_, sessionsDir_, packDir_, dbPath_}) e->setPlaceholderText("default");
@@ -798,6 +801,7 @@ QWidget* Window::settingsPage() {
     auto fp = new QFormLayout(play);
     fp->addRow("Default 9-max model", defaultModel_);
     fp->addRow("River re-solve iterations", resolveIters_);
+    fp->addRow("", resolveFloor_);
     fp->addRow("9-max search deals per decision", searchSamples_);
     fp->addRow("TexasSolver program", browse(tsBin_, false));
     fp->addRow("TexasSolver resources", browse(tsRes_, true));
@@ -850,6 +854,7 @@ void Window::loadSettings() {
     lan_->setChecked(s.value("lan").toBool(true));
     resolveIters_->setValue(s.value("resolve_iters").toInt(500));
     searchSamples_->setValue(s.value("search_samples").toInt(1024));
+    resolveFloor_->setChecked(s.value("resolve_floor").toBool(true));
     tsThreads_->setValue(s.value("texassolver_threads").toInt(8));
     tsBin_->setText(s.value("texassolver_bin").toString());
     tsRes_->setText(s.value("texassolver_resources").toString());
@@ -880,6 +885,7 @@ void Window::saveSettings() {
     s["default_model"] = defaultModel_->currentText();
     s["resolve_iters"] = resolveIters_->value();
     s["search_samples"] = searchSamples_->value();
+    s["resolve_floor"] = resolveFloor_->isChecked();
     s["texassolver_threads"] = tsThreads_->value();
     auto put = [&](const char* k, QLineEdit* e) {
         if (e->text().trimmed().isEmpty()) s.remove(k);

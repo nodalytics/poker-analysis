@@ -36,8 +36,8 @@ import torch.nn.functional as F
 
 from ninemax_engine import Dealer, Menu, Tables, strength
 from ninemax_eval import load
-from ninemax_search import result, take, with_pay
-from ninemax_selfplay import context, features, masked
+from ninemax_search import Draws, icdf, result, take, with_pay
+from ninemax_selfplay import board_of, context, features, masked
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 NBOARD = {0: 0, 1: 3, 2: 4, 3: 5}
@@ -159,17 +159,23 @@ class LBR:
         return best
 
 
-def match(net, dealer, menu, n, dev, lbr):
+def match(net, dealer, menu, n, dev, lbr, seed=0):
     """LBR in each seat against 8 copies of the network, and the network itself in the same seats on the same deals:
-    the per-deal results (bb/100) of both, and LBR's decisions."""
+    the per-deal results (bb/100) of both, and LBR's decisions. Both arms draw every action from the same uniforms
+    (ninemax_search.Draws, by deal, seat and step), so they play each deal identically until LBR acts differently;
+    the tables carry the board, as in training (texture networks read it)."""
     P = dealer.P
     bk, rk, cd = dealer.deal(n, cards=True)
-    stacks, pay = context(n, P, dev)
+    with torch.random.fork_rng(devices=[] if str(dev) == "cpu" else None):
+        torch.manual_seed(seed)
+        stacks, pay = context(n, P, dev)
     out = {"lbr": torch.zeros(n, device=dev), "net": torch.zeros(n, device=dev)}
     decisions = 0
     for who in ("net", "lbr"):
         for h in range(P):
             T = with_pay(Tables(n, P, menu, dev, stacks=stacks), pay)
+            T.board = board_of(cd, P, dev)
+            draws = Draws(n, seed, h, dev)
             hist = [[] for _ in range(n)]
             while not bool(T.done.all()):
                 g = (~T.done).nonzero().squeeze(1)
@@ -178,7 +184,7 @@ def match(net, dealer, menu, n, dev, lbr):
                 s = strength(dealer, bk[g], T.street[g]).gather(1, i[:, None]).squeeze(1)
                 with torch.no_grad():
                     lg, _ = net(feat, bk[g, i], T.street[g], s)
-                a = torch.multinomial(F.softmax(masked(lg, legal), 1), 1).squeeze(1)
+                a = icdf(F.softmax(masked(lg, legal), 1), draws.take(g))
                 if who == "lbr":
                     heads_up = (~T.folded[g]).sum(1) == 2
                     mine = (i == h) & (T.street[g] >= 1) & heads_up
@@ -220,7 +226,7 @@ def main():
     lbr = LBR(net, dealer, a.runouts, np.random.default_rng(a.seed))
     t0 = time.time()
     with torch.no_grad():
-        out, decisions = match(net, dealer, menu, a.hands, dev, lbr)
+        out, decisions = match(net, dealer, menu, a.hands, dev, lbr, a.seed)
     gain = (out["lbr"] - out["net"]).cpu().numpy()
     m, se = float(gain.mean()), float(gain.std() / math.sqrt(len(gain)))
     res = {"run": a.run, "hands_trained": int(hands), "hands": a.hands, "runouts": a.runouts,

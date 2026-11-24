@@ -84,7 +84,7 @@ class Window : public QMainWindow {
 
     // settings (admin)
     QSpinBox *port_ = nullptr, *wsPort_ = nullptr, *tcpPort_ = nullptr, *resolveIters_ = nullptr, *searchSamples_ = nullptr, *tsThreads_ = nullptr;
-    QCheckBox* lan_ = nullptr;
+    QCheckBox *lan_ = nullptr, *resolveFloor_ = nullptr;
     QComboBox* defaultModel_ = nullptr;
     QLineEdit *tsBin_ = nullptr, *tsRes_ = nullptr, *sessionsDir_ = nullptr, *packDir_ = nullptr, *dbPath_ = nullptr;
     QLabel *settingsNote_ = nullptr, *lanLinks_ = nullptr;

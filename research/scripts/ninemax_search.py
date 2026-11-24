@@ -135,7 +135,11 @@ def pick(pr, draws, key):
     """Inverse-CDF sampling: one action per row of pr [n, A] from the uniforms draws[key] (key [n]: the row's sample,
     decision * N + deal). Rows with the same key (the same deal under different candidate moves or continuations) get
     the same uniform, so their draws are coupled: that pairs the rollouts of different moves."""
-    u = draws[key]
+    return icdf(pr, draws[key])
+
+
+def icdf(pr, u):
+    """One action per row of pr [n, A] from the uniforms u [n], by inverse CDF (never an action of probability 0)."""
     c = pr.cumsum(1)
     a = (c <= u[:, None] * c[:, -1:]).sum(1)
     last = pr.shape[1] - 1 - (pr > 0).flip(1).float().argmax(1)  # the last action with probability > 0
@@ -251,15 +255,41 @@ class Search:
         return torch.where(low[:, None], pnet, out)
 
 
-def match(net, search, dealer, menu, n, dev, max_live=3, first_street=1, opp_bias=0, bias=5.0):
+class Draws:
+    """The match's action draws, paired across runs: one uniform per (deal, step of its hand), column k drawn as the
+    k-th block of n from a generator seeded by (seed, hero seat). Two runs with the same seed (search on and off, two
+    ESS floors) then play every deal identically until one of them makes a different decision."""
+
+    def __init__(self, n, seed, h, dev):
+        self.n, self.dev = n, dev
+        self.gen = torch.Generator(device=dev)
+        self.gen.manual_seed(int(seed) * 1_000_003 + h)
+        self.U = torch.empty((n, 0), device=dev)
+        self.step = torch.zeros(n, dtype=torch.long, device=dev)
+
+    def take(self, g):
+        k = self.step[g]
+        while self.U.shape[1] <= int(k.max()):  # a column at a time: column j is the same however far a run got
+            self.U = torch.cat([self.U, torch.rand((self.n, 1), generator=self.gen, device=self.dev)], 1)
+        self.step[g] += 1
+        return self.U[g, k]
+
+
+def match(net, search, dealer, menu, n, dev, max_live=3, first_street=1, opp_bias=0, bias=5.0, seed=None):
     """Hero (search, or the network when search is None) in each seat against P-1 copies of the network, same deals.
-    Returns hero's bb/100 per deal (mean over seats), and the number of searched decisions."""
+    Returns hero's bb/100 per deal (mean over seats), and the number of searched decisions. Everything random in the
+    match (deals, stacks and payouts, every action) follows seed (default: the dealer's seed at the start), so two
+    runs with the same seed are paired deal by deal; search's own rollouts keep their own draws."""
     P = dealer.P
+    seed = dealer.seed if seed is None else seed
     bk, rk, cd = dealer.deal(n, cards=True)
-    stacks, pay = context(n, P, dev)
+    with torch.random.fork_rng(devices=[] if str(dev) == "cpu" else None):  # the tables, without touching the caller's
+        torch.manual_seed(seed)
+        stacks, pay = context(n, P, dev)
     total = torch.zeros(n, device=dev)
     searched = 0
     for h in range(P):
+        draws = Draws(n, seed, h, dev)
         T = with_pay(Tables(n, P, menu, dev, stacks=stacks), pay)
         T.board = board_of(cd, P, dev)  # texture networks read the board (None of them: unused)
         hist = [[] for _ in range(n)]
@@ -284,7 +314,7 @@ def match(net, search, dealer, menu, n, dev, max_live=3, first_street=1, opp_bia
                     sel = lambda x: None if x is None else x[g[el]]  # noqa: E731
                     probs[el] = search.decide(sel(stacks), sel(pay), [hist[t] for t in gj], h, fx)
                     searched += len(gj)
-            a = torch.multinomial(probs, 1).squeeze(1)
+            a = icdf(probs, draws.take(g))
             for t, s, x in zip(g.tolist(), i.tolist(), a.tolist()):
                 hist[t].append((s, x))
             T.step(g, a)
@@ -312,7 +342,7 @@ def main():
     ap.add_argument("--no-crn", action="store_true", help="independent rollout draws per move (before 2026-11-23)")
     ap.add_argument("--out")
     ap.add_argument(
-        "--per-deal", help="save each deal's result (bb/100, .npy) for paired comparisons on the same deals"
+        "--per-deal", help="save each deal's result (bb/100, .npy): runs with the same --seed are paired deal by deal"
     )
     ap.add_argument("--lib", default=os.path.join(ROOT, "blueprint", "libbp6.so"))
     ap.add_argument("--abs", default=os.path.join(ROOT, "blueprint", "out"))
