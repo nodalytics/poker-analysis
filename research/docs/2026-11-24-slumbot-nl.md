@@ -47,9 +47,9 @@ pseudo-harmonic mapping for off-tree bets (`kestrel/core/src/headsup.cpp`).
 | 1 | **Shuffled flop cycle** in `mccfr_vec`: walk a permutation of all boards, split across threads, instead of each thread drawing its own (today `std::random_device` seeds per thread, so boards repeat and others wait) | Removes short-run board bias for free | Small code change | Built (`--flop-cycle`); on trial |
 | 2 | **Bet sizes over card buckets**: add a small first bet (0.25 pot) and overbets (4x, maybe 8x) to the heads-up tree, before any more buckets | Run 7's finer card abstraction did not lower LBR, which matches Jackson's judgement; our leak is folding 45-55% of bets faced, a betting-tree question | Tree grows 2.9x; needs a fresh solve | Built (`BLUEPRINT_TREE=wide`: adds 0.25x and 4x pot first bets); on trial |
 | 3 | Several boards per update | Jackson's reason was disk cost; in memory the gain is unclear | One more table | Built (`--batch-boards B`); on trial |
-| 4 | Board-first (hierarchical) buckets | Our distribution-aware buckets did not help | | Skip for now |
+| 4 | Board-first (hierarchical) buckets | Our distribution-aware buckets did not help | | Other ways to group cards, below; a diagnostic decides first |
 | 5 | Disk-based, multi-machine solving | The lab has the memory | | Skip |
-| 6 | DyypHoldem code | No licence; models gone | | No. The idea (value networks at re-solve leaves) stays on the list for later |
+| 6 | DyypHoldem code | No licence; models gone | | Code no. The idea (value networks at re-solve leaves): test plan below |
 | 7 | AV-AIVAT luck correction for the 9-max checks | Could cut the 40,000-deal checks | Read first | Read next |
 
 ### Built and on trial (2026-11-24)
@@ -84,6 +84,86 @@ Pass rules, set before the results: a sampling option is adopted if both its run
 random-board runs; otherwise it stays an option. The wide tree is adopted if its LBR interval lies below the standard
 tree's estimate at the same compute; if the intervals overlap, the result is "not shown" and the overbet count from A4
 decides whether a longer wide solve is worth it.
+
+## Other ways to group cards
+
+Slumbot NL's board-first buckets are one option; run 7's finer distribution-aware buckets did not lower LBR. Before
+building another abstraction, find out whether cards are the leak at all.
+
+**What we have** (both imperfect recall, 169 pre-flop classes):
+
+| | Percentile (`abstraction.cpp`, `out/`, 200 a street) | Distribution-aware (`abstraction_pa.cpp`, `out_pa/`, 500 a street) |
+|---|---|---|
+| River | hand strength against all opponent hands | hand strength against 8 opponent groups (OCHS) |
+| Turn | mean squared strength over the rivers | 50-bin histogram of river strength |
+| Flop | mean of the turn values | 50-bin histogram of turn strength |
+| Grouping | equal-population cuts | k-means (squared distance between histograms, standing in for EMD) |
+
+`vec_init` gives every street the largest street's count, so per-street counts work but cost memory at the maximum.
+
+**A finding about LBR:** it only ever bets the pot or all-in (`scripts/lbr.py`), and both are on the blueprint's menu.
+So LBR has never tested bet translation, and against a pot bet folding about 50% is the defence the price requires.
+The 45-55% fold rate is therefore not by itself a leak; the question is which hands fold, which is a card question.
+`LBR_SIZES` (8547f1e) lets LBR bet off-menu sizes, so translation can now be measured.
+
+**The diagnostic (queued on the lab, starts when the sampling trial ends):** on run 2, `br_vec` inside the abstraction,
+and LBR over the same 30,000 deals with on-menu sizes (pot, all-in) and with off-menu sizes (0.5, 0.75 and 1.5 pot,
+all-in). Run 7's tables are no longer on the lab, so run 2 is the only blueprint measured. Rules, set before results:
+- off-menu LBR beats on-menu LBR by more than 20 bb/100 with separate intervals: translation is a material leak, and
+  the wide tree comes before any card work;
+- `br_vec` is at least half of LBR: the solve has not converged, so work on training, not buckets;
+- `br_vec` under 10 and translation not material: the gap is card resolution, and the card options below are next;
+- otherwise: not shown, and card abstraction is left alone.
+
+**Card options, ranked** (from the literature as recalled, not re-read; no numbers quoted from papers):
+
+| # | Option | Why it might help where run 7 did not | Cost |
+|---|---|---|---|
+| 1 | Most buckets on the river (e.g. 200 flop, 500 turn, 3,000 river) | LBR's wins come from bets folded to, most on the river; run 7 spread buckets evenly | Small: a few lines in `vec_init` for per-street counts, one abstraction pass, one solve |
+| 2 | Asymmetric abstraction: a finer best responder than the player (also a `br_vec` diagnostic of card loss) | Measures card loss inside the tree directly | Moderate |
+| 3 | Board-texture features (flush, pairs, straights) added to the strength features | A soft form of Slumbot's board-first grouping in a single table | Small |
+| 4 | Potential-aware flop buckets: histograms over turn buckets with real EMD (Ganzfried and Sandholm 2014) | The step beyond our histograms of a single strength number | Large |
+| 5 | More OCHS opponent groups (16-32, or groups from the blueprint's own river ranges) | 8 fixed groups may not match the ranges reached | Trivial |
+| 6 | Learned groupings from the networks' per-hand values | Groups hands by how they should be played, not by equity | Moderate; untested anywhere we know of |
+
+## Value networks at the re-solve leaves (DeepStack's idea), test plan
+
+**Today (from the code):** our safe re-solve is river only (`resolve.cpp` refuses any other street) and plays exactly
+to the end of the hand, so no leaf values exist anywhere. The only turn re-solve is TexasSolver, unsafe, with one bet
+and one raise size. On 200 river spots the safe re-solve lowers the opponent's best response by 161 ± 17 chips a hand
+pair; LBR with it reads +105 [+42, +168], level with the blueprint (`research/blueprint/model.md` 5.4).
+
+**The test is on the turn**, where exact answers are still affordable (48 river cards), so a network's error can be
+measured against ground truth before it is trusted on the flop. A safe turn re-solve (the same gadget, with the
+opponent's values from a best response to the blueprint over turn and river), with the river handled four ways:
+
+| Arm | River | Role |
+|---|---|---|
+| B | TexasSolver's unsafe turn re-solve | today |
+| C | every river card solved exactly | ground truth |
+| D | blueprint values at the leaves | the cheap alternative |
+| E | river value network at the leaves | DeepStack's idea |
+
+**The network:** inputs are both players' ranges over river buckets, the pot relative to the stack, and board features;
+outputs are counterfactual values per bucket for both players, as fractions of the pot, with DeepStack's zero-sum
+correction. Data: river spots solved by `resolve.cpp` with generated ranges, one fifth taken from ranges blueprint
+self-play actually reaches, boards from a shuffled cycle; 100 k, 300 k, then 1 M samples (DyypHoldem's maintainer
+cites 1 M a street for the original models). The estimate is a few hundred core-hours of solving and a few GPU-hours of
+training; time 1,000 river solves first to replace the estimate with a measurement.
+
+| Stage | Work | Go on if |
+|---|---|---|
+| 0 | River network: data, training, held-out checks | error on blueprint-reached ranges under about 2-3% of the pot; zero-sum residual under 0.5% of the pot before the correction; the learning curve has flattened |
+| 1a | Safe turn re-solve, arms C, D, E on 200 turn spots, each scored by an exact best response | E within C's standard error. If D is level with C, blueprint leaves suffice: ship D and stop the network work |
+| 1b | LBR (30,000 hands), then Slumbot (20,000 hands): B against the better of C and E | LBR falls by more than about 30 bb/100 from +105 |
+| 2 | Turn network, flop re-solve stopped at the turn | flop spots improve over blueprint leaves, and LBR's flop wins shrink |
+
+**First step either way:** arm C alone, a safe turn re-solve with exact rivers. It needs no network, it is the next
+step `model.md` already names, and it is the baseline every other arm is judged against.
+
+**Expectations:** a re-solve over the same bet menu cannot fix a menu leak, so the turn re-solve should carry the wide
+tree's sizes too. Network error compounds street by street, and production Kestrel has no GPU path. DeepStack never
+claimed to beat Slumbot (DyypHoldem issue #4); the realistic best case is LBR lower by tens of bb/100.
 
 ## DyypHoldem (checked 2026-11-24)
 
