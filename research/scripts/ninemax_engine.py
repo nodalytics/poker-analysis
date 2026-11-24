@@ -338,6 +338,7 @@ def run_dealer(run, lib, absdir, players, B, dev, seed, tmp):
     d = os.path.dirname(run) if run.endswith(".pt") else run
     if absdir is None:
         absdir = os.path.join(ROOT, json.load(open(os.path.join(d, "config.json"))).get("abs", "blueprint/out"))
+    os.makedirs(tmp, exist_ok=True)  # /tmp is emptied by a reboot
     copy = os.path.join(tmp, f"libbp_{len(os.listdir(tmp))}.so")
     shutil.copy(lib, copy)
     return Dealer(copy, absdir, players, B, dev, seed=seed)

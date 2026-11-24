@@ -195,8 +195,30 @@ def check_opponents_rule(tmp):
     expect(not errs, f"opponents.rule = 'interval' validates ({errs})")
 
 
+def check_stranded(tmp):
+    """A restart mid-training leaves a checkpoint (one is written every eval period); only a finished run is judged."""
+    here = pipeline.HERE
+    pipeline.HERE = tmp
+    try:
+        os.makedirs(os.path.join(tmp, "blueprint", "nm97"))
+        open(os.path.join(tmp, "blueprint", "nm97", "checkpoint.pt"), "w").close()
+        st = os.path.join(tmp, "results", "pipeline", "nm97", "state.json")
+        os.makedirs(os.path.dirname(st))
+        base = {"name": "nm97", "status": "training", "pid": None, "training_started": "2026-11-24T12:11:06Z"}
+        json.dump(base, open(st, "w"))
+        got = pipeline.stranded()
+        expect(got == [("nm97", "train")], f"a partial checkpoint resumes training, not the checks ({got})")
+        json.dump(dict(base, status="checking", trained="2026-11-24T18:11:06Z"), open(st, "w"))
+        got = pipeline.stranded()
+        expect(got == [("nm97", "checks")], f"a trained run resumes at the checks ({got})")
+    finally:
+        pipeline.HERE = here
+
+
 def main():
     flags = pipeline.trainer_flags()
+    with tempfile.TemporaryDirectory() as tmp:
+        check_stranded(tmp)
     with tempfile.TemporaryDirectory() as tmp:
         check_opponents_rule(tmp)
     with tempfile.TemporaryDirectory() as tmp:

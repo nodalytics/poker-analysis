@@ -446,6 +446,12 @@ class Run:
             return
         if os.path.exists(os.path.join(HERE, out)) and not self.state.get("training_started"):
             raise RuntimeError(f"{out} already exists and is not this pipeline's run")
+        if os.path.exists(os.path.join(HERE, out)):
+            # interrupted (a restart, a crash): ninemax_selfplay.py would continue the checkpoint for another full
+            # --minutes, which is not the recipe; keep the partial run aside and train from the start again
+            aside = f"{out}.interrupted-{now().replace(':', '')}"
+            os.rename(os.path.join(HERE, out), os.path.join(HERE, aside))
+            self.save(interrupted=self.state.get("interrupted", []) + [aside])
         cmd = [PY, "scripts/ninemax_selfplay.py", out, "--init", f"blueprint/{t.get('init', 'nm25')}/checkpoint.pt"]
         for k, v in args.items():
             if v is True:
@@ -753,8 +759,9 @@ def stranded():
                                     capture_output=True).returncode == 0  # fmt: skip
             if trainer or runner:
                 continue  # still training, or a run process is on it (one started by hand): look again later
-            ck = os.path.join(HERE, "blueprint", s["name"], "checkpoint.pt")
-            out.append((s["name"], "checks" if (s.get("trained") or os.path.exists(ck)) else "train"))
+            # a checkpoint alone is not a trained run: training writes one every eval period, so a restart mid-run
+            # leaves a partial network that the checks must never judge; train() starts that run over
+            out.append((s["name"], "checks" if s.get("trained") else "train"))
     return out
 
 
