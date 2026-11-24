@@ -90,6 +90,29 @@ flowchart TB
 - Every chair an opponent takes must have a player in it, and each bust's bounty goes to whoever won the pot that
   took the player's last chips (fixes B1 and B2 in `research/docs/2026-11-23-review-and-plan.md`).
 
+### 2.1 What kind of learning this is, and what it is not
+
+| Part | Method | Where |
+|---|---|---|
+| 9-max networks | Gradient descent on self-play: a NeuRD policy update (a policy gradient built for games), a KL pull toward the starting network, an entropy bonus | `ninemax_selfplay.py` |
+| Opponent population | Population-based training in the style of AlphaStar's league and PSRO (below) | `ninemax_selfplay.py --league-share --pfsp --max-frozen` |
+| Heads-up strategy | Counterfactual regret minimisation: vector MCCFR with public chance sampling, DCFR weighting | `mccfr_vec` (section 4) |
+| Short-stack reference | ICM push/fold equilibrium by fictitious play, up to two callers | `icm_pushfold.py` |
+| Meta-game analysis | Replicator dynamics (evolution's model) over a population of strategies: which survive against each other; analysis only, it trains nothing | `meta_game.py` |
+
+**The league.** The opponents the learner meets are a population:
+- rule players (reg, tag, maniac, station) and styles (archetypes, generated, human-fitted);
+- earlier runs' networks (`--pool-nets`), frozen;
+- the learner's own last few checkpoints (`--pool-snapshots`, 5 by default);
+- a main exploiter, trained to beat the learner;
+- a league exploiter, trained to beat the whole population. At each reset (every `--exploit-reset` minutes, 60 by default) it is frozen into the pool, and `--max-frozen` caps how many are kept.
+
+Prioritised fictitious self-play (`--pfsp`) picks opponents by weight (1 − p_win)^k, so the ones the learner beats least come up most. The population changes as training goes: exploiters are added and checkpoints replace older ones.
+
+**No genetic algorithms.** Nothing breeds networks by crossover and mutation, and no population of learners competes for survival. The population above is there only to choose opponents. Every network is still trained by gradients.
+- **On the weights:** a genetic algorithm or evolution strategy would be a poor fit. The networks have millions of weights and the gradient gives a direction for each. An evolutionary search would need far more hands for the same improvement, and one poker reading is already noisy at 100,000 hands.
+- **On the training settings:** evolution could search a handful of them (pool mix, exploiter share, entropy), but each candidate costs a 6-hour run plus its checks. A small population over a few generations would take weeks of GPU time. One registered run at a time (section 3) answers the same questions more cheaply. The 2026-11-08 methods survey (`research/docs/2026-11-08-blueprint-speed-accuracy.md`) listed PSRO and population-based training under "Ecology / evolution"; the league is that idea, built.
+
 ## 3. From a run file to Kestrel
 
 ```mermaid
