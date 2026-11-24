@@ -1,0 +1,157 @@
+{
+ "net": "blueprint/nm25",
+ "deals": 500000,
+ "batch": 25000,
+ "seed": 21,
+ "rules": {
+  "open_limp": false,
+  "ante": 1.0,
+  "early_shove_bb": 0.0
+ },
+ "stages": {
+  "final": {
+   "configs": 40,
+   "deals": 500000,
+   "equity_difference": [
+    -0.143,
+    -0.221,
+    -0.065
+   ],
+   "equity_chart": [
+    -0.114,
+    -0.201,
+    -0.028
+   ],
+   "equity_control_nm25": [
+    0.029,
+    -0.036,
+    0.094
+   ],
+   "chips_difference": [
+    1.656,
+    1.507,
+    1.805
+   ],
+   "spots": {
+    "first_in": {
+     "count": 2155173,
+     "chart_in": 0.251,
+     "nm25_same_action": 0.105,
+     "nm25_in_any": 0.223
+    },
+    "facing_shove": {
+     "count": 855213,
+     "chart_in": 0.133,
+     "nm25_same_action": 0.11,
+     "nm25_in_any": 0.139
+    },
+    "shove_and_call": {
+     "count": 85076,
+     "chart_in": 0.074,
+     "nm25_same_action": 0.068,
+     "nm25_in_any": 0.075
+    },
+    "first_in_allin_illegal": 7006
+   },
+   "by_hero_stack": {
+    "0-8bb": {
+     "share": 0.511,
+     "difference_per_seat_hand": [
+      0.273,
+      0.181,
+      0.365
+     ]
+    },
+    "8-15bb": {
+     "share": 0.308,
+     "difference_per_seat_hand": [
+      -0.259,
+      -0.413,
+      -0.105
+     ]
+    },
+    "15-upbb": {
+     "share": 0.181,
+     "difference_per_seat_hand": [
+      -1.123,
+      -1.325,
+      -0.921
+     ]
+    }
+   },
+   "seconds": 123
+  },
+  "bubble": {
+   "configs": 40,
+   "deals": 500000,
+   "equity_difference": [
+    0.65,
+    0.55,
+    0.749
+   ],
+   "equity_chart": [
+    0.656,
+    0.551,
+    0.762
+   ],
+   "equity_control_nm25": [
+    0.007,
+    -0.068,
+    0.081
+   ],
+   "chips_difference": [
+    4.228,
+    4.081,
+    4.374
+   ],
+   "spots": {
+    "first_in": {
+     "count": 2020028,
+     "chart_in": 0.306,
+     "nm25_same_action": 0.168,
+     "nm25_in_any": 0.244
+    },
+    "facing_shove": {
+     "count": 1437135,
+     "chart_in": 0.086,
+     "nm25_same_action": 0.08,
+     "nm25_in_any": 0.091
+    },
+    "shove_and_call": {
+     "count": 139016,
+     "chart_in": 0.034,
+     "nm25_same_action": 0.026,
+     "nm25_in_any": 0.028
+    },
+    "first_in_allin_illegal": 1967
+   },
+   "by_hero_stack": {
+    "0-8bb": {
+     "share": 0.494,
+     "difference_per_seat_hand": [
+      0.825,
+      0.698,
+      0.951
+     ]
+    },
+    "8-15bb": {
+     "share": 0.342,
+     "difference_per_seat_hand": [
+      0.655,
+      0.485,
+      0.825
+     ]
+    },
+    "15-upbb": {
+     "share": 0.164,
+     "difference_per_seat_hand": [
+      0.11,
+      -0.142,
+      0.362
+     ]
+    }
+   },
+   "seconds": 120
+  }
+ }
+}

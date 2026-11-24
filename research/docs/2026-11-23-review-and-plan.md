@@ -264,3 +264,52 @@ B3 (search), described against the code before this plan's fixes, which were alr
 other-players check uses the new `"rule": "interval"`: on 100,000 paired hands, the lower end of the difference's 95%
 interval must be above -2.0 bb/100 against every rule player (nm44's station reading, -27.4 [-29.2, -25.6], fails it).
 The exploiter is judged on the mean of four seeds with a limit of +1.25 (nm25's +0.75 plus 0.5).
+
+**A3 results (2026-11-24): the ICM push/fold chart against nm25** (`scripts/icm_pushfold.py`,
+`scripts/equity3_169.py`, `scripts/ninemax_chart_match.py`; `results/pushfold_a3/`, pre-registered in
+`results/pushfold_a3/prereg.json` before any deal was played).
+
+The reference first. `icm_pushfold.solve2` allows up to two callers after a shove (the first caller may be followed by
+one overcaller; everyone after folds). Three-way all-ins are valued from a new table of three-hand equities
+(`results/preflop/equity3_169.npz`, 9 MB): every unordered triple of the 169 classes, 4,000 Monte Carlo deals each with
+card removal among the three hands, the six strength orders stored, so side pots with unequal stacks are settled
+exactly. The one-caller solver is kept. `--selftest` adds: AA wins 0.670 against KK and QQ; a hand-built side-pot case;
+a three-handed table whose values (everyone's, and the shove, call and overcall values by class) match a direct
+enumeration of every class triple; the batched three-way sums match a direct sum; with overcalls forbidden the
+two-caller solver reproduces the one-caller one; winner-take-all equities sum to 1 and AA always overcalls, 72o never.
+Two fixes came out of the checks, and both change the one-caller charts slightly: a player busted by an all-in had a
+stack of exactly 0, which Malmuth-Harville pays nothing at all, so at a final table every all-in's downside was
+overstated by the lowest prize (now a vanishing stack, as the engine's reward does); and the 169x169 table's two
+entries for a pair are separate estimates that disagree by up to 0.019, now averaged so both sides of an all-in agree.
+
+The match. The chart player is nm25 except before the flop when it is first in (shove or fold), facing a first-in
+shove (call or fold) or facing a shove and one call (overcall or fold); there it plays the two-caller chart solved
+for the table's exact stacks. Anywhere else (a limp or a smaller raise ahead, a re-shove, after the flop) it plays
+nm25. Tables: 40 fixed stack configurations per stage, 9 players, average stack log-uniform 8-12.5bb, each stack x
+lognormal (sd 0.7, as training's tables) and at least 2bb, the big-blind ante of nm25's game; every chart converged to
+a best-response gain under 0.01bb (median 0.003-0.004). Payouts: a final table paying 26, 17.5, 12.6, 9.4, 7.2, 5.6,
+4.4, 3.6, 3.0 (% of the pool), and a bubble with 9 players and 8 paid (the same ladder's top 8, ninth nothing). The
+match is duplicate and paired: the chart player in each of the 9 seats against 8 x nm25, and nm25 in the same seat on
+the same deals, with common random numbers for every action draw, so the two arms play identical hands until the
+chart acts differently. 500,000 deals x 9 seatings per arm and stage; prize equity in bb/100-equivalent:
+
+| Stage | Chart − nm25, prize equity | Replicate (seed 22) | Chips | Control (nm25 vs itself) |
+|---|---|---|---|---|
+| final table | **−0.14 [−0.22, −0.07]** | −0.13 [−0.21, −0.05] | +1.66 [+1.51, +1.81] | +0.03 [−0.04, +0.09] |
+| bubble | **+0.65 [+0.55, +0.75]** | +0.64 [+0.54, +0.74] | +4.23 [+4.08, +4.37] | +0.01 [−0.07, +0.08] |
+
+By the hero's own stack (per seat-hand; seats of one deal share cards, so these intervals are approximate), final
+table / bubble: under 8bb +0.27 / +0.83, 8-15bb −0.26 / +0.66, over 15bb −1.12 / +0.11. The chart helps where
+push/fold is the right game (short stacks, and the bubble's stronger ICM pressure) and costs equity at the final
+table's deeper stacks, where nm25's smaller raises do better than shoving. First in, the chart shoves 25% (final
+table) and 31% (bubble) of the time against nm25's 11% and 17%; facing a shove it calls 13% and 9% against nm25's 11%
+and 8%. In chips the chart wins at both stages: chips overstate it, as with the aggressors above.
+
+Verdict, by the pre-registered rule (Holm over the two stages): the bubble result is positive and survives, so
+**nm46 is worth registering**, with two limits on what it may claim. The gain is small (+0.65 bb/100 at the bubble)
+and the chart loses at the final table, so nm46's target is the bubble and stacks under about 15bb, not chart
+agreement everywhere: pulling deeper final-table stacks toward the chart would cost equity. nm46's gate stays as
+planned: the A3 match reversed (nm46 at least level with the chart player at the bubble, and no worse than nm25 at
+the final table), no-harm, the exploiter. Caveats: the intervals cover the deals, not the choice of 40 table
+configurations or of the payout ladders; the push/fold model ignores limps and small raises, which the chart player
+meets by playing nm25.

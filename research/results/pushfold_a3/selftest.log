@@ -1,0 +1,11 @@
+ICM matches brute force (3, 5, 7 players)
+Malmuth-Weitzman matches brute force (3, 5, 7 players)
+winner-take-all = chips, 4 x 10bb: shove shares [0.234, 0.318, 0.578] vs poker_math [0.225, 0.327, 0.578]
+winner-take-all = chips, 6 x 8bb: shove shares [0.155, 0.213, 0.264, 0.342, 0.626] vs poker_math [0.155, 0.204, 0.264, 0.342, 0.626]
+winner-take-all agrees with the chip-EV multi-way solver
+three-way table: AA best against KK and QQ 0.670; orders consistent under permutation
+side pots: 10/4/7 all in, the 4 best then the 7: stacks 3, 12, 6
+solve2's tree walk matches enumerating every class triple (3 tables, random strategies): everyone's value, and the shove, call and overcall values by class
+the batched three-way sums match a direct sum for all 10 triples of 5 players
+overcalls forbidden: solve2 reproduces the one-caller solver (5 and 6 players)
+winner-take-all, 4 x 10bb: equities sum to 1.0000, AA always overcalls and 72o never, max gain 0.0173 bb; shove shares [0.258, 0.342, 0.578] with two callers, [0.246, 0.336, 0.578] with one

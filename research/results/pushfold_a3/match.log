@@ -1,0 +1,189 @@
+final 25,000/500,000 deals, 6s: chart - nm25 [np.float64(0.127), np.float64(-0.214), np.float64(0.469)] bb/100
+final 50,000/500,000 deals, 12s: chart - nm25 [np.float64(0.01), np.float64(-0.236), np.float64(0.256)] bb/100
+final 75,000/500,000 deals, 18s: chart - nm25 [np.float64(0.025), np.float64(-0.176), np.float64(0.225)] bb/100
+final 100,000/500,000 deals, 25s: chart - nm25 [np.float64(-0.111), np.float64(-0.285), np.float64(0.062)] bb/100
+final 125,000/500,000 deals, 31s: chart - nm25 [np.float64(-0.076), np.float64(-0.232), np.float64(0.08)] bb/100
+final 150,000/500,000 deals, 36s: chart - nm25 [np.float64(-0.127), np.float64(-0.27), np.float64(0.016)] bb/100
+final 175,000/500,000 deals, 42s: chart - nm25 [np.float64(-0.152), np.float64(-0.285), np.float64(-0.02)] bb/100
+final 200,000/500,000 deals, 48s: chart - nm25 [np.float64(-0.15), np.float64(-0.274), np.float64(-0.026)] bb/100
+final 225,000/500,000 deals, 54s: chart - nm25 [np.float64(-0.152), np.float64(-0.268), np.float64(-0.035)] bb/100
+final 250,000/500,000 deals, 61s: chart - nm25 [np.float64(-0.14), np.float64(-0.25), np.float64(-0.029)] bb/100
+final 275,000/500,000 deals, 67s: chart - nm25 [np.float64(-0.146), np.float64(-0.252), np.float64(-0.041)] bb/100
+final 300,000/500,000 deals, 73s: chart - nm25 [np.float64(-0.136), np.float64(-0.237), np.float64(-0.035)] bb/100
+final 325,000/500,000 deals, 79s: chart - nm25 [np.float64(-0.145), np.float64(-0.242), np.float64(-0.048)] bb/100
+final 350,000/500,000 deals, 85s: chart - nm25 [np.float64(-0.17), np.float64(-0.264), np.float64(-0.077)] bb/100
+final 375,000/500,000 deals, 92s: chart - nm25 [np.float64(-0.154), np.float64(-0.244), np.float64(-0.063)] bb/100
+final 400,000/500,000 deals, 98s: chart - nm25 [np.float64(-0.149), np.float64(-0.236), np.float64(-0.061)] bb/100
+final 425,000/500,000 deals, 104s: chart - nm25 [np.float64(-0.149), np.float64(-0.234), np.float64(-0.064)] bb/100
+final 450,000/500,000 deals, 110s: chart - nm25 [np.float64(-0.146), np.float64(-0.228), np.float64(-0.063)] bb/100
+final 475,000/500,000 deals, 116s: chart - nm25 [np.float64(-0.151), np.float64(-0.231), np.float64(-0.07)] bb/100
+final 500,000/500,000 deals, 123s: chart - nm25 [np.float64(-0.143), np.float64(-0.221), np.float64(-0.065)] bb/100
+{
+ "final": {
+  "configs": 40,
+  "deals": 500000,
+  "equity_difference": [
+   -0.143,
+   -0.221,
+   -0.065
+  ],
+  "equity_chart": [
+   -0.114,
+   -0.201,
+   -0.028
+  ],
+  "equity_control_nm25": [
+   0.029,
+   -0.036,
+   0.094
+  ],
+  "chips_difference": [
+   1.656,
+   1.507,
+   1.805
+  ],
+  "spots": {
+   "first_in": {
+    "count": 2155173,
+    "chart_in": 0.251,
+    "nm25_same_action": 0.105,
+    "nm25_in_any": 0.223
+   },
+   "facing_shove": {
+    "count": 855213,
+    "chart_in": 0.133,
+    "nm25_same_action": 0.11,
+    "nm25_in_any": 0.139
+   },
+   "shove_and_call": {
+    "count": 85076,
+    "chart_in": 0.074,
+    "nm25_same_action": 0.068,
+    "nm25_in_any": 0.075
+   },
+   "first_in_allin_illegal": 7006
+  },
+  "by_hero_stack": {
+   "0-8bb": {
+    "share": 0.511,
+    "difference_per_seat_hand": [
+     0.273,
+     0.181,
+     0.365
+    ]
+   },
+   "8-15bb": {
+    "share": 0.308,
+    "difference_per_seat_hand": [
+     -0.259,
+     -0.413,
+     -0.105
+    ]
+   },
+   "15-upbb": {
+    "share": 0.181,
+    "difference_per_seat_hand": [
+     -1.123,
+     -1.325,
+     -0.921
+    ]
+   }
+  },
+  "seconds": 123
+ }
+}
+bubble 25,000/500,000 deals, 6s: chart - nm25 [np.float64(0.393), np.float64(-0.063), np.float64(0.848)] bb/100
+bubble 50,000/500,000 deals, 12s: chart - nm25 [np.float64(0.635), np.float64(0.316), np.float64(0.954)] bb/100
+bubble 75,000/500,000 deals, 18s: chart - nm25 [np.float64(0.794), np.float64(0.538), np.float64(1.051)] bb/100
+bubble 100,000/500,000 deals, 23s: chart - nm25 [np.float64(0.798), np.float64(0.575), np.float64(1.02)] bb/100
+bubble 125,000/500,000 deals, 30s: chart - nm25 [np.float64(0.74), np.float64(0.54), np.float64(0.939)] bb/100
+bubble 150,000/500,000 deals, 35s: chart - nm25 [np.float64(0.77), np.float64(0.588), np.float64(0.951)] bb/100
+bubble 175,000/500,000 deals, 41s: chart - nm25 [np.float64(0.781), np.float64(0.613), np.float64(0.949)] bb/100
+bubble 200,000/500,000 deals, 47s: chart - nm25 [np.float64(0.724), np.float64(0.567), np.float64(0.88)] bb/100
+bubble 225,000/500,000 deals, 53s: chart - nm25 [np.float64(0.741), np.float64(0.594), np.float64(0.889)] bb/100
+bubble 250,000/500,000 deals, 59s: chart - nm25 [np.float64(0.712), np.float64(0.572), np.float64(0.852)] bb/100
+bubble 275,000/500,000 deals, 65s: chart - nm25 [np.float64(0.685), np.float64(0.551), np.float64(0.819)] bb/100
+bubble 300,000/500,000 deals, 71s: chart - nm25 [np.float64(0.702), np.float64(0.575), np.float64(0.83)] bb/100
+bubble 325,000/500,000 deals, 77s: chart - nm25 [np.float64(0.667), np.float64(0.544), np.float64(0.79)] bb/100
+bubble 350,000/500,000 deals, 83s: chart - nm25 [np.float64(0.664), np.float64(0.545), np.float64(0.782)] bb/100
+bubble 375,000/500,000 deals, 89s: chart - nm25 [np.float64(0.669), np.float64(0.555), np.float64(0.784)] bb/100
+bubble 400,000/500,000 deals, 95s: chart - nm25 [np.float64(0.652), np.float64(0.542), np.float64(0.763)] bb/100
+bubble 425,000/500,000 deals, 102s: chart - nm25 [np.float64(0.65), np.float64(0.543), np.float64(0.758)] bb/100
+bubble 450,000/500,000 deals, 108s: chart - nm25 [np.float64(0.662), np.float64(0.557), np.float64(0.766)] bb/100
+bubble 475,000/500,000 deals, 114s: chart - nm25 [np.float64(0.664), np.float64(0.563), np.float64(0.766)] bb/100
+bubble 500,000/500,000 deals, 120s: chart - nm25 [np.float64(0.65), np.float64(0.55), np.float64(0.749)] bb/100
+{
+ "bubble": {
+  "configs": 40,
+  "deals": 500000,
+  "equity_difference": [
+   0.65,
+   0.55,
+   0.749
+  ],
+  "equity_chart": [
+   0.656,
+   0.551,
+   0.762
+  ],
+  "equity_control_nm25": [
+   0.007,
+   -0.068,
+   0.081
+  ],
+  "chips_difference": [
+   4.228,
+   4.081,
+   4.374
+  ],
+  "spots": {
+   "first_in": {
+    "count": 2020028,
+    "chart_in": 0.306,
+    "nm25_same_action": 0.168,
+    "nm25_in_any": 0.244
+   },
+   "facing_shove": {
+    "count": 1437135,
+    "chart_in": 0.086,
+    "nm25_same_action": 0.08,
+    "nm25_in_any": 0.091
+   },
+   "shove_and_call": {
+    "count": 139016,
+    "chart_in": 0.034,
+    "nm25_same_action": 0.026,
+    "nm25_in_any": 0.028
+   },
+   "first_in_allin_illegal": 1967
+  },
+  "by_hero_stack": {
+   "0-8bb": {
+    "share": 0.494,
+    "difference_per_seat_hand": [
+     0.825,
+     0.698,
+     0.951
+    ]
+   },
+   "8-15bb": {
+    "share": 0.342,
+    "difference_per_seat_hand": [
+     0.655,
+     0.485,
+     0.825
+    ]
+   },
+   "15-upbb": {
+    "share": 0.164,
+    "difference_per_seat_hand": [
+     0.11,
+     -0.142,
+     0.362
+    ]
+   }
+  },
+  "seconds": 120
+ }
+}
+done

@@ -1,0 +1,22 @@
+200 / 818,805 triples, 3s
+40,200 / 818,805 triples, 35s
+80,200 / 818,805 triples, 69s
+120,200 / 818,805 triples, 101s
+160,200 / 818,805 triples, 134s
+200,200 / 818,805 triples, 168s
+240,200 / 818,805 triples, 202s
+280,200 / 818,805 triples, 235s
+320,200 / 818,805 triples, 268s
+360,200 / 818,805 triples, 302s
+400,200 / 818,805 triples, 335s
+440,200 / 818,805 triples, 368s
+480,200 / 818,805 triples, 402s
+520,200 / 818,805 triples, 435s
+560,200 / 818,805 triples, 469s
+600,200 / 818,805 triples, 503s
+640,200 / 818,805 triples, 536s
+680,200 / 818,805 triples, 570s
+720,200 / 818,805 triples, 603s
+760,200 / 818,805 triples, 636s
+800,200 / 818,805 triples, 670s
+done: 818,805 triples x 4000 samples in 687s; impossible 325; fewest accepted samples 3969; wrote results/preflop/equity3_169.npz

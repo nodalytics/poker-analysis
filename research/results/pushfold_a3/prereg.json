@@ -1,0 +1,20 @@
+{
+ "written": "2026-11-24, before any match deal was played",
+ "question": "Does an ICM push/fold chart player (nm25 with its pre-flop push/fold spots replaced by a two-caller ICM chart solved for the exact table) beat nm25 in prize equity at short-stacked ICM tables, against 8 x nm25?",
+ "property": "the value of the push/fold chart's pre-flop decisions against nm25's own, at about 10bb (the target nm46 would train toward)",
+ "tables": "9 players, average stack log-uniform 8-12.5bb, each stack x lognormal(sd 0.7), at least 2bb; 40 fixed configurations per stage; big-blind ante 1bb (nm25's game)",
+ "stages": {
+  "final": "places 1-9 paid: 26, 17.5, 12.6, 9.4, 7.2, 5.6, 4.4, 3.6, 3.0",
+  "bubble": "9 players, places 1-8 paid with the same ladder's top 8, 9th nothing"
+ },
+ "design": "duplicate (chart player in each of the 9 seats), paired with nm25 in the same seat on the same deals, common random numbers for every action draw",
+ "deals_per_stage": 500000,
+ "primary_statistic": "per stage: mean over deals of (chart player's prize-equity result - nm25's), averaged over the 9 seats, in bb/100-equivalent, with a 95% normal interval over deals",
+ "decision": {
+  "multiple_comparisons": "Holm over the two stages (two-sided, alpha 0.05)",
+  "register_nm46": "at least one stage shows the chart player ahead of nm25 after Holm",
+  "drop_nm46": "otherwise: chart behind nm25 (a significant negative) or inconclusive (intervals through 0); an inconclusive result is reported as inconclusive, not as a loss",
+  "no_tuning": "the solver settings, tables and deal count are fixed here; no re-run with other settings is read as A3's answer"
+ },
+ "secondary": ["chips difference", "the control arm (nm25 vs 8 x nm25, zero in expectation)", "how often each spot occurs and how far nm25's policy is from the chart there", "the difference by the hero's stack (under 8, 8-15, over 15bb)"]
+}
