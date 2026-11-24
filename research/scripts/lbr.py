@@ -22,6 +22,10 @@ The bot's policy for every holding, mirroring solver_play:
 The bot's real cards are played from the same policy, so the range LBR tracks is the bot's actual one.
 Reports LBR's winnings (bb/100, card luck removed as in aivat_lite.py), and per street how often the bot folds to
 LBR's bets.
+
+LBR_SIZES (environment, e.g. "0.5,0.75,1.5") replaces the pot-sized bet with these fractions of the pot after a call;
+all-in stays. Pot and all-in are both on the blueprint's menu, so default LBR barely tests bet translation; off-menu
+sizes do. The difference between the two on the same deals is the translation loss.
 """
 
 import copy
@@ -379,7 +383,9 @@ class Hand:
                 state.min_completion_betting_or_raising_to_amount,
                 state.max_completion_betting_or_raising_to_amount,
             )
-            sizes = {max(lo, min(hi, state.bets[self.lbr] + to_call + (pot + to_call))), hi}
+            fracs = [float(f) for f in os.environ.get("LBR_SIZES", "1").split(",")]
+            sizes = {max(lo, min(hi, state.bets[self.lbr] + to_call + round(f * (pot + to_call)))) for f in fracs}
+            sizes.add(hi)
             for to in sorted(sizes):
                 s2 = copy.deepcopy(state)
                 t2 = copy.copy(self.t)
