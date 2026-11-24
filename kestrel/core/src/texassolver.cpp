@@ -58,9 +58,17 @@ nlohmann::json texassolver_solve(const TexasSolverConfig& c, const TexasSolverSp
        << "set_use_isomorphism 1\nstart_solve\nset_dump_rounds 1\ndump_result " << (dir / "out.json").string() << "\n";
     in.close();
     // run inside the temporary folder: TexasSolver writes its progress log (tmp_log.txt) to the working directory
-    std::string cmd = "cd " + quote(dir.string()) + " && ";
+    std::string cmd;
 #ifndef _WIN32
-    cmd += "timeout " + std::to_string(c.timeout_s) + " nice -n 10 ";
+    // a time limit: coreutils' timeout (gtimeout from Homebrew), else perl's alarm, which macOS has and timeout not
+    // (before 0.4.1 the solver never ran on macOS: "timeout" was not found, and every call fell back to the blueprint)
+    const std::string secs = std::to_string(c.timeout_s);
+    cmd += "T=$(command -v timeout || command -v gtimeout); if [ -n \"$T\" ]; then set -- \"$T\" " + secs +
+           "; else set -- perl -e 'alarm shift; exec @ARGV or exit 127' " + secs + "; fi; ";
+#endif
+    cmd += "cd " + quote(dir.string()) + " && ";
+#ifndef _WIN32
+    cmd += "\"$@\" nice -n 10 ";
 #endif
     cmd += quote(c.bin) + " --input_file " + quote((dir / "in.txt").string()) + " --resource_dir " +
            quote(c.resources);
