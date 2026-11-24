@@ -1,0 +1,4 @@
+net   none +0.30 [0.1, 0.5] floor +0.35  diff +0.051 [-0.171, +0.272]  corr -0.001 identical 0.0%  fallback 0.0/0.0689 p10 6.8/6.8 searched 76856/76869
+call  none +0.52 [0.3, 0.7] floor +0.71  diff +0.193 [-0.057, +0.444]  corr 0.006 identical 0.0%  fallback 0.0/0.1057 p10 4.9/4.9 searched 112275/111190
+fold  none +0.17 [0.0, 0.3] floor +0.12  diff -0.051 [-0.262, +0.160]  corr 0.016 identical 0.1%  fallback 0.0/0.0588 p10 7.7/7.6 searched 76025/75233
+raise none +1.73 [1.6, 1.9] floor +1.61  diff -0.118 [-0.353, +0.117]  corr 0.021 identical 0.0%  fallback 0.0/0.0695 p10 6.8/6.7 searched 50055/50511

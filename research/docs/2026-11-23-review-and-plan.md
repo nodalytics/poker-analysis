@@ -313,3 +313,22 @@ planned: the A3 match reversed (nm46 at least level with the chart player at the
 the final table), no-harm, the exploiter. Caveats: the intervals cover the deals, not the choice of 40 table
 configurations or of the payout ladders; the push/fold model ignores limps and small raises, which the chart player
 meets by playing nm25.
+
+**The ESS floor in play (2026-11-24): no measurable effect.** nm25 searching at 256 samples, 200,000 deals per arm,
+seed 4242, with the floor (`--min-ess 0.02`) and without (`0`), against each opponent bias
+(`results/search_b3/ess_floor/`: `run.sh`, the eight result files, `analyse.py` and its output `paired.txt`). The floor
+sends 5.9-10.6% of searched decisions back to the network. Floor minus none, bb/100:
+
+| Opponents | No floor | Floor | Floor − none |
+|---|---|---|---|
+| net | +0.30 | +0.35 | +0.05 [−0.17, +0.27] |
+| call | +0.52 | +0.71 | +0.19 [−0.06, +0.44] |
+| fold | +0.17 | +0.12 | −0.05 [−0.26, +0.16] |
+| raise | +1.73 | +1.61 | −0.12 [−0.35, +0.12] |
+| all four, pooled | | | +0.02 [−0.10, +0.13] |
+
+Every interval includes zero, and the pooled one rules out an effect larger than about 0.13 bb/100 either way. The
+floor stays (it costs nothing and keeps decisions resting on a handful of deals out of play), and it is not a lever
+worth more work. One finding about the method: the two arms' per-deal results are uncorrelated (r = −0.001 to 0.021,
+no deal identical), so "the same seed" does not give the same deals in `ninemax_search.py`. The intervals above are
+therefore unpaired; a paired design would need the deals drawn from their own generator, apart from search's draws.
