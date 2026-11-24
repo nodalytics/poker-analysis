@@ -44,13 +44,46 @@ pseudo-harmonic mapping for off-tree bets (`kestrel/core/src/headsup.cpp`).
 
 | # | Adopt | Why | Cost | Status |
 |---|---|---|---|---|
-| 1 | **Shuffled board cycle** in `mccfr_vec`: walk a permutation of all boards, split across threads, instead of each thread drawing its own (today `std::random_device` seeds per thread, so boards repeat and others wait) | Removes short-run board bias for free | Small code change; a run on a small blueprint scored by LBR | Adopt |
-| 2 | **Bet sizes over card buckets**: add a small first bet (0.25 pot) and overbets (4x, maybe 8x) to the heads-up tree, before any more buckets | Run 7's finer card abstraction did not lower LBR, which matches Jackson's judgement; our leak is folding 45-55% of bets faced, a betting-tree question | Tree grows; needs a fresh solve | Adopt after A4 shows how often Slumbot overbets |
-| 3 | Several boards per update | Jackson's reason was disk cost; in memory the gain is unclear | Trial only | Trial |
+| 1 | **Shuffled flop cycle** in `mccfr_vec`: walk a permutation of all boards, split across threads, instead of each thread drawing its own (today `std::random_device` seeds per thread, so boards repeat and others wait) | Removes short-run board bias for free | Small code change | Built (`--flop-cycle`); on trial |
+| 2 | **Bet sizes over card buckets**: add a small first bet (0.25 pot) and overbets (4x, maybe 8x) to the heads-up tree, before any more buckets | Run 7's finer card abstraction did not lower LBR, which matches Jackson's judgement; our leak is folding 45-55% of bets faced, a betting-tree question | Tree grows 2.9x; needs a fresh solve | Built (`BLUEPRINT_TREE=wide`: adds 0.25x and 4x pot first bets); on trial |
+| 3 | Several boards per update | Jackson's reason was disk cost; in memory the gain is unclear | One more table | Built (`--batch-boards B`); on trial |
 | 4 | Board-first (hierarchical) buckets | Our distribution-aware buckets did not help | | Skip for now |
 | 5 | Disk-based, multi-machine solving | The lab has the memory | | Skip |
 | 6 | DyypHoldem code | No licence; models gone | | No. The idea (value networks at re-solve leaves) stays on the list for later |
 | 7 | AV-AIVAT luck correction for the 9-max checks | Could cut the 40,000-deal checks | Read first | Read next |
+
+### Built and on trial (2026-11-24)
+
+All three are options; with none set, `mccfr_vec` and the tree behave exactly as before.
+
+- **`--flop-cycle [--board-seed S]`**: flops come from a shuffled cycle of all 22,100, shared by every thread
+  through one counter; turn and river stay random. The cycle order is a keyed permutation (a 4-round Feistel network
+  on 15 bits, walked until it lands below 22,100), so it needs no table, and each cycle uses a new key. The seed is
+  kept in `OUTDIR/board_seed.txt` so a resumed run continues. Why the flop and not the whole board: there are about
+  52 M ordered boards (flop, turn, river), and a run deals a few hundred thousand to a couple of million of them, so a
+  cycle over whole boards would be indistinguishable from random draws. At about 0.75 boards a second per core, a
+  4-core run goes through every flop in about 2 hours, so a flop cycle does change what is dealt. `--bench` checks
+  that a cycle is a permutation of all 22,100 flops and that two cycles' orders differ.
+- **`--batch-boards B`**: regret increments collect in a third table and are added into the regrets at a barrier every
+  B boards (all threads), so the strategy is fixed across B boards, as in Slumbot NL (about 50 boards per update). The
+  barrier is the one the discount and checkpoints already use; the batch is flushed before either, so neither misses
+  increments. Costs one more table the size of the regrets.
+- **`BLUEPRINT_TREE=wide`** (environment, read by `tree.hpp`): adds a quarter-pot and a 4x-pot first bet after the flop.
+  The tree grows from 277,406 nodes and 55.5 M table entries to 795,510 nodes and 159.1 M. Every program that builds
+  the tree (`mccfr_vec`, `br_vec`, `resolve`) must be run with the same setting as the run it reads, and each prints
+  the tree it built; `blueprint_bot.py` reads `tree.tsv` and needs nothing.
+
+The trials, on the lab, on the 200-bucket abstraction (`out/`), all with DCFR:
+
+| Trial | Arms | Budget | Score |
+|---|---|---|---|
+| Sampling | random boards; `--flop-cycle`; `--batch-boards 50`; two runs each | 4 threads, 180 minutes each | `br_vec` (2,000 boards, 3,000 evaluation boards, purify 0.05) |
+| Tree | standard; wide; one run each | 8 threads, 360 minutes each | `br_vec` inside each tree (not comparable across trees), then LBR over 30,000 hands in the real game (comparable) |
+
+Pass rules, set before the results: a sampling option is adopted if both its runs are less exploitable than both
+random-board runs; otherwise it stays an option. The wide tree is adopted if its LBR interval lies below the standard
+tree's estimate at the same compute; if the intervals overlap, the result is "not shown" and the overbet count from A4
+decides whether a longer wide solve is worth it.
 
 ## DyypHoldem (checked 2026-11-24)
 

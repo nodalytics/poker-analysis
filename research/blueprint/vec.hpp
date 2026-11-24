@@ -170,6 +170,8 @@ static uint64_t vec_init(const std::string& abs) {
       n.offset = total;
       total += (uint64_t)BUCKETS[n.street] * n.children.size();
     }
+  fprintf(stderr, "tree: %s, %zu nodes, %lu table entries\n", wide_tree() ? "wide" : "standard", T.size(),
+          (unsigned long)total);
   int k = 0;
   for (int a = 0; a < 52; ++a)
     for (int c = a + 1; c < 52; ++c) COMBO_A[k] = a, COMBO_B[k] = c, ++k;

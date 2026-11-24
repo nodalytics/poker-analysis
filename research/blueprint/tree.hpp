@@ -2,6 +2,7 @@
 // train the identical game. See mccfr.cpp's header for the action abstraction.
 #pragma once
 #include <algorithm>
+#include <cstdlib>
 #include <string>
 #include <utility>
 #include <vector>
@@ -19,6 +20,14 @@ struct Node {
 };
 
 static std::vector<Node> T;
+
+// BLUEPRINT_TREE=wide adds two first-bet sizes after the flop, a quarter pot and four times the pot (Slumbot NL allows
+// 0.25x to 50x; our 2x was the largest). Every program that builds the tree (mccfr_vec, br_vec, resolve) must see the
+// same setting as the run it reads; blueprint_bot.py reads tree.tsv and needs nothing.
+static bool wide_tree() {
+  const char* v = getenv("BLUEPRINT_TREE");
+  return v && std::string(v) == "wide";
+}
 
 struct Bet {
   int street, player, c0, c1, raises, acted;  // acted: decisions taken this street
@@ -72,10 +81,12 @@ static int build(Bet b) {
         sizes.push_back({"4bet2.3x", (int)(2.3 * theirs)});
       }
     } else if (to_call == 0) {
+      if (b.raises == 0 && wide_tree()) sizes.push_back({"bet0.25", mine + pot / 4});
       sizes.push_back({"bet0.33", mine + pot / 3});
       sizes.push_back({"bet0.66", mine + 2 * pot / 3});
       sizes.push_back({"bet1", mine + pot});
       if (b.raises == 0) sizes.push_back({"bet2", mine + 2 * pot});
+      if (b.raises == 0 && wide_tree()) sizes.push_back({"bet4", mine + 4 * pot});
     } else {
       sizes.push_back({"raise1", theirs + (pot + to_call)});
       if (b.raises == 1) sizes.push_back({"raise2.5x", theirs + (int)(1.5 * to_call) + to_call});

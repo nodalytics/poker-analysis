@@ -527,6 +527,8 @@ cd ~/research/blueprint && make -j            # pinned PokerHandEvaluator and ha
 ./abstraction out 200 && ./abstraction_pa out out_pa 500
 ./mccfr4 out_pa run6 --threads 16 --minutes 1440 --pcfr
 ./mccfr_vec out_pa runvec --threads 8 --minutes 1440 --dcfr
+./mccfr_vec out runcyc --threads 8 --minutes 1440 --dcfr --flop-cycle --batch-boards 50   # Slumbot NL's sampling
+BLUEPRINT_TREE=wide ./mccfr_vec out runwide --threads 8 --minutes 1440 --dcfr                # + 0.25x and 4x pot bets
 ./br_vec out run2 --boards 2000 --eval-boards 1000 --purify 0.05
 cd .. && .venv-gpu/bin/python scripts/mlp_selfplay.py blueprint/runmlp2 --kl 0.3 --magnet-tau 0.0003 --entropy 0.01
 sh blueprint/lbr_trend.sh blueprint/run6 3000 16
