@@ -1,4 +1,4 @@
-# Slumbot NL, and a reading list from its citations (2026-11-24)
+# Slumbot NL, DyypHoldem, and a reading list (2026-11-24)
 
 Two parts. First, Eric Jackson's *Slumbot NL: Solving Large Games with Counterfactual Regret Minimization Using Sampling
 and Distributed Processing* (Computer Poker and Imperfect Information, AAAI 2013 workshop, pp. 35-38), read in full
@@ -35,6 +35,28 @@ What it means for us:
   almost every bucket gets an update each iteration), and walking a shuffled permutation of boards instead of drawing
   them at random, which removes short-run board-sampling bias (his example: too many boards containing a 5 overvalue
   every hand holding a 5).
+
+## DyypHoldem (checked 2026-11-24)
+
+`github.com/lucky72s/dyypholdem`: a Python/PyTorch port of DeepHoldem, which is the no-limit hold'em version of DeepStack
+(continual re-solving with counterfactual value networks for flop, turn and river, plus a preflop auxiliary network). It
+ships ACPC players and a player for Slumbot's API. Last push 2022-01-03; 30 stars.
+
+- **It cannot be run as published.** The trained networks and the bucketing data were in Git LFS, and GitHub now answers
+  HTTP 410 for them (issues #7, 2025-03, and #8, 2026-08, both open and unanswered). Running it means regenerating
+  every street's training data and retraining; a maintainer's comment says the original models used 1 M samples a
+  street, against a default of 100 k.
+- **No measured strength.** The only result in the repo is one user's 1,803 hands against Slumbot (issue #4): -15.9
+  bb/100, "baseline" -24.5 bb/100, with no interval. At heads-up variance that sample cannot tell -16 from 0 (our own
+  3,000-hand Slumbot runs had intervals about 120 bb/100 wide). A reply there says the original DeepStack did not claim
+  to beat Slumbot.
+- **No licence.** The repository states none, so its code cannot be copied into this public repo. DeepHoldem, which it
+  ports, also states none. Reading it for ideas is fine.
+- **Where it touches our work:** DeepStack-style re-solving at every decision is the general form of what Kestrel's
+  river and turn re-solve do with a blueprint at the leaves. DyypHoldem uses value networks at the leaves instead,
+  which is how DeepStack avoids needing a full-game blueprint. It is a possible extra heads-up opponent for A4 only if
+  someone retrains it, and that cost (data generation for three streets) outweighs what one more bot of unknown
+  strength would tell us.
 
 ## Why it matters here
 
