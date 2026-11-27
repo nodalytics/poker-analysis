@@ -1,0 +1,4 @@
+vs 8 x reg      run   +25.76  baseline   +25.64  difference +0.11 [-0.2, 0.43] bb/100
+vs 8 x tag      run   +32.30  baseline   +32.44  difference -0.14 [-0.49, 0.22] bb/100
+vs 8 x maniac   run  +521.74  baseline  +517.27  difference +4.46 [4.03, 4.9] bb/100
+vs 8 x station  run  +127.33  baseline  +109.65  difference +17.68 [17.0, 18.36] bb/100

@@ -44,9 +44,9 @@ pseudo-harmonic mapping for off-tree bets (`kestrel/core/src/headsup.cpp`).
 
 | # | Adopt | Why | Cost | Status |
 |---|---|---|---|---|
-| 1 | **Shuffled flop cycle** in `mccfr_vec`: walk a permutation of all boards, split across threads, instead of each thread drawing its own (today `std::random_device` seeds per thread, so boards repeat and others wait) | Removes short-run board bias for free | Small code change | Built (`--flop-cycle`); on trial |
-| 2 | **Bet sizes over card buckets**: add a small first bet (0.25 pot) and overbets (4x, maybe 8x) to the heads-up tree, before any more buckets | Run 7's finer card abstraction did not lower LBR, which matches Jackson's judgement; our leak is folding 45-55% of bets faced, a betting-tree question | Tree grows 2.9x; needs a fresh solve | Built (`BLUEPRINT_TREE=wide`: adds 0.25x and 4x pot first bets); on trial |
-| 3 | Several boards per update | Jackson's reason was disk cost; in memory the gain is unclear | One more table | Built (`--batch-boards B`); on trial |
+| 1 | **Shuffled flop cycle** in `mccfr_vec`: walk a permutation of all boards, split across threads, instead of each thread drawing its own (today `std::random_device` seeds per thread, so boards repeat and others wait) | Removes short-run board bias for free | Small code change | Built (`--flop-cycle`); not adopted (results below) |
+| 2 | **Bet sizes over card buckets**: add a small first bet (0.25 pot) and overbets (4x, maybe 8x) to the heads-up tree, before any more buckets | Run 7's finer card abstraction did not lower LBR, which matches Jackson's judgement; our leak is folding 45-55% of bets faced, a betting-tree question | Tree grows 2.9x; needs a fresh solve | Built (`BLUEPRINT_TREE=wide`: adds 0.25x and 4x pot first bets); not shown at equal time (results below) |
+| 3 | Several boards per update | Jackson's reason was disk cost; in memory the gain is unclear | One more table | Built (`--batch-boards B`); not adopted (results below) |
 | 4 | Board-first (hierarchical) buckets | Our distribution-aware buckets did not help | | Other ways to group cards, below; a diagnostic decides first |
 | 5 | Disk-based, multi-machine solving | The lab has the memory | | Skip |
 | 6 | DyypHoldem code | No licence; models gone | | Code no. The idea (value networks at re-solve leaves): test plan below |
@@ -84,6 +84,32 @@ Pass rules, set before the results: a sampling option is adopted if both its run
 random-board runs; otherwise it stays an option. The wide tree is adopted if its LBR interval lies below the standard
 tree's estimate at the same compute; if the intervals overlap, the result is "not shown" and the overbet count from A4
 decides whether a longer wide solve is worth it.
+
+**Results (2026-11-27).** Exploitability inside the abstraction (`br_vec`, bb/100, lower is better, 95% intervals):
+
+| Arm | Run a | Run b | Vector iterations (a, b) |
+|---|---|---|---|
+| random boards | +24.31 [+23.54, +25.08] | +23.93 [+23.00, +24.86] | 40,378, 40,138 |
+| `--flop-cycle` | +24.86 [+23.96, +25.77] | +32.90 [+31.83, +33.97] | 41,604, 40,848 |
+| `--batch-boards 50` | +65.06 [+64.09, +66.03] | +58.00 [+57.05, +58.95] | 34,828, 34,664 |
+
+- **Flop cycle: not adopted.** Neither run beats both random-board runs; run b is 9 bb/100 worse. Two seeds of the
+  same option differ by more than the options do, so the board order is not where the error is.
+- **Batched updates: not adopted**, and not a bug. Fifty boards a batch over about 20,000 boards a run is about 400
+  strategy updates, against about 20,000 with one board an update; the barrier also cost 14% of the iterations.
+  Batching trades the number of updates for less noise in each, which pays only when, as in Slumbot NL, a run deals
+  billions of boards.
+
+| Tree | Vector iterations | `br_vec` (own tree) | LBR, 30,000 hands, luck-adjusted | LBR, raw |
+|---|---|---|---|---|
+| standard | 176,342 | +26.69 [+25.74, +27.63] | +87.0 [+69.5, +104.5] | +90.4 [+69.1, +111.7] |
+| wide | 52,926 | +27.42 [+26.65, +28.20] | +78.9 [+61.2, +96.5] | +83.3 [+62.3, +104.4] |
+
+- **Wide tree: not shown.** Its LBR interval reaches +96.5, above the standard tree's +87.0. It is 8 bb/100 lower
+  on less than a third of the iterations (the tree is 2.9x larger), and LBR's biggest gains against both are the same:
+  pot-sized flop bets that are called (+55 and +62 bb/100 of LBR's total) or folded to (+33 and +34). A wide solve
+  with as many iterations as the standard one (about 18 hours on 8 threads) is the fair test, if A4's overbet count
+  calls for it.
 
 ## Other ways to group cards
 
@@ -187,6 +213,26 @@ worst-hand gain that should fall toward 0 as iterations grow. Fixing both rivers
 worse than the blueprint's own: the turn solve assumes an opponent who never deviates on the river, and the best
 response does. Hence the fair arm D, added after this run. Queued on the lab: 100 spots at 200 iterations, then 20 at
 500 for convergence.
+
+**Full run (2026-11-27)**, run 2's blueprint, standard tree, 6 threads, chips per hand pair (se of the change, paired
+with the blueprint on the same spots):
+
+| Arm | 100 spots, 200 iterations: change vs blueprint | worst hand's gain | s a spot | 20 spots, 500 iterations: change | worst hand's gain |
+|---|---|---|---|---|---|
+| blueprint (+660.7; +706.7 on the 20) | | 0 | | | 0 |
+| unsafe re-solve | -645.0 (se 67.4) | +667.4 | 261 | -809.0 (se 172.0) | +823.2 |
+| safe re-solve (C) | **-121.3** (se 23.1) | +42.7 | 208 | **-172.5** (se 55.9) | +28.7 |
+| safe, our river fixed (D) | -96.7 (se 12.4) | +40.2 | 137 | -103.6 (se 23.1) | +29.1 |
+| safe, both rivers fixed | +269.6 (se 16.8) | +446.2 | 94 | +286.8 (se 37.5) | +463.6 |
+
+- The safe re-solve improves on the blueprint by about 18% of the opponent's best response, and its worst-hand gain
+  falls with iterations (+208 at 50, +43 at 200, +29 at 500); the floor is doing its job.
+- The unsafe re-solve still lets a single hand gain 667-823 over the blueprint: the TexasSolver path's weakness, now
+  measured.
+- **C against D, the rule that decides the value-network work:** C is ahead by about 25 at 200 iterations and 69 at
+  500, but this output pairs each arm only with the blueprint, so the C-D difference has no standard error yet.
+  `resolve_turn --skip 1,4` reruns C and D alone on the same spots (the spots depend only on the seed) and prints
+  the paired difference and one line a spot; that run decides it.
 
 **Expectations:** a re-solve over the same bet menu cannot fix a menu leak, so the turn re-solve should carry the wide
 tree's sizes too. Network error compounds street by street, and production Kestrel has no GPU path. DeepStack never

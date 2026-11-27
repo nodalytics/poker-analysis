@@ -20,6 +20,7 @@
 //                         opponent will not deviate on the river
 //
 // Usage: resolve_turn ABS RUN --test SPOTS [--iters 200] [--purify 0.05] [--seed 1] [--threads 8] [--floor 0.02]
+//        [--skip 1,4]
 // Memory per spot: the largest turn subgame of the standard tree holds 5,476 river action slots, 2.3 GB over 48
 // river cards (regrets and averages); the median holds 88 (37 MB). Keep --threads modest.
 #define RESOLVE_LIB
@@ -248,6 +249,7 @@ int main(int argc, char** argv) {
   int spots = 50, iters = 200, threads = 8;
   double purify = 0.05;
   uint64_t seed = 1;
+  std::string skip;  // --skip 1,4: arms not run (the spots stay the same: they depend only on the seed)
   for (int i = 3; i < argc; ++i) {
     std::string a = argv[i];
     if (a == "--test") spots = atoi(argv[++i]);
@@ -256,6 +258,7 @@ int main(int argc, char** argv) {
     else if (a == "--seed") seed = strtoull(argv[++i], nullptr, 10);
     else if (a == "--threads") threads = atoi(argv[++i]);
     else if (a == "--floor") FLOOR = (float)atof(argv[++i]);
+    else if (a == "--skip") skip = argv[++i];
   }
   if (!load_table(abs, run, purify)) return 1;
   const int M = 5;
@@ -263,6 +266,8 @@ int main(int argc, char** argv) {
                          "safe, both rivers fixed"};
   std::vector<double> ex[M], worst[M], secs[M];
   for (int m = 0; m < M; ++m) ex[m].assign(spots, 0), worst[m].assign(spots, 0), secs[m].assign(spots, 0);
+  bool on[M];
+  for (int m = 0; m < M; ++m) on[m] = m == 0 || ("," + skip + ",").find("," + std::to_string(m) + ",") == std::string::npos;
   std::vector<int> kept(spots, 0);
   double t0 = omp_get_wtime();
 #pragma omp parallel for schedule(dynamic, 1) num_threads(threads)
@@ -322,6 +327,7 @@ int main(int argc, char** argv) {
     }
     walk(tb, nullptr, 1, -1, root, opp, nullptr, r_us, cbv.data(), ar, 1);  // the opponent's values vs the blueprint
     for (int m = 0; m < M; ++m) {
+      if (!on[m]) continue;
       double ts = omp_get_wtime();
       TurnSol s;
       TurnSol* use = nullptr;
@@ -347,6 +353,7 @@ int main(int argc, char** argv) {
   for (int k = 0; k < spots; ++k) nk += kept[k];
   printf("%d turn spots, %d CFR+ iterations, %.0fs\n", nk, iters, omp_get_wtime() - t0);
   for (int m = 0; m < M; ++m) {
+    if (!on[m]) continue;
     double me = 0, mw = 0, d = 0, d2 = 0, ms = 0;
     for (int k = 0; k < spots; ++k)
       if (kept[k]) {
@@ -360,5 +367,24 @@ int main(int argc, char** argv) {
            "gain over blueprint %+8.1f  %.1fs a spot\n",
            name[m], me, d, se, mw, ms);
   }
+  // C against D on the same spots: what exact rivers buy over blueprint values at the leaves (positive: C better)
+  if (on[2] && on[3]) {
+    double d = 0, d2 = 0;
+    for (int k = 0; k < spots; ++k)
+      if (kept[k]) {
+        double x = ex[3][k] - ex[2][k];
+        d += x, d2 += x * x;
+      }
+    d /= nk;
+    printf("our river fixed minus safe re-solve: %+.1f chips per hand pair (se %.1f, paired over %d spots)\n", d,
+           std::sqrt(std::max(d2 / nk - d * d, 0.0) / std::max(nk - 1, 1)), nk);
+  }
+  for (int k = 0; k < spots; ++k)  // one line a spot, for any other pairing
+    if (kept[k]) {
+      fprintf(stderr, "spot %d", k);
+      for (int m = 0; m < M; ++m)
+        if (on[m]) fprintf(stderr, " %d:%.1f/%.1f", m, ex[m][k], worst[m][k]);
+      fprintf(stderr, "\n");
+    }
   return 0;
 }

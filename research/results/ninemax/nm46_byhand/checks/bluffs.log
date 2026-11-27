@@ -1,0 +1,26 @@
+equity   jam-any vs 8 x nm46            -51.5 bb/100 [-55.1, -47.9]
+equity   jam-any vs 8 x hybrid-zero    -129.1 bb/100 [-133.1, -125.1]
+equity   jam-any vs 8 x hybrid-pko     -135.0 bb/100 [-139.3, -130.8]
+equity    jam-40 vs 8 x nm46            -13.6 bb/100 [-15.2, -12.0]
+equity    jam-40 vs 8 x hybrid-zero     -30.1 bb/100 [-32.0, -28.3]
+equity    jam-40 vs 8 x hybrid-pko      -31.2 bb/100 [-33.0, -29.3]
+equity raise-any vs 8 x nm46            -10.5 bb/100 [-11.5, -9.4]
+equity raise-any vs 8 x hybrid-zero     -14.7 bb/100 [-15.8, -13.5]
+equity raise-any vs 8 x hybrid-pko      -18.9 bb/100 [-20.0, -17.8]
+ chips   jam-any vs 8 x nm46            +14.8 bb/100 [+10.0, +19.5]
+ chips   jam-any vs 8 x hybrid-zero    -103.4 bb/100 [-109.6, -97.2]
+ chips   jam-any vs 8 x hybrid-pko      -98.9 bb/100 [-105.0, -92.9]
+ chips    jam-40 vs 8 x nm46            +13.6 bb/100 [+11.4, +15.9]
+ chips    jam-40 vs 8 x hybrid-zero     -12.2 bb/100 [-15.1, -9.4]
+ chips    jam-40 vs 8 x hybrid-pko      -17.7 bb/100 [-20.6, -14.9]
+ chips raise-any vs 8 x nm46            -10.6 bb/100 [-12.2, -9.0]
+ chips raise-any vs 8 x hybrid-zero     -35.4 bb/100 [-37.2, -33.6]
+ chips raise-any vs 8 x hybrid-pko      -33.8 bb/100 [-35.5, -32.0]
+hybrid-zero vs 8 x nm46         -3.23 bb/100 [-4.00, -2.46]
+nm46 vs 8 x hybrid-zero         +7.14 bb/100 [+6.45, +7.84]
+hybrid-pko vs 8 x nm46          -2.36 bb/100 [-3.08, -1.64]
+nm46 vs 8 x hybrid-pko          +3.57 bb/100 [+2.90, +4.24]
+fold to an all-in pre-flop, nm46: {'with jam-any at the table': 0.863, 'defenders only': 0.773}
+fold to an all-in pre-flop, hybrid-zero: {'with jam-any at the table': 0.694, 'defenders only': 0.507}
+fold to an all-in pre-flop, hybrid-pko: {'with jam-any at the table': 0.734, 'defenders only': 0.559}
+done
