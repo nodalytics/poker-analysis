@@ -152,6 +152,9 @@ main { padding: 18px; max-width: 1400px; margin: 0 auto; }
 .pseat .btn-d { position: absolute; top: -8px; right: -8px; }
 .standings { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
 .standings .row { display: flex; justify-content: space-between; padding: 5px 8px; border-radius: 8px; background: var(--panel-2); }
+.lineup { display: grid; grid-template-columns: auto 1fr; gap: 4px 8px; align-items: center; }
+.lineup .k { font-size: 12px; color: var(--muted); }
+.lineup-tools { display: flex; gap: 8px; margin: 6px 0; flex-wrap: wrap; }
 .empty { display: grid; place-items: center; text-align: center; padding: 70px 20px; color: var(--muted); }
 .empty .big { width: 120px; height: 120px; margin: 0 auto 10px; }
 .empty h2 { color: var(--text); margin: 6px 0; font-weight: 600; }
@@ -192,12 +195,19 @@ select, input { width: 100%; padding: 9px 11px; border-radius: 10px; border: 1px
   <div id="tourneyField" style="display:none"><label>Tournaments (within the hands below)</label><input id="tourneys" type="number" value="10" min="1"></div>
   </div>
   <div id="practiceFields" style="display:none">
-    <label>Who plays</label><select id="pwho"><option value="watch">Kestrel in every seat (watch it decide)</option><option value="human">You against Kestrel</option></select>
-    <label>Model</label><select id="pmodel"></select>
+    <label>Who plays</label><select id="pwho"><option value="watch">Kestrel in every seat (watch it decide)</option><option value="human">You against Kestrel</option><option value="match">Choose the table (models against each other, and you)</option></select>
+    <div id="pmodelField"><label>Model</label><select id="pmodel"></select></div>
     <label>Players</label><select id="pplayers"><option>9</option><option>8</option><option>7</option><option>6</option><option>5</option><option>4</option><option>3</option><option>2</option></select>
     <label>Starting stacks (average, big blinds)</label><input id="pavg" type="number" min="5" max="60" value="20">
     <label>Pace</label><select id="ppace"><option value="5000">Very slow (5 s a move)</option><option value="3000">Slow (3 s a move)</option><option value="1800" selected>Normal (1.8 s a move)</option><option value="800">Fast</option><option value="0">As fast as it can</option></select>
-    <div class="reach">Every seat is played by the model, with its cards face up, in a real final table: stacks carry over, blinds rise every 15 hands, busted players finish in places, and ICM prize equity is recomputed every hand, as in training.</div>
+    <div id="lineupField" style="display:none">
+      <label>The table, seat by seat (in order round it)</label>
+      <div id="lineup" class="lineup"></div>
+      <div class="lineup-tools"><button type="button" class="btn ghost" id="lineupMix">Every model in turn</button><button type="button" class="btn ghost" id="lineupMe">Add me</button></div>
+      <label class="reach" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="protate" checked style="width:auto"> Move everyone one seat each tournament (evens out position luck)</label>
+      <div class="reach">The leaderboard ranks the models by their average prize per seat over the finished tournaments, against an equal share. Against people, Kestrel's cards and probabilities stay hidden.</div>
+    </div>
+    <div class="reach" id="practiceAbout">Every seat is played by the model, with its cards face up, in a real final table: stacks carry over, blinds rise every 15 hands, busted players finish in places, and ICM prize equity is recomputed every hand, as in training.</div>
   </div>
   <label>Hands</label><input id="hands" type="number" min="1" value="200">
   <div class="row-end"><button class="btn ghost" id="cancel">Cancel</button><button class="btn primary" id="start">Start</button></div>
@@ -446,15 +456,26 @@ function practiceView(t) {
     <div>${practiceTable(t)}<div class="panel" style="margin-top:18px"><h3>This hand</h3><div class="mono" style="font-size:13px;line-height:1.7">${log || "–"}</div></div></div>
     <div class="side">
       ${t.human ? movesPanel(t) : `<div class="panel"><h3>Last move${d ? ` · ${esc(d.pos)} ${esc(d.name)}` : ""}</h3>${bars ? `<div class="bars">${bars}</div><div class="why">${esc(t.model)} · ${STREETS[d.street]} · value ${sign(d.value_bb)} bb</div>` : `<div class="why">Waiting for the first decision…</div>`}</div>`}
-      <div class="panel"><h3>Practice tournament ${t.tournament || 1}</h3><div class="engine mono">${t.human ? `you against ${esc(t.model)}` : `${esc(t.model)} in every seat`} · ${t.players || 9}-handed start · ${t.hands || 0}${t.target ? ` / ${t.target}` : ""} hands</div>
+      <div class="panel"><h3>Practice tournament ${t.tournament || 1}</h3><div class="engine mono">${(t.model || "").includes(" vs ") ? esc(t.model) : t.human ? `you against ${esc(t.model)}` : `${esc(t.model)} in every seat`} · ${t.players || 9}-handed start · ${t.hands || 0}${t.target ? ` / ${t.target}` : ""} hands</div>
         <div class="standings">${rows || `<div class="why">Standings after the first hand</div>`}</div>
         <div class="row-end" style="margin-top:12px"><button class="btn" onclick="stopTable(${t.id})" ${t.status !== "playing" ? "disabled" : ""}>${t.status === "playing" ? "Stop" : esc(t.status)}</button></div></div>
+      ${t.match !== undefined ? leaderboard(t.match) : ""}
     </div></div>`;
+}
+// a match's leaderboard: each model's mean prize per seat (% of the prize pool), its edge over an equal share with a
+// 95% interval, wins and seats
+function leaderboard(m) {
+  if (!m || !m.tournaments) return `<div class="panel"><h3>Leaderboard</h3><div class="why">After the first finished tournament</div></div>`;
+  const pct = x => (100 * x).toFixed(1);
+  const rows = m.models.map((x, i) => `<div class="row" title="${x.seats} seats · ${x.firsts} wins · ${x.paid} paid"><span>${i + 1}. ${esc(x.model)}</span><span class="mono ${x.edge >= 0 ? "win" : "loss"}">${x.edge >= 0 ? "+" : ""}${pct(x.edge)} ±${pct(1.96 * x.se)} · ${x.firsts} won</span></div>`).join("");
+  return `<div class="panel"><h3>Leaderboard · ${m.tournaments} tournament${m.tournaments > 1 ? "s" : ""}</h3>
+    <div class="engine mono">prize per seat vs an equal share (${pct(m.fair)}% of the pool), with a 95% interval</div>
+    <div class="standings">${rows}</div></div>`;
 }
 
 function render() {
   const tabs = [...tables.values()].map((t, i) => `<button class="tab ${t.id === current && view === "screen" ? "on" : ""}" data-id="${t.id}">
-      <span class="dot ${esc(t.status)}"></span>${t.kind === "practice" ? `${t.human ? "you vs" : "practice ·"} ${esc(t.model || "")} <span class="mono" style="font-size:12px;color:var(--muted)">${t.players || 9}-max #${t.tournament || 1}</span>${t.yourTurn ? ` <span class="badge">your turn</span>` : ""}` : `${esc(t.connector)}<span class="mono ${won(t) >= 0 ? "win" : "loss"}" style="font-size:12px">${t.hands ? sign(won(t)) : ""}</span>`}<span class="k mono">${i + 1}</span></button>`).join("");
+      <span class="dot ${esc(t.status)}"></span>${t.kind === "practice" ? `${t.human && !(t.model || "").includes(" vs ") ? "you vs" : "practice ·"} ${esc(t.model || "")} <span class="mono" style="font-size:12px;color:var(--muted)">${t.players || 9}-max #${t.tournament || 1}</span>${t.yourTurn ? ` <span class="badge">your turn</span>` : ""}` : `${esc(t.connector)}<span class="mono ${won(t) >= 0 ? "win" : "loss"}" style="font-size:12px">${t.hands ? sign(won(t)) : ""}</span>`}<span class="k mono">${i + 1}</span></button>`).join("");
   $("#tabs").innerHTML = tabs;
   document.querySelectorAll(".tab").forEach(b => b.onclick = () => { current = +b.dataset.id; setView("screen"); });
   const main = $("#main");
@@ -499,8 +520,8 @@ function onEvent(e) {
   }
   if (e.type === "practice_decision") { t.state = e; t.lastDecision = e; t.tournament = e.tournament; t.yourTurn = null; }
   else if (e.type === "practice_your_turn") { t.state = e; t.yourTurn = e; t.tournament = e.tournament; }
-  else if (e.type === "practice_hand") { t.state = e; t.standings = e.standings; t.hands = e.hands; t.tournament = e.tournament; }
-  if (e.type === "table") { if (e.players) t.players = e.players; if (e.human !== undefined) t.human = e.human; t.status = e.status; if (e.model) { t.model = e.model; t.solver = e.solver; } if (current == null) current = t.id; }
+  else if (e.type === "practice_hand") { t.state = e; t.standings = e.standings; t.hands = e.hands; t.tournament = e.tournament; if (e.match) t.match = e.match; }
+  if (e.type === "table") { if (e.players) t.players = e.players; if (e.human !== undefined) t.human = e.human; t.status = e.status; if (e.status && e.status !== "playing") t.yourTurn = null; if (e.model) { t.model = e.model; t.solver = e.solver; } if (current == null) current = t.id; }
   else if (e.type === "decision") { t.state = e; t.lastDecision = e; }
   else if (e.type === "deal") { t.state = { ...e, board: [], action: "" }; }
   else if (e.type === "hand") {
@@ -565,7 +586,48 @@ $("#kind").onclick = ev => {
   $("#practiceFields").style.display = k === "practice" ? "" : "none";
   const pm = engines.models.filter(m => m.practice);
   $("#pmodel").innerHTML = pm.map(m => `<option>${esc(m.name)}</option>`).join("") || `<option disabled>no 9-max model installed</option>`;
+  if (!lineup.length) lineupDefault();
+  showWho();
 };
+// the table for a match: one entry a seat, a model's name or "you". Default: you in the first seat, then every
+// practice model in turn, the default model first (the server's list puts it first)
+let lineup = [];
+const practiceModels = () => engines.models.filter(m => m.practice).map(m => m.name);
+// the default table's models: the default model's game only (a bounty model cannot share a table with regular ones)
+const defaultModels = () => {
+  const pm = engines.models.filter(m => m.practice);
+  return pm.filter(m => m.game === pm[0]?.game).map(m => m.name);
+};
+function lineupDefault(withMe = true) {
+  const ms = defaultModels(), n = +$("#pplayers").value;
+  lineup = Array.from({ length: n }, (_, k) => withMe ? (k === 0 ? "you" : ms[(k - 1) % ms.length]) : ms[k % ms.length]);
+  drawLineup();
+}
+function drawLineup() {
+  const ms = practiceModels(), dm = defaultModels(), n = +$("#pplayers").value;
+  while (lineup.length < n) lineup.push(dm[lineup.length % dm.length]);
+  lineup.length = n;
+  const game = Object.fromEntries(engines.models.map(m => [m.name, m.game]));
+  const opts = v => [...ms.map(m => `<option value="${esc(m)}" ${m === v ? "selected" : ""}>${esc(m)}${/bounty/.test(game[m] || "") ? " (bounty)" : ""}</option>`), `<option value="you" ${v === "you" ? "selected" : ""}>You</option>`].join("");
+  $("#lineup").innerHTML = lineup.map((v, k) => `<span class="k mono">seat ${k + 1}</span><select data-k="${k}">${opts(v)}</select>`).join("");
+  $("#lineup").querySelectorAll("select").forEach(sel => sel.onchange = () => {
+    const k = +sel.dataset.k;
+    if (sel.value === "you") lineup = lineup.map(v => v === "you" ? dm[0] : v);  // one seat for you
+    lineup[k] = sel.value;
+    drawLineup();
+  });
+}
+function showWho() {
+  const m = $("#pwho").value === "match";
+  $("#lineupField").style.display = m ? "" : "none";
+  $("#pmodelField").style.display = m ? "none" : "";
+  $("#practiceAbout").style.display = m ? "none" : "";
+  if (m) drawLineup();
+}
+$("#pwho").onchange = showWho;
+$("#pplayers").onchange = () => { if ($("#pwho").value === "match") drawLineup(); };
+$("#lineupMix").onclick = () => lineupDefault(lineup.includes("you"));
+$("#lineupMe").onclick = () => { if (!lineup.includes("you")) { lineup[0] = "you"; drawLineup(); } };
 function showReach() {
   const c = connectors.find(x => x.name === $("#conn").value); if (!c) return;
   $("#reach").innerHTML = `talks to ${esc(c.hosts.join(", "))}${c.env.length ? "<br>reads " + esc(c.env.join(", ")) : ""}`;
@@ -583,10 +645,14 @@ api("/v1/network").then(n => {
 $("#cancel").onclick = () => $("#dlg").close();
 $("#start").onclick = async () => {
   if (newKind === "practice") {
-    const body = { model: $("#pmodel").value, players: +$("#pplayers").value, avg_bb: +$("#pavg").value, pace_ms: +$("#ppace").value, hands: +$("#hands").value, human: $("#pwho").value === "human" };
+    const match = $("#pwho").value === "match";
+    const body = match
+      ? { seats: [...lineup], rotate: $("#protate").checked, avg_bb: +$("#pavg").value, pace_ms: +$("#ppace").value, hands: +$("#hands").value, human: lineup.includes("you") }
+      : { model: $("#pmodel").value, players: +$("#pplayers").value, avg_bb: +$("#pavg").value, pace_ms: +$("#ppace").value, hands: +$("#hands").value, human: $("#pwho").value === "human" };
+    if (match && !lineup.some(v => v !== "you")) { toast("the table needs at least one model"); return; }
     const r = await api("/v1/practice", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     $("#dlg").close();
-    if (r.id) { const t = upsert(r.id, "practice"); Object.assign(t, { kind: "practice", model: body.model, target: body.hands, status: "playing", players: body.players, human: body.human }); current = r.id; setView("screen"); }
+    if (r.id) { const t = upsert(r.id, "practice"); Object.assign(t, { kind: "practice", model: match ? [...new Set(lineup)].join(" vs ") : body.model, target: body.hands, status: "playing", players: match ? lineup.length : body.players, human: body.human, match: match ? null : undefined }); current = r.id; setView("screen"); }
     else toast(r.error || "could not start");
     return;
   }

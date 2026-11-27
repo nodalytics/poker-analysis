@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <fstream>
+#include <cmath>
 #include <map>
 #include <random>
 #include <memory>
@@ -610,28 +611,74 @@ int serve(const ServeOptions& o) {
         reply(res, {{"id", t->id}}, 201);
     });
 
-    // a practice tournament: a 9-max network in every seat, played at a watchable pace
+    // a practice tournament: a 9-max network in every seat, played at a watchable pace. A match between models:
+    //   "seats": ["nm25", "you", "nm46", ...]  the table in order round it, 2-9 seats, "you" (at most one) the user;
+    //   "models": ["nm25", "nm46"]             or a list cycled over "players" seats (9 unless given), "you" allowed.
+    // "rotate" (default true) moves everyone one seat round the table each tournament, so position luck evens out:
+    // seat k goes to list[(k + t) % N] in tournament t. Every hand carries a leaderboard ("match"): per model, the mean
+    // prize per seat over the finished tournaments, its edge over an equal share, and that mean's standard error
     srv.Post("/v1/practice", [&](const httplib::Request& req, httplib::Response& res) {
         json body = json::parse(req.body, nullptr, false);
         if (body.is_discarded()) return reply(res, {{"error", "bad JSON"}}, 400);
-        std::string model = body.value("model", "");
+        std::vector<std::string> names;  // "" is the user's seat
+        const bool by_seat = body.contains("seats");
+        if (by_seat || body.contains("models")) {
+            const json& l = body[by_seat ? "seats" : "models"];
+            if (!l.is_array()) return reply(res, {{"error", "seats and models: a list of model names (or \"you\")"}}, 400);
+            for (auto& x : l) {
+                if (!x.is_string()) return reply(res, {{"error", "seats and models: names only"}}, 400);
+                std::string nm = x.get<std::string>();
+                names.push_back(nm == "you" || nm == "You" ? "" : nm);
+            }
+            if (names.size() < 2 || names.size() > 9) return reply(res, {{"error", "seats and models: 2 to 9 entries"}}, 400);
+            if (std::count(names.begin(), names.end(), "") > 1) return reply(res, {{"error", "one seat for you at most"}}, 400);
+            if (std::count(names.begin(), names.end(), "") == int(names.size()))
+                return reply(res, {{"error", "the table needs at least one model"}}, 400);
+        } else {
+            names.push_back(body.value("model", ""));
+        }
         auto ms = nine_max_models(o);
-        auto it = std::find_if(ms.begin(), ms.end(), [&](auto& m) { return m.first == model; });
-        if (it == ms.end()) return reply(res, {{"error", "no 9-max model " + model}}, 404);
         if (!pack_problem.empty()) return reply(res, {{"error", pack_problem}}, 400);
-        std::shared_ptr<Net> net;
+        std::vector<std::shared_ptr<Net>> nets;  // one per name, the same object for a repeated name
         try {
             buckets_init(o.pack);
-            net = std::make_shared<Net>(it->second);
+            std::map<std::string, std::shared_ptr<Net>> loaded;
+            std::shared_ptr<Net> first;  // every model must be able to share a table with the first
+            for (auto& nm : names) {
+                if (nm.empty() && names.size() > 1) {  // the user's seat
+                    nets.push_back(nullptr);
+                    continue;
+                }
+                auto it = std::find_if(ms.begin(), ms.end(), [&](auto& m) { return m.first == nm; });
+                if (it == ms.end()) return reply(res, {{"error", "no 9-max model " + nm}}, 404);
+                auto& n = loaded[nm];
+                if (!n) n = std::make_shared<Net>(it->second);
+                if (!first) first = n;
+                std::string why = practice_mismatch(first->info(), n->info());
+                if (!why.empty()) return reply(res, {{"error", "these models cannot play each other: " + why}}, 400);
+                nets.push_back(n);
+            }
         } catch (const std::exception& e) {
             return reply(res, {{"error", e.what()}}, 400);
         }
+        const bool match = names.size() > 1;
+        const bool rotate = body.value("rotate", true);
+        std::string model;  // the table's title: each player once, in seat order
+        std::vector<std::string> seen;
+        for (auto& nm : names) {
+            std::string x = nm.empty() ? "you" : nm;
+            if (std::find(seen.begin(), seen.end(), x) != seen.end()) continue;
+            model += (seen.empty() ? "" : " vs ") + x, seen.push_back(x);
+        }
+        std::shared_ptr<Net> net;
+        for (auto& n : nets)
+            if (n && !net) net = n;
         PracticeConfig pc;
-        pc.players = std::clamp(body.value("players", 9), 2, 9);
+        pc.players = by_seat ? int(names.size()) : std::clamp(body.value("players", 9), 2, 9);
         pc.avg_bb = std::clamp(body.value("avg_bb", 20.0), 5.0, 60.0);
         int hands = std::clamp(body.value("hands", 300), 1, 100000);
         int pace = std::clamp(body.value("pace_ms", 700), 0, 5000);
-        pc.human = body.value("human", false);
+        pc.human = match ? std::count(names.begin(), names.end(), "") == 1 : body.value("human", false);
         // knockout bounties: a PKO model plays with the share it trained with unless told otherwise; others never
         pc.bounty = net->info().feat_bounty > 0 ? std::clamp(body.value("bounty", net->info().feat_bounty), 0.0, 0.9) : 0.0;
         auto t = std::make_shared<TableRun>();
@@ -647,7 +694,7 @@ int serve(const ServeOptions& o) {
                      {"status", "playing"}, {"model", model}, {"solver", "none"}, {"players", pc.players},
                      {"human", pc.human}});
         const std::string logdir = o.out + "/" + std::to_string(t->id) + "-practice";
-        t->th = std::thread([&hub, t, net, pc, pace, logdir, db, model] {
+        t->th = std::thread([&hub, t, net, nets, names, match, rotate, pc, pace, logdir, db, model] {
             {
                 std::lock_guard<std::mutex> lk(hub.mu);
                 t->status = "playing";
@@ -665,10 +712,38 @@ int serve(const ServeOptions& o) {
             };
             in_db([&] { sid = db->begin_session("practice", "practice", model, "none", logdir); });
             uint64_t round = 0;
+            // the match leaderboard: per model, the seats it held in finished tournaments and their prizes
+            struct Score {
+                int seats = 0, firsts = 0, paid = 0;
+                double prize = 0, prize2 = 0;
+            };
+            std::map<std::string, Score> score;
+            int finished = 0;
+            double fair = 0;  // a seat's share of the prizes when every seat is equal
+            for (int k = 0; k < pc.players && k < int(pc.payouts.size()); ++k) fair += pc.payouts[k];
+            fair = ((1 - std::clamp(pc.bounty, 0.0, 0.9)) * fair + std::clamp(pc.bounty, 0.0, 0.9)) / pc.players;
+            auto board = [&] {
+                json a = json::array();
+                for (auto& [m, x] : score) {
+                    const double mean = x.seats ? x.prize / x.seats : 0;
+                    const double var = x.seats > 1 ? std::max(0.0, (x.prize2 - x.seats * mean * mean) / (x.seats - 1)) : 0;
+                    a.push_back({{"model", m}, {"seats", x.seats}, {"prize", mean}, {"edge", mean - fair},
+                                 {"se", x.seats > 1 ? std::sqrt(var / x.seats) : 0.0}, {"firsts", x.firsts},
+                                 {"paid", x.paid}});
+                }
+                std::sort(a.begin(), a.end(), [](const json& x, const json& y) { return x["prize"] > y["prize"]; });
+                return json{{"tournaments", finished}, {"fair", fair}, {"models", a}};
+            };
             while (!t->stop && t->done < t->hands) {
                 PracticeConfig c = pc;
-                c.seed = uint64_t(t->id) * 1000003 + round++;
-                PracticeTournament tour(*net, c, "Kestrel");
+                c.seed = uint64_t(t->id) * 1000003 + round;
+                std::vector<PracticeSeat> lineup;
+                for (size_t k = 0; k < names.size(); ++k) {
+                    size_t j = (k + (rotate ? round : 0)) % names.size();
+                    lineup.push_back({names[j], nets[j].get()});
+                }
+                ++round;
+                PracticeTournament tour = match ? PracticeTournament(lineup, c) : PracticeTournament(*net, c, "Kestrel");
                 while (!tour.over() && !t->stop && t->done < t->hands) {
                     auto ask = [&](const json& q) {
                         json ev = q;
@@ -692,6 +767,18 @@ int serve(const ServeOptions& o) {
                         json ev = e;
                         ev["table"] = t->id, ev["connector"] = "practice", ev["kind"] = "practice";
                         ev["tournament"] = round;
+                        if (match && e["type"] == "practice_hand") {
+                            if (e["over"].get<bool>()) {  // score the finished tournament, seat by seat
+                                ++finished;
+                                for (auto& r : e["standings"]) {
+                                    Score& x = score[r["model"].get<std::string>()];  // "You" for the user
+                                    const double p = r["prize"].get<double>();
+                                    ++x.seats, x.prize += p, x.prize2 += p * p;
+                                    x.firsts += r["place"] == 1, x.paid += p > 0;
+                                }
+                            }
+                            ev["match"] = board();
+                        }
                         {
                             std::lock_guard<std::mutex> lk(hub.mu);
                             if (e["type"] == "practice_hand") ev["hands"] = ++t->done, t->summary = e["standings"];
@@ -713,6 +800,7 @@ int serve(const ServeOptions& o) {
                 std::lock_guard<std::mutex> lk(hub.mu);
                 t->status = t->stop ? "stopped" : "finished";
             }
+            if (match) std::ofstream(logdir + "/match.json") << board().dump(1) << "\n";
             if (sid) {
                 json standings;
                 {

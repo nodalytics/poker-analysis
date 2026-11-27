@@ -336,11 +336,41 @@ int main(int argc, char** argv) {
             pko.cmp(pt.over() ? total : -1, 1.0, "tournament " + std::to_string(seed) + ", " +
                                                       std::to_string(pt.hands()) + " hands");
         }
+    // a lineup of models (one network under three names) and a user seat: every seat keeps its model, the user's seat
+    // is asked for each of its moves and only for them, and the prizes add up to the pool
+    Check lineup{"practice lineup", 1e-9};
+    if (info.feat_tourney && info.feat_bounty == 0)
+        for (uint64_t seed : {1, 2}) {
+            PracticeConfig pc;
+            pc.seed = seed, pc.players = 7;
+            std::vector<PracticeSeat> l{{"a", &net}, {"b", &net}, {"you", nullptr}, {"c", &net}};
+            PracticeTournament pt(l, pc);
+            int asked = 0, wrong = 0;
+            while (!pt.over() && pt.hands() < 2000)
+                pt.play_hand([](const json&) {}, [&](const json& q) {
+                    ++asked;
+                    bool mine = false;
+                    for (auto& st : q["seats"])
+                        if (st["seat"] == q["actor"]) mine = st["you"].get<bool>();
+                    wrong += !mine;
+                    return q["choices"][0]["slot"].get<int>();  // the user always takes the first choice (fold or check)
+                });
+            double total = 0;
+            int bad_model = 0, k = 0;
+            const char* want[7] = {"a", "b", "You", "c", "a", "b", "a"};  // cycled past the user: the first model
+            for (auto& r : pt.standings()) total += r["prize"].get<double>(), bad_model += r["model"] != want[k++];
+            double pool = 0;  // seven players: the top seven prizes
+            for (int j = 0; j < pc.players; ++j) pool += pc.payouts[j];
+            lineup.cmp(pt.over() ? total : -1, pool, "tournament " + std::to_string(seed));
+            lineup.eq(asked > 0 && wrong == 0, 1, "the user was asked " + std::to_string(asked) + " times, " +
+                                                     std::to_string(wrong) + " not for their own seat");
+            lineup.eq(bad_model, 0, "seats with the wrong model");
+        }
     bool ok = true;
     std::printf("kestrel self-test: %zu 9-max hands, %d ICM cases, %d heads-up decisions, %d with the defence floor "
                 "(%d floored), %d replayed platform decisions\n", V["hands"].size(), c, hc, fc, floored, rdec);
     for (Check* k : {&actor, &street, &legal, &targets, &feat, &str, &logit, &value, &done, &pay, &eq0, &icmc, &hturn,
-                     &hnode, &hbk, &hn, &hkind, &hprob, &hto, &fagree, &rturn, &rprob, &rto, &mwc, &bfwd, &bval, &srch, &pko}) {
+                     &hnode, &hbk, &hn, &hkind, &hprob, &hto, &fagree, &rturn, &rprob, &rto, &mwc, &bfwd, &bval, &srch, &pko, &lineup}) {
         std::printf("  %-6s %-10s %6ld checks, worst error %.2e (tolerance %.0e)%s\n", k->bad ? "FAIL" : "ok",
                     k->name.c_str(), k->n, k->worst, k->tol, k->bad ? "" : "");
         if (k->bad) {

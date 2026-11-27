@@ -1,8 +1,10 @@
-// A practice tournament: a final table played out by a 9-max tournament network in every seat, to watch it decide.
+// A practice tournament: a final table played out by a 9-max tournament network in every seat, to watch it decide, or
+// by several networks against each other (a lineup: one network a seat, the seats named after their models).
 // Stacks carry over, the button moves, blinds rise every few hands, busted players finish in places with
 // final-table payouts, and every hand is played with the ICM features the network was trained on.
 #pragma once
 #include <functional>
+#include <stdexcept>
 #include <random>
 #include <string>
 #include <vector>
@@ -26,13 +28,28 @@ struct PracticeConfig {
     double level_factor = 1.25;
     std::vector<double> payouts{0.30, 0.20, 0.145, 0.105, 0.08, 0.065, 0.05, 0.035, 0.02};
     uint64_t seed = 1;
-    bool human = false;  // the first player is the user ("You"); the model plays the others, and hides its cards
+    bool human = false;  // one model: the first player is the user ("You"); the model plays the others, and hides its
+                         // cards. A lineup sets it from its seats
     double bounty = 0;   // progressive knockouts: this share of the prize money is bounties (a PKO model only)
 };
+
+// one seat of a lineup: who plays it (the model's name, shown and scored) and with which network; no network: the
+// user's seat ("You", at most one), advised by the table's first model
+struct PracticeSeat {
+    std::string model;
+    const Net* net = nullptr;
+};
+
+// why two networks cannot share a practice table ("" if they can): the same betting menu and rules (one Table plays
+// every seat), both tournament networks, and bounties for both or neither
+std::string practice_mismatch(const NetInfo& a, const NetInfo& b);
 
 class PracticeTournament {
   public:
     PracticeTournament(const Net& net, const PracticeConfig& c, std::string label);
+    // a lineup: seat k (of cfg.players, in order round the table) is played by lineup[k % lineup.size()]. A model that
+    // holds several seats has them numbered ("nm25 #2"); standings carry each seat's model ("You" for the user)
+    PracticeTournament(const std::vector<PracticeSeat>& lineup, const PracticeConfig& c);
     bool over() const;
     // plays one hand; emit sees {"type": "practice_decision" | "practice_hand", ...}. With a human seat, ask gets
     // {"type": "practice_your_turn", ...} and returns the chosen action slot (-1: the session is stopping)
@@ -44,12 +61,15 @@ class PracticeTournament {
   private:
     struct Player {
         std::string name;
+        std::string model;
+        const Net* net = nullptr;
+        bool human = false;
         int64_t chips = 0;
         int place = 0;      // 0 while playing
         double bounty = 0;  // on this player's head, as a share of the prize money
         double won = 0;     // bounty cash collected
     };
-    const Net& net_;
+    const Net& net_;  // the first seat's network: its menu and rules run the table (practice_mismatch keeps them equal)
     PracticeConfig cfg_;
     std::string label_;
     std::vector<Player> players_;
