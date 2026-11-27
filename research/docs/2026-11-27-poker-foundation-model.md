@@ -45,7 +45,20 @@ First builds (lab, `~/scratch/fm/data`):
 | nm25 self-play (20,000 hands, both layouts) | 40,000 sequences | 0 | 92.7 |
 | HandHQ, 40 files | 38,098 | 1,672 (4%: straddles and posted blinds) | 47.0 |
 
-The full build is running: all 27 HandHQ no-limit stakes (about 21.6 M hands) and 1 M self-play hands.
+Full build (data2): HandHQ 20,879,811 hands (1.00 B tokens, 48 a hand; 726,276 unreadable, mostly straddles),
+1 M nm25 self-play hands (185 M tokens, both layouts), Pluribus 10,000 (1.5 M tokens).
+
+**Simulations and Kestrel's tables** (added 2026-11-27). The vocabulary grows to 187 (appended, so earlier ids hold):
+SRC_sim, SRC_kestrel and a player token per seat, WHO_<name>, when it is known (the simulations' personas bob, nora,
+tina, tinaplus, max, carl, solverbot, sol (TexasSolver), monte, the RL bots rlbot and rlavg, generated styles; our
+networks; a person at a practice table), so a model can learn styles and be checked on recognising them.
+- `fm_data.py botsim` reads research's ten botsim runs (9-handed 100bb, short stacks, heads-up): about 120,000 hands
+  with every player's cards (their end rows) and payoffs, 2% unreadable. Their rows record the table after each
+  action, and a call that closes a street already shows the next street's empty bets, so the chips put in are read from
+  each stack's fall and the pot and street bets kept by the converter.
+- `fm_data.py kestrel` reads Kestrel's practice tables (the container's /data/sessions): 57,450 hands with results,
+  models' and people's seats tagged.
+- More self-play: 200,000 hands each from nm17, nm45 and nm46.
 
 ## Next
 

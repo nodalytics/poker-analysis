@@ -27,6 +27,7 @@ REVEAL), so a model learns what the actions say about the cards; "full" puts the
 
 import bisect
 import math
+import re
 from dataclasses import dataclass, field
 
 CARD_RANKS, CARD_SUITS = "23456789TJQKA", "cdhs"
@@ -51,6 +52,25 @@ def positions(n):
     return ["SB", "BB"] + NINE[9 - (n - 2) :]
 
 
+WHO = ["bob", "nora", "tina", "tinaplus", "max", "carl", "solverbot", "sol", "monte", "rlbot", "rlavg", "style",
+       "reg", "tag", "maniac", "station", "net", "human", "other"]  # fmt: skip
+
+
+def who_of(name):
+    """A player's name in a log as one of WHO: the simulations' personas, a generated style, one of our networks
+    ("nm25 #2", "Kestrel 3"), a person ("You"), else other."""
+    n = (name or "").split("#")[0].strip().lower()
+    if n in WHO:
+        return n
+    if n.startswith("style"):
+        return "style"
+    if n == "you":
+        return "human"
+    if n.startswith(("nm", "kestrel", "net")):
+        return "net"
+    return "other"
+
+
 def _vocab():
     v = ["PAD", "BOS", "EOS", "SEP", "END", "PRE", "FLOP", "TURN", "RIVER", "HOLE", "SHOW", "REVEAL"]
     v += ["SRC_self", "SRC_human", "SRC_pluribus", "GAME_tourney", "GAME_cash", "ANTE_0", "ANTE_1"]
@@ -60,6 +80,9 @@ def _vocab():
     v += ["FOLD", "CHECK", "ALLIN"]
     v += [f"{k}_{b}" for k in ("CALL", "BET", "RAISE") for b in range(len(SIZE_EDGES) + 1)]
     v += [f"RES_{b}" for b in range(len(RES_EDGES) + 1)]
+    # added 2026-11-27 (appended, so the ids above never change): two more sources, and who sits in each seat when it
+    # is known (the simulations' personas, our networks, a person at a Kestrel practice table)
+    v += ["SRC_sim", "SRC_kestrel"] + [f"WHO_{w}" for w in WHO]
     return v
 
 
@@ -77,6 +100,7 @@ class Hand:
     streets: list = field(default_factory=list)  # [{"board": [cards], "actions": [(player, kind, x)]}]
     shown: list = field(default_factory=list)
     results_bb: list | None = None
+    players: list | None = None  # who sits in each seat (WHO), when known
 
 
 def _cards(cs):
@@ -96,6 +120,8 @@ def encode(h, layout="public"):
     for p in range(n):
         sb = h.stacks_bb[p]
         t += [f"POS_{pos[p]}", f"STK_{_b(STACK_EDGES, sb)}" if math.isfinite(sb) else "STK_U"]
+        if h.players is not None:
+            t.append(f"WHO_{h.players[p]}")
     if layout == "full":
         for p in range(n):
             if h.holes[p] is not None:
@@ -243,6 +269,141 @@ def from_tables(T, g, cards, results_chips, bb=100, ante_bb=1.0, game="tourney")
     shown = [idx[s] for s in seats if bool(T.showdown[g]) and not bool(T.folded[g, s])]
     res = [float(results_chips[s]) / bb for s in seats]
     return Hand("self", game, ante_bb, [float(T.stack[g, s]) / bb for s in seats], holes, streets, shown, res)
+
+
+# ---- the bot simulations (research botsim_*/session*/hands.jsonl) ----
+
+STREETS = ["preflop", "flop", "turn", "river"]
+
+
+def _parse_cards(text):
+    """Cards from a log's text ("Ad 5h"; "-" for none)."""
+    return [card_int(x) for x in text.split()] if text and text != "-" else []
+
+
+def from_botsim(rows):
+    """One hand of a botsim log (its decision rows, then its end row) as a Hand, or None. A decision row: the actor's
+    seat, every stack after the bets so far, this street's bets, the street, the actor's cards, the board, the pot (with
+    the bets), the amount to call and the action ("folds", "checks", "calls N", "raises to N", "... (all-in)"); the end
+    row: the board, every hand shown or not ("-"), who was in at the end and the payoffs. Seat 0 is the small blind."""
+    dec = [r for r in rows if "action" in r]
+    end = next((r for r in rows if r.get("end")), None)
+    if not dec or end is None:
+        return None
+    seats = dec[0]["seats"]
+    n = len(seats)
+    b0 = dec[0]["bets"]
+    bb = float(b0[1])
+    if n < 2 or n > 9 or bb <= 0:
+        return None
+    start = [float(dec[0]["stacks"][p]) + float(b0[p]) for p in range(n)]
+    holes = [None] * n
+    for p, h in enumerate(end.get("holes", [])):
+        if h and h != "-":
+            holes[p] = sorted(_parse_cards(h), reverse=True)
+    streets, board_seen, cur = [], [], None
+    # a row is the table AFTER its action, and a call that closes a street already shows the next street's (empty)
+    # bets: so the chips a player put in are read from its stack, which only falls, and the pot and each street's
+    # bets are kept here
+    blinds = [float(b0[0]), bb] + [0.0] * (n - 2)
+    stk = [start[p] - blinds[p] for p in range(n)]
+    sbet, pot = blinds[:], sum(blinds)
+    for r in dec:
+        st = STREETS.index(r["street"])
+        while cur is None or cur < st:
+            cur = 0 if cur is None else cur + 1
+            bd = _parse_cards(r["board"]) if cur == st else []
+            streets.append({"board": [c for c in bd if c not in board_seen], "actions": []})
+            board_seen += streets[-1]["board"]
+            if cur > 0:
+                sbet = [0.0] * n
+        s, a = int(r["seat"]), r["action"]
+        if holes[s] is None and r.get("hole") and r["hole"] != "-":
+            holes[s] = sorted(_parse_cards(r["hole"]), reverse=True)
+        after = float(r["stacks"][s])
+        added = max(stk[s] - after, 0.0) if a.startswith(("call", "raise", "bet")) else 0.0
+        top, pot0 = max(sbet), pot
+        broke = stk[s] - added <= 1e-9
+        if a.startswith("fold"):
+            streets[-1]["actions"].append((s, "fold", 0.0))
+        elif a.startswith("check"):
+            streets[-1]["actions"].append((s, "check", 0.0))
+        elif a.startswith("call"):
+            streets[-1]["actions"].append((s, "allin" if broke else "call", added / max(pot0, 1e-9)))
+        elif a.startswith(("raise", "bet")):
+            kind = "allin" if ("all-in" in a or broke) else ("raise" if (st == 0 or top > 0) else "bet")
+            streets[-1]["actions"].append((s, kind, (sbet[s] + added - top) / max(pot0, 1e-9)))
+        else:
+            return None
+        stk[s] -= added
+        sbet[s] += added
+        pot += added
+    full = _parse_cards(end.get("board", ""))
+    live = [p for p in range(n) if end.get("in_at_end", [False] * n)[p]]
+    if len(live) > 1:  # a showdown: the rest of the board, if an all-in ran it out
+        while len(streets) < 4 and len(board_seen) < len(full):
+            k = len(streets)
+            new = full[len(board_seen) : {1: 3, 2: 4, 3: 5}[k]]
+            streets.append({"board": new, "actions": []})
+            board_seen += new
+    shown = [p for p in live if len(live) > 1 and holes[p] is not None]
+    res = [float(x) / bb for x in end["payoffs"]] if "payoffs" in end else None
+    return Hand("sim", "cash", 0.0, [x / bb for x in start], holes, streets, shown, res, [who_of(x) for x in seats])
+
+
+# ---- Kestrel's practice tables (sessions/<n>-practice/hands.jsonl, practice_hand events) ----
+
+
+def from_kestrel(ev, ante_bb=1.0):
+    """A Kestrel practice hand (a practice_hand event) as a Hand, or None. Its log gives every action in big blinds
+    ("raise to X", the hand total; "call X", the chips added; "all-in X", the total; "check"; "fold"), the results each
+    seat's result and cards when known, the standings every player's chips after the hand (stacks = after - result).
+    Tournament tables with a big-blind ante (the networks' game)."""
+    res = sorted(ev.get("results", []), key=lambda r: r["seat"])
+    n = len(res)
+    if n < 2 or n > 9:
+        return None
+    after = {s["name"]: float(s["chips_bb"]) for s in ev.get("standings", [])}
+    names = [r["name"] for r in res]
+    start = [after.get(nm, float("nan")) - float(r["result_bb"]) for nm, r in zip(names, res)]
+    k_of = {nm: k for k, nm in enumerate(names)}
+    holes = [sorted([card_int(c) for c in r["hole"]], reverse=True) if r.get("hole") else None for r in res]
+    contrib = [0.0] * n
+    contrib[0], contrib[1] = 0.5, 1.0
+    dead = ante_bb  # the big-blind ante (heads-up too, as Kestrel's table posts it)
+    bet, full = 1.0, [card_int(c) for c in ev.get("board", [])]
+    streets, raised = [], {}
+    nb = {0: 0, 1: 3, 2: 4, 3: 5}
+    for e in ev.get("log", []):
+        st, p, lab = int(e["street"]), k_of.get(e["name"]), e["action"]
+        if p is None:
+            return None
+        while len(streets) <= st:
+            m = len(streets)
+            streets.append({"board": full[nb[m - 1] : nb[m]] if m else [], "actions": []})
+        pot = sum(contrib) + dead
+        num = re.findall(r"[0-9.]+", lab)
+        if lab.startswith("fold"):
+            streets[st]["actions"].append((p, "fold", 0.0))
+        elif lab.startswith("check"):
+            streets[st]["actions"].append((p, "check", 0.0))
+        elif lab.startswith("call"):
+            add = float(num[0]) if num else 0.0
+            streets[st]["actions"].append((p, "call", add / max(pot, 1e-9)))
+            contrib[p] += add
+        else:  # raise to X / all-in X: X the player's total for the hand
+            to = float(num[0]) if num else contrib[p]
+            kind = "allin" if lab.startswith("all-in") else ("raise" if (st == 0 or raised.get(st)) else "bet")
+            streets[st]["actions"].append((p, kind, max(to - bet, 0.0) / max(pot, 1e-9)))
+            contrib[p], bet = to, max(bet, to)
+            raised[st] = True
+    if ev.get("showdown"):
+        while len(streets) < 4:
+            m = len(streets)
+            streets.append({"board": full[nb[m - 1] : nb[m]], "actions": []})
+    shown = [k for k, r in enumerate(res) if ev.get("showdown") and not r.get("folded") and r.get("hole")]
+    return Hand("kestrel", "tourney", ante_bb, start, holes, streets, shown, [float(r["result_bb"]) for r in res],
+                [who_of(x) for x in names])  # fmt: skip
 
 
 def check_roundtrip():
