@@ -1,5 +1,5 @@
 
-# 2026-11-27T16:27:04Z /home/steven-reid/research/.venv-gpu/bin/python scripts/pipeline_opponents.py blueprint/nm47 --baseline blueprint/nm25 --against reg,tag,maniac,station --hands 100000 --out /home/steven-reid/research/results/pipeline/nm47/other-players.json
+# 2026-11-27T16:27:04Z ~/research/.venv-gpu/bin/python scripts/pipeline_opponents.py blueprint/nm47 --baseline blueprint/nm25 --against reg,tag,maniac,station --hands 100000 --out ~/research/results/pipeline/nm47/other-players.json
 vs 8 x reg      run   +25.67  baseline   +25.67  difference +0.00 [-0.3, 0.31] bb/100
 vs 8 x tag      run   +32.34  baseline   +32.49  difference -0.15 [-0.46, 0.16] bb/100
 vs 8 x maniac   run  +519.70  baseline  +518.65  difference +1.04 [0.69, 1.4] bb/100

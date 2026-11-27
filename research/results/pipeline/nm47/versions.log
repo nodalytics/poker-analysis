@@ -1,5 +1,5 @@
 
-# 2026-11-27T18:33:04Z /home/steven-reid/research/.venv-gpu/bin/python scripts/ninemax_consistency.py --reference blueprint/nm25 --runs blueprint/nm47 --deals 4000 --out /home/steven-reid/research/results/pipeline/nm47/versions.json
+# 2026-11-27T18:33:04Z ~/research/.venv-gpu/bin/python scripts/ninemax_consistency.py --reference blueprint/nm25 --runs blueprint/nm47 --deals 4000 --out ~/research/results/pipeline/nm47/versions.json
 2 versions, 35,505 spots from 4,000 deals; skipped 0 with other inputs or cards
 overall: disagreement 0.050, different top action 4.9%
 distance from nm25: nm47 0.050
