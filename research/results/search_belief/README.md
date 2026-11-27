@@ -33,5 +33,12 @@ dealing, bucketing and weighting 8,192 deals costs more than the rollouts there.
 | 8 | about 20 s (stopped) | | |
 
 2 x is affordable (+0.6 s) for 39% more effective deals and half the fallbacks; whether it wins chips needs a paired
-match (100 deals cannot separate the gains, +13 to +15 bb/100 with intervals of about ±15). The belief proposal cuts the error by another 27% and is not in Kestrel yet: it needs
+match (100 deals cannot separate the gains, +13 to +15 bb/100 with intervals of about ±15).
+
+**Paired, 1,500 deals** (seed 11, both runs on the same deals, `kestrel_oversample/`: the summaries and each deal's
+result without and with search; the plain arm is identical in both): search's gain over plain nm25 is +3.74
+[−0.29, +7.77] bb/100 with oversampling off and +5.08 [+1.08, +9.09] with 2 x; **2 x minus off, deal by deal: +1.34
+[−1.65, +4.33]**, not shown. 2 x took 4.9 s a decision against 3.9 s (the lab busy), rested on 611 effective deals
+against 445, and fell back to the network 440 times against 815. The default stays off; about 4,000 more paired deals
+would narrow the difference to about ±1.8. The belief proposal cuts the error by another 27% and is not in Kestrel yet: it needs
 the belief network in C++.

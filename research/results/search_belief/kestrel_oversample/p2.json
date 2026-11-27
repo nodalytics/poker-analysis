@@ -1,0 +1,1 @@
+{"model": "~/research/models/ninemax/nm25", "deals": 1500, "samples": 1024, "robust": false, "opp_bias": "net", "plain_bb100": [0.41, -1.66, 2.47], "search_bb100": [5.49, 1.61, 9.37], "gain_bb100": [5.08, 1.08, 9.09], "searched": 13755, "ms_per_search": 4905.8, "ess_mean": 611.4, "crn": true, "min_ess": 0.02, "ess_fallback": 440, "threads": 16}
