@@ -377,6 +377,11 @@ Kestrel 0.4.1 deployed on the lab with practice matches between models, with or 
         pre-registered run after nm47.
   - [ ] **B. A size head:** fold, call or raise, then a size from a learned distribution over pot fractions. Needs a
         learning rule for a continuous action (NeuRD works on a fixed list) and an exploiter that can try sizes. After A.
+  - [x] **A built** (2026-11-27): per-seat menus (trainer and Kestrel), the nearest-size warm start, the sizes report;
+        nm48 registered (PR #6), queued after nm47.
+  - [ ] **B. A size head** (built 2026-11-27, `SizeHeadNet`, menus `size8` and `grid16`, `ninemax_sizehead_init.py`;
+        a 3-minute run trains at nm25's level). Still: the check suite on a size-head network, the size head in
+        Kestrel's C++, a full warm start (3,000 steps), and a pre-registered run (nm49) after nm48.
   - [ ] **C. Search picks the size:** Kestrel's 9-max search scores extra sizes by rollouts at play time. After B.
 - [ ] **A machine that keeps learning** (requested 2026-11-27): practice games feed training automatically. Already
       built: Kestrel stores every practice hand (`kestrel.db`, `sessions/`); before a run with `"patterns": true` the
@@ -387,6 +392,20 @@ Kestrel 0.4.1 deployed on the lab with practice matches between models, with or 
       (the model pipeline, then a Kestrel redeploy); (3) mining the hands people lost too, and model-against-model
       practice tables. Learning stays offline and gated: a network that updated itself during play could be steered
       into a leak by the person playing it, so nothing reaches Kestrel without passing the checks.
+- [ ] **Expanding the model** (agreed 2026-11-27), in this order after bet sizing:
+  1. **Search with beliefs** (ReBeL-style): search at play time over the opponents' predicted ranges rather than
+     random cards, so the network works each spot out afresh; builds on Kestrel's 9-max search (+3.7 to +6.2 bb/100
+     at 1,024 samples) and needs item 2's belief output.
+  2. **A richer game state**: the cards themselves rather than buckets; the hand's action history read as a sequence
+     (a transformer) rather than hand-made summaries; the belief output (`--belief-weight`) switched on.
+  3. **Opponent modelling, then bounded exploitation**: a network conditioned on Kestrel's opponent profile, exploiting
+     only within limits that grow with the evidence (the adaptive bot lost −22.9 bb/100 when its read was wrong).
+  4. **Richer opponents, PSRO-style**: each round a best response to the current network joins the pool; with the
+     generated and human styles, the partner's patterns and the practice-game loop, so self-play keeps finding new
+     strategies (the league, nm45, lost the station: the pool must keep the rule players).
+  5. **One network for every format**: 9-max tournaments, bounties, 6-max cash and heads-up, conditioned on the format.
+  6. **The research loop itself**: a queue of hypotheses that writes the next run files, ranked by past results, under
+     the same fixed checks.
 - [ ] A3 follow-up: the push/fold target at the bubble and under about 15bb, from the better of nm25 and nm47.
 - [ ] Partner's practice games: tally them by spot (`kestrel_practice_tally.py`) against nm25, nm45 and nm46.
 - [ ] Read AV-AIVAT; estimate the deals it would save on the 40,000-deal checks.
