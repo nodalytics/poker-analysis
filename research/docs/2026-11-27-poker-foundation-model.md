@@ -60,6 +60,26 @@ networks; a person at a practice table), so a model can learn styles and be chec
   models' and people's seats tagged.
 - More self-play: 200,000 hands each from nm17, nm45 and nm46.
 
+## Stage 1, the first model (m1, 2026-11-27)
+
+25.6 M parameters (d 512, 8 layers, 8 heads, context 512), 2.0 B tokens of data2 (self-play 40%, human 58%, Pluribus
+2%), 42 minutes on the RTX PRO 6000 (`results/foundation_model/m1_result.json`, `m1_train.log`). Held out: the first
+1 M tokens of each source's first shard. Bits per action token, against a count model of the action given the actor's
+position and the street:
+
+| Held out | Model | Count model | Uncertainty removed |
+|---|---|---|---|
+| Human (HandHQ), 165,447 actions | **1.342** | 2.672 | 50% |
+| Self-play (nm25), 96,323 | 0.468 | 1.398 | 67% |
+| Pluribus against professionals, 36,694 | 0.739 | 2.284 | 68% |
+
+On real players it halves the uncertainty about the next action: the opponent-model signal stage 1 tests for.
+
+The cards after REVEAL (every player's, after the whole hand): 4.31 bits a card on self-play against 5.35 uniform,
+4.80 against 5.45 on Pluribus. Part of that is free: at a showdown the shown cards come just before REVEAL and can be
+copied, and human hands carry REVEAL only when every card was shown (0.94 bits: copying). So this is not comparable
+with the belief network's 0.98 bits an opponent, which are read mid-hand at a decision; that test is stage 2's.
+
 ## Next
 
 Stage 1: a decoder-only transformer of about 25 M parameters (Kronos-small's size) pretrained on the shards, scored on
