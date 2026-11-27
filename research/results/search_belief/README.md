@@ -12,7 +12,11 @@ better than the uniform guess (9.32 against 10.05 bits held out).
 | v2 belief, no oversampling | 0.90 | 71.4% | 57.2 |
 | **v2 belief, 8 x oversampled and resampled** | **0.48** | **80.2%** | 256 |
 
-363 spots (`eval_b1_400.json`); a first run of 57 spots (`eval_b1.json`) ranked them the same way. Oversampling is
-cheap (a guess costs a replay of the hand, its rollouts cost far more) and is now Kestrel's default
-(`SearchConfig::oversample` 8). The belief proposal cuts the error by another 27% and is not in Kestrel yet: it needs
+363 spots (`eval_b1_400.json`); a first run of 57 spots (`eval_b1.json`) ranked them the same way.
+
+**In Kestrel it is not cheap** (2026-11-27). Kestrel's search, nm25, 1,024 samples (`kestrel_search_match`, seed 7):
+without oversampling +3.08 bb/100 [−1.22, +7.37] over 1,500 deals at 2.9 s a decision, with 447 of 1,024 effective deals
+on average; with 8 x the first 200 deals took 2,306 s against 331 s, about 7 times slower (about 20 s a decision):
+dealing, bucketing and weighting 8,192 deals costs more than the rollouts there. The match was stopped and
+`SearchConfig::oversample` set back to 1 (off); 2 x and 4 x are being timed. The belief proposal cuts the error by another 27% and is not in Kestrel yet: it needs
 the belief network in C++.

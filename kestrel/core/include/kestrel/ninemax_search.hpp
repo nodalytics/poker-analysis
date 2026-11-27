@@ -30,10 +30,12 @@ struct SearchConfig {
                           // plain network by 5-6.5 bb/100, 1,024 gained +6.2 against raise-biased opponents)
     // candidate deals per sample (2026-11-27): oversample x samples deals are weighted, and samples of them are
     // resampled in proportion to their weights (systematic resampling) before the rollouts. The rollouts then rest on
-    // many more distinct deals: in research (ninemax_belief_eval.py, nm25, 57 spots, 256 rollouts) the move values'
-    // error against a search 64 times larger fell from 1.64 to 0.56 bb and the best move agreed 79% of the time
-    // instead of 53%. Weighting a deal costs a replay of the hand, far less than its rollouts. 1: the old search.
-    int oversample = 8;
+    // many more distinct deals: in research (ninemax_belief_eval.py, nm25, 363 spots, 256 rollouts) the move values'
+    // error against a search 64 times larger fell from 1.39 to 0.66 bb. But in Kestrel dealing, bucketing and weighting
+    // the extra deals costs more than the rollouts: at 1,024 samples, 8 x made a decision about 7 times slower (about
+    // 20 s against 2.9 s; kestrel_search_match, nm25, 2026-11-27), and Kestrel's own search already rests on 447 of
+    // 1,024 effective deals on average. So it is off by default until a cheaper version is measured. 1: off.
+    int oversample = 1;
     bool robust = false;  // the opponents may switch continuation strategy
     double bias = 5.0;    // how strongly a continuation strategy is tilted
     // safe exploitation: each seat's tilt (Kestrel's seats; empty: none). Every deal is also played out with the
