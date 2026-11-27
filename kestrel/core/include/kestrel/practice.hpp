@@ -30,6 +30,7 @@ struct PracticeConfig {
     uint64_t seed = 1;
     bool human = false;  // one model: the first player is the user ("You"); the model plays the others, and hides its
                          // cards. A lineup sets it from its seats
+    std::string human_name = "You";  // the user's seat's name, saved with every hand (a player's own sessions)
     double bounty = 0;   // progressive knockouts: this share of the prize money is bounties (a PKO model only)
 };
 

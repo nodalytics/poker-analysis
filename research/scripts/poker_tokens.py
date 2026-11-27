@@ -367,7 +367,9 @@ def from_kestrel(ev, ante_bb=1.0):
     names = [r["name"] for r in res]
     start = [after.get(nm, float("nan")) - float(r["result_bb"]) for nm, r in zip(names, res)]
     k_of = {nm: k for k, nm in enumerate(names)}
-    holes = [sorted([card_int(c) for c in r["hole"]], reverse=True) if r.get("hole") else None for r in res]
+    priv = {x["name"]: x["hole"] for x in (ev.get("private") or {}).get("holes", [])}  # every card, since 2026-11-27
+    holes = [sorted([card_int(c) for c in (priv.get(nm) or r.get("hole"))], reverse=True)
+             if (priv.get(nm) or r.get("hole")) else None for nm, r in zip(names, res)]  # fmt: skip
     contrib = [0.0] * n
     contrib[0], contrib[1] = 0.5, 1.0
     dead = ante_bb  # the big-blind ante (heads-up too, as Kestrel's table posts it)
@@ -402,8 +404,8 @@ def from_kestrel(ev, ante_bb=1.0):
             m = len(streets)
             streets.append({"board": full[nb[m - 1] : nb[m]], "actions": []})
     shown = [k for k, r in enumerate(res) if ev.get("showdown") and not r.get("folded") and r.get("hole")]
-    return Hand("kestrel", "tourney", ante_bb, start, holes, streets, shown, [float(r["result_bb"]) for r in res],
-                [who_of(x) for x in names])  # fmt: skip
+    who = ["human" if r.get("you") else who_of(x) for r, x in zip(res, names)]  # a person may give a name
+    return Hand("kestrel", "tourney", ante_bb, start, holes, streets, shown, [float(r["result_bb"]) for r in res], who)
 
 
 def check_roundtrip():

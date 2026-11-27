@@ -679,6 +679,14 @@ int serve(const ServeOptions& o) {
         int hands = std::clamp(body.value("hands", 300), 1, 100000);
         int pace = std::clamp(body.value("pace_ms", 700), 0, 5000);
         pc.human = match ? std::count(names.begin(), names.end(), "") == 1 : body.value("human", false);
+        {  // the player's name, saved with every hand: printable, at most 40 characters ("You" when none)
+            std::string nm;
+            for (char ch : body.value("player", std::string()))
+                if (ch >= 32 && ch < 127 && nm.size() < 40) nm += ch;
+            while (!nm.empty() && nm.back() == ' ') nm.pop_back();
+            while (!nm.empty() && nm.front() == ' ') nm.erase(nm.begin());
+            if (!nm.empty()) pc.human_name = nm;
+        }
         // knockout bounties: a PKO model plays with the share it trained with unless told otherwise; others never
         pc.bounty = net->info().feat_bounty > 0 ? std::clamp(body.value("bounty", net->info().feat_bounty), 0.0, 0.9) : 0.0;
         auto t = std::make_shared<TableRun>();
@@ -779,15 +787,20 @@ int serve(const ServeOptions& o) {
                             }
                             ev["match"] = board();
                         }
+                        // the record keeps the whole hand (every player's cards, the full board, the networks'
+                        // probabilities); what is shown and sent to the screens never does
+                        json shown = ev;
+                        shown.erase("private");
                         {
                             std::lock_guard<std::mutex> lk(hub.mu);
-                            if (e["type"] == "practice_hand") ev["hands"] = ++t->done, t->summary = e["standings"];
-                            t->state = ev;
+                            if (e["type"] == "practice_hand") ev["hands"] = shown["hands"] = ++t->done, t->summary = e["standings"];
+                            t->state = shown;
                         }
-                        hub.publish(ev);
+                        hub.publish(shown);
                         if (e["type"] == "practice_hand" && log) log << ev.dump() << "\n" << std::flush;
                         if (e["type"] == "practice_hand" && sid) {
                             json row = ev;
+                            row.erase("private");  // the database is served (/v1/hands): the hidden cards stay in the file
                             row["model"] = model;
                             in_db([&] { db->add_hand(sid, row); });
                         }

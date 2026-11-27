@@ -56,6 +56,7 @@ const std::vector<Method>& methods() {
                      {"seats", {{"type", "array"}, {"items", {{"type", "string"}}}}},
                      {"models", {{"type", "array"}, {"items", {{"type", "string"}}}}},
                      {"rotate", {{"type", "boolean"}}},
+                     {"player", {{"type", "string"}}},
                      {"avg_bb", {{"type", "number"}}}, {"hands", {{"type", "integer"}}},
                      {"pace_ms", {{"type", "integer"}}}, {"human", {{"type", "boolean"}}}})},
         {"practice_act", "your move at a practice table: one of the slots it offered", "POST",

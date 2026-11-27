@@ -61,7 +61,7 @@ PracticeTournament::PracticeTournament(const Net& net, const PracticeConfig& c, 
         p.chips = int64_t(std::llround(bb * BB)), p.bounty = std::clamp(cfg_.bounty, 0.0, 0.9) / n;
         players_.push_back(p);
     }
-    if (cfg_.human) players_[0].name = players_[0].model = "You", players_[0].human = true;
+    if (cfg_.human) players_[0].name = cfg_.human_name, players_[0].model = "You", players_[0].human = true;
     button_ = int(rng_() % uint64_t(n));
 }
 
@@ -95,7 +95,7 @@ PracticeTournament::PracticeTournament(const std::vector<PracticeSeat>& lineup, 
         p.model = s.net ? s.model : "You", p.net = s.net ? s.net : &net_, p.human = !s.net;
         p.menu = Menu::named(p.net->info().menu);
         cfg_.human = cfg_.human || p.human;
-        p.name = p.human ? "You" : seats[s.model] > 1 ? s.model + " #" + std::to_string(++numbered[s.model]) : s.model;
+        p.name = p.human ? cfg_.human_name : seats[s.model] > 1 ? s.model + " #" + std::to_string(++numbered[s.model]) : s.model;
         p.chips = int64_t(std::llround(bb * BB)), p.bounty = std::clamp(cfg_.bounty, 0.0, 0.9) / n;
         players_.push_back(p);
     }
@@ -237,6 +237,9 @@ void PracticeTournament::play_hand(const std::function<void(const json&)>& emit,
         return a;
     };
     json log = json::array();
+    // the hand as the server saw it, for the record and never for the screen (the server strips "private" before
+    // publishing): every decision with the network's probabilities (its advice, at the user's seat) and value
+    json plog = json::array();
     while (!T.done()) {
         const int i = T.actor(), st = T.street();
         T.set_menu(players_[who[i]].menu);  // this seat's moves and sizes
@@ -283,6 +286,14 @@ void PracticeTournament::play_hand(const std::function<void(const json&)>& emit,
                    {"options", opts},             {"seats", seats_json()}, {"board", board_json(st)},
                    {"pot_bb", pot},               {"players_left", n}, {"hidden", cfg_.human}};
         if (!cfg_.human) ev["value_bb"] = v;
+        {  // the private record, labelled before the move changes the table (the amounts to call and raise to)
+            json all = json::array();
+            for (int a = 0; a < A; ++a)
+                if (L[a] && (p[a] >= 0.005 || a == act)) all.push_back({{"label", label(a)}, {"prob", p[a]}});
+            plog.push_back({{"street", st}, {"pos", pos[i]}, {"name", players_[who[i]].name},
+                            {"model", players_[who[i]].model}, {"human", players_[who[i]].human}, {"action", label(act)},
+                            {"options", all}, {"value_bb", v}, {"pot_bb", pot}});
+        }
         T.step(act);
         std::string said;
         for (auto& o : opts)
@@ -345,10 +356,18 @@ void PracticeTournament::play_hand(const std::function<void(const json&)>& emit,
             if (p.place == 0) p.place = 1, p.won += p.bounty, p.bounty = 0;  // the winner collects its own bounty
     button_ = (button_ + 1) % N;
     // the board as far as it was dealt: everything at a showdown, else up to the street the hand ended on
+    json priv = {{"decisions", plog}, {"board", json::array()}, {"holes", json::array()}, {"stacks_bb", json::array()}};
+    for (int k = 0; k < 5; ++k) priv["board"].push_back(card_str(board[k]));  // all five, dealt or not
+    for (int s = 0; s < 9; ++s) {
+        if (who[s] < 0) continue;
+        priv["holes"].push_back({{"seat", s}, {"pos", pos[s]}, {"name", players_[who[s]].name},
+                                 {"hole", json{card_str(hole[s][0]), card_str(hole[s][1])}}});
+        priv["stacks_bb"].push_back({{"seat", s}, {"name", players_[who[s]].name}, {"stack_bb", double(stacks[s]) / BB}});
+    }
     emit({{"type", "practice_hand"},  {"hand", hands_},  {"level", level_},
           {"board", board_json(T.showdown() ? 3 : T.street())},
           {"results", res},           {"showdown", T.showdown()},          {"log", log},
-          {"standings", standings()}, {"over", over()}});
+          {"standings", standings()}, {"over", over()}, {"private", priv}});
 }
 
 }  // namespace kestrel

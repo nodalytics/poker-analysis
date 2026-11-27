@@ -196,6 +196,7 @@ select, input { width: 100%; padding: 9px 11px; border-radius: 10px; border: 1px
   </div>
   <div id="practiceFields" style="display:none">
     <label>Who plays</label><select id="pwho"><option value="watch">Kestrel in every seat (watch it decide)</option><option value="human">You against Kestrel</option><option value="match">Choose the table (models against each other, and you)</option></select>
+    <div id="pnameField" style="display:none"><label>Your name (saved with every hand, for review afterwards)</label><input id="pname" maxlength="40" placeholder="e.g. Alex"></div>
     <div id="pmodelField"><label>Model</label><select id="pmodel"></select></div>
     <label>Players</label><select id="pplayers"><option>9</option><option>8</option><option>7</option><option>6</option><option>5</option><option>4</option><option>3</option><option>2</option></select>
     <label>Starting stacks (average, big blinds)</label><input id="pavg" type="number" min="5" max="60" value="20">
@@ -396,6 +397,7 @@ function practiceTable(t, mini = false) {
 }
 let showAdvice = false;
 try { showAdvice = localStorage.getItem("kestrel-advice") === "1"; } catch {}
+try { const nm = localStorage.getItem("kestrel-player"), e = document.querySelector("#pname"); if (nm && e) e.value = nm; } catch {}
 function movesPanel(t) {
   const q = t.yourTurn;
   if (!q) return `<div class="panel"><h3>Your move</h3><div class="why">${t.status === "playing" ? "Waiting for the others…" : esc(t.status)}</div>${lastMove(t)}</div>`;
@@ -619,6 +621,7 @@ function drawLineup() {
 }
 function showWho() {
   const m = $("#pwho").value === "match";
+  $("#pnameField").style.display = $("#pwho").value === "watch" ? "none" : "";
   $("#lineupField").style.display = m ? "" : "none";
   $("#pmodelField").style.display = m ? "none" : "";
   $("#practiceAbout").style.display = m ? "none" : "";
@@ -646,9 +649,11 @@ $("#cancel").onclick = () => $("#dlg").close();
 $("#start").onclick = async () => {
   if (newKind === "practice") {
     const match = $("#pwho").value === "match";
+    const player = $("#pname").value.trim();
+    try { localStorage.setItem("kestrel-player", player); } catch {}
     const body = match
-      ? { seats: [...lineup], rotate: $("#protate").checked, avg_bb: +$("#pavg").value, pace_ms: +$("#ppace").value, hands: +$("#hands").value, human: lineup.includes("you") }
-      : { model: $("#pmodel").value, players: +$("#pplayers").value, avg_bb: +$("#pavg").value, pace_ms: +$("#ppace").value, hands: +$("#hands").value, human: $("#pwho").value === "human" };
+      ? { seats: [...lineup], rotate: $("#protate").checked, avg_bb: +$("#pavg").value, pace_ms: +$("#ppace").value, hands: +$("#hands").value, human: lineup.includes("you"), player }
+      : { model: $("#pmodel").value, players: +$("#pplayers").value, avg_bb: +$("#pavg").value, pace_ms: +$("#ppace").value, hands: +$("#hands").value, human: $("#pwho").value === "human", player };
     if (match && !lineup.some(v => v !== "you")) { toast("the table needs at least one model"); return; }
     const r = await api("/v1/practice", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     $("#dlg").close();
