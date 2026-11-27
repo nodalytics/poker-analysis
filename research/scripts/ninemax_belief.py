@@ -133,7 +133,11 @@ def train(a):
     net, _ = load(a.run, B, dev)
     assert not getattr(net, "size_head", False), "beliefs read the slot layout (a size-head network: not yet)"
     t0 = time.time()
-    held = examples(net, dealer, menu, a.deals // 20, dev)
+    parts, n_held = [], min(a.deals // 20, 200000)  # held-out deals, built a chunk at a time (memory)
+    while n_held > 0:
+        parts.append(examples(net, dealer, menu, min(a.chunk, n_held), dev))
+        n_held -= a.chunk
+    held = {k: torch.cat([p[k] for p in parts]) for k in parts[0]}
     os.makedirs(a.out, exist_ok=True)
     log = open(os.path.join(a.out, "train.log"), "a", buffering=1)
     model = BeliefNet(held["feat"].shape[1], dealer.P).to(dev)
