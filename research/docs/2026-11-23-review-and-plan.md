@@ -355,3 +355,38 @@ and checks DyypHoldem and the papers around Slumbot. Three items join the plan:
   through a shuffled list of all boards instead of drawn at random (Slumbot NL's two sampling choices).
 - Read AV-AIVAT (Li, Chen, Huang 2026: luck correction with a test valid at any stopping time) and estimate how many
   deals it would have saved on nm45's checks, which ran 40,000 deals for no-harm alone.
+
+## 6. To do (updated 2026-11-27)
+
+Done this round: the blueprint sampling and tree trials (`2026-11-24-slumbot-nl.md`: flop cycle and batched updates
+not adopted, wide tree not shown); the card-vs-translation diagnostic (translation is the leak: off-menu LBR +249 vs
+on-menu +122); nm46 run through nm45's checks (`results/ninemax/nm46_byhand/`); nm45 and nm46 on the lab's Kestrel;
+Kestrel 0.4.1 deployed on the lab with practice matches between models, with or without the user at the table.
+
+**9-max**
+- [ ] nm47 (nm46's recipe, pre-registered): merge PR #4, then the lab trains and judges it (about 9 hours). If adopted,
+  it ships through the model pipeline and becomes Kestrel's default.
+- [ ] nm46's exploiter check: the fourth seed (first three +1.0, +1.5, +0.9; limit +1.25).
+- [ ] Bet sizing, in this order (requested 2026-11-27: more sizes are harder for people to read and open strategies the
+      network cannot play now):
+  - [ ] **A. More sizes on the menu.** The `wide` menu (opens 2/2.5/3.5bb, two 3-bet and 4-bet sizes, heads-up bets
+        0.25-2x pot, two raise sizes; 8 actions instead of 6), never trained. Build: per-seat menus in the table
+        engine (so a wide network and nm25 can share a table for the no-harm check and in Kestrel); a warm start from
+        nm25 that maps its 6 actions onto the 8 by nearest size; a size-usage report (which new sizes it plays, where)
+        and a size-tells report (how well its hand strength can be read from its size, against nm25). Then a
+        pre-registered run after nm47.
+  - [ ] **B. A size head:** fold, call or raise, then a size from a learned distribution over pot fractions. Needs a
+        learning rule for a continuous action (NeuRD works on a fixed list) and an exploiter that can try sizes. After A.
+  - [ ] **C. Search picks the size:** Kestrel's 9-max search scores extra sizes by rollouts at play time. After B.
+- [ ] A3 follow-up: the push/fold target at the bubble and under about 15bb, from the better of nm25 and nm47.
+- [ ] Partner's practice games: tally them by spot (`kestrel_practice_tally.py`) against nm25, nm45 and nm46.
+- [ ] Read AV-AIVAT; estimate the deals it would save on the 40,000-deal checks.
+- [ ] Kestrel desktop app: the practice table editor (the web app has it).
+
+**Heads-up**
+- [ ] The turn re-solve's paired C-vs-D rerun (running): whether exact rivers beat blueprint leaves; if they do,
+      stage 0 of the river value network.
+- [ ] Off-tree bets: the same off-menu LBR with the turn and river re-solve on, against +249.
+- [ ] A4: run 2 against Slumbot, plain and re-solved, logging Slumbot's bets above 2x pot.
+- [ ] Batched updates and the wide tree stay options; a wide solve as long as the standard one only if A4's overbet
+      count calls for it.
