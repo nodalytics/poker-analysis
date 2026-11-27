@@ -117,9 +117,13 @@ def board_texture(board, g, street, dev):
     return out * on[:, None]
 
 
-def features(T, g, i, menu=None):
+def features(T, g, i, menu=None, sizehead=False):
     """Public features of tables g for actor i: [len(g), NF]; the legal moves and sizes are those of menu (the
-    actor's own, when it differs from the table's)."""
+    actor's own, when it differs from the table's).
+
+    sizehead (plan B): the layout SizeHeadNet reads, whatever the number of sizes S: the same public features, then
+    fold, call and all-in legal, any raise legal, the smallest and largest legal raise (fraction of the pot, /10),
+    then each size's fraction of the pot (/10, 0 where illegal) and its legal flag (S each)."""
     P = T.P
     c = T.contrib[g].float()
     pot = c.sum(1) + T.dead[g].float()  # the big-blind ante is in the pot (0 without an ante)
@@ -169,9 +173,23 @@ def features(T, g, i, menu=None):
         f.append(board_texture(getattr(T, "board", None), g, T.street[g], g.device))
     menu = menu or T.menu
     legal, t = T.legal(g, i, menu)
-    f.append(legal.float())
     S = menu.S
-    f.append(((t - bet[:, None]) / pot.clamp(min=1)[:, None]).clamp(0, 10) / 10 * legal[:, 2 : 2 + S].float())
+    frac = ((t - bet[:, None]) / pot.clamp(min=1)[:, None]).clamp(0, 10) / 10
+    ls = legal[:, 2 : 2 + S]
+    if sizehead:
+        big = torch.full_like(frac, 9.0)
+        lo = torch.where(ls, frac, big).min(1).values
+        hi = torch.where(ls, frac, -big).max(1).values
+        anyr = ls.any(1)
+        f.append(legal[:, [0, 1, menu.A - 1]].float())
+        f.append(anyr.float()[:, None])
+        f.append(torch.where(anyr, lo, torch.zeros_like(lo))[:, None])
+        f.append(torch.where(anyr, hi, torch.zeros_like(hi))[:, None])
+        f.append(frac * ls.float())
+        f.append(ls.float())
+        return torch.cat(f, 1), legal
+    f.append(legal.float())
+    f.append(frac * ls.float())
     return torch.cat(f, 1), legal
 
 
@@ -255,6 +273,48 @@ class NineNet(nn.Module):
         return self.pi(h), self.v(h).squeeze(1)
 
 
+class SizeHeadNet(NineNet):
+    """Bet sizing, plan B: the policy is fold, call, raise or all-in, then a size. A raise's score is a function of
+    its size, g(h, size), so the network rates any size and any number of them: training offers random sizes
+    (RANDOM_MENUS), play a fixed grid (grid16) or whatever a caller offers. Joint logits over the menu's moves:
+    [fold, call, raise + log_softmax(g over the legal sizes), all-in], so the chance of raising does not depend on how
+    many sizes are offered. Reads features(..., sizehead=True): nbase inputs, then S size fractions and S legal flags,
+    S read from the width."""
+
+    size_head = True
+
+    def __init__(self, nbase, buckets, hidden=512, blocks=4, emb=32, players=9, size_hidden=64, belief=False):
+        super().__init__(nbase, 4, buckets, hidden=hidden, blocks=blocks, emb=emb, arch="mlp", players=players,
+                         belief=belief)  # fmt: skip
+        self.nbase = nbase
+        self.sz_h = nn.Linear(hidden, size_hidden)
+        self.sz_z = nn.Linear(3, size_hidden)
+        self.sz_out = nn.Sequential(
+            nn.GELU(), nn.Linear(size_hidden, size_hidden), nn.GELU(), nn.Linear(size_hidden, 1)
+        )
+
+    def forward(self, feat, bk, street, st):
+        nb = self.nbase
+        S = (feat.shape[1] - nb) // 2
+        x, ls = feat[:, nb : nb + S] * 10, feat[:, nb + S :] > 0.5  # pot fractions, legal
+        e = [self.emb[s](bk[:, s].clamp(max=self.emb[s].num_embeddings - 1)) * (street >= s).float()[:, None]
+             for s in range(4)]  # fmt: skip
+        h = self.inp(torch.cat([feat[:, :nb]] + e + [st[:, None]], 1))
+        for blk in self.blocks:
+            h = h + blk(h)
+        h = self.norm(h)
+        if self.belief is not None and self.training:
+            self.last_h = h
+        t = self.pi(h)  # fold, call, raise, all-in
+        z = torch.stack([x, torch.log(x + 0.01), (street.float() == 0)[:, None].expand_as(x)], 2)  # [n, S, 3]
+        gk = self.sz_out(self.sz_h(h)[:, None, :] + self.sz_z(z)).squeeze(2)  # [n, S]
+        gk = gk.masked_fill(~ls, -1e9)
+        lp = torch.log_softmax(gk, 1)
+        lp = torch.where(ls.any(1, keepdim=True), lp, torch.full_like(lp, -1e9))
+        joint = torch.cat([t[:, :2], t[:, 2:3] + lp, t[:, 3:4]], 1)
+        return joint, self.v(h).squeeze(1)
+
+
 def masked(logits, legal):
     return logits.masked_fill(~legal, -1e9)
 
@@ -266,7 +326,7 @@ def tag_probs(T, g, i, legal, s, dealer):
     to_call = T.bet[g].float() - c.gather(1, i[:, None]).squeeze(1)
     odds = to_call / (pot + to_call).clamp(min=1)
     pre = T.street[g] == 0
-    S = T.menu.S
+    S = legal.shape[1] - 3  # the menu the legal moves came from (a rule player may play another than the table's)
     first_size = legal[:, 2 : 2 + S].float().argmax(1) + 2
     has_size = legal[:, 2 : 2 + S].any(1)
     raise_slot = torch.where(has_size, first_size, torch.full_like(first_size, S + 2))
@@ -319,7 +379,7 @@ def reg_probs(T, g, i, legal, bk, dealer):
       3-bet
     After the flop it plays like tag. Unlike the maniac and the station, it folds to shoves that are priced wrong
     and defends its big blind, so open-shoving and a wide big blind pay against it."""
-    P, S, dev = T.P, T.menu.S, g.device
+    P, S, dev = T.P, legal.shape[1] - 3, g.device
     s_all = strength(dealer, bk[g], T.street[g])
     post = tag_probs(T, g, i, legal, s_all.gather(1, i[:, None]).squeeze(1), dealer)
     cls = bk[g, i, 0].clamp(max=168)
@@ -407,13 +467,13 @@ def _rule_probs(name, T, g, i, legal, s, dealer, bk=None):
     raise ValueError(name)
 
 
-def n_features(P, menu, dev):
+def n_features(P, menu, dev, sizehead=False):
     """The input size in the run's mode, from a one-table probe."""
     st, pay = context(1, P, dev)
     T = Tables(1, P, menu, dev, stacks=st)
     if pay is not None:
         T.pay, T.eq0 = pay.float(), start_equity(T.stack, pay)
-    return features(T, torch.zeros(1, dtype=torch.long, device=dev), T.actor[:1])[0].shape[1]
+    return features(T, torch.zeros(1, dtype=torch.long, device=dev), T.actor[:1], sizehead=sizehead)[0].shape[1]
 
 
 def table_cell(st, kind):
@@ -506,8 +566,15 @@ def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None,
     learners = learner if isinstance(learner, (list, tuple)) else [learner]
     lids = torch.tensor([k for k, q in enumerate(uniq) if any(q is x for x in learners)] or [-1], device=dev)
     pmenus = [policy_menu(p, menu, dev) for p in uniq]
+    sheads = [bool(getattr(p, "size_head", False)) for p in uniq]
+    own = [pmenus[k] is not menu or sheads[k] for k in range(len(uniq))]  # its own moves or its own inputs
     mixed = any(m is not menu for m in pmenus)
-    assert not (mixed and record), "recording needs every policy on the table's menu"
+    rec_own = None  # recording a policy with its own layout: every recorded policy must share it
+    lk = [k for k in range(len(uniq)) if learner is None or k in set(lids.tolist())]
+    if record and any(own):
+        lays = {(id(pmenus[k]), sheads[k]) for k in lk}
+        assert len(lays) == 1, "the recorded policies must share one menu and one input layout"
+        rec_own = own[lk[0]]
     while not bool(T.done.all()):
         g = (~T.done).nonzero().squeeze(1)
         i = T.actor[g]
@@ -517,14 +584,17 @@ def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None,
         mybk = bk[g, i]
         a = torch.zeros(len(g), dtype=torch.long, device=dev)
         pol_of = assign[g, i]
+        own_rows = {}
         for k, pol in enumerate(uniq):
             m = pol_of == k
             if not m.any():
                 continue
             pm = pmenus[k]
-            feat_k, legal_k = (feat[m], legal[m]) if pm is menu else features(T, g[m], i[m], pm)
+            feat_k, legal_k = features(T, g[m], i[m], pm, sizehead=sheads[k]) if own[k] else (feat[m], legal[m])
+            if own[k] and rec_own and k in lk:
+                own_rows[k] = (m, feat_k, legal_k)
             if isinstance(pol, str):
-                probs = rule_probs(pol, T, g[m], i[m], legal[m], s[m], dealer, bk)
+                probs = rule_probs(pol, T, g[m], i[m], legal_k, s[m], dealer, bk)
             elif views and id(pol) in views:
                 vbk, vdl = views[id(pol)]
                 gm, im = g[m], i[m]
@@ -550,7 +620,18 @@ def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None,
             a[m] = torch.multinomial(probs, 1).squeeze(1)
         if record:
             keep = torch.ones_like(i, dtype=torch.bool) if learner is None else torch.isin(pol_of, lids)
-            rec.append(tuple(x[keep] for x in (g, i, feat, legal, mybk, T.street[g].clone(), s, a, pol_of)))
+            fr, lr = feat, legal
+            if rec_own and not own_rows:  # no recorded policy acted this step
+                keep = torch.zeros_like(keep)
+            elif rec_own:  # the recorded policies' own inputs and moves, in their rows
+                w = next(iter(own_rows.values()))[1].shape[1]
+                aw = next(iter(own_rows.values()))[2].shape[1]
+                fr = torch.zeros(len(g), w, device=dev)
+                lr = torch.zeros(len(g), aw, dtype=torch.bool, device=dev)
+                for m, fk, lk_ in own_rows.values():
+                    fr[m], lr[m] = fk, lk_
+            if keep.any() or not rec_own:
+                rec.append(tuple(x[keep] for x in (g, i, fr, lr, mybk, T.street[g].clone(), s, a, pol_of)))
         if not mixed:
             T.step(g, a)
         else:  # each menu's actors step with their own moves (the other tables' actors do not change meanwhile)
@@ -619,10 +700,13 @@ def remap_menu(sd, old, new, emb_dim):
     return sd
 
 
+RULE_MENU = None  # the menu rule players play (None: the table's); a random-menu run sets mtt (ninemax_selfplay --menu)
+
+
 def policy_menu(pol, menu, dev):
     """The menu a policy plays at a table whose menu is `menu`: a network's own (menu_name) when it has one and it
-    differs, else the table's."""
-    name = None if isinstance(pol, str) else getattr(pol, "menu_name", None)
+    differs, a rule player's RULE_MENU when set, else the table's."""
+    name = RULE_MENU if isinstance(pol, str) else getattr(pol, "menu_name", None)
     if name is None or name == menu.name:
         return menu
     if (name, str(dev)) not in _MENUS:
@@ -827,6 +911,14 @@ def main():
         help="the network: one input vector, or the other seats as a set (Deep Sets)",
     )
     ap.add_argument("--menu", default="medium")
+    ap.add_argument(
+        "--size-head",
+        action="store_true",
+        help="plan B: SizeHeadNet, fold/call/raise/all-in then a size scored by g(h, size); train with a "
+        "random menu (--menu size8), rule players on --rule-menu, evaluated and played on --play-menu",
+    )
+    ap.add_argument("--rule-menu", default="mtt", help="the rule players' menu when --size-head")
+    ap.add_argument("--play-menu", default="grid16", help="the menu a --size-head network is evaluated and played on")
     ap.add_argument("--abs", default="blueprint/out")
     ap.add_argument("--lib", default="blueprint/libbp5.so")
     ap.add_argument("--batch", type=int, default=8192, help="tables per training batch")
@@ -938,9 +1030,19 @@ def main():
     pre_s = dealer.pre_strength[torch.tensor(bk0[:, :, 0].ravel(), device=dev)]
     dealer.pre_q = (torch.quantile(pre_s, 0.88).item(), torch.quantile(pre_s, 0.65).item())
     menu = Menu(args.menu, dev)
-    nfeat = n_features(args.players, menu, dev)
     buckets = list(read_buckets(args.abs))
-    net = NineNet(nfeat, menu.A, buckets, arch=args.arch, players=args.players, belief=args.belief_weight > 0).to(dev)
+    if args.size_head:
+        assert args.belief_weight == 0 and args.arch == "mlp", "the size head is built for the mlp network, no belief"
+        global RULE_MENU
+        RULE_MENU = args.rule_menu
+        nfeat = n_features(args.players, menu, dev, sizehead=True)
+        nbase = nfeat - 2 * menu.S
+        net = SizeHeadNet(nbase, buckets, players=args.players, belief=args.belief_weight > 0).to(dev)
+    else:
+        nfeat = n_features(args.players, menu, dev)
+        net = NineNet(nfeat, menu.A, buckets, arch=args.arch, players=args.players, belief=args.belief_weight > 0).to(
+            dev
+        )
     magnet, avg = copy.deepcopy(net), copy.deepcopy(net)
     for m in (magnet, avg):
         m.requires_grad_(False)
@@ -957,8 +1059,12 @@ def main():
         st = torch.load(args.init, map_location=dev, weights_only=True)
         init_cfg = json.load(open(os.path.join(os.path.dirname(args.init), "config.json")))
         init_menu = Menu(init_cfg.get("menu", "medium"), dev)
+        assert bool(init_cfg.get("size_head")) == args.size_head, "a size-head run starts from a size-head network"
         for mod, k in ((net, "net"), (magnet, "magnet"), (avg, "avg")):
             sd = dict(st[k] if k in st else st["avg"])
+            if args.size_head:  # from ninemax_sizehead_init.py (a size-head copy of nm25): no remapping
+                mod.load_state_dict(sd)
+                continue
             if init_menu.name != menu.name:  # another menu: its moves mapped onto this one's by nearest size
                 assert args.arch == "mlp", "a menu change is mapped for the mlp network only"
                 sd = remap_menu(sd, init_menu, menu, mod.emb[0].embedding_dim)
@@ -995,7 +1101,8 @@ def main():
         dist["target"] = torch.softmax(masked(z, dist["legal"]), 1)
         print(f"distillation: {len(q)} positions from {len(shards)} shards, tau {args.distill_tau}", flush=True)
     pool = (rules + extra or None) if args.pool_share > 0 else None
-    json.dump({**vars(args), "nfeat": nfeat, "actions": menu.A, "buckets": buckets}, open(os.path.join(args.out, "config.json"), "w"),
+    json.dump({**vars(args), "nfeat": nfeat, "actions": menu.A, "buckets": buckets,
+               **({"nbase": net.nbase} if args.size_head else {})}, open(os.path.join(args.out, "config.json"), "w"),
               indent=1)  # fmt: skip
     log = open(os.path.join(args.out, "progress.log"), "a", buffering=1)
     t0 = last_eval = time.time()
