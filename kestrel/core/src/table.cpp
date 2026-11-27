@@ -31,6 +31,16 @@ Menu Menu::named(const std::string& name) {
         m.opens = bb({2.0f, 2.5f, 3.5f}), m.rer = {{2.5f, 3.5f}, {2.2f, 3.0f}}, m.max_pre = 4;
         m.hb = {0.25f, 0.5f, 0.75f, 1.25f, 2.0f}, m.hr = {0.75f, 1.5f}, m.mb = {0.33f, 0.75f}, m.mr = {1.0f};
         m.max_post = 3;
+    } else if (name == "grid16") {
+        // the size head's play grid (research ninemax_engine.MENUS["grid16"]): 16 sizes log-spaced over each range,
+        // rounded to 4 decimals as Python writes them
+        auto geom = [](double lo, double hi) {
+            std::vector<float> v;
+            for (int k = 0; k < 16; ++k) v.push_back(float(std::round(lo * std::pow(hi / lo, k / 15.0) * 1e4) / 1e4));
+            return v;
+        };
+        m.opens = bb(geom(2.0, 4.0)), m.rer = {geom(2.0, 4.0), geom(2.0, 4.0)}, m.max_pre = 4;
+        m.hb = geom(0.2, 3.0), m.hr = geom(0.2, 3.0), m.mb = geom(0.2, 3.0), m.mr = geom(0.2, 3.0), m.max_post = 3;
     } else {
         throw std::invalid_argument("unknown menu: " + name);
     }

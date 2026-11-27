@@ -128,10 +128,22 @@ std::vector<float> features(const Table& T, const NetInfo& info, const TourneyCt
     }
     std::vector<float> t;
     auto L = T.legal(&t);
-    for (auto x : L) push(x);
-    const int S = T.menu().S;
-    for (int k = 0; k < S; ++k)
-        push(std::clamp((t[k] - bet) / std::max(pot, 1.0f), 0.0f, 10.0f) / 10.0f * float(L[2 + k]));
+    const int S = T.menu().S, A = T.menu().A;
+    std::vector<float> frac(S);
+    for (int k = 0; k < S; ++k) frac[k] = std::clamp((t[k] - bet) / std::max(pot, 1.0f), 0.0f, 10.0f) / 10.0f;
+    if (info.size_head) {  // fold, call, all-in legal; any raise; the smallest and largest legal raise; sizes; flags
+        push(L[0]), push(L[1]), push(L[A - 1]);
+        bool anyr = false;
+        float lo = 9.0f, hi = -9.0f;
+        for (int k = 0; k < S; ++k)
+            if (L[2 + k]) anyr = true, lo = std::min(lo, frac[k]), hi = std::max(hi, frac[k]);
+        push(anyr), push(anyr ? lo : 0.0f), push(anyr ? hi : 0.0f);
+        for (int k = 0; k < S; ++k) push(frac[k] * float(L[2 + k]));
+        for (int k = 0; k < S; ++k) push(L[2 + k]);
+    } else {
+        for (auto x : L) push(x);
+        for (int k = 0; k < S; ++k) push(frac[k] * float(L[2 + k]));
+    }
     if (int(f.size()) != info.nfeat)
         throw std::logic_error("features: " + std::to_string(f.size()) + " features, the network reads " +
                                std::to_string(info.nfeat));
@@ -151,6 +163,8 @@ Net::Net(const std::string& dir) {
     info_.feat_tourney = j["features"].value("tourney", false);
     info_.feat_bounty = j["features"].value("bounty", 0.0);
     info_.pre_strength = j["pre_strength"].get<std::vector<float>>();
+    info_.size_head = j.value("size_head", false);
+    info_.nbase = j.value("nbase", 0);
 
     std::ifstream bf(dir + "/net.bin", std::ios::binary);
     if (!bf) throw std::runtime_error("no " + dir + "/net.bin");
@@ -191,6 +205,12 @@ Net::Net(const std::string& dir) {
             lin_w(v_);
         } else if (name == "v.bias") {
             v_.b = std::move(data);
+        } else if (name == "sz_h.weight" || name == "sz_z.weight" || name == "sz_out.1.weight" ||
+                   name == "sz_out.3.weight") {
+            lin_w(name == "sz_h.weight" ? sz_h_ : name == "sz_z.weight" ? sz_z_ : name == "sz_out.1.weight" ? sz1_ : sz2_);
+        } else if (name == "sz_h.bias" || name == "sz_z.bias" || name == "sz_out.1.bias" || name == "sz_out.3.bias") {
+            (name == "sz_h.bias" ? sz_h_ : name == "sz_z.bias" ? sz_z_ : name == "sz_out.1.bias" ? sz1_ : sz2_).b =
+                std::move(data);
         } else if (name == "norm.weight") {
             norm_.w = std::move(data);
         } else if (name == "norm.bias") {
@@ -209,7 +229,10 @@ Net::Net(const std::string& dir) {
         }
     }
     if (bf.peek() != EOF) throw std::runtime_error("net.bin is longer than net.json says");
-    if (inp_.in != info_.nfeat + 4 * emb_dim_ + 1) throw std::runtime_error("net.json: input size mismatch");
+    const int nin = info_.size_head ? info_.nbase : info_.nfeat;
+    if (inp_.in != nin + 4 * emb_dim_ + 1) throw std::runtime_error("net.json: input size mismatch");
+    if (info_.size_head && (sz_h_.w.empty() || sz_z_.w.empty() || sz1_.w.empty() || sz2_.w.empty() || pi_.out != 4))
+        throw std::runtime_error("net.json: a size-head network without its size head");
 }
 
 namespace {
@@ -267,11 +290,12 @@ void linear_batch(const std::vector<float>& w, const std::vector<float>& b, int 
 void Net::forward_batch(int B, const float* feat, const int* bk, const int* street, const float* st, float* logits,
                         float* value) const {
     const int nf = info_.nfeat, nin = inp_.in, H = hidden_;
+    const int nx = info_.size_head ? info_.nbase : nf;  // the inputs the trunk reads
     std::vector<float> X(size_t(B) * nin), h(size_t(B) * H), a(size_t(B) * H), b(size_t(B) * H);
     for (int i = 0; i < B; ++i) {
         float* x = X.data() + size_t(i) * nin;
-        std::copy(feat + size_t(i) * nf, feat + size_t(i + 1) * nf, x);
-        int at = nf;
+        std::copy(feat + size_t(i) * nf, feat + size_t(i) * nf + nx, x);
+        int at = nx;
         for (int s = 0; s < 4; ++s) {
             int row = std::min(bk[i * 4 + s], emb_rows_[s] - 1);
             float on = street[i] >= s ? 1.0f : 0.0f;
@@ -288,13 +312,49 @@ void Net::forward_batch(int B, const float* feat, const int* bk, const int* stre
         for (size_t q = 0; q < h.size(); ++q) h[q] += a[q];
     }
     for (int i = 0; i < B; ++i) layernorm(norm_.w, norm_.b, h.data() + size_t(i) * H, a.data() + size_t(i) * H, H);
-    linear_batch(pi_.w, pi_.b, pi_.out, H, a.data(), logits, B);
+    if (info_.size_head) {
+        for (int i = 0; i < B; ++i)
+            size_logits(a.data() + size_t(i) * H, feat + size_t(i) * nf, nf, street[i], logits + size_t(i) * info_.actions);
+    } else {
+        linear_batch(pi_.w, pi_.b, pi_.out, H, a.data(), logits, B);
+    }
     if (value) linear_batch(v_.w, v_.b, 1, H, a.data(), value, B);
+}
+
+void Net::size_logits(const float* a, const float* feat, int nfeat, int street, float* out) const {
+    const int H = hidden_, nb = info_.nbase, S = (nfeat - nb) / 2, D = sz_h_.out;
+    std::vector<float> t(4), hh(D), u(D), w(D), g(S);
+    linear(pi_.w, pi_.b, 4, H, a, t.data());  // fold, call, raise, all-in
+    linear(sz_h_.w, sz_h_.b, D, H, a, hh.data());
+    auto gelu = [](float z) { return 0.5f * z * (1.0f + std::erf(z * 0.70710678118654752f)); };
+    bool anyl = false;
+    for (int k = 0; k < S; ++k) {
+        const bool legal = feat[nb + S + k] > 0.5f;
+        if (!legal) {
+            g[k] = -1e9f;
+            continue;
+        }
+        anyl = true;
+        const float x = feat[nb + k] * 10.0f;
+        const float z[3] = {x, std::log(x + 0.01f), street == 0 ? 1.0f : 0.0f};
+        linear(sz_z_.w, sz_z_.b, D, 3, z, u.data());
+        for (int q = 0; q < D; ++q) u[q] = gelu(u[q] + hh[q]);
+        linear(sz1_.w, sz1_.b, D, D, u.data(), w.data());
+        for (auto& q : w) q = gelu(q);
+        linear(sz2_.w, sz2_.b, 1, D, w.data(), &g[k]);
+    }
+    float mx = -1e30f;
+    for (float x : g) mx = std::max(mx, x);
+    double se = 0;
+    for (float x : g) se += std::exp(double(x - mx));
+    const float lse = mx + float(std::log(se));
+    out[0] = t[0], out[1] = t[1], out[S + 2] = t[3];
+    for (int k = 0; k < S; ++k) out[2 + k] = t[2] + (anyl ? g[k] - lse : -1e9f);
 }
 
 void Net::forward(const std::vector<float>& feat, const std::array<int, 4>& bk, int street, float st,
                   std::vector<float>& logits, float& value, std::vector<float>* hidden) const {
-    std::vector<float> x(feat);
+    std::vector<float> x(feat.begin(), feat.begin() + (info_.size_head ? info_.nbase : int(feat.size())));
     for (int s = 0; s < 4; ++s) {
         int row = std::min(bk[s], emb_rows_[s] - 1);
         float on = street >= s ? 1.0f : 0.0f;
@@ -312,8 +372,13 @@ void Net::forward(const std::vector<float>& feat, const std::array<int, 4>& bk, 
         for (int q = 0; q < H; ++q) h[q] += a[q];
     }
     layernorm(norm_.w, norm_.b, h.data(), a.data(), H);
-    logits.assign(pi_.out, 0.0f);
-    linear(pi_.w, pi_.b, pi_.out, H, a.data(), logits.data());
+    if (info_.size_head) {
+        logits.assign(info_.actions, 0.0f);
+        size_logits(a.data(), feat.data(), int(feat.size()), street, logits.data());
+    } else {
+        logits.assign(pi_.out, 0.0f);
+        linear(pi_.w, pi_.b, pi_.out, H, a.data(), logits.data());
+    }
     linear(v_.w, v_.b, 1, H, a.data(), &value);
     if (hidden) hidden->assign(a.begin(), a.begin() + H);
 }
