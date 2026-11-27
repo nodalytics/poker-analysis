@@ -399,6 +399,10 @@ def main():
     search = None
     if a.samples:
         belief = load_belief(a.belief, dev) if a.proposal == "belief" else None
+        if belief is not None:  # the belief's guesses are bucketed by bp_bucket_cards: libbp7.so has it, libbp6.so not
+            assert hasattr(dealer.lib, "bp_bucket_cards"), (
+                f"--proposal belief needs a --lib with bp_bucket_cards ({a.lib})"
+            )
         search = Search(net, dealer, menu, a.samples, a.mode, a.tau, a.chunk, a.robust, a.bias, not a.no_crn, a.min_ess,
                         a.proposal, a.over, belief)  # fmt: skip
     t0 = time.time()
