@@ -1,0 +1,21 @@
+{
+ "a": "blueprint/nm46",
+ "b": "blueprint/nm25",
+ "early": 0.0,
+ "verdict": "no difference at the end",
+ "deals": 200000,
+ "n_max": 200000,
+ "looks": [
+  {
+   "deals": 200000,
+   "bb100": -0.14,
+   "ci95": [
+    -0.297,
+    0.017
+   ],
+   "z": -1.745,
+   "boundary": 2.241
+  }
+ ],
+ "C": 2.241240035694396
+}

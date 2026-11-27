@@ -1,0 +1,2 @@
+look 1: 200000 deals  -0.14 bb/100  z -1.74 (stop beyond 2.24)
+{"a": "blueprint/nm46", "b": "blueprint/nm25", "early": 0.0, "verdict": "no difference at the end", "deals": 200000, "n_max": 200000, "C": 2.241240035694396}

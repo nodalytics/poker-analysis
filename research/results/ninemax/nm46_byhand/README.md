@@ -47,6 +47,10 @@ as a run (nm47) is what would adopt it.
 | bluffers: jam-any, jam-40, raise-any | -53.1, -12.1, -12.3 | -51.5, -13.6, -10.5 |
 | exploiter, 4 seeds of 30 minutes (limit +1.25) | +0.5 (+0.6, +0.3, +0.5, +0.5) | +1.10 (+1.0, +1.5, +1.0, +0.9), passes |
 
+Head to head with nm25 over 200,000 deals (2026-11-27, `checks/nm46_nm25_200k.*`, one look at the end): **−0.14
+bb/100, z −1.74**, a 95% interval of about −0.30 to +0.02. nm46 does not beat nm25 at one table: at best level, more
+likely very slightly behind; its edge is against weaker players (the station, the maniac, the bluffer).
+
 Direct, nm46 against nm45: +17.68 [+17.00, +18.36] more against the station, +4.46 [+4.03, +4.90] against the maniac,
 reg and tag level; at one table, 40,000 deals, -0.19 bb/100, no difference.
 
