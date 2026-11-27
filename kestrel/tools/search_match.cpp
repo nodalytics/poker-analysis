@@ -5,7 +5,8 @@
 // tables, bubbles and in-the-money tables, --depths average stacks, --short of the final tables short-handed).
 //
 //   kestrel_search_match --model DIR --pack DIR [--deals 2000] [--samples 1024] [--robust] [--opp-bias net|fold|call|raise]
-//                        [--depths 10,25] [--short 0.5] [--seed 1] [--no-crn] [--min-ess 0.02] [--oversample 8]
+//                        [--depths 10,25] [--short 0.5] [--seed 1] [--no-crn] [--min-ess 0.02] [--oversample 1]
+//                        [--per-deal FILE]
 #include <omp.h>
 
 #include <algorithm>
@@ -156,7 +157,7 @@ Played play(const Net& net, const Game& g, const std::vector<int>& deck, int her
 }  // namespace
 
 int main(int argc, char** argv) {
-    std::string model, pack;
+    std::string model, pack, per_deal;
     int deals = 2000, opp = 0;
     double lo = 10, hi = 25, short_share = 0.5;
     uint64_t seed = 1;
@@ -177,6 +178,7 @@ int main(int argc, char** argv) {
         else if (a == "--deals") deals = std::stoi(v);
         else if (a == "--samples") sc.samples = std::stoi(v);
         else if (a == "--oversample") sc.oversample = std::stoi(v);
+        else if (a == "--per-deal") per_deal = v;
         else if (a == "--min-ess") sc.min_ess = std::stod(v);
         else if (a == "--seed") seed = std::stoull(v);
         else if (a == "--short") short_share = std::stod(v);
@@ -224,6 +226,13 @@ int main(int argc, char** argv) {
     };
     std::vector<double> gain(deals);
     for (int n = 0; n < deals; ++n) gain[n] = with[n] - plain[n];
+    if (!per_deal.empty()) {  // each deal's result without and with search (big blinds): two runs with the same seed
+        FILE* f = std::fopen(per_deal.c_str(), "w");  // play the same deals, so their difference is paired deal by deal
+        if (f) {
+            for (int n = 0; n < deals; ++n) std::fprintf(f, "%.6f %.6f\n", plain[n], with[n]);
+            std::fclose(f);
+        }
+    }
     const int S = std::accumulate(searched.begin(), searched.end(), 0);
     const int FB = std::accumulate(fallen.begin(), fallen.end(), 0);
     const double MS = std::accumulate(ms.begin(), ms.end(), 0.0), ES = std::accumulate(ess.begin(), ess.end(), 0.0);
