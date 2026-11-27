@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <map>
 #include <numeric>
 
 #include "kestrel/buckets.hpp"
@@ -40,16 +41,63 @@ namespace {
 
 }  // namespace
 
+std::string practice_mismatch(const NetInfo& a, const NetInfo& b) {
+    if (a.menu != b.menu) return "different betting menus (" + a.menu + ", " + b.menu + ")";
+    if (a.rules.open_limp != b.rules.open_limp) return "one allows open limps and the other does not";
+    if (a.rules.ante_bb != b.rules.ante_bb) return "different antes";
+    if (!a.feat_tourney || !b.feat_tourney) return "practice tables are tournaments: every model must be a tournament network";
+    if ((a.feat_bounty > 0) != (b.feat_bounty > 0)) return "a bounty (PKO) model cannot share a table with a regular one";
+    return "";
+}
+
 PracticeTournament::PracticeTournament(const Net& net, const PracticeConfig& c, std::string label)
     : net_(net), cfg_(c), label_(std::move(label)), rng_(c.seed) {
     int n = std::clamp(cfg_.players, 2, 9);
     std::uniform_real_distribution<double> u(-cfg_.spread, cfg_.spread);
     for (int k = 0; k < n; ++k) {
         double bb = std::max(4.0, cfg_.avg_bb * std::exp(u(rng_)));
-        players_.push_back({label_ + " " + std::to_string(k + 1), int64_t(std::llround(bb * BB)), 0,
-                            std::clamp(cfg_.bounty, 0.0, 0.9) / n, 0.0});
+        Player p;
+        p.name = label_ + " " + std::to_string(k + 1), p.model = label_, p.net = &net_;
+        p.chips = int64_t(std::llround(bb * BB)), p.bounty = std::clamp(cfg_.bounty, 0.0, 0.9) / n;
+        players_.push_back(p);
     }
-    if (cfg_.human) players_[0].name = "You";
+    if (cfg_.human) players_[0].name = players_[0].model = "You", players_[0].human = true;
+    button_ = int(rng_() % uint64_t(n));
+}
+
+// the network that runs the table (and advises a human seat): the first seat a model plays
+static const PracticeSeat& first_model(const std::vector<PracticeSeat>& lineup) {
+    for (auto& s : lineup)
+        if (s.net) return s;
+    throw std::runtime_error("a practice table needs at least one model");
+}
+
+PracticeTournament::PracticeTournament(const std::vector<PracticeSeat>& lineup, const PracticeConfig& c)
+    : net_(*first_model(lineup).net), cfg_(c), label_(first_model(lineup).model), rng_(c.seed) {
+    cfg_.human = false;
+    int n = std::clamp(cfg_.players, 2, 9);
+    std::uniform_real_distribution<double> u(-cfg_.spread, cfg_.spread);
+    // seat k's player: lineup[k % size]; a list cycled past the user's entry gives that seat to the first model, so
+    // the user has one seat
+    std::vector<PracticeSeat> at;
+    bool user = false;
+    for (int k = 0; k < n; ++k) {
+        PracticeSeat s = lineup[size_t(k) % lineup.size()];
+        if (!s.net && user) s = first_model(lineup);
+        user = user || !s.net;
+        at.push_back(s);
+    }
+    std::map<std::string, int> seats, numbered;  // seats a model holds; a model with several has them numbered
+    for (auto& s : at) ++seats[s.model];
+    for (const PracticeSeat& s : at) {
+        double bb = std::max(4.0, cfg_.avg_bb * std::exp(u(rng_)));
+        Player p;
+        p.model = s.net ? s.model : "You", p.net = s.net ? s.net : &net_, p.human = !s.net;
+        cfg_.human = cfg_.human || p.human;
+        p.name = p.human ? "You" : seats[s.model] > 1 ? s.model + " #" + std::to_string(++numbered[s.model]) : s.model;
+        p.chips = int64_t(std::llround(bb * BB)), p.bounty = std::clamp(cfg_.bounty, 0.0, 0.9) / n;
+        players_.push_back(p);
+    }
     button_ = int(rng_() % uint64_t(n));
 }
 
@@ -62,7 +110,7 @@ bool PracticeTournament::over() const {
 json PracticeTournament::standings() const {
     json a = json::array();
     for (auto& p : players_)
-        a.push_back({{"name", p.name}, {"chips_bb", double(p.chips) / BB}, {"place", p.place},
+        a.push_back({{"name", p.name}, {"model", p.model}, {"chips_bb", double(p.chips) / BB}, {"place", p.place},
                      {"prize", (p.place ? (1 - std::clamp(cfg_.bounty, 0.0, 0.9)) * cfg_.payouts[p.place - 1] : 0.0) + p.won},
                      {"bounty", p.bounty}, {"bounty_won", p.won}});
     return a;
@@ -165,7 +213,7 @@ void PracticeTournament::play_hand(const std::function<void(const json&)>& emit,
     const int nb[4] = {0, 3, 4, 5};
     // what a seat may see: everything in a model-only table; with a human, only their own cards until the showdown
     auto visible = [&](int s, bool showdown) {
-        return !cfg_.human || who[s] == 0 || (showdown && !T.folded[s]);
+        return !cfg_.human || players_[who[s]].human || (showdown && !T.folded[s]);
     };
     auto hole_json = [&](int s, bool showdown) {
         return visible(s, showdown) ? json{card_str(hole[s][0]), card_str(hole[s][1])} : json(nullptr);
@@ -177,7 +225,7 @@ void PracticeTournament::play_hand(const std::function<void(const json&)>& emit,
             a.push_back({{"seat", s}, {"pos", pos[s]}, {"name", players_[who[s]].name},
                          {"stack_bb", double(T.stack[s]) / BB}, {"in_bb", double(T.contrib[s]) / BB},
                          {"folded", bool(T.folded[s])}, {"allin", bool(T.allin[s])},
-                         {"hole", hole_json(s, false)}, {"icm", ctx.eq0[s]}, {"you", cfg_.human && who[s] == 0},
+                         {"hole", hole_json(s, false)}, {"icm", ctx.eq0[s]}, {"you", players_[who[s]].human},
                          {"bounty", s < int(ctx.bounty.size()) ? ctx.bounty[s] : 0.0}});
         }
         return a;
@@ -192,11 +240,12 @@ void PracticeTournament::play_hand(const std::function<void(const json&)>& emit,
         const int i = T.actor(), st = T.street();
         std::vector<float> t;
         auto L = T.legal(&t);
-        auto f = features(T, net_.info(), &ctx);
+        const Net& net = *players_[who[i]].net;  // the seat's own network
+        auto f = features(T, net.info(), &ctx);
         std::vector<float> lg;
         float v;
-        net_.forward(f, bk[i], st, strength(net_.info(), st, bk[i][st]), lg, v);
-        auto p = net_.policy(lg, L);
+        net.forward(f, bk[i], st, strength(net.info(), st, bk[i][st]), lg, v);
+        auto p = net.policy(lg, L);
         const int64_t to_call = T.bet - T.contrib[i];
         const int A = T.menu().A;
         auto label = [&](int a) {
@@ -206,7 +255,7 @@ void PracticeTournament::play_hand(const std::function<void(const json&)>& emit,
                                 : "raise to " + bb_str(double(t[a - 2]));
         };
         const double pot = (double(std::accumulate(T.contrib.begin(), T.contrib.end(), int64_t(0))) + double(T.dead)) / BB;
-        const bool human_turn = cfg_.human && who[i] == 0 && ask;
+        const bool human_turn = players_[who[i]].human && ask;
         int act;
         if (human_turn) {
             json choices = json::array();
@@ -228,6 +277,7 @@ void PracticeTournament::play_hand(const std::function<void(const json&)>& emit,
         }
         json ev = {{"type", "practice_decision"}, {"hand", hands_},  {"level", level_},       {"street", st},
                    {"actor", i},                  {"pos", pos[i]},   {"name", players_[who[i]].name},
+                   {"model", players_[who[i]].model},
                    {"options", opts},             {"seats", seats_json()}, {"board", board_json(st)},
                    {"pot_bb", pot},               {"players_left", n}, {"hidden", cfg_.human}};
         if (!cfg_.human) ev["value_bb"] = v;
@@ -258,7 +308,7 @@ void PracticeTournament::play_hand(const std::function<void(const json&)>& emit,
         if (who[s] < 0) continue;
         res.push_back({{"seat", s}, {"pos", pos[s]}, {"name", players_[who[s]].name}, {"result_bb", u[s] / BB},
                        {"hole", hole_json(s, T.showdown())}, {"folded", bool(T.folded[s])},
-                       {"you", cfg_.human && who[s] == 0}});
+                       {"you", players_[who[s]].human}});
         players_[who[s]].chips = std::max<int64_t>(0, after[s]);
         if (players_[who[s]].chips == 0) busted.push_back(who[s]);
     }
