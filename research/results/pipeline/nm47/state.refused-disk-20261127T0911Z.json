@@ -1,0 +1,9 @@
+{
+ "name": "nm47",
+ "question": "Does nm25 re-trained against a more aggressive rule pool (two maniacs, a bigger pool share, a larger and faster-restarting exploiter), the recipe nm46 ran by hand, pass nm45's checks when its checks are fixed before it trains?",
+ "checks": {},
+ "commit": "2daa84706ff5",
+ "status": "failed",
+ "stage": "refused: under 25 GB of disk free",
+ "updated": "2026-11-27T09:11:52Z"
+}
