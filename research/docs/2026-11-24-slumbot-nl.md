@@ -257,6 +257,14 @@ with the blueprint on the same spots):
   `resolve_turn --skip 1,4` reruns C and D alone on the same spots (the spots depend only on the seed) and prints
   the paired difference and one line a spot; that run decides it.
 
+**C against D, paired (2026-11-27).** The rerun reproduced every number above exactly (the spots depend only on the
+seed). Our river fixed to the blueprint (D) minus exact rivers (C), the opponent's best response, chips per hand pair:
++24.6 (se 14.7) over 100 spots at 200 iterations, +68.9 (se 42.0) over 20 spots at 500. Both favour exact rivers, by a
+fifth to two-fifths of the re-solve's whole gain, and both sit at about 1.65 standard errors: **not shown** at 95%, so
+neither "D is level with C" nor "C is better" holds yet. Running: 200 new spots (seed 2) at 500 iterations, about four
+times the 500-iteration sample; if the gap holds at its size its interval will clear zero, and stage 0 of the river
+network goes ahead; if it closes, blueprint leaves suffice.
+
 **Expectations:** a re-solve over the same bet menu cannot fix a menu leak, so the turn re-solve should carry the wide
 tree's sizes too. Network error compounds street by street, and production Kestrel has no GPU path. DeepStack never
 claimed to beat Slumbot (DyypHoldem issue #4); the realistic best case is LBR lower by tens of bb/100.
