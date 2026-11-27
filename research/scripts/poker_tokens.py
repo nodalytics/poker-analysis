@@ -79,6 +79,11 @@ class Hand:
     results_bb: list | None = None
 
 
+def _cards(cs):
+    """A player's two cards as tokens, the higher card first (so a pair of cards has one spelling)."""
+    return ["C_" + card_str(c) for c in sorted(cs, reverse=True)]
+
+
 def _b(edges, x):
     return bisect.bisect_right(edges, x)
 
@@ -94,7 +99,7 @@ def encode(h, layout="public"):
     if layout == "full":
         for p in range(n):
             if h.holes[p] is not None:
-                t += ["HOLE", f"POS_{pos[p]}"] + ["C_" + card_str(c) for c in h.holes[p]]
+                t += ["HOLE", f"POS_{pos[p]}"] + _cards(h.holes[p])
     for k, st in enumerate(h.streets):
         t.append(["PRE", "FLOP", "TURN", "RIVER"][k])
         t += ["C_" + card_str(c) for c in st["board"]]
@@ -104,11 +109,11 @@ def encode(h, layout="public"):
     if layout == "public":
         for p in h.shown:
             if h.holes[p] is not None:
-                t += ["SHOW", f"POS_{pos[p]}"] + ["C_" + card_str(c) for c in h.holes[p]]
+                t += ["SHOW", f"POS_{pos[p]}"] + _cards(h.holes[p])
         if all(x is not None for x in h.holes):  # every card known (self-play, Pluribus): what each player held
             t.append("REVEAL")
             for p in range(n):
-                t += [f"POS_{pos[p]}"] + ["C_" + card_str(c) for c in h.holes[p]]
+                t += [f"POS_{pos[p]}"] + _cards(h.holes[p])
     t.append("END")
     if h.results_bb is not None:
         for p in range(n):
