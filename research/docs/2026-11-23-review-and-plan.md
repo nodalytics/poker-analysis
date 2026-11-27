@@ -410,6 +410,18 @@ Kestrel 0.4.1 deployed on the lab with practice matches between models, with or 
 - [x] **Search oversampling in Kestrel** (2026-11-27): 8 x the deals, weighted, resampled; move-value error 1.39 to
       0.66 bb on 363 spots (`results/search_belief/`). Belief guesses cut it to 0.48; their C++ port is next. A paired
       Kestrel match (oversampling 1 against 8, 1,500 deals) is measuring the gain in play.
+- [ ] **A poker foundation model** (requested 2026-11-27, after Kronos: github.com/shiyu-coder/Kronos, MIT, a family of
+      decoder-only transformers pretrained on candlesticks from over 45 exchanges, a tokenizer turning OHLCV into
+      discrete tokens, 4.1 M to 499.2 M parameters). The poker version: a tokenizer for hands (seats and stacks, cards
+      when seen, every action with its size bucketed, board, showdown) and a decoder-only transformer pretrained by
+      next-token prediction on billions of self-play hands (every hole card known), the HandHQ human hands we hold and
+      the Pluribus hands. What it is for: an opponent model (a player's next action from their recent hands, the basis
+      of bounded exploitation), a belief model (hidden cards, against `ninemax_belief.py`'s 0.73 bits), a start for
+      fine-tuning, and realistic training opponents. What it is not: a strong player by itself; predicting play is not
+      playing well, and every system that beat professionals got its strength from game-theoretic training and search
+      (Libratus, Pluribus, DeepStack, ReBeL, Student of Games), with plain feed-forward networks. Stage 0: tokenizer and
+      data; stage 1: a ~25 M model, scored on next-action log-loss against the current opponent models and on hidden
+      cards against the belief network; stage 2: into search if it wins either.
 - [ ] **Seat angles** (requested 2026-11-27, the "π" question): seats sit in a circle, so each seat's position among
       the players seated, counted from the button, enters as an angle, $(\cos 2\pi k/n, \sin 2\pi k/n)$ for position
       $k$ of $n$, for me and each other seat. Every table size reads alike and the button sits next to the small blind.
