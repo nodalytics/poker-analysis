@@ -352,7 +352,9 @@ class Run:
         if gpu is not None:
             env["CUDA_VISIBLE_DEVICES"] = str(gpu)
         with open(os.path.join(self.dir, log), "a") as out:
-            out.write(f"\n# {now()} {' '.join(args)}\n")
+            # the command as run, the home folder written ~ (the logs go into the repo: no machine's login in them)
+            shown = " ".join(args).replace(os.path.expanduser("~"), "~")
+            out.write(f"\n# {now()} {shown}\n")
             out.flush()
             p = subprocess.Popen(args, cwd=HERE, env=env, stdout=out, stderr=subprocess.STDOUT, start_new_session=True)
             t0 = time.time()
