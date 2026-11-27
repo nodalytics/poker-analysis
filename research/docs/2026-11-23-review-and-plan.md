@@ -442,6 +442,16 @@ Kestrel 0.4.1 deployed on the lab with practice matches between models, with or 
      the same fixed checks.
 - [ ] A3 follow-up: the push/fold target at the bubble and under about 15bb, from the better of nm25 and nm47.
 - [ ] Partner's practice games: tally them by spot (`kestrel_practice_tally.py`) against nm25, nm45 and nm46.
+- [ ] **Partner's notes on playing Kestrel** (2026-11-27): "still playing a high level of poker"; (1) with medium to
+      large stacks it avoids unnecessary confrontation, probably ICM; (2) under about 10bb its ranges change to calling
+      more bluffs; (3) it raises or goes all in first to win without a showdown. Judged "a small problem we can ignore
+      for now". Against what is measured: (1) is ICM's advice for medium stacks, but the chip leader should do the
+      opposite and pressure them, so measure entry and raising by chip rank at the table; (2) shorter stacks should call
+      wider, and A3 found nm25's short-stack play off the ICM chart (the chart beat it under 8bb, +0.27 final table,
+      +0.83 bubble) while calling shoves less often overall (11% against 13%), so the leak may be which hands, not how
+      often: compare its calling range under 10bb with the chart's, hand by hand; (3) is fold equity, correct at
+      10-25bb, and nm25 shoves first in less than the chart (11% against 25% final table, 17% against 31% bubble).
+      None is a pattern that beats the bot (not for `pipeline/patterns/`); the A3 follow-up's target covers (2).
 - [ ] Read AV-AIVAT; estimate the deals it would save on the 40,000-deal checks.
 - [ ] Kestrel desktop app: the practice table editor (the web app has it).
 
