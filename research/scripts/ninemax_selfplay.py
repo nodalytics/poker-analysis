@@ -534,7 +534,10 @@ def reg_probs(T, g, i, legal, bk, dealer):
 
 def rule_probs(name, T, g, i, legal, s, dealer, bk=None):
     """Rule-based opponents: reg (a tournament regular, reg_probs; needs bk, every table's buckets), tag (tight-aggressive), maniac (raises and shoves most of the time), station (always
-    calls or checks), random (uniform over the legal actions). Where a rule wants to call and calling is not legal
+    calls or checks), random (uniform over the legal actions); and (2026-11-27) jammer (all in whenever it can),
+    bluffer (weak hands bet or raise its biggest size 85% of the time, medium hands check and call, strong hands raise
+    half the time), raise3x, raise5x and raise8x (a regular whose opens are 3, 5 or 8 big blinds and re-raises 3, 5 or 8
+    times the bet: their own menus, RULE_OWN_MENU). Where a rule wants to call and calling is not legal
     (first in, without open limping: RULES["open_limp"] False), it opens with the first legal size instead, or shoves."""
     p = _rule_probs(name, T, g, i, legal, s, dealer, bk)
     lost = (p * ~legal).sum(1)
@@ -556,6 +559,28 @@ def _rule_probs(name, T, g, i, legal, s, dealer, bk=None):
         return F.one_hot(torch.ones(len(g), dtype=torch.long, device=g.device), legal.shape[1]).float()
     if name == "random":
         return lf / lf.sum(1, keepdim=True)
+    if name == "jammer":  # all in whenever it can, else check or call
+        a = torch.where(legal[:, -1], legal.shape[1] - 1, 1)
+        return F.one_hot(a, legal.shape[1]).float()
+    if name == "bluffer":  # an extreme bluffer: weak hands bet or raise its biggest size, medium ones check and call
+        A = legal.shape[1]
+        big = torch.where(
+            legal[:, 2 : A - 1].any(1),
+            (legal[:, 2 : A - 1].float() * torch.arange(1, A - 2, device=g.device)).argmax(1) + 2,
+            A - 1,
+        )
+        weak, strong = s < 0.35, s > 0.7
+        p = torch.zeros(len(g), A, device=g.device)
+        ar = torch.arange(len(g), device=g.device)
+        owe = T.bet[g] > T.contrib[g, i]
+        give_up = torch.where(owe, 0, 1)  # fold to a bet, else check
+        # weak: 85% the biggest raise, 15% give up; medium: call or check; strong: half raise, half call
+        p[ar, big] += torch.where(weak, 0.85, torch.where(strong, 0.5, 0.0))
+        p[ar, give_up] += torch.where(weak, 0.15, 0.0)
+        p[ar, 1] += torch.where(weak, 0.0, torch.where(strong, 0.5, 1.0))
+        return p
+    if name in ("raise3x", "raise5x", "raise8x"):  # a regular, raising only to its own size (its menu: open3/5/8)
+        return reg_probs(T, g, i, legal, bk, dealer)
     if name == "maniac":  # 70% spread over the raises and all-in when there are any, else call
         w = lf.clone()
         w[:, 0] = 0
@@ -811,13 +836,17 @@ def remap_menu(sd, old, new, emb_dim):
     return sd
 
 
+RULE_OWN_MENU = {"raise3x": "open3", "raise5x": "open5", "raise8x": "open8"}
 RULE_MENU = None  # the menu rule players play (None: the table's); a random-menu run sets mtt (ninemax_selfplay --menu)
 
 
 def policy_menu(pol, menu, dev):
     """The menu a policy plays at a table whose menu is `menu`: a network's own (menu_name) when it has one and it
     differs, a rule player's RULE_MENU when set, else the table's."""
-    name = RULE_MENU if isinstance(pol, str) else getattr(pol, "menu_name", None)
+    if isinstance(pol, str) and pol in RULE_OWN_MENU:  # a fixed-size raiser plays its own menu
+        name = RULE_OWN_MENU[pol]
+    else:
+        name = RULE_MENU if isinstance(pol, str) else getattr(pol, "menu_name", None)
     if name is None or name == menu.name:
         return menu
     if (name, str(dev)) not in _MENUS:

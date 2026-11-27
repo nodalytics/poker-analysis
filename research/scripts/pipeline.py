@@ -65,7 +65,7 @@ CHECKS = {
 }
 SEQ_PASS = {"ahead", "not_behind", "equivalent_or_ahead"}
 BLUFFERS = {"jam-any", "jam-40", "raise-any"}
-RULE_PLAYERS = {"reg", "tag", "maniac", "station", "random"}
+RULE_PLAYERS = {"reg", "tag", "maniac", "station", "random", "jammer", "bluffer", "raise3x", "raise5x", "raise8x"}
 HUMAN = os.path.join("results", "human_styles", "styles.json")
 # exploiters that attack differently: a copy of the target (the standard reading), one that keeps trying odd moves,
 # one that learns fast and commits, and one that starts from an older, different network and searches elsewhere
