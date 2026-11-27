@@ -225,7 +225,10 @@ moves and sizes, is distilled on nm25's self-play decisions:
 $$\mathcal{L} = \mathrm{KL}\big(\pi_{nm25}(\cdot \mid x) \,\|\, \pi_\theta(\cdot \mid x)\big) + \tfrac12 (v_\theta - v_{nm25})^2$$
 
 After 300 steps (about 11 M decisions) the KL was 0.008; the copy read −0.38 [−1.29, +0.54] bb/100 against nm25 when
-offered nm25's sizes and +1.03 [+0.10, +1.95] on `grid16` (5,000 deals × 9).
+offered nm25's sizes and +1.03 [+0.10, +1.95] on `grid16` (5,000 deals × 9). After 3,000 steps (11 minutes; what the pipeline runs
+before a size-head run) the KL was 0.0013 and the copy read +0.24 [−0.22, +0.71] on nm25's sizes and +0.22 [−0.25,
++0.68] on `grid16` (20,000 deals × 9): level with nm25 on both, so the earlier +1.03 on the grid was the smaller
+sample's noise.
 
 ## 7. Measurement
 
