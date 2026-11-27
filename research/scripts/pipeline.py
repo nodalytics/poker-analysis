@@ -457,7 +457,18 @@ class Run:
             aside = f"{out}.interrupted-{now().replace(':', '')}"
             os.rename(os.path.join(HERE, out), os.path.join(HERE, aside))
             self.save(interrupted=self.state.get("interrupted", []) + [aside])
-        cmd = [PY, "scripts/ninemax_selfplay.py", out, "--init", f"blueprint/{t.get('init', 'nm25')}/checkpoint.pt"]
+        init_ck = f"blueprint/{t.get('init', 'nm25')}/checkpoint.pt"
+        init_cfg = os.path.join(HERE, os.path.dirname(init_ck), "config.json")
+        if args.get("size-head") and not json.load(open(init_cfg)).get("size_head"):
+            # a size-head run from a slot-menu network (bet sizing, plan B): first a size-head copy of it, distilled
+            # on its own play (ninemax_sizehead_init.py, 3,000 steps), kept beside the run; the run starts from that
+            prep = f"{out}-init"
+            gpu, gname = self.pick_gpu()
+            self.save(status="preparing", stage=f"a size-head copy of {t.get('init', 'nm25')} on the {gname}")
+            self.sh([PY, "scripts/ninemax_sizehead_init.py", f"blueprint/{t.get('init', 'nm25')}", prep, "--steps",
+                     "3000"], "sizehead_init.log", gpu, timeout_min=60)  # fmt: skip
+            init_ck = f"{prep}/checkpoint.pt"
+        cmd = [PY, "scripts/ninemax_selfplay.py", out, "--init", init_ck]
         for k, v in args.items():
             if v is True:
                 cmd.append(f"--{k}")
