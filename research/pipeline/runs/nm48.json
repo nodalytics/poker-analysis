@@ -1,0 +1,26 @@
+{
+ "name": "nm48",
+ "question": "Does nm25 re-trained on the wide bet menu (opens 2, 2.5 or 3.5bb, two 3-bet and 4-bet sizes, heads-up bets of 0.25, 0.5, 0.75, 1.25 and 2 pot, two raise sizes; 8 moves instead of 6), with nm25's recipe otherwise unchanged, play at least as well as nm25 while betting sizes nm25 cannot, and give away no more about its hand through its sizes?",
+ "why": "Bet sizing, plan A (docs/2026-11-23-review-and-plan.md, section 6; requested 2026-11-27): with three sizes a person learns quickly what each one means, and overbets, small probe bets and other opens are strategies the network cannot play at all. The wide menu was defined in the trainer and Kestrel and never trained. nm25 is warm-started onto it by nearest size (ninemax_selfplay.remap_menu): the mapped copy read +0.13 [-0.33, +0.59] bb/100 against nm25 over 20,000 deals x 9 seatings, so the run starts at nm25's level and any change is the training's. Only the menu changes, so the comparison with nm25 isolates it. Each network plays its own menu at a shared table, so the checks against nm25 and the rule players are unchanged; the version report cannot compare spots across menus and is replaced by the sizes report.",
+ "train": {
+  "init": "nm25",
+  "minutes": 360,
+  "gpu": "any",
+  "args": {"menu": "wide"}
+ },
+ "checks": [
+  {"id": "no-harm", "type": "seqtest", "against": "nm25", "early": 0, "pass": "not_behind", "max": 40000, "looks": 8, "alpha": 0.025, "margin": 0.5,
+   "why": "it must not lose to nm25 in nm25's own game, at a table where each plays its own menu"},
+  {"id": "other-players", "type": "opponents", "against": ["reg", "tag", "maniac", "station"], "baseline": "nm25", "hands": 100000, "tolerance": 2.0, "rule": "interval",
+   "why": "nm45's check: on the same deals as nm25, the 95% interval of the difference must lie above -2.0 bb/100 against every rule player (they play the mtt menu, the same for both)"},
+  {"id": "styles", "type": "styles", "count": 20, "seed": 2026, "hands": 5000, "baseline": "nm25", "worst_tolerance": 2.0, "mean_tolerance": 0.0,
+   "why": "at least as good as nm25 on average across 25 generated players (nm25 with its tendencies pushed, on its own menu), and never far behind"},
+  {"id": "bluffs", "type": "bluffers", "early": 0, "unit": "equity", "bluffers": ["jam-any", "jam-40", "raise-any"], "pass": "all_lose",
+   "why": "bluff jams and raises must lose prize equity against it, as against nm25"},
+  {"id": "robust", "type": "exploit", "minutes": 30, "seeds": 4, "limit": 1.25,
+   "why": "as nm45 and nm47: the mean of four 30-minute exploiters, which play the wide menu too and can try every size it adds; limit nm25's +0.75 plus 0.5"},
+  {"id": "sizes", "type": "sizes", "baseline": "nm25", "deals": 40000,
+   "why": "a report: which of the new sizes it uses and where, and how much its sizes say about its hand against nm25's. Not a gate, since no threshold for it has been measured; it decides whether readability needs a check of its own"}
+ ],
+ "adopt": "all"
+}
