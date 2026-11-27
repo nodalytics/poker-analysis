@@ -40,5 +40,10 @@ result without and with search; the plain arm is identical in both): search's ga
 [−0.29, +7.77] bb/100 with oversampling off and +5.08 [+1.08, +9.09] with 2 x; **2 x minus off, deal by deal: +1.34
 [−1.65, +4.33]**, not shown. 2 x took 4.9 s a decision against 3.9 s (the lab busy), rested on 611 effective deals
 against 445, and fell back to the network 440 times against 815. The default stays off; about 4,000 more paired deals
-would narrow the difference to about ±1.8. The belief proposal cuts the error by another 27% and is not in Kestrel yet: it needs
+would narrow the difference to about ±1.8.
+
+**4,000 more paired deals** (seed 12, `kestrel_oversample/*_s12*`): 2 x minus off +1.41 [−0.45, +3.28]. **Pooled over
+5,500 deals: +1.39 [−0.19, +2.97]**, still not shown, though both seeds read +1.3 to +1.4. 2 x took 4.29 s a decision
+against 3.64 (+18%), rested on 614 effective deals against 445 and fell back to the network 1,071 times against 2,139.
+The default stays off: a likely small gain, not established. The belief proposal cuts the error by another 27% and is not in Kestrel yet: it needs
 the belief network in C++.

@@ -265,6 +265,13 @@ neither "D is level with C" nor "C is better" holds yet. Running: 200 new spots 
 times the 500-iteration sample; if the gap holds at its size its interval will clear zero, and stage 0 of the river
 network goes ahead; if it closes, blueprint leaves suffice.
 
+**Decided (2026-11-27): blueprint leaves suffice.** 200 new spots (seed 2) at 500 iterations
+(`results/blueprint_diag/turn/cd_t200_i500_s2.*`): the safe re-solve (C) improves on the blueprint by −100.3 (se 10.9),
+our river fixed to the blueprint (D) by −106.9 (se 9.0); **D minus C, paired: −6.6 (se 6.4)**. D is level with C
+(if anything ahead), at 322 s a spot against 501. The earlier +24.6 and +68.9 were smaller samples' noise. By the rule
+set before the runs, the river value network (stage 0) is not built: the turn re-solve keeps blueprint values at its
+river leaves.
+
 **Expectations:** a re-solve over the same bet menu cannot fix a menu leak, so the turn re-solve should carry the wide
 tree's sizes too. Network error compounds street by street, and production Kestrel has no GPU path. DeepStack never
 claimed to beat Slumbot (DyypHoldem issue #4); the realistic best case is LBR lower by tens of bb/100.

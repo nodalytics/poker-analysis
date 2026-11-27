@@ -364,8 +364,10 @@ on-menu +122); nm46 run through nm45's checks (`results/ninemax/nm46_byhand/`); 
 Kestrel 0.4.1 deployed on the lab with practice matches between models, with or without the user at the table.
 
 **9-max**
-- [ ] nm47 (nm46's recipe, pre-registered): merge PR #4, then the lab trains and judges it (about 9 hours). If adopted,
-  it ships through the model pipeline and becomes Kestrel's default.
+- [x] nm47 (nm46's recipe, pre-registered): **not adopted** (2026-11-27). It failed no-harm (inconclusive after 40,000
+  deals at −0.39 bb/100: not shown to be not behind nm25) and styles (mean −0.14 against nm25, needs at least 0); it
+  passed other players, bluffers and the exploiter (+1.1, limit +1.25). With nm46's 200,000-deal −0.14, the recipe is a
+  shade behind nm25 head to head. nm25 stays the default.
 - [ ] nm46's exploiter check: the fourth seed (first three +1.0, +1.5, +0.9; limit +1.25).
 - [ ] Bet sizing, in this order (requested 2026-11-27: more sizes are harder for people to read and open strategies the
       network cannot play now):
