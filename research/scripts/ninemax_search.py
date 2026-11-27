@@ -56,6 +56,7 @@ import torch.nn.functional as F
 
 from ninemax_engine import BB, Dealer, Menu, Tables, strength
 from ninemax_eval import load
+from ninemax_belief import load_belief, propose
 from ninemax_selfplay import FEAT, board_of, context, end_equity, features, masked, start_equity
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -156,8 +157,13 @@ MIN_ESS = 0.02
 
 class Search:
     def __init__(self, net, dealer, menu, samples=256, mode="greedy", tau=1.0, chunk=16, robust=False, bias=5.0,
-                 crn=True, min_ess=MIN_ESS):  # fmt: skip
+                 crn=True, min_ess=MIN_ESS, proposal="uniform", over=1, belief=None):  # fmt: skip
         self.net, self.dealer, self.menu = net, dealer, menu
+        # where the guesses of the hidden cards come from (search with beliefs, 2026-11-27): "uniform" (random deals),
+        # or over x N candidates, uniform or from a BeliefNet ("belief"), weighted by likelihood / proposal and
+        # resampled to N (systematic resampling); over 1 with uniform is the original search
+        assert proposal in ("uniform", "belief") and over >= 1 and (proposal == "uniform" or belief is not None)
+        self.proposal, self.over, self.belief = proposal, over, belief
         self.N, self.mode, self.tau, self.chunk = samples, mode, tau, chunk
         self.robust, self.bias = robust, bias
         self.crn = crn  # common random numbers: every candidate move's rollouts use the same draws per (deal, step)
@@ -182,18 +188,26 @@ class Search:
             out.append(self._decide(cut(stacks, sl), cut(pay, sl), hists[sl], hero, fixed[sl]))
         return torch.cat(out)
 
+    def _replay(self, R, seat, act, K, logw=None, hero=None, BK=None):
+        """Replay the recorded actions on R (K rows per decision); with logw, add each opponent action's log
+        probability under the network (the likelihood of the row's cards)."""
+        dev = R.dev
+        for t in range(seat.shape[1]):
+            js = (seat[:, t] >= 0).nonzero().squeeze(1)
+            r = (js[:, None] * K + torch.arange(K, device=dev)).reshape(-1)
+            s_t, a_t = seat[js, t].repeat_interleave(K), act[js, t].repeat_interleave(K)
+            assert bool((R.actor[r] == s_t).all()), "replay diverged from the recorded hand"
+            if logw is not None:
+                opp = s_t != hero
+                if opp.any():
+                    ro = r[opp]
+                    pr, _ = net_probs(self.net, self.dealer, R, ro, BK)
+                    logw[ro] += torch.log(pr.gather(1, a_t[opp][:, None]).squeeze(1).clamp(min=1e-12))
+            R.step(r, a_t)
+
     def _decide(self, stacks, pay, hists, hero, fixed):
         M, N, P, dev = len(hists), self.N, self.dealer.P, self.dealer.dev
-        deals = [deal_fixed(self.dealer, N, fixed[j]) for j in range(M)]
-        BK = torch.cat([d[0] for d in deals])  # [M*N, P, 4], rows j*N .. j*N+N-1 belong to decision j
-        RK = torch.cat([d[1] for d in deals])
-        st = None if stacks is None else stacks.repeat_interleave(N, 0)
-        R = with_pay(Tables(M * N, P, self.menu, dev, stacks=st), None if pay is None else pay.repeat_interleave(N, 0))
-        R.board = board_of(np.concatenate([d[2] for d in deals]), P, dev)  # each sample's board (texture networks)
-        gen = torch.Generator(device=dev)  # the rollouts' draws: one uniform per (sample, step), shared by every move
-        gen.manual_seed(self.dealer.seed * 1_000_003 + self.calls)
-        self.calls += 1
-        # 1. replay the hand, weighting each sample by the opponents' actions
+        K = N * self.over  # candidate guesses per decision
         L = max(len(h) for h in hists)
         seat = torch.full((M, L), -1, dtype=torch.long, device=dev)
         act = torch.zeros((M, L), dtype=torch.long, device=dev)
@@ -201,22 +215,43 @@ class Search:
             if h:
                 seat[j, : len(h)] = torch.tensor([x[0] for x in h], device=dev)
                 act[j, : len(h)] = torch.tensor([x[1] for x in h], device=dev)
-        logw = torch.zeros(M * N, device=dev)
-        for t in range(L):
-            js = (seat[:, t] >= 0).nonzero().squeeze(1)
-            r = (js[:, None] * N + torch.arange(N, device=dev)).reshape(-1)
-            s_t, a_t = seat[js, t].repeat_interleave(N), act[js, t].repeat_interleave(N)
-            assert bool((R.actor[r] == s_t).all()), "replay diverged from the recorded hand"
-            opp = s_t != hero
-            if opp.any():
-                ro = r[opp]
-                pr, _ = net_probs(self.net, self.dealer, R, ro, BK)
-                logw[ro] += torch.log(pr.gather(1, a_t[opp][:, None]).squeeze(1).clamp(min=1e-12))
-            R.step(r, a_t)
+        logq = torch.zeros(M * K, device=dev)
+        if self.proposal == "belief":  # the opponents' cards from the beliefs at this decision (public inputs only)
+            R1 = with_pay(Tables(M, P, self.menu, dev, stacks=stacks), pay)
+            self._replay(R1, seat, act, 1)
+            root1 = torch.arange(M, device=dev)
+            f1, _ = features(R1, root1, R1.actor[root1])
+            live = ~R1.folded
+            live[:, hero] = False
+            cards, logq = propose(self.belief, f1, hero, live, fixed, K)
+            BK, RK = self.dealer.buckets_for(cards)
+            board_cards = cards
+        else:
+            deals = [deal_fixed(self.dealer, K, fixed[j]) for j in range(M)]
+            BK = torch.cat([d[0] for d in deals])  # [M*K, P, 4], rows j*K .. j*K+K-1 belong to decision j
+            RK = torch.cat([d[1] for d in deals])
+            board_cards = np.concatenate([d[2] for d in deals])
+        st = None if stacks is None else stacks.repeat_interleave(K, 0)
+        R = with_pay(Tables(M * K, P, self.menu, dev, stacks=st), None if pay is None else pay.repeat_interleave(K, 0))
+        R.board = board_of(board_cards, P, dev)  # each sample's board (texture networks)
+        gen = torch.Generator(device=dev)  # the rollouts' draws: one uniform per (sample, step), shared by every move
+        gen.manual_seed(self.dealer.seed * 1_000_003 + self.calls)
+        self.calls += 1
+        # 1. replay the hand, weighting each guess by the opponents' actions over its proposal probability
+        logw = -logq
+        self._replay(R, seat, act, K, logw, hero, BK)
         assert bool((R.actor == hero).all()), "not the hero's turn after the replay"
-        w = torch.softmax(logw.view(M, N), 1)  # [M, N]
-        ess = 1 / (w**2).sum(1)  # effective sample size of each decision's weighted samples
-        self.ess.extend(ess.tolist())
+        w = torch.softmax(logw.view(M, K), 1)  # [M, K]
+        ess = 1 / (w**2).sum(1)  # effective sample size of each decision's weighted guesses
+        if K > N:  # systematic resampling to N guesses of equal weight
+            cw = w.cumsum(1)
+            pos = (torch.rand(M, 1, device=dev, generator=gen) + torch.arange(N, device=dev)[None, :]) / N
+            chosen = torch.searchsorted(cw, pos.clamp(max=1 - 1e-7)).clamp(max=K - 1)  # [M, N]
+            rows = (torch.arange(M, device=dev)[:, None] * K + chosen).reshape(-1)
+            R, BK, RK = take(R, rows), BK[rows], RK[rows]
+            w = torch.full((M, N), 1.0 / N, device=dev)
+        eff = ess.clamp(max=N)  # the distinct guesses the values rest on: at most N after resampling
+        self.ess.extend(eff.tolist())
         root = torch.arange(M, device=dev) * N
         pnet, legal = net_probs(self.net, self.dealer, R, root, BK)  # hero's own bucket is the same in every sample
         # 2. every legal action on every sample, then rollouts with the network
@@ -250,7 +285,7 @@ class Search:
         else:
             z = torch.log(pnet.clamp(min=1e-12)) + (Q - Q.max(1, keepdim=True).values) / self.tau
             out = torch.softmax(masked(z, legal), 1)
-        low = ess < self.min_ess * N  # too few effective samples: the values are noise, keep the network's policy
+        low = eff < self.min_ess * N  # too few effective samples: the values are noise, keep the network's policy
         self.fallback.extend(low.tolist())
         return torch.where(low[:, None], pnet, out)
 
@@ -340,6 +375,14 @@ def main():
     ap.add_argument("--min-ess", type=float, default=MIN_ESS,
                     help="below this share of --samples effective samples, play the network's own policy (0: never)")  # fmt: skip
     ap.add_argument("--no-crn", action="store_true", help="independent rollout draws per move (before 2026-11-23)")
+    ap.add_argument(
+        "--proposal",
+        choices=("uniform", "belief"),
+        default="uniform",
+        help="where the guesses of the hidden cards come from (belief: --belief, a ninemax_belief.py model)",
+    )
+    ap.add_argument("--over", type=int, default=1, help="draw over x samples guesses, weight them, resample to samples")
+    ap.add_argument("--belief", help="a folder with belief.pt and belief.json (ninemax_belief.py train)")
     ap.add_argument("--out")
     ap.add_argument(
         "--per-deal", help="save each deal's result (bb/100, .npy): runs with the same --seed are paired deal by deal"
@@ -355,7 +398,9 @@ def main():
     dealer = Dealer(a.lib, a.abs, 9, B, dev, seed=a.seed)
     search = None
     if a.samples:
-        search = Search(net, dealer, menu, a.samples, a.mode, a.tau, a.chunk, a.robust, a.bias, not a.no_crn, a.min_ess)
+        belief = load_belief(a.belief, dev) if a.proposal == "belief" else None
+        search = Search(net, dealer, menu, a.samples, a.mode, a.tau, a.chunk, a.robust, a.bias, not a.no_crn, a.min_ess,
+                        a.proposal, a.over, belief)  # fmt: skip
     t0 = time.time()
     per, searched = match(net, search, dealer, menu, a.hands, dev, a.max_live, 0 if a.preflop else 1,
                           BIASES.index(a.opp_bias), a.bias)  # fmt: skip
@@ -364,7 +409,7 @@ def main():
     m, sd = float(per.mean()), float(per.std())
     lo, hi = m - 1.96 * sd / math.sqrt(len(per)), m + 1.96 * sd / math.sqrt(len(per))
     res = {"run": a.run, "hands_trained": hands, "hands": a.hands, "samples": a.samples, "mode": a.mode,
-           "tau": a.tau, "robust": a.robust, "crn": not a.no_crn, "min_ess": a.min_ess, "bias": a.bias, "opp_bias": a.opp_bias, "max_live": a.max_live, "preflop": a.preflop, "tourney": FEAT["tourney"], "searched_decisions": searched, "bb100": round(m, 1),
+           "tau": a.tau, "proposal": a.proposal, "over": a.over, "belief": a.belief, "robust": a.robust, "crn": not a.no_crn, "min_ess": a.min_ess, "bias": a.bias, "opp_bias": a.opp_bias, "max_live": a.max_live, "preflop": a.preflop, "tourney": FEAT["tourney"], "searched_decisions": searched, "bb100": round(m, 1),
            "ci95": [round(lo, 1), round(hi, 1)], "seconds": round(time.time() - t0)}  # fmt: skip
     if search is not None and search.ess:
         e = torch.tensor(search.ess)

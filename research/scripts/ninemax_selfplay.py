@@ -57,7 +57,7 @@ from ninemax_engine import BB, RULES, STACK, Dealer, Menu, Tables, read_buckets,
 #            heads. Knocking a player out pays half their bounty in cash and adds the other half to your own; the
 #            payouts tensor then carries both, [G, 2P] (split_pay). 0: no bounties.
 FEAT = {"stacks": None, "tourney": False, "depths": None, "short": 0.0, "seats": None, "bounty": 0.0, "texture": False,
-        "early": 0.0}  # fmt: skip
+        "early": 0.0, "seat_angles": False}  # fmt: skip
 PRIORITY = {}  # prioritised scenario sampling: table cell -> weight (ninemax_leaks.py), training tables only
 
 
@@ -171,6 +171,8 @@ def features(T, g, i, menu=None, sizehead=False):
     if FEAT["texture"]:  # the betting so far, per street, and the board's texture (the network otherwise sees buckets)
         f.append((T.hist[g].float() / 4).clamp(max=1).reshape(len(g), 12))
         f.append(board_texture(getattr(T, "board", None), g, T.street[g], g.device))
+    if FEAT["seat_angles"]:  # seats in a circle: each player's position from the button as an angle (2026-11-27)
+        f.append(seat_angles(T, g, i, rel))
     menu = menu or T.menu
     legal, t = T.legal(g, i, menu)
     S = menu.S
@@ -194,6 +196,29 @@ def features(T, g, i, menu=None, sizehead=False):
 
 
 TEXTURE_N = 19  # the texture inputs (12 betting history + 7 board), just before the legal moves and sizes
+
+
+def angle_n(P):
+    """The seat-angle inputs: (cos, sin) for me and each other seat."""
+    return 2 * P
+
+
+def seat_angles(T, g, i, rel):
+    """[len(g), 2P]: for me, then each other seat in table order after me, (cos, sin) of 2 pi k / n, with k the seat's
+    position among the n players seated counted from the button (button 0, small blind 1, big blind 2, ...); 0, 0 for
+    an empty seat. Every table size reads alike, and the button sits next to the small blind as at a real table."""
+    seated = T.stack[g] > 0  # [m, P]; the engine's seats run small blind, big blind, ..., button (the last seated)
+    n = seated.sum(1, keepdim=True).float()
+    rank = seated.long().cumsum(1) - 1  # 0 for the small blind
+    k = torch.where(n == 2, rank, (rank + 1) % n.long()).float()  # 0 for the button (heads-up: the small blind)
+    ang = 2 * math.pi * k / n
+    c, s = torch.cos(ang) * seated, torch.sin(ang) * seated
+    out = [c.gather(1, i[:, None]), s.gather(1, i[:, None])]
+    for k_ in range(rel.shape[1]):
+        out += [c.gather(1, rel[:, k_ : k_ + 1]), s.gather(1, rel[:, k_ : k_ + 1])]
+    return torch.cat(out, 1)
+
+
 BELIEF_BINS = 10  # the belief output's classes per seat: strength in tenths
 
 
@@ -604,10 +629,14 @@ def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None,
                 probs = F.softmax(masked(lg, legal_k), 1)
             else:
                 fm = feat_k
+                cut = fm.shape[1] - pm.A - pm.S  # the legal moves and sizes start here
+                if FEAT["seat_angles"] and getattr(pol, "seat_angles", True) is False:  # trained without them
+                    na = angle_n(T.P)
+                    fm = torch.cat([fm[:, : cut - na], fm[:, cut:]], 1)
+                    cut -= na
                 if FEAT["texture"] and getattr(pol, "texture", True) is False:  # a network trained without them
-                    A_, S_ = pm.A, pm.S
-                    cut = fm.shape[1] - A_ - S_
-                    fm = torch.cat([fm[:, : cut - TEXTURE_N], fm[:, cut:]], 1)
+                    tc = cut - (angle_n(T.P) if FEAT["seat_angles"] and getattr(pol, "seat_angles", True) else 0)
+                    fm = torch.cat([fm[:, : tc - TEXTURE_N], fm[:, tc:]], 1)
                 with torch.no_grad():
                     lg, _ = pol(fm, mybk[m], T.street[g][m], s[m])
                 probs = F.softmax(masked(lg, legal_k), 1)
@@ -839,7 +868,7 @@ def duplicate(dealer, menu, hero, villain, n, dev, cv=False, chips=False, per_de
 
 
 def set_mode(stacks="100", tourney=False, depths=None, open_limp=True, ante=0.0, short=0.0, seats=None, bounty=0.0,
-             texture=False, early=0.0):  # fmt: skip
+             texture=False, early=0.0, seat_angles=False):  # fmt: skip
     """Set FEAT from a run's options (also used by the tools that load a run, from its config.json). depths: the
     tournament tables' average-stack ranges, "LO,HI;LO,HI" (None: icm.scenarios' default, 10-60bb)."""
     RULES["open_limp"] = bool(open_limp)
@@ -852,6 +881,7 @@ def set_mode(stacks="100", tourney=False, depths=None, open_limp=True, ante=0.0,
     FEAT["bounty"] = float(bounty or 0.0)
     FEAT["texture"] = bool(texture)
     FEAT["early"] = float(early or 0.0)
+    FEAT["seat_angles"] = bool(seat_angles)
 
 
 def extra_pool(args, avg, nfeat, buckets, dev, dealer=None, menu=None):
@@ -988,6 +1018,11 @@ def main():
         help="belief modelling: weight of the auxiliary loss predicting each live opponent's hand strength (0 = off)",
     )
     ap.add_argument("--texture", action="store_true", help="also read the betting per street and the board's texture")
+    ap.add_argument(
+        "--seat-angles",
+        action="store_true",
+        help="also read each seat's position from the button as an angle (cos, sin of 2 pi k / n)",
+    )
     ap.add_argument("--priority", help="a leak map (ninemax_leaks.py JSON): training tables drawn by its cell weights")
     ap.add_argument("--max-frozen", type=int, default=0, help="frozen exploiters kept in the pool (0 = all, as before)")
     ap.add_argument("--chunks", type=int, default=4, help="population chunks per batch (one opponent each)")
@@ -1016,7 +1051,7 @@ def main():
     ap.add_argument("--depths", help='tournament average-stack ranges in bb, "LO,HI;LO,HI" (default 10,60)')
     args = ap.parse_args()
     set_mode(args.stacks, args.tourney, args.depths, not args.no_open_limp, args.ante, args.short, args.seats,
-             args.bounty, args.texture, args.early)  # fmt: skip
+             args.bounty, args.texture, args.early, args.seat_angles)  # fmt: skip
     if args.priority:  # the leak map's weights per table cell (ninemax_leaks.py)
         PRIORITY.update({int(k): float(v) for k, v in json.load(open(args.priority))["weights"].items()})
         print(f"prioritised sampling: {len(PRIORITY)} cells weighted, max {max(PRIORITY.values()):.2f}", flush=True)

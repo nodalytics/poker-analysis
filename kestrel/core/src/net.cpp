@@ -126,6 +126,21 @@ std::vector<float> features(const Table& T, const NetInfo& info, const TourneyCt
         float share = std::max(float(T.stack[i]) / tot, 1e-6f);
         push(std::clamp(float(ctx->eq0[i]) / share, 0.0f, 5.0f));
     }
+    if (info.feat_seat_angles) {  // (cos, sin) of 2 pi k / n, k the position among the n seated from the button
+        int n = 0;
+        for (int j = 0; j < P; ++j) n += T.stack[j] > 0;
+        std::vector<float> cs(P, 0.0f), sn(P, 0.0f);
+        int rank = 0;
+        for (int j = 0; j < P; ++j) {
+            if (T.stack[j] <= 0) continue;
+            const int k = n == 2 ? rank : (rank + 1) % n;  // the button 0 (heads-up: the small blind)
+            const float ang = 2.0f * 3.14159265358979f * float(k) / float(n);
+            cs[j] = std::cos(ang), sn[j] = std::sin(ang);
+            ++rank;
+        }
+        push(cs[i]), push(sn[i]);
+        for (int r : rel) push(cs[r]), push(sn[r]);
+    }
     std::vector<float> t;
     auto L = T.legal(&t);
     const int S = T.menu().S, A = T.menu().A;
@@ -162,6 +177,7 @@ Net::Net(const std::string& dir) {
     info_.feat_stacks = j["features"].value("stacks", false);
     info_.feat_tourney = j["features"].value("tourney", false);
     info_.feat_bounty = j["features"].value("bounty", 0.0);
+    info_.feat_seat_angles = j["features"].value("seat_angles", false);
     info_.pre_strength = j["pre_strength"].get<std::vector<float>>();
     info_.size_head = j.value("size_head", false);
     info_.nbase = j.value("nbase", 0);

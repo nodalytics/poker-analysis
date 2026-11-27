@@ -13,6 +13,7 @@ struct NetInfo {
     Rules rules;
     bool feat_stacks = false, feat_tourney = false;
     double feat_bounty = 0;
+    bool feat_seat_angles = false;  // each seat's position from the button as an angle (research seat_angles)
     bool size_head = false;  // plan B: fold/call/raise/all-in, then a size scored by g(h, size) (research SizeHeadNet)
     int nbase = 0;           // a size-head network's inputs before the 2 x S size columns  // progressive knockouts: the share of the money in bounties the network trained with (0: none)
     std::vector<float> pre_strength;

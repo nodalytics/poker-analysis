@@ -79,7 +79,8 @@ def main():
         "menu": menu_name, "menu_def": MENUS[menu_name],
         **({"size_head": True, "nbase": cfg["nbase"]} if sh else {}),
         "ante_bb": RULES["ante"], "open_limp": RULES["open_limp"],
-        "features": {"stacks": FEAT["stacks"] is not None, "tourney": FEAT["tourney"], "bounty": FEAT["bounty"]},
+        "features": {"stacks": FEAT["stacks"] is not None, "tourney": FEAT["tourney"], "bounty": FEAT["bounty"],
+                     "seat_angles": FEAT["seat_angles"]},
         "pre_strength": r6(dealer.pre_strength.tolist()),
         "source": a.model,
     }  # fmt: skip
