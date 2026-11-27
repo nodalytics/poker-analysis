@@ -80,6 +80,26 @@ The cards after REVEAL (every player's, after the whole hand): 4.31 bits a card 
 copied, and human hands carry REVEAL only when every card was shown (0.94 bits: copying). So this is not comparable
 with the belief network's 0.98 bits an opponent, which are read mid-hand at a decision; that test is stage 2's.
 
+## Stage 1, the second model (m2): does variety help on real players?
+
+The same model and budget (2.0 B tokens, 44 minutes) on data3: data2 plus the simulations, Kestrel's tables and
+200,000 self-play hands each from nm17, nm45 and nm46 (mix: self-play 33%, human 55%, simulations 7%, Kestrel 3%,
+Pluribus 2%). The question set before it ran: do they improve prediction of real players, on the same held-out hands?
+
+| Held out, bits an action | m1 | m2 |
+|---|---|---|
+| **Human (HandHQ), 165,447 actions** | **1.342** | **1.342** |
+| Pluribus against professionals, 36,694 | 0.739 | 0.732 |
+| Simulations (personas tagged), 140,253 | — | 0.461 (count model 3.201) |
+| Kestrel's practice tables, 91,241 | — | 0.640 (count model 2.051) |
+
+**No**: the two are level on human hands to three decimals, and m2 gains a negligible 0.007 on Pluribus. The variety
+did not transfer to people: human hands are already most of the data (1.0 B tokens), and our bots do not play like
+2009 online players. m2 adds what the new sources hold: it predicts the simulated bots almost exactly (0.46 bits against
+3.20, the player token lets it learn each persona) and reads Kestrel's tables, the partner's practice hands among them.
+So m2 is the general-purpose opponent model to carry forward; better prediction of people needs more model, more
+human data, or what the opponent model is for in the end: a player's own earlier hands as context.
+
 ## Next
 
 Stage 1: a decoder-only transformer of about 25 M parameters (Kronos-small's size) pretrained on the shards, scored on
