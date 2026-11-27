@@ -32,6 +32,9 @@ Studies:
 - [2026-11-23 — LLMs that play poker: six outside sources](docs/2026-11-23-llm-poker-literature.md): PokerSkill,
   PokerBench (paper and arena), Husky Hold'em Bench and a screen-reading LLM bot, read against our results; the best
   LLM agent loses 5.7 bb/100 to an equilibrium bot, and solver agreement is not play strength.
+- [2026-11-27 — A poker foundation model, after Kronos](docs/2026-11-27-poker-foundation-model.md): the hand
+  language (a 166-token vocabulary for hands from self-play, HandHQ and Pluribus) and the token data; stage 1 a ~25 M
+  decoder-only transformer, scored as an opponent model and a belief model.
 - [2026-11-24 — Slumbot NL, DyypHoldem and a reading list](docs/2026-11-24-slumbot-nl.md): Slumbot's 2013 design set
   against our heads-up blueprint (11 first-bet sizes to our 4, buckets 10-20x ours, disk-based distributed CFR); DyypHoldem
   (DeepStack in PyTorch) cannot run as published; AV-AIVAT is the paper to read next for cheaper checks.
