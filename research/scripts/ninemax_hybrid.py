@@ -31,7 +31,7 @@ import os
 import torch
 import torch.nn as nn
 
-from ninemax_engine import BB
+from ninemax_engine import BB, Menu
 from ninemax_eval import load, setup
 from ninemax_selfplay import FEAT, board_of, context, duplicate, play
 
@@ -77,6 +77,7 @@ class Bluffer(nn.Module):
         super().__init__()
         self.base, self.slot, self.thr = base, slot, thr
         self.menu_name = getattr(base, "menu_name", None)  # it plays base's menu (play() reads it)
+        self.size_head = getattr(base, "size_head", False)  # and reads base's inputs
 
     def forward(self, feat, bk, street, st):
         lg, v = self.base(feat, bk, street, st)
@@ -132,7 +133,8 @@ def main():
     bk0, _, _ = dealer.raw(1 << 16)
     pre_s = dealer.pre_strength[torch.tensor(bk0[:, :, 0].ravel(), device=dev)]
     top40 = torch.quantile(pre_s, 0.60).item()
-    A, S = menu.A, menu.S
+    pm = Menu(post.menu_name, dev) if getattr(post, "menu_name", None) else menu  # the bluffers play post's menu
+    A, S = pm.A, pm.S
     allin, big = A - 1, 2 + S - 1
     bluffers = {
         "jam-any": Bluffer(post, allin),
