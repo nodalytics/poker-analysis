@@ -25,7 +25,7 @@ from multiprocessing import Pool
 
 import numpy as np
 
-from poker_tokens import ID, VOCAB, decode, encode, from_phh
+from poker_tokens import ID, VOCAB, decode, encode, from_botsim, from_kestrel, from_phh
 
 SHARD = 50_000_000  # tokens a shard, at most
 
@@ -132,6 +132,79 @@ def cmd_phh(a):
     print(json.dumps({"source": a.source, "files": len(files), "unreadable": bad}), flush=True)
 
 
+def _botsim_file(path):
+    """Every hand of one botsim session log: its rows grouped by hand number, in order."""
+    out, bad, rows, cur = [], 0, [], None
+
+    def flush():
+        nonlocal bad
+        if not rows:
+            return
+        try:
+            h = from_botsim(rows)
+        except (KeyError, ValueError, IndexError, TypeError):
+            h = None
+        if h is None:
+            bad += 1
+            return
+        out.append(encode(h, "public"))
+        if all(x is not None for x in h.holes):
+            out.append(encode(h, "full"))
+
+    for line in open(path, errors="replace"):
+        try:
+            r = json.loads(line)
+        except ValueError:
+            continue
+        if r.get("hand") != cur:
+            flush()
+            rows, cur = [], r.get("hand")
+        rows.append(r)
+    flush()
+    return out, bad
+
+
+def cmd_botsim(a):
+    files = []
+    for d in a.dirs:
+        files += sorted(glob.glob(os.path.join(d, "**", "hands.jsonl"), recursive=True))
+    w, bad = Writer(a.out, "sim"), 0
+    with Pool(a.workers) as pool:
+        for seqs, b in pool.imap_unordered(_botsim_file, files, chunksize=8):
+            bad += b
+            for s in seqs:
+                w.add(s)
+    w.flush()
+    print(json.dumps({"source": "sim", "files": len(files), "unreadable": bad}), flush=True)
+
+
+def cmd_kestrel(a):
+    """Kestrel's practice tables: every practice_hand event under DIR/*-practice/hands.jsonl (a copy of the
+    container's /data/sessions)."""
+    w, bad, n = Writer(a.out, "kestrel"), 0, 0
+    for f in sorted(glob.glob(os.path.join(a.dir, "*-practice", "hands.jsonl"))):
+        for line in open(f, errors="replace"):
+            try:
+                ev = json.loads(line)
+            except ValueError:
+                continue
+            if ev.get("type") != "practice_hand":
+                continue
+            n += 1
+            try:
+                h = from_kestrel(ev)
+            except (KeyError, ValueError, IndexError, TypeError):
+                h = None
+            if h is None:
+                bad += 1
+                continue
+            w.add(encode(h, "public"))
+            if all(x is not None for x in h.holes):
+                w.add(encode(h, "full"))
+    w.flush()
+    print(json.dumps({"source": "kestrel", "hands": n, "unreadable": bad}), flush=True)
+
+
 def cmd_stats(a):
     res, used = {}, np.zeros(len(VOCAB), np.int64)
     for f in sorted(glob.glob(os.path.join(a.out, "*.npy"))):
@@ -178,10 +251,19 @@ def main():
     p.add_argument("--source", choices=("human", "pluribus"), required=True)
     p.add_argument("--workers", type=int, default=8)
     p.add_argument("--max-files", type=int, default=0)
+    b = sub.add_parser("botsim")
+    b.add_argument("dirs", nargs="+")
+    b.add_argument("out")
+    b.add_argument("--workers", type=int, default=8)
+    k = sub.add_parser("kestrel")
+    k.add_argument("dir")
+    k.add_argument("out")
     t = sub.add_parser("stats")
     t.add_argument("out")
     a = ap.parse_args()
-    {"selfplay": cmd_selfplay, "phh": cmd_phh, "stats": cmd_stats}[a.cmd](a)
+    {"selfplay": cmd_selfplay, "phh": cmd_phh, "botsim": cmd_botsim, "kestrel": cmd_kestrel, "stats": cmd_stats}[a.cmd](
+        a
+    )
 
 
 if __name__ == "__main__":
