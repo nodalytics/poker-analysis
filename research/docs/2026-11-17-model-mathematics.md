@@ -1,4 +1,4 @@
-# The models in mathematics, and their versions (2026-11-17)
+# The models in mathematics, and their versions (2026-11-17, updated 2026-11-27)
 
 What every 9-max network computes, how it is trained, how it is measured and how Kestrel searches with it, written
 as formulas and checked against the code (`scripts/ninemax_selfplay.py`, `ninemax_engine.py`, `icm.py`,
@@ -6,7 +6,7 @@ as formulas and checked against the code (`scripts/ninemax_selfplay.py`, `ninema
 `core/src/ninemax_search.cpp`, `connectors/src/profile.cpp`). The version table at the end gives each run's settings
 from its `config.json`.
 
-Notation: $P = 9$ seats, $A = 6$ menu slots, $BB = 100$ chips, $STACK = 100\,BB$. Seat $i$ is the player to act,
+Notation: $P = 9$ seats, $A$ menu slots ($A = S + 3$ with $S$ raise sizes; $A = 6$ for `mtt`), $BB = 100$ chips, $STACK = 100\,BB$. Seat $i$ is the player to act,
 $\mathbb{1}[\cdot]$ an indicator, $\lVert\cdot\rVert$ the Euclidean norm.
 
 ## 1. The game and the menu
@@ -20,6 +20,19 @@ The sizes come from the menu (`ninemax_engine.MENUS`): `mtt` opens to 2, 2.5 or 
 to 3x (then 2.3x) the current bet; after the flop it bets 0.33, 0.75 or 1.5 pot and raises 1 pot (`medium` opens
 2.5 bb only). A slot is legal when the rules allow it ($\ell \in \{0,1\}^A$); `--no-open-limp` makes calling the big
 blind first in illegal.
+
+**Wider menus (bet sizing, 2026-11-27).** `wide` ($S = 5$, $A = 8$): opens 2, 2.5 or 3.5 bb; re-raises 2.5x or 3.5x,
+then 2.2x or 3x; heads-up bets 0.25, 0.5, 0.75, 1.25 or 2 pot and raises 0.75 or 1.5 pot; multiway bets 0.33 or
+0.75 pot, raises 1 pot. `grid16` ($S = 16$): 16 sizes log-spaced over each range, $x_k = x_{lo}(x_{hi}/x_{lo})^{k/15}$
+(opens 2-4 bb, re-raises 2-4x, bets and raises 0.2-3 pot). The random menu `size8` ($S = 8$) draws its sizes afresh
+at every decision, $u_1 \le \dots \le u_8$ sorted uniforms and $x_k = x_{lo}(x_{hi}/x_{lo})^{u_k}$ over the same ranges,
+once per decision so the legal moves, the inputs and the step see the same sizes. A post-flop size $x$ is a raise to
+$\beta + x\,(p + \beta - c_i)$; a pre-flop open is $x$ big blinds and a re-raise $x\beta$.
+
+**Per-seat menus.** The table keeps only chips and betting; the legal moves, the raise targets and the step depend
+on the actor's menu alone. So networks trained on different menus share a table, each playing its own (nm48 on
+`wide` against nm25 on `mtt` in every check, and in Kestrel's practice tables, `Table::set_menu`); rule players play
+the table's menu, or `mtt` when a run trains on a random menu.
 
 ## 2. The cards: buckets and strength
 
@@ -51,6 +64,14 @@ $p = \sum_j c_j + \text{dead}$, current bet $\beta$, chips $\text{avail}_j$ a pl
 | bounties (`--bounty`) | my and the others' bounty $9\,b_j$ (as shares of all the money) | 1 + 8 |
 | **PKO, $F = 110$** | | |
 
+The size slots scale with the menu: `wide` has $A + S = 13$ legal-and-size inputs instead of 9, so $F = 105$ in the
+tournament game.
+
+**The size-head layout** (plan B, `features(..., sizehead=True)`): the public inputs, then fold, call and all-in
+legal, whether any raise is legal, the smallest and largest legal raise $x_{\min}/10$, $x_{\max}/10$, then each
+offered size's pot fraction $x_k/10$ (0 when illegal) and its legal flag $\ell_k$: $F_{base} = 101 - 9 + 6 = 98$
+inputs that do not depend on $S$, then $2S$.
+
 ## 4. The network $f_\theta$
 
 One network for every seat (`NineNet`: 512 hidden, 4 residual blocks, 32-number embeddings). Each street's bucket
@@ -68,6 +89,22 @@ $$\pi_\theta(a \mid x, b) = \frac{\ell_a\, e^{z_a}}{\sum_{a'} \ell_{a'}\, e^{z_{
 
 Kestrel runs the same arithmetic in C++ (`Net::forward`; `forward_batch` for many positions at once, checked equal
 to it, worst difference 0).
+
+**The size head** (`SizeHeadNet`, plan B, 2026-11-27). The trunk reads the $F_{base}$ inputs only, so it does not
+depend on how many sizes are offered. Four type logits $t = W_\pi \bar h + c_\pi \in \mathbb{R}^4$ (fold, call, raise,
+all-in), and a raise of pot fraction $x_k$ scores
+
+$$g_k = w_3^\top \mathrm{GELU}\Big(W_2\,\mathrm{GELU}\big(W_h \bar h + W_z\,[x_k,\ \log(x_k + 0.01),\ \mathbb{1}[t = 0]] +
+c_z\big) + c_2\Big) + c_3$$
+
+a function of the size, so any size and any number of them can be scored. The joint logits over the menu's moves are
+
+$$z = \Big[t_{fold},\ t_{call},\ t_{raise} + \log\frac{e^{g_k}}{\sum_{k' : \ell_{k'}} e^{g_{k'}}}\ (k = 1..S),\ t_{all\text{-}in}\Big]$$
+
+so $\pi(\text{raise } k) = \pi(\text{raise}) \cdot \pi(k \mid \text{raise})$, and the chance of raising does not depend
+on how many sizes are offered. Training offers `size8` (fresh random sizes every decision, so $g$ is learnt over the
+whole range); evaluation and Kestrel offer `grid16`. NeuRD (section 6) is unchanged: each decision still has a finite
+set of moves.
 
 ## 5. The reward
 
@@ -88,7 +125,9 @@ blinds at the table's average chip value:
 $$G_j = \big(E_j(s + u) - E_j(s)\big) \cdot \frac{\sum_m s_m}{BB}$$
 
 **Knockouts, PKO** (nm29-30): a share $\beta = 0.5$ of the money is in bounties $b_j$; a bust pays half its bounty
-in cash to the hand's biggest winner and adds the other half to that winner's bounty. Each player's equity is ICM on
+in cash to the winner(s) of the pot that took the player's last chips (the pot level at its contribution, among the
+live players who put in at least as much, split on ties; until 2026-11-23 the hand's biggest winner) and adds the
+other half to that winner's bounty. Each player's equity is ICM on
 the regular prizes plus its chip share of the whole bounty pool (nm30's correction, 2026-11-16):
 
 $$E^0_j = E_j^{ICM}(s) + \frac{s_j}{\sum s} \sum_m b_m, \qquad
@@ -136,6 +175,26 @@ seats the network in $k \sim U\{1..8\}$ seats against one population member hold
 `tag`, `maniac`, `station`, `random`, past snapshots); the rest is self-play. The network learns only from its own
 seats.
 
+**A warm start across menus** (`remap_menu`, nm48). Each new size slot $j$ takes the old slot $m(j)$ whose size is
+nearest on a log scale, by vote over the contexts the slots are used in (opens, each re-raise level, heads-up and
+multiway bets and raises; ties to the smaller); `mtt` to `wide` gives $m = (1, 1, 2, 3, 3)$. With $n_k = |\{j : m(j) =
+k\}|$ copies of old slot $k$, the policy rows and the legal and size input columns are copied and corrected so the new
+network starts where the old one was:
+
+$$z^{new}_{2+j} = z^{old}_{2+m(j)} - \log n_{m(j)}, \qquad W^{new}_{in}[:, \ell_{2+j}] = W^{old}_{in}[:, \ell_{2+m(j)}] /
+n_{m(j)}$$
+
+The copy of nm25 on `wide` read +0.13 [−0.33, +0.59] bb/100 against nm25 (20,000 deals × 9).
+
+**A size-head copy of nm25** (`ninemax_sizehead_init.py`). The trunk, the embeddings, the value and the fold, call and
+all-in rows are copied (the raise type row from nm25's smallest size); then the copy, offered exactly nm25's legal
+moves and sizes, is distilled on nm25's self-play decisions:
+
+$$\mathcal{L} = \mathrm{KL}\big(\pi_{nm25}(\cdot \mid x) \,\|\, \pi_\theta(\cdot \mid x)\big) + \tfrac12 (v_\theta - v_{nm25})^2$$
+
+After 300 steps (about 11 M decisions) the KL was 0.008; the copy read −0.38 [−1.29, +0.54] bb/100 against nm25 when
+offered nm25's sizes and +1.03 [+0.10, +1.95] on `grid16` (5,000 deals × 9).
+
 ## 7. Measurement
 
 **Duplicate match** (`duplicate`): the hero in each seat in turn against 8 copies of the opponent on the same $n$
@@ -155,6 +214,20 @@ $$\hat r = \arg\min_r \sum_{A<B} \frac{(r_A - r_B - \Delta_{AB})^2}{\mathrm{se}_
 **Exploitability.** A fresh copy trained for 30 minutes against 8 copies of the model (same loss as section 6 with
 $\lambda_{KL} = 0$); its duplicate result is the hole it found. **LBR**: a best response by enumeration of the
 opponent's range after the flop, heads-up, assuming a check-down.
+
+**The pipeline's checks** (`pipeline.py`, from nm45): no-harm is a sequential test against nm25 (8 looks, at most
+40,000 deals, $\alpha = 0.025$, margin 0.5 bb/100); other players are paired, the run and the baseline on the same
+deals against each rule player, the 95% interval of the per-deal difference above −2.0; the exploiter check is the
+mean of four 30-minute exploiters (limit +1.25, nm25's +0.75 plus 0.5).
+
+**What sizes say about the hand** (`ninemax_sizes.py`, the `sizes` report). Per context (pre-flop open, each re-raise
+level, each street's heads-up and multiway bets and raises), over the decisions that bet or raise, with $s$ the
+player's strength and the groups the sizes chosen:
+
+$$\eta^2 = \frac{\sum_{\text{size } k} n_k\,(\bar s_k - \bar s)^2}{\sum_n (s_n - \bar s)^2}$$
+
+0 when the size says nothing about the hand, 1 when it names it; reported overall and by street (weighted by bets),
+against nm25's. nm25's river reads 0.100; a 3-minute wide-menu network 0.034 (8,000 deals; a check of the tool).
 
 **Search gain** (`search_paired.py`, Kestrel's `search_match`): per deal, the hero's result with search minus without,
 on the same cards; the interval is over deals.
@@ -204,11 +277,12 @@ game (card buckets and a betting menu). At iteration $T$ the regret of not alway
 is $R^T(I, a) = \sum_{t \le T} \big(v^t(I, a) - v^t(I)\big)$ weighted by the opponent's reach, and the strategy is
 regret matching, $\sigma^{T+1}(I, a) \propto \max(R^T(I, a), 0)$; the average strategy converges to equilibrium.
 Kestrel's river re-solve runs CFR+ on the river subgame from both blueprint ranges with a gadget that keeps every
-opponent hand at or below its blueprint value (safe subgame solving).
+opponent hand at or below its blueprint value (safe subgame solving). The turn re-solve (`resolve_turn.cpp`, 2026-11-24)
+solves from the turn with every river card exact; `../blueprint/model.md` section 5.5 has its arithmetic and results.
 
 ## 11. The versions
 
-All 9-max runs: $P = 9$, $A = 6$, 512 hidden, 4 blocks, $\lambda_{KL} = 0.3$ (nm19: 0.05), $\tau_m = 3\cdot10^{-4}$,
+All 9-max runs: $P = 9$, $A = 6$ (nm48: 8), 512 hidden, 4 blocks, $\lambda_{KL} = 0.3$ (nm19: 0.05), $\tau_m = 3\cdot10^{-4}$,
 $\tau_a = 10^{-3}$, batch 16,384. "Init" is the warm start. Ratings are the ladder's (bb/100 against nm17 in nm25's
 game, ±0.15-0.17), where played.
 
@@ -239,6 +313,10 @@ game, ±0.15-0.17), where played.
 | nm28 | **6-max cash** 50-250bb, short 0.2 | 82 | NeuRD 4 | 0.04 | same | 12 | — | 6-max cash | (cash; not on the ladder) |
 | nm29 | **PKO**, bounty 0.5 | 110 | NeuRD 4 | 0.04 | same | 12 | — | knockouts (reward not zero-sum: void) | |
 | nm30 | PKO, conserved bounty equity | 110 | NeuRD 4 | 0.04 | same | 8 | nm29 | the corrected reward | |
+| nm45 | ante, short 0.5 | 101 | NeuRD 4 | 0.04 | + league 0.15, PFSP, 8 frozen, archetype styles | 6 | nm25 | the league on fixed seating | not adopted: station −16.5 [−17.2, −15.8] |
+| nm46 | ante, short 0.5 | 101 | NeuRD 4 | 0.04 | maniac ×2, tag, station, reg; 0.6; exploiter 0.35, reset 45 min | 6 | nm25 | an aggressive pool (by hand, checks after) | passed nm45's checks; exploiter +1.10 |
+| nm47 | same as nm46 | 101 | NeuRD 4 | 0.04 | same as nm46 | 6 | nm25 | nm46's recipe, pre-registered | running |
+| nm48 | ante, short 0.5, **`wide` menu** | 105 | NeuRD 4 | 0.04 | nm25's | 6 | nm25 (remapped) | bet sizing A: 8 moves | queued after nm47 |
 
 nm25 is the champion (Kestrel's default) over nm26 and nm27 because they tie it on the ladder and nm26 left a larger
 hole for the exploiter (+1.1 against +0.2). The road from nm12 (−1.1) to nm25 (+0.96) is about 2 bb/100: the ante,
