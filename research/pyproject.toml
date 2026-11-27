@@ -7,7 +7,7 @@ requires-python = ">=3.12"
 # standard library, so they also run with a bare python3 on the lab. These are for self-play and rendering.
 dependencies = [
     "pokerkit==0.7.7",
-    "pillow==12.3.0",
+    "pillow==13.0.0",
     "chess==1.11.2",
     "eval7==0.1.11",
     "matplotlib==3.11.2",
