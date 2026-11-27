@@ -45,10 +45,13 @@ as a run (nm47) is what would adopt it.
 | 25 styles | mean +0.17, worst -1.55 (maniac) | mean -0.03, worst -1.38 (style06) |
 | no-harm, 40,000 deals vs nm25 | -0.06, no difference | -0.23, no difference |
 | bluffers: jam-any, jam-40, raise-any | -53.1, -12.1, -12.3 | -51.5, -13.6, -10.5 |
-| exploiter, 4 seeds of 30 minutes (limit +1.2) | +0.5 | running |
+| exploiter, 4 seeds of 30 minutes (limit +1.25) | +0.5 (+0.6, +0.3, +0.5, +0.5) | +1.10 (+1.0, +1.5, +1.0, +0.9), passes |
 
 Direct, nm46 against nm45: +17.68 [+17.00, +18.36] more against the station, +4.46 [+4.03, +4.90] against the maniac,
 reg and tag level; at one table, 40,000 deals, -0.19 bb/100, no difference.
+
+nm46 passes every check nm45 was judged by. It is easier to exploit than nm25 (+0.75) and nm45 (+0.5) but inside
+the limit; nm47 repeats the recipe with these checks fixed first.
 
 Both networks are on the lab's Kestrel as practice models (nm25 stays the default), installed as verified model
 packages in its data volume, so no rebuild was needed.
