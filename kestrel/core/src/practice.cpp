@@ -42,7 +42,6 @@ namespace {
 }  // namespace
 
 std::string practice_mismatch(const NetInfo& a, const NetInfo& b) {
-    if (a.menu != b.menu) return "different betting menus (" + a.menu + ", " + b.menu + ")";
     if (a.rules.open_limp != b.rules.open_limp) return "one allows open limps and the other does not";
     if (a.rules.ante_bb != b.rules.ante_bb) return "different antes";
     if (!a.feat_tourney || !b.feat_tourney) return "practice tables are tournaments: every model must be a tournament network";
@@ -58,6 +57,7 @@ PracticeTournament::PracticeTournament(const Net& net, const PracticeConfig& c, 
         double bb = std::max(4.0, cfg_.avg_bb * std::exp(u(rng_)));
         Player p;
         p.name = label_ + " " + std::to_string(k + 1), p.model = label_, p.net = &net_;
+        p.menu = Menu::named(net_.info().menu);
         p.chips = int64_t(std::llround(bb * BB)), p.bounty = std::clamp(cfg_.bounty, 0.0, 0.9) / n;
         players_.push_back(p);
     }
@@ -93,6 +93,7 @@ PracticeTournament::PracticeTournament(const std::vector<PracticeSeat>& lineup, 
         double bb = std::max(4.0, cfg_.avg_bb * std::exp(u(rng_)));
         Player p;
         p.model = s.net ? s.model : "You", p.net = s.net ? s.net : &net_, p.human = !s.net;
+        p.menu = Menu::named(p.net->info().menu);
         cfg_.human = cfg_.human || p.human;
         p.name = p.human ? "You" : seats[s.model] > 1 ? s.model + " #" + std::to_string(++numbered[s.model]) : s.model;
         p.chips = int64_t(std::llround(bb * BB)), p.bounty = std::clamp(cfg_.bounty, 0.0, 0.9) / n;
@@ -238,6 +239,7 @@ void PracticeTournament::play_hand(const std::function<void(const json&)>& emit,
     json log = json::array();
     while (!T.done()) {
         const int i = T.actor(), st = T.street();
+        T.set_menu(players_[who[i]].menu);  // this seat's moves and sizes
         std::vector<float> t;
         auto L = T.legal(&t);
         const Net& net = *players_[who[i]].net;  // the seat's own network
