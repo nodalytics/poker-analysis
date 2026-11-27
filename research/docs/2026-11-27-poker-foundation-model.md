@@ -1,0 +1,55 @@
+# A poker foundation model, after Kronos (2026-11-27)
+
+The idea (requested 2026-11-27): what Kronos (github.com/shiyu-coder/Kronos, MIT) does for candlesticks, for poker. Kronos
+turns OHLCV data into discrete tokens with a tokenizer, then pretrains a family of decoder-only transformers (4.1 M to
+499.2 M parameters) on data from over 45 exchanges by next-token prediction. The poker version turns hands into
+tokens and pretrains on every hand we can get: our networks' self-play (every card known), the HandHQ human hands and
+the Pluribus hands.
+
+**What it is for, and what it is not.** Predicting what players do is not playing well: every system that has beaten
+professionals got its strength from game-theoretic training and search (Libratus, Pluribus, DeepStack, ReBeL, Student
+of Games), with plain feed-forward networks. A pretrained model of hands is for what feeds that recipe:
+- an opponent model: a player's next action from their recent hands (the basis of bounded exploitation);
+- a belief model: hidden cards from the actions, against `ninemax_belief.py` (0.73 bits better than a uniform guess);
+- a start for fine-tuning, and realistic training opponents.
+
+## Stage 0: the hand language and the data
+
+`scripts/poker_tokens.py` writes a hand (from any source) as tokens from a fixed vocabulary of 166:
+
+```
+BOS SRC_<self|human|pluribus> GAME_<tourney|cash> N_<players> ANTE_<0|1>  (POS_<p> STK_<b>) x n
+[full layout: HOLE POS_<p> card card ...]
+PRE (POS_<p> <action>)*  FLOP c c c (POS_<p> <action>)*  TURN c ...  RIVER c ...
+[SHOW POS_<p> card card]*  [REVEAL (POS_<p> card card)*]  END (POS_<p> RES_<b>)*  EOS
+```
+
+- Positions are Kestrel's names (SB, BB, then the last seats of UTG ... BTN), so every table size reads alike.
+- Stacks in 18 log-spaced buckets of big blinds (STK_U: not recorded, a third of HandHQ's hands).
+- Actions: FOLD, CHECK, ALLIN, and CALL, BET or RAISE with the chips put in beyond the bet before it over the pot then,
+  in 13 buckets (0.1, 0.2, 0.33, 0.5, 0.66, 0.8, 1, 1.25, 1.5, 2, 3, 5 pot).
+- Results: each seat's result in big blinds, 17 signed buckets.
+- Two layouts: "public" (cards only when shown; when every card is known, REVEAL lists them after the hand, so a model
+  learns what the actions said about the cards) and "full" (cards first). Self-play and Pluribus hands are written in
+  both; human hands, whose cards are mostly unknown, in "public".
+
+`scripts/fm_data.py` builds shards of token ids (uint16, hands back to back, BOS to EOS, at most 50 M tokens each):
+`selfplay RUN` plays the network against itself (the engine now records every action: `Tables.ev`), `phh DIRS` reads
+PHH hand histories in parallel, `stats` counts and decodes examples.
+
+First builds (lab, `~/scratch/fm/data`):
+
+| Source | Hands read | Unreadable | Tokens a hand |
+|---|---|---|---|
+| Pluribus (10,000 hands, both layouts) | 20,000 sequences | 0 | 63.7 |
+| nm25 self-play (20,000 hands, both layouts) | 40,000 sequences | 0 | 92.7 |
+| HandHQ, 40 files | 38,098 | 1,672 (4%: straddles and posted blinds) | 47.0 |
+
+The full build is running: all 27 HandHQ no-limit stakes (about 21.6 M hands) and 1 M self-play hands.
+
+## Next
+
+Stage 1: a decoder-only transformer of about 25 M parameters (Kronos-small's size) pretrained on the shards, scored on
+held-out hands by next-action log-loss (against the opponent profile and the hand-reading models we have) and on the
+hidden cards after the actions (the REVEAL tokens, against the belief network). Stage 2: into search if it wins
+either.
