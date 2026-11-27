@@ -136,9 +136,11 @@ even after deletion.
 
 ## Git
 
-- Remote `nodalytics` → `github.com/nodalytics/poker-analysis` (**public**), branch `main`; the only remote.
+- Remote `nodalytics` → `github.com/nodalytics/poker-analysis` (**private** since 2026-11-27; public from 2026-11-22),
+  branch `main`; the only remote.
 - Commit as `ojies` (`68871517+ojies@users.noreply.github.com`); this repo's local identity is a bot.
 - **No `Co-Authored-By` or other attribution trailers**, ever, even if a tool suggests one.
 - The repo ignores `*.log`; add result logs with `git add -f`.
-- Never commit credentials, the lab key, `credentials.env`, anything in `.secrets/` or API keys (the repo is public). Check `git diff --cached` before committing.
+- Never commit credentials, the lab key, `credentials.env`, anything in `.secrets/` or API keys: the repo is private, but
+  it was public before and may be again, and history is permanent. Check `git diff --cached` before committing.
 - Lint before committing: `uv run ruff check scripts` and `uv run ruff format --check scripts` (ruff 0.14.0, line length 120).
