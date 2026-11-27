@@ -18,5 +18,15 @@ better than the uniform guess (9.32 against 10.05 bits held out).
 without oversampling +3.08 bb/100 [−1.22, +7.37] over 1,500 deals at 2.9 s a decision, with 447 of 1,024 effective deals
 on average; with 8 x the first 200 deals took 2,306 s against 331 s, about 7 times slower (about 20 s a decision):
 dealing, bucketing and weighting 8,192 deals costs more than the rollouts there. The match was stopped and
-`SearchConfig::oversample` set back to 1 (off); 2 x and 4 x are being timed. The belief proposal cuts the error by another 27% and is not in Kestrel yet: it needs
+`SearchConfig::oversample` set back to 1 (off). Timed on 100 deals (seed 7, 1,024 samples, 16 threads):
+
+| Oversampling | Time a decision | Effective deals (of 1,024) | Searches that fell back to the network |
+|---|---|---|---|
+| 1 (off) | 2.74 s | 432 | 67 of 914 |
+| 2 | 3.32 s (+21%) | 600 | 38 of 888 |
+| 4 | 5.31 s (+94%) | 726 | 15 of 895 |
+| 8 | about 20 s (stopped) | | |
+
+2 x is affordable (+0.6 s) for 39% more effective deals and half the fallbacks; whether it wins chips needs a paired
+match (100 deals cannot separate the gains, +13 to +15 bb/100 with intervals of about ±15). The belief proposal cuts the error by another 27% and is not in Kestrel yet: it needs
 the belief network in C++.
