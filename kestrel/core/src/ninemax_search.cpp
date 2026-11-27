@@ -74,8 +74,9 @@ SearchResult ninemax_search(const Net& net, const Table& T, const TourneyCtx& ct
     if (board.size() > 5 || hero < 0 || hero >= P || !T.seated[hero] ||
         deck.size() < (5 - board.size()) + 2 * size_t(std::max(seated - 1, 0)))
         throw std::invalid_argument("search: the spot cannot be dealt");
-    std::vector<Deal> deals(N);
-    for (int n = 0; n < N; ++n) {
+    const int K = N * std::clamp(cfg.oversample, 1, 64);  // candidate deals, resampled to N after the weights
+    std::vector<Deal> deals(K);
+    for (int n = 0; n < K; ++n) {
         std::vector<int> d = deck;
         std::shuffle(d.begin(), d.end(), rng);
         size_t at = 0;
@@ -96,18 +97,18 @@ SearchResult ninemax_search(const Net& net, const Table& T, const TourneyCtx& ct
     }
 
     // 2. weights: how likely the network was to take each opponent's actual moves with that deal's cards
-    std::vector<double> logw(N, 0.0);
+    std::vector<double> logw(K, 0.0);
     {
-        std::vector<float> F(size_t(N) * nf), st(N), lg(size_t(N) * A);
-        std::vector<int> bk(size_t(N) * 4), street(N);
+        std::vector<float> F(size_t(K) * nf), st(K), lg(size_t(K) * A);
+        std::vector<int> bk(size_t(K) * 4), street(K);
         for (auto& h : hist) {
-            for (int n = 0; n < N; ++n) {
+            for (int n = 0; n < K; ++n) {
                 std::copy(h.feat.begin(), h.feat.end(), F.begin() + size_t(n) * nf);
                 for (int k = 0; k < 4; ++k) bk[n * 4 + k] = deals[n].bk[h.seat][k];
                 street[n] = h.street, st[n] = strength(info, h.street, deals[n].bk[h.seat][h.street]);
             }
-            net.forward_batch(N, F.data(), bk.data(), street.data(), st.data(), lg.data(), nullptr);
-            for (int n = 0; n < N; ++n) {
+            net.forward_batch(K, F.data(), bk.data(), street.data(), st.data(), lg.data(), nullptr);
+            for (int n = 0; n < K; ++n) {
                 float* p = lg.data() + size_t(n) * A;
                 softmax_legal(p, h.legal.data(), A);
                 logw[n] += std::log(std::max(double(p[h.slot]), 1e-12));
@@ -115,11 +116,24 @@ SearchResult ninemax_search(const Net& net, const Table& T, const TourneyCtx& ct
         }
     }
     const double mx = *std::max_element(logw.begin(), logw.end());
-    std::vector<double> w(N);
+    std::vector<double> w(K);
     double z = 0, z2 = 0;
-    for (int n = 0; n < N; ++n) z += w[n] = std::exp(logw[n] - mx);
+    for (int n = 0; n < K; ++n) z += w[n] = std::exp(logw[n] - mx);
     for (auto& x : w) x /= z, z2 += x * x;
-    res.ess = 1.0 / z2;
+    res.ess = std::min(1.0 / z2, double(N));  // the distinct deals the rollouts can rest on
+    if (K > N) {  // systematic resampling: N deals in proportion to the weights, each then of weight 1 / N
+        std::vector<Deal> kept(N);
+        const double u0 = std::uniform_real_distribution<double>(0, 1)(rng) / N;
+        double cum = w[0];
+        int j = 0;
+        for (int i = 0; i < N; ++i) {
+            const double pos = u0 + double(i) / N;
+            while (cum < pos && j < K - 1) cum += w[++j];
+            kept[i] = deals[j];
+        }
+        deals.swap(kept);
+        w.assign(N, 1.0 / N);
+    }
 
     // 3. every legal move on every deal (four times with continuation strategies), played out in lockstep
     std::vector<float> targets;

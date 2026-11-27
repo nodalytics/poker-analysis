@@ -28,6 +28,12 @@ struct OpponentTilt {
 struct SearchConfig {
     int samples = 1024;   // deals of the unknown cards, 16 to 4,096; Kestrel offers 1,024 and up (256 lost to the
                           // plain network by 5-6.5 bb/100, 1,024 gained +6.2 against raise-biased opponents)
+    // candidate deals per sample (2026-11-27): oversample x samples deals are weighted, and samples of them are
+    // resampled in proportion to their weights (systematic resampling) before the rollouts. The rollouts then rest on
+    // many more distinct deals: in research (ninemax_belief_eval.py, nm25, 57 spots, 256 rollouts) the move values'
+    // error against a search 64 times larger fell from 1.64 to 0.56 bb and the best move agreed 79% of the time
+    // instead of 53%. Weighting a deal costs a replay of the hand, far less than its rollouts. 1: the old search.
+    int oversample = 8;
     bool robust = false;  // the opponents may switch continuation strategy
     double bias = 5.0;    // how strongly a continuation strategy is tilted
     // safe exploitation: each seat's tilt (Kestrel's seats; empty: none). Every deal is also played out with the
@@ -58,7 +64,7 @@ struct OppDecision {
 struct SearchResult {
     std::vector<float> policy;  // over the menu's slots
     std::vector<double> q;      // each legal slot's value, big blinds of ICM equity (NaN: not legal)
-    double ess = 0;             // effective number of deals after the weights
+    double ess = 0;             // effective number of deals after the weights (at most samples)
     int samples = 0;
     bool fell_back = false;     // the ESS was below the floor: policy is the network's own
 };
