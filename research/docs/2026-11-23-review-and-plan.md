@@ -378,6 +378,15 @@ Kestrel 0.4.1 deployed on the lab with practice matches between models, with or 
   - [ ] **B. A size head:** fold, call or raise, then a size from a learned distribution over pot fractions. Needs a
         learning rule for a continuous action (NeuRD works on a fixed list) and an exploiter that can try sizes. After A.
   - [ ] **C. Search picks the size:** Kestrel's 9-max search scores extra sizes by rollouts at play time. After B.
+- [ ] **A machine that keeps learning** (requested 2026-11-27): practice games feed training automatically. Already
+      built: Kestrel stores every practice hand (`kestrel.db`, `sessions/`); before a run with `"patterns": true` the
+      pipeline mines the live Kestrel's hands for spots where people beat the bot (`exploit_patterns.py mine`, one
+      mined so far, plus two the partner found) and trains against them, and a `patterns` check tests them. Missing:
+      (1) a standing recipe that registers the next run by itself when enough new practice hands have come in, with
+      the same fixed checks (no hand-written run file); (2) an adopted network shipped to Kestrel automatically
+      (the model pipeline, then a Kestrel redeploy); (3) mining the hands people lost too, and model-against-model
+      practice tables. Learning stays offline and gated: a network that updated itself during play could be steered
+      into a leak by the person playing it, so nothing reaches Kestrel without passing the checks.
 - [ ] A3 follow-up: the push/fold target at the bubble and under about 15bb, from the better of nm25 and nm47.
 - [ ] Partner's practice games: tally them by spot (`kestrel_practice_tally.py`) against nm25, nm45 and nm46.
 - [ ] Read AV-AIVAT; estimate the deals it would save on the 40,000-deal checks.
