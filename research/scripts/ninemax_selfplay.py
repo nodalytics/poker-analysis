@@ -629,7 +629,7 @@ def context(G, P, dev, prioritized=False):
 
 
 def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None, assign=None, ctx=None, views=None,
-         board=None, chips=False):  # fmt: skip
+         board=None, chips=False, tables_out=None):  # fmt: skip
     """Play len(bk) hands; policies[seat] is a NineNet or a rule name (rule_probs). Returns payoffs [G, P] (chips)
     and, with record, the decisions (only those of the policy `learner`, or of a list of policies, when given), each
     with the index of the policy that took it (last field).
@@ -752,6 +752,8 @@ def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None,
                 if on.any():
                     T.step(g[on], a[on], pm)
     u = T.payoffs(rk)
+    if tables_out is not None:  # the finished tables (their action logs: poker_tokens.from_tables)
+        tables_out.append((T, u))
     # tournament: the change in prize equity, in chips at the table's average chip value
     if pay is not None and not chips:
         u = (end_equity(T, u, rk) - T.eq0) * T.stack.sum(1, keepdim=True).float()
