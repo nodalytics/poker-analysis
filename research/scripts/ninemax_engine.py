@@ -68,6 +68,20 @@ MENUS = {
 }
 
 
+def _geom(lo, hi, n):
+    return tuple(round(lo * (hi / lo) ** (k / (n - 1)), 4) for k in range(n))
+
+
+# the size head's fixed grid (bet sizing, plan B): 16 sizes log-spaced over the whole range, for evaluation and play
+MENUS["grid16"] = (_geom(2.0, 4.0, 16), (_geom(2.0, 4.0, 16), _geom(2.0, 4.0, 16)), 4, _geom(0.2, 3.0, 16),
+                   _geom(0.2, 3.0, 16), _geom(0.2, 3.0, 16), _geom(0.2, 3.0, 16), 3)  # fmt: skip
+# random menus (plan B, training): K sizes drawn log-uniformly over each range afresh at every decision, sorted; opens
+# in big blinds, re-raises as multiples of the bet, post-flop bets and raises as fractions of the pot after calling
+RANDOM_MENUS = {
+    "size8": {"K": 8, "open": (2.0, 4.0), "rer": (2.0, 4.0), "post": (0.2, 3.0), "max_pre": 4, "max_post": 3}
+}
+
+
 def read_buckets(absdir):
     """The abstraction's bucket counts (flop, turn, river) from its meta.txt: per street when it gives them
     (abstraction.cpp OUT FLOP TURN RIVER), else the one count for all three."""
@@ -127,6 +141,13 @@ class Dealer:
 class Menu:
     def __init__(self, name, dev):
         self.name = name
+        self.random = name in RANDOM_MENUS
+        if self.random:
+            r = RANDOM_MENUS[name]
+            self.S, self.A, self.max_pre, self.max_post = r["K"], r["K"] + 3, r["max_pre"], r["max_post"]
+            self.ranges = {k: r[k] for k in ("open", "rer", "post")}
+            self.rer = torch.zeros(2, self.S, device=dev)  # only its length is read elsewhere (the re-raise levels)
+            return
         opens, rer, self.max_pre, hb, hr, mb, mr, self.max_post = MENUS[name]
         self.S = max(len(opens), *(len(x) for x in rer), len(hb), len(hr), len(mb), len(mr))
         pad = lambda x: torch.tensor(list(x) + [float("nan")] * (self.S - len(x)), device=dev)  # noqa: E731
@@ -205,12 +226,26 @@ class Tables:
     # ---- the action menu ----
     # A seat may play its own menu (menu=...: a network trained on another one, at a table with others): the table
     # keeps only chips and betting, so legal moves, raise targets and the step depend on the actor's menu alone.
+    def candidates(self, S):
+        """[G, S] uniforms in 0..1, sorted, for a random menu's sizes: drawn once per decision (step redraws the rows
+        of the tables that moved), so legal(), the features and step() see the same sizes."""
+        if getattr(self, "cand_u", None) is None or self.cand_u.shape[1] != S:
+            self.cand_u = torch.rand(self.G, S, device=self.dev).sort(1).values
+        return self.cand_u
+
     def targets(self, g, i, menu=None):
         """Raise-to totals of the menu sizes for tables g with actor i: [len(g), S] (nan where unused)."""
         m = menu or self.menu
         bet, pot = self.bet[g], self.contrib[g].sum(1) + self.dead[g]
         to_call = bet - self.contrib[g, i]
         pre = self.street[g] == 0
+        if m.random:  # log-uniform within each range, from this decision's draws
+            u = self.candidates(m.S)[g]
+            lg = lambda r: r[0] * (r[1] / r[0]) ** u  # noqa: E731
+            pre_t = torch.where((self.raises[g] == 0)[:, None], lg(m.ranges["open"]) * BB,
+                                lg(m.ranges["rer"]) * bet[:, None])  # fmt: skip
+            post_t = bet[:, None] + lg(m.ranges["post"]) * (pot + to_call)[:, None]
+            return torch.where(pre[:, None], pre_t, post_t).floor()
         lvl = (self.raises[g] - 1).clamp(0, len(m.rer) - 1)
         pre_t = torch.where((self.raises[g] == 0)[:, None], m.opens[None, :], m.rer[lvl] * bet[:, None])
         multi = (~self.folded[g]).sum(1) > 2
@@ -294,6 +329,8 @@ class Tables:
         self.aggressor[g] = torch.where(full | (inc > 0) & ~fold & ~call, i, self.aggressor[g])
         self.bet[g] = torch.maximum(bet, total)
         self.to_act[g] = i
+        if getattr(self, "cand_u", None) is not None:  # a random menu: fresh sizes for these tables' next decision
+            self.cand_u[g] = torch.rand(len(g), self.cand_u.shape[1], device=self.dev).sort(1).values
         self.advance()
 
     # ---- payoffs ----

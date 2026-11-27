@@ -30,7 +30,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from ninemax_engine import BB, Dealer, Menu
-from ninemax_selfplay import FEAT, NineNet, board_of, duplicate, masked, play, seats_used, set_mode
+from ninemax_selfplay import FEAT, NineNet, SizeHeadNet, board_of, duplicate, masked, play, seats_used, set_mode
 
 
 def setup(args, dev):
@@ -59,6 +59,16 @@ def load(run, B, dev, part="avg"):
         cfg.get("texture", False),
         cfg.get("early", 0.0),
     )  # the runs compared must share a mode
+    if cfg.get("size_head"):  # plan B: played on its play menu (a fixed grid), rule players on theirs
+        import ninemax_selfplay
+
+        ninemax_selfplay.RULE_MENU = cfg.get("rule_menu", "mtt")
+        net = SizeHeadNet(cfg["nbase"], cfg.get("buckets", B)).to(dev)
+        st = torch.load(ck, map_location=dev, weights_only=True)
+        net.load_state_dict(st[part])
+        net.texture = bool(cfg.get("texture", False))
+        net.menu_name = cfg.get("play_menu", "grid16")
+        return net.requires_grad_(False).eval(), st["hands"]
     net = NineNet(
         cfg["nfeat"],
         cfg["actions"],
