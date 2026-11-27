@@ -1,0 +1,30 @@
+{
+ "run": "blueprint/nm25",
+ "spots": 363,
+ "samples": 256,
+ "reference": "uniform x16, 1024 rollouts",
+ "reference_ess_median": 1024.0,
+ "arms": {
+  "v0 uniform": {
+   "q_rmse_bb": 1.3921,
+   "best_move_agrees": 0.6501,
+   "ess_median_of_N": 30.5
+  },
+  "v1 uniform x8": {
+   "q_rmse_bb": 0.6578,
+   "best_move_agrees": 0.7521,
+   "ess_median_of_N": 250.5
+  },
+  "v2 belief x1": {
+   "q_rmse_bb": 0.8992,
+   "best_move_agrees": 0.7135,
+   "ess_median_of_N": 76.9
+  },
+  "v2 belief x8": {
+   "q_rmse_bb": 0.4557,
+   "best_move_agrees": 0.7934,
+   "ess_median_of_N": 256.0
+  }
+ },
+ "seconds": 287
+}

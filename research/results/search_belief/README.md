@@ -14,6 +14,11 @@ better than the uniform guess (9.32 against 10.05 bits held out).
 
 363 spots (`eval_b1_400.json`); a first run of 57 spots (`eval_b1.json`) ranked them the same way.
 
+**A better belief network** (`b2/`, 40 M deals: 0.98 bits an opponent against b1's 0.73), the same 363 spots
+(`eval_b2_400.json`; the uniform arms repeat exactly): belief x1 rests on 76.9 effective guesses against 57.2 but its
+error is unchanged (0.899 bb against 0.900); belief x8's error falls from 0.483 to **0.456 bb** (agreement 79.3%
+against 80.2%, within the noise of 363 spots).
+
 **In Kestrel it is not cheap** (2026-11-27). Kestrel's search, nm25, 1,024 samples (`kestrel_search_match`, seed 7):
 without oversampling +3.08 bb/100 [−1.22, +7.37] over 1,500 deals at 2.9 s a decision, with 447 of 1,024 effective deals
 on average; with 8 x the first 200 deals took 2,306 s against 331 s, about 7 times slower (about 20 s a decision):

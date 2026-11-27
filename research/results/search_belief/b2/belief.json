@@ -1,0 +1,10 @@
+{
+ "run": "blueprint/nm25",
+ "nfeat": 101,
+ "players": 9,
+ "deals": 40009728,
+ "held_out_examples": 90166,
+ "bits": 9.0676,
+ "uniform_bits": 10.0494,
+ "gain_bits": 0.9818
+}
