@@ -1,0 +1,66 @@
+{
+ "parameters": 25577984,
+ "tokens": 1999994880,
+ "sources": [
+  "self",
+  "human",
+  "sim",
+  "kestrel",
+  "pluribus"
+ ],
+ "mix": {
+  "self": 0.33,
+  "human": 0.55,
+  "sim": 0.07,
+  "kestrel": 0.03,
+  "pluribus": 0.02
+ },
+ "held_out": {
+  "self": {
+   "bits_a_token": 0.8453468240884459,
+   "action_bits": 0.5381899492120047,
+   "count_model_action_bits": 1.5956260583931565,
+   "reveal_card_bits": 4.26969515209535,
+   "uniform_card_bits": 5.337126486176294,
+   "actions": 95261,
+   "cards": 88070
+  },
+  "human": {
+   "bits_a_token": 0.742328335441463,
+   "action_bits": 1.342300038232217,
+   "count_model_action_bits": 2.743607705932053,
+   "reveal_card_bits": 0.9508173862830763,
+   "uniform_card_bits": 5.442632376458162,
+   "actions": 165447,
+   "cards": 872
+  },
+  "sim": {
+   "bits_a_token": 0.6727379541390242,
+   "action_bits": 0.4612347902747736,
+   "count_model_action_bits": 3.200525498106859,
+   "reveal_card_bits": 4.7019046518986425,
+   "uniform_card_bits": 5.394139101612315,
+   "actions": 140253,
+   "cards": 68640
+  },
+  "kestrel": {
+   "bits_a_token": 0.6464467279020225,
+   "action_bits": 0.640312032993872,
+   "count_model_action_bits": 2.051255776216704,
+   "reveal_card_bits": 4.449999235281685,
+   "uniform_card_bits": 5.466343657849778,
+   "actions": 91241,
+   "cards": 72508
+  },
+  "pluribus": {
+   "bits_a_token": 0.6704911504491032,
+   "action_bits": 0.7317869369811177,
+   "count_model_action_bits": 2.475361088998679,
+   "reveal_card_bits": 4.734421138330638,
+   "uniform_card_bits": 5.452529372454343,
+   "actions": 36694,
+   "cards": 23952
+  }
+ },
+ "seconds": 2643
+}
