@@ -141,6 +141,29 @@ all-in). Run 7's tables are no longer on the lab, so run 2 is the only blueprint
 - `br_vec` under 10 and translation not material: the gap is card resolution, and the card options below are next;
 - otherwise: not shown, and card abstraction is left alone.
 
+**Result (2026-11-27): translation is the leak** (`research/results/blueprint_diag/`). (The first launch failed: the `lbrx/` link tree lacked `blueprint/`
+and then other top-level folders; every hand errored. Rerun with the whole tree linked, 0 errors.) Run 2, 30,000 hands
+each, LBR's win in bb/100 (luck-adjusted, 95% interval):
+
+| Measure | Result |
+|---|---|
+| `br_vec` inside the abstraction | +8.46 [+7.52, +9.39] |
+| LBR, on-menu sizes (pot, all-in) | +122.1 [+100.0, +144.1] (raw +121.4) |
+| LBR, off-menu sizes (0.5, 0.75, 1.5 pot, all-in) | **+248.9 [+224.1, +273.6]** (raw +255.2) |
+
+- By the first rule, off-menu beats on-menu by 127 bb/100 with separate intervals: **translation is material**.
+  The second rule does not fire (8.5 is far below half of LBR's 122), so training is not the problem; and card work
+  waits.
+- Caveat: the off-menu LBR also has more sizes to choose from, so part of the gap is a richer best response, not
+  mapping error. The pattern says most of it is mapping: the biggest single source is 1.5x-pot flop bets the bot
+  *calls* (+77 bb/100 of the total, against +74 for pot-sized bets in the on-menu run), and it folds as often to off-tree
+  sizes as to on-tree ones (flop 47.3% vs 47.0%).
+- What it means for the plan: the wide tree adds 0.25x and 4x first bets, not the 0.5, 0.75 and 1.5 sizes measured
+  here, so it is not the direct fix. The direct ones are the safe turn and river re-solves for off-tree bets (the
+  bet is put into the re-solved subgame exactly, which `resolve_turn` makes possible from the turn), and, for the
+  flop, either a flop re-solve or a tree that carries 0.5 and 1.5 pot. The next measurement is the same off-menu
+  LBR with the re-solve on for turn and river bets, against this +248.9.
+
 **Card options, ranked** (from the literature as recalled, not re-read; no numbers quoted from papers):
 
 | # | Option | Why it might help where run 7 did not | Cost |
