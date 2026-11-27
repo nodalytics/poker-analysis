@@ -1,0 +1,53 @@
+{
+ "name": "nm47",
+ "question": "Does nm25 re-trained against a more aggressive rule pool (two maniacs, a bigger pool share, a larger and faster-restarting exploiter), the recipe nm46 ran by hand, pass nm45's checks when its checks are fixed before it trains?",
+ "checks": {
+  "no-harm": {
+   "type": "seqtest",
+   "pass": false,
+   "result": "inconclusive after 40,000 deals: -0.39 bb/100 (needs not behind)",
+   "at": "2026-11-27T16:27:04Z"
+  },
+  "other-players": {
+   "type": "opponents",
+   "pass": true,
+   "result": "vs reg +25.7 (nm25 +25.7, difference +0.00 [-0.30, +0.31]), vs tag +32.3 (nm25 +32.5, difference -0.15 [-0.46, +0.16]), vs maniac +519.7 (nm25 +518.6, difference +1.04 [+0.69, +1.40]), vs station +126.2 (nm25 +125.9, difference +0.27 [-0.32, +0.87]); each interval within 2.0 of nm25",
+   "at": "2026-11-27T16:28:04Z"
+  },
+  "styles": {
+   "type": "styles",
+   "pass": false,
+   "result": "25 styles: mean -0.14 vs nm25, worst style18 -1.84 (within 2.0 at worst and 0.0 on average)",
+   "at": "2026-11-27T16:29:34Z"
+  },
+  "bluffs": {
+   "type": "bluffers",
+   "pass": true,
+   "result": "jam-any -51.1 [-54.7, -47.5], jam-40 -11.6 [-13.2, -10.0], raise-any -12.6 [-13.7, -11.6]",
+   "at": "2026-11-27T16:31:04Z"
+  },
+  "robust": {
+   "type": "exploit",
+   "pass": true,
+   "result": "exploiters win +1.1 bb/100 on average over 4 seeds (+1.1, +1.0, +0.9, +1.2; SD 0.1) (limit +1.2)",
+   "at": "2026-11-27T18:33:04Z"
+  },
+  "versions": {
+   "type": "consistency",
+   "pass": true,
+   "result": "report: distance from nm25 0.050, a different top action in 4.9% of spots; most in street river 0.211, position BB 0.064, stack 25bb+ 0.084, facing a bet no 0.162, seated 2 0.155",
+   "at": "2026-11-27T18:33:34Z"
+  }
+ },
+ "commit": "1eb231fc106a",
+ "status": "done",
+ "started": "2026-11-27T10:26:04Z",
+ "pid": 2785501,
+ "updated": "2026-11-27T18:33:34Z",
+ "stage": "done",
+ "gpu": "NVIDIA GeForce RTX 3090",
+ "training_started": "2026-11-27T10:26:04Z",
+ "trained": "2026-11-27T16:26:34Z",
+ "verdict": "not adopted",
+ "finished": "2026-11-27T18:33:34Z"
+}

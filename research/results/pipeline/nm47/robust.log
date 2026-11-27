@@ -1,0 +1,20 @@
+
+# 2026-11-27T16:31:04Z /home/steven-reid/research/.venv-gpu/bin/python scripts/ninemax_eval.py exploit blueprint/nm47 --out /home/steven-reid/research/results/pipeline/nm47/robust_exploiter_s7 --minutes 30 --eval-minutes 10 --menu mtt --lib blueprint/libbp7.so --abs blueprint/out --seed 7
+10.0 min 24099393 hands 1471 steps entropy 0.072  learner vs 8 x target: +0.8 bb/100 [+0.2, +1.4]
+20.0 min 48591978 hands 2966 steps entropy 0.061  learner vs 8 x target: +0.9 bb/100 [+0.4, +1.4]
+30.0 min 73133712 hands 4464 steps entropy 0.057  learner vs 8 x target: +1.1 bb/100 [+0.5, +1.6]
+
+# 2026-11-27T17:01:34Z /home/steven-reid/research/.venv-gpu/bin/python scripts/ninemax_eval.py exploit blueprint/nm47 --out /home/steven-reid/research/results/pipeline/nm47/robust_exploiter_s8 --minutes 30 --eval-minutes 10 --menu mtt --lib blueprint/libbp7.so --abs blueprint/out --seed 8
+10.0 min 24328755 hands 1485 steps entropy 0.120  learner vs 8 x target: +0.9 bb/100 [+0.4, +1.4]
+20.0 min 49001553 hands 2991 steps entropy 0.060  learner vs 8 x target: +1.1 bb/100 [+0.5, +1.6]
+30.0 min 73461372 hands 4484 steps entropy 0.057  learner vs 8 x target: +1.0 bb/100 [+0.5, +1.5]
+
+# 2026-11-27T17:32:04Z /home/steven-reid/research/.venv-gpu/bin/python scripts/ninemax_eval.py exploit blueprint/nm47 --out /home/steven-reid/research/results/pipeline/nm47/robust_exploiter_s9 --minutes 30 --eval-minutes 10 --menu mtt --lib blueprint/libbp7.so --abs blueprint/out --seed 9
+10.0 min 24328755 hands 1485 steps entropy 0.144  learner vs 8 x target: +0.0 bb/100 [-0.6, +0.7]
+20.0 min 49067085 hands 2995 steps entropy 0.059  learner vs 8 x target: +0.7 bb/100 [+0.2, +1.3]
+30.0 min 73756266 hands 4502 steps entropy 0.082  learner vs 8 x target: +0.9 bb/100 [+0.2, +1.6]
+
+# 2026-11-27T18:02:34Z /home/steven-reid/research/.venv-gpu/bin/python scripts/ninemax_eval.py exploit blueprint/nm47 --out /home/steven-reid/research/results/pipeline/nm47/robust_exploiter_s10 --minutes 30 --eval-minutes 10 --menu mtt --lib blueprint/libbp7.so --abs blueprint/out --seed 10
+10.0 min 24410670 hands 1490 steps entropy 0.072  learner vs 8 x target: +0.9 bb/100 [+0.4, +1.4]
+20.0 min 49329213 hands 3011 steps entropy 0.050  learner vs 8 x target: +0.9 bb/100 [+0.4, +1.4]
+30.0 min 74051160 hands 4520 steps entropy 0.062  learner vs 8 x target: +1.2 bb/100 [+0.6, +1.8]

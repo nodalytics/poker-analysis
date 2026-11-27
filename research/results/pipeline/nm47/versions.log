@@ -1,0 +1,18 @@
+
+# 2026-11-27T18:33:04Z /home/steven-reid/research/.venv-gpu/bin/python scripts/ninemax_consistency.py --reference blueprint/nm25 --runs blueprint/nm47 --deals 4000 --out /home/steven-reid/research/results/pipeline/nm47/versions.json
+2 versions, 35,505 spots from 4,000 deals; skipped 0 with other inputs or cards
+overall: disagreement 0.050, different top action 4.9%
+distance from nm25: nm47 0.050
+by street: river 0.211, turn 0.136, flop 0.105, pre-flop 0.047
+by position: BB 0.064, SB 0.063, CO 0.049, BTN 0.049, HJ 0.048, UTG 0.045, LJ 0.044, MP 0.043, UTG+1 0.042
+by stack: 25bb+ 0.084, 18-25bb 0.052, 12-18bb 0.045, under 12bb 0.039
+by facing a bet: no 0.162, yes 0.047
+by seated: 2 0.155, 3-5 0.102, 6-8 0.061, 9 0.046
+  1.00  pre-flop HJ J7o  74.9bb: nm25 fold; nm47 check/call
+  0.99  pre-flop SB 83o  22.7bb: nm25 check/call; nm47 fold
+  0.99  pre-flop SB A6o  9.0bb: nm25 check/call; nm47 fold
+  0.99  turn UTG JJ 7h 7c Ah 6d 11.1bb: nm25 check/call; nm47 fold
+  0.99  pre-flop BB JTs  13.5bb: nm25 fold; nm47 check/call
+  0.99  pre-flop BB Q8o  5.1bb: nm25 check/call; nm47 fold
+  0.99  flop SB 32o Ts 7d 9h 3.9bb: nm25 check/call; nm47 fold
+  0.99  pre-flop UTG+1 99  13.4bb: nm25 fold; nm47 all-in
