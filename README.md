@@ -60,4 +60,6 @@ LLM evaluations (local models as agents, the arena ladder, GUI control) are also
 ## Rules
 
 - No bots, OCR or real-time assistance on real-money poker sites. Kestrel's advice is for study and its own bot tables, not real-money play.
-- Never commit credentials or keys; the repo is public. Machine addresses and logins go in `.secrets/` (ignored).
+- Never commit credentials or keys. The repo is private (it was public from 2026-11-22 to 2026-11-27, and git history
+  is permanent, so treat every commit as if it could be published). Machine addresses and logins go in `.secrets/`
+  (ignored).
