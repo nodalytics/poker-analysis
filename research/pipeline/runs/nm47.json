@@ -1,0 +1,26 @@
+{
+ "name": "nm47",
+ "question": "Does nm25 re-trained against a more aggressive rule pool (two maniacs, a bigger pool share, a larger and faster-restarting exploiter), the recipe nm46 ran by hand, pass nm45's checks when its checks are fixed before it trains?",
+ "why": "nm46 was trained by hand on 2026-11-24 (results/ninemax/nm46_byhand/): nm25's recipe started from nm25 with the pool maniac, maniac, tag, station, reg at share 0.6 (nm25: reg, reg, tag, maniac, station at 0.5), exploiter share 0.35 restarted every 45 minutes (nm25: 0.25, 60), snapshots every hour. Run afterwards through nm45's checks it passed every one that finished: against the station +1.15 [+0.58, +1.71] vs nm25 where nm45 was -16.53, against the maniac +0.92 [+0.57, +1.28], reg and tag level, 25 styles mean -0.03 and worst -1.38, no-harm -0.23 over 40,000 deals, all three bluffers lose. Those checks were chosen after it trained, so they describe it and cannot adopt it; this run repeats the recipe with its checks set first. Same GPU as nm46 (the 3090), so the hand count matches.",
+ "train": {
+  "init": "nm25",
+  "minutes": 360,
+  "gpu": "3090",
+  "args": {"pool": "maniac,maniac,tag,station,reg", "pool-share": 0.6, "exploit-share": 0.35, "exploit-reset": 45, "keep-hours": 1}
+ },
+ "checks": [
+  {"id": "no-harm", "type": "seqtest", "against": "nm25", "early": 0, "pass": "not_behind", "max": 40000, "looks": 8, "alpha": 0.025, "margin": 0.5,
+   "why": "it must not lose to nm25 in nm25's own game"},
+  {"id": "other-players", "type": "opponents", "against": ["reg", "tag", "maniac", "station"], "baseline": "nm25", "hands": 100000, "tolerance": 2.0, "rule": "interval",
+   "why": "nm45's check, unchanged: on the same deals as nm25, the 95% interval of the difference must lie above -2.0 bb/100 against every rule player. More maniacs in training must not cost the station win nm44 and nm45 lost"},
+  {"id": "styles", "type": "styles", "count": 20, "seed": 2026, "hands": 5000, "baseline": "nm25", "worst_tolerance": 2.0, "mean_tolerance": 0.0,
+   "why": "at least as good as nm25 on average across 25 generated players, and never far behind (as nm45)"},
+  {"id": "bluffs", "type": "bluffers", "early": 0, "unit": "equity", "bluffers": ["jam-any", "jam-40", "raise-any"], "pass": "all_lose",
+   "why": "bluff jams and raises must lose prize equity against it, as against nm25"},
+  {"id": "robust", "type": "exploit", "minutes": 30, "seeds": 4, "limit": 1.25,
+   "why": "as nm45: the mean of four 30-minute exploiters, limit nm25's +0.75 plus 0.5. The check most at risk: nm46's first seed read +1.0"},
+  {"id": "versions", "type": "consistency", "reference": "nm25", "deals": 4000,
+   "why": "a report for the reviewer: where nm47 decides differently from nm25"}
+ ],
+ "adopt": "all"
+}
