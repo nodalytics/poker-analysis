@@ -1,0 +1,26 @@
+{
+ "name": "nm49",
+ "question": "Does nm25 re-trained against the partner's pool of aggressive and odd-sized players (2 extreme bluffers, 2 all-in players, 2 raising 3x, 2 raising 5x, 1 raising 8x) win more than nm25 against those players without losing to anyone else?",
+ "why": "The partner, after playing Kestrel on 2026-11-27, proposed training against this pool. The players are new rule players (ninemax_selfplay: bluffer, jammer, raise3x, raise5x, raise8x; the raisers on their own bet menus, so the network meets those sizes). nm25 already beats each by a lot (4,000 deals x 9: +321 bb/100 against 8 bluffers, +531 against 8 all-in players, +26, +34 and +41 against the raisers), and nm46, trained against an aggressive pool, beat nm25 against the bluffers by +5.5 [+1.8, +9.3]; so the run can only add to large wins, and the risk is what nm45 showed: training on a narrow pool can cost the win against players it no longer sees (the calling station, -16.5). The pool replaces nm25's, as proposed; the checks hold it to nm25's level against the old players too.",
+ "train": {
+  "init": "nm25",
+  "minutes": 360,
+  "gpu": "any",
+  "args": {"pool": "bluffer,bluffer,jammer,jammer,raise3x,raise3x,raise5x,raise5x,raise8x"}
+ },
+ "checks": [
+  {"id": "no-harm", "type": "seqtest", "against": "nm25", "early": 0, "pass": "not_behind", "max": 40000, "looks": 8, "alpha": 0.025, "margin": 0.5,
+   "why": "it must not lose to nm25 in nm25's own game"},
+  {"id": "the-pool", "type": "opponents", "against": ["bluffer", "jammer", "raise5x", "raise8x"], "baseline": "nm25", "hands": 100000, "tolerance": 0.0, "rule": "interval",
+   "why": "the point of the run: on the same deals as nm25, the 95% interval of the difference must lie above zero against each of the pool's kinds (raise3x left out: its size is nm25's own open, nothing new to learn)"},
+  {"id": "other-players", "type": "opponents", "against": ["reg", "tag", "maniac", "station"], "baseline": "nm25", "hands": 100000, "tolerance": 2.0, "rule": "interval",
+   "why": "nm45's check: the pool leaves out the players nm25 trained against, so the station's win must not fall (interval above -2.0 against each)"},
+  {"id": "styles", "type": "styles", "count": 20, "seed": 2026, "hands": 5000, "baseline": "nm25", "worst_tolerance": 2.0, "mean_tolerance": 0.0,
+   "why": "at least as good as nm25 on average across 25 generated players, and never far behind"},
+  {"id": "bluffs", "type": "bluffers", "early": 0, "unit": "equity", "bluffers": ["jam-any", "jam-40", "raise-any"], "pass": "all_lose",
+   "why": "bluff jams and raises must lose prize equity against it, as against nm25"},
+  {"id": "robust", "type": "exploit", "minutes": 30, "seeds": 4, "limit": 1.25,
+   "why": "as nm45 and nm47: the mean of four 30-minute exploiters, limit nm25's +0.75 plus 0.5; a network bent towards calling aggressive players is easier to exploit"}
+ ],
+ "adopt": "all"
+}
