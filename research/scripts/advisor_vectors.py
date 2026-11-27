@@ -59,7 +59,10 @@ def main():
     B = int(open(os.path.join(a.abs, "meta.txt")).read().split()[1])
     net, _ = load(a.model, B, dev)  # sets RULES and FEAT from the config
     dealer = Dealer(a.lib, a.abs, P, B, dev)  # seed 1: the trainer's pre-flop strengths
-    menu = Menu(cfg.get("menu", "medium"), dev)
+    sh = bool(cfg.get("size_head"))  # plan B: Kestrel plays it on its play menu, with the size-head inputs
+    menu_name = cfg.get("play_menu", "grid16") if sh else cfg.get("menu", "medium")
+    menu = Menu(menu_name, dev)
+    nfeat = cfg["nbase"] + 2 * menu.S if sh else cfg["nfeat"]
 
     # ---- weights ----
     # training-only outputs (the belief head) are not part of the policy Kestrel reads
@@ -72,8 +75,9 @@ def main():
     meta = {
         "tensors": [[k, list(t.shape)] for k, t in sd.items()],
         "seats": cfg.get("seats") or cfg.get("players", 9),  # the table size it plays (6 for 6-max), for its description
-        "nfeat": cfg["nfeat"], "actions": cfg["actions"], "buckets": B, "players": P,
-        "menu": cfg.get("menu", "medium"), "menu_def": MENUS[cfg.get("menu", "medium")],
+        "nfeat": nfeat, "actions": menu.A, "buckets": B, "players": P,
+        "menu": menu_name, "menu_def": MENUS[menu_name],
+        **({"size_head": True, "nbase": cfg["nbase"]} if sh else {}),
         "ante_bb": RULES["ante"], "open_limp": RULES["open_limp"],
         "features": {"stacks": FEAT["stacks"] is not None, "tourney": FEAT["tourney"], "bounty": FEAT["bounty"]},
         "pre_strength": r6(dealer.pre_strength.tolist()),
@@ -95,7 +99,7 @@ def main():
         while not bool(T.done.all()):
             i = T.actor[g]
             s = strength(dealer, bk, T.street).gather(1, i[:, None]).squeeze(1)
-            feat, legal = features(T, g, i)
+            feat, legal = features(T, g, i, sizehead=sh)
             _, t = T.legal(g, i)
             with torch.no_grad():
                 lg, v = net(feat, bk[g, i], T.street, s)

@@ -12,7 +12,9 @@ struct NetInfo {
     std::string menu;
     Rules rules;
     bool feat_stacks = false, feat_tourney = false;
-    double feat_bounty = 0;  // progressive knockouts: the share of the money in bounties the network trained with (0: none)
+    double feat_bounty = 0;
+    bool size_head = false;  // plan B: fold/call/raise/all-in, then a size scored by g(h, size) (research SizeHeadNet)
+    int nbase = 0;           // a size-head network's inputs before the 2 x S size columns  // progressive knockouts: the share of the money in bounties the network trained with (0: none)
     std::vector<float> pre_strength;
 };
 
@@ -73,6 +75,9 @@ class Net {
     std::array<int, 4> emb_rows_{};
     int emb_dim_ = 0, hidden_ = 0;
     Lin inp_, pi_, v_;
+    Lin sz_h_, sz_z_, sz1_, sz2_;  // the size head: g = sz2(gelu(sz1(gelu(sz_h(h) + sz_z(z)))))
+    // the joint logits of a size-head network from its last hidden layer a and its inputs
+    void size_logits(const float* a, const float* feat, int nfeat, int street, float* logits) const;
     std::vector<LN> bln_;
     std::vector<Lin> b1_, b2_;
     LN norm_;
