@@ -1,0 +1,3 @@
+10.0 min 20003643 hands 1221 steps entropy 0.103  learner vs 8 x target: +0.9 bb/100 [+0.3, +1.4]
+20.0 min 41137713 hands 2511 steps entropy 0.094  learner vs 8 x target: +1.0 bb/100 [+0.5, +1.5]
+30.0 min 61911357 hands 3779 steps entropy 0.076  learner vs 8 x target: +0.9 bb/100 [+0.4, +1.5]
