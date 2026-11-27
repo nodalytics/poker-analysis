@@ -59,6 +59,7 @@ def load(run, B, dev, part="avg"):
         cfg.get("texture", False),
         cfg.get("early", 0.0),
         cfg.get("seat_angles", False),
+        cfg.get("history", 0),
     )  # the runs compared must share a mode
     if cfg.get("size_head"):  # plan B: played on its play menu (a fixed grid), rule players on theirs
         import ninemax_selfplay
@@ -76,6 +77,7 @@ def load(run, B, dev, part="avg"):
         cfg.get("buckets", B),
         arch=cfg.get("arch", "mlp"),
         belief=cfg.get("belief_weight", 0) > 0,
+        history=cfg.get("history", 0),
     ).to(dev)
     st = torch.load(ck, map_location=dev, weights_only=True)
     net.load_state_dict(st[part])
