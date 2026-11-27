@@ -1,0 +1,26 @@
+{
+ "name": "nm50",
+ "question": "Does nm25 re-trained with a size head (fold, call, raise or all-in, then a raise size scored as a function of the size, trained on 8 sizes drawn at random every decision and played on a 16-size grid), with nm25's recipe otherwise unchanged, play at least as well as nm25 while betting sizes nm25 cannot, and give away no more about its hand through its sizes?",
+ "why": "Bet sizing, plan B (docs/2026-11-23-review-and-plan.md, section 6; requested 2026-11-27): a network that scores any size instead of choosing among three. The size head (ninemax_selfplay.SizeHeadNet; docs/2026-11-17-model-mathematics.md) starts as a size-head copy of nm25 distilled on nm25's own play (ninemax_sizehead_init.py, run by the pipeline before training: a 300-step copy read -0.38 [-1.29, +0.54] bb/100 against nm25 offered nm25's sizes and +1.03 [+0.10, +1.95] on the 16-size grid). Training offers 8 sizes drawn log-uniformly afresh every decision (size8: opens 2-4bb, re-raises 2-4x, bets and raises 0.2-3 pot) with the rule players on nm25's menu; it is judged on the grid16 menu, which Kestrel plays (its C++ reproduces a size-head network exactly). Every check was run end to end at small size on a 3-minute size-head network. nm48 asks the same about a fixed wider menu; this run asks it about a continuous one.",
+ "train": {
+  "init": "nm25",
+  "minutes": 360,
+  "gpu": "any",
+  "args": {"size-head": true, "menu": "size8"}
+ },
+ "checks": [
+  {"id": "no-harm", "type": "seqtest", "against": "nm25", "early": 0, "pass": "not_behind", "max": 40000, "looks": 8, "alpha": 0.025, "margin": 0.5,
+   "why": "it must not lose to nm25 in nm25's own game, at a table where each plays its own menu"},
+  {"id": "other-players", "type": "opponents", "against": ["reg", "tag", "maniac", "station"], "baseline": "nm25", "hands": 100000, "tolerance": 2.0, "rule": "interval",
+   "why": "nm45's check: on the same deals as nm25, the 95% interval of the difference must lie above -2.0 bb/100 against every rule player"},
+  {"id": "styles", "type": "styles", "count": 20, "seed": 2026, "hands": 5000, "baseline": "nm25", "worst_tolerance": 2.0, "mean_tolerance": 0.0,
+   "why": "at least as good as nm25 on average across 25 generated players, and never far behind"},
+  {"id": "bluffs", "type": "bluffers", "early": 0, "unit": "equity", "bluffers": ["jam-any", "jam-40", "raise-any"], "pass": "all_lose",
+   "why": "bluff jams and raises must lose prize equity against it, as against nm25"},
+  {"id": "robust", "type": "exploit", "minutes": 30, "seeds": 4, "limit": 1.25,
+   "why": "as nm45 and nm48: the mean of four 30-minute exploiters (which play its menu and so every size it offers); limit nm25's +0.75 plus 0.5"},
+  {"id": "sizes", "type": "sizes", "baseline": "nm25", "deals": 40000,
+   "why": "a report: which sizes of the grid it uses and where, and how much its sizes say about its hand against nm25's"}
+ ],
+ "adopt": "all"
+}
