@@ -117,8 +117,9 @@ def board_texture(board, g, street, dev):
     return out * on[:, None]
 
 
-def features(T, g, i):
-    """Public features of tables g for actor i: [len(g), NF]."""
+def features(T, g, i, menu=None):
+    """Public features of tables g for actor i: [len(g), NF]; the legal moves and sizes are those of menu (the
+    actor's own, when it differs from the table's)."""
     P = T.P
     c = T.contrib[g].float()
     pot = c.sum(1) + T.dead[g].float()  # the big-blind ante is in the pot (0 without an ante)
@@ -166,9 +167,10 @@ def features(T, g, i):
     if FEAT["texture"]:  # the betting so far, per street, and the board's texture (the network otherwise sees buckets)
         f.append((T.hist[g].float() / 4).clamp(max=1).reshape(len(g), 12))
         f.append(board_texture(getattr(T, "board", None), g, T.street[g], g.device))
-    legal, t = T.legal(g, i)
+    menu = menu or T.menu
+    legal, t = T.legal(g, i, menu)
     f.append(legal.float())
-    S = T.menu.S
+    S = menu.S
     f.append(((t - bet[:, None]) / pot.clamp(min=1)[:, None]).clamp(0, 10) / 10 * legal[:, 2 : 2 + S].float())
     return torch.cat(f, 1), legal
 
@@ -483,7 +485,11 @@ def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None,
     views {id(policy): (bk, dealer)}: a network that reads another abstraction sees the same cards through its own
     buckets and hand strength (ninemax_absmatch.py); the others use bk and dealer.
 
-    chips: return the chips won even in tournament mode (the players still see the payouts and ICM)."""
+    chips: return the chips won even in tournament mode (the players still see the payouts and ICM).
+
+    Menus: a network that carries menu_name (ninemax_eval.load sets it from its config) plays its own menu's moves and
+    sizes at this table, whatever the table's; rule players and the rest play the table's menu. Decisions are
+    recorded only when every policy plays the table's menu."""
     G, P = bk.shape[0], bk.shape[1]
     stacks, pay = ctx if ctx is not None else context(G, P, dev)
     T = Tables(G, P, menu, dev, stacks=stacks)
@@ -499,6 +505,9 @@ def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None,
         uniq = list(policies)
     learners = learner if isinstance(learner, (list, tuple)) else [learner]
     lids = torch.tensor([k for k, q in enumerate(uniq) if any(q is x for x in learners)] or [-1], device=dev)
+    pmenus = [policy_menu(p, menu, dev) for p in uniq]
+    mixed = any(m is not menu for m in pmenus)
+    assert not (mixed and record), "recording needs every policy on the table's menu"
     while not bool(T.done.all()):
         g = (~T.done).nonzero().squeeze(1)
         i = T.actor[g]
@@ -512,6 +521,8 @@ def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None,
             m = pol_of == k
             if not m.any():
                 continue
+            pm = pmenus[k]
+            feat_k, legal_k = (feat[m], legal[m]) if pm is menu else features(T, g[m], i[m], pm)
             if isinstance(pol, str):
                 probs = rule_probs(pol, T, g[m], i[m], legal[m], s[m], dealer, bk)
             elif views and id(pol) in views:
@@ -519,33 +530,104 @@ def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None,
                 gm, im = g[m], i[m]
                 sv = strength(vdl, vbk[gm], T.street[gm]).gather(1, im[:, None]).squeeze(1)
                 with torch.no_grad():
-                    lg, _ = pol(feat[m], vbk[gm, im], T.street[gm], sv)
-                probs = F.softmax(masked(lg, legal[m]), 1)
+                    lg, _ = pol(feat_k, vbk[gm, im], T.street[gm], sv)
+                probs = F.softmax(masked(lg, legal_k), 1)
             else:
-                fm = feat[m]
+                fm = feat_k
                 if FEAT["texture"] and getattr(pol, "texture", True) is False:  # a network trained without them
-                    A_, S_ = menu.A, menu.S
+                    A_, S_ = pm.A, pm.S
                     cut = fm.shape[1] - A_ - S_
                     fm = torch.cat([fm[:, : cut - TEXTURE_N], fm[:, cut:]], 1)
                 with torch.no_grad():
                     lg, _ = pol(fm, mybk[m], T.street[g][m], s[m])
-                probs = F.softmax(masked(lg, legal[m]), 1)
+                probs = F.softmax(masked(lg, legal_k), 1)
             rule = getattr(pol, "early_shove_bb", 0) if not isinstance(pol, str) else 0
             if rule:  # this player follows the early-shove rule (a hero-only test of it)
-                no = T.early_shove(g[m], i[m], rule, legal[m][:, 2 : 2 + menu.S].any(1))
+                no = T.early_shove(g[m], i[m], rule, legal_k[:, 2 : 2 + pm.S].any(1))
                 probs = probs.clone()
-                probs[no, menu.A - 1] = 0
+                probs[no, pm.A - 1] = 0
                 probs = probs / probs.sum(1, keepdim=True)
             a[m] = torch.multinomial(probs, 1).squeeze(1)
         if record:
             keep = torch.ones_like(i, dtype=torch.bool) if learner is None else torch.isin(pol_of, lids)
             rec.append(tuple(x[keep] for x in (g, i, feat, legal, mybk, T.street[g].clone(), s, a, pol_of)))
-        T.step(g, a)
+        if not mixed:
+            T.step(g, a)
+        else:  # each menu's actors step with their own moves (the other tables' actors do not change meanwhile)
+            for pm in {id(x): x for x in pmenus}.values():
+                on = torch.zeros_like(pol_of, dtype=torch.bool)
+                for k, x in enumerate(pmenus):
+                    if x is pm:
+                        on |= pol_of == k
+                if on.any():
+                    T.step(g[on], a[on], pm)
     u = T.payoffs(rk)
     # tournament: the change in prize equity, in chips at the table's average chip value
     if pay is not None and not chips:
         u = (end_equity(T, u, rk) - T.eq0) * T.stack.sum(1, keepdim=True).float()
     return u, rec
+
+
+_MENUS = {}
+
+
+def slot_map(old, new):
+    """For each raise slot of menu new, the slot of menu old whose size is nearest, by vote over the contexts the
+    slots are used in (opens, each re-raise level, heads-up and multiway bets and raises), on a log scale; ties go to
+    the smaller slot. Returns a list of len(new.S)."""
+    ctx = [(old.opens, new.opens), *zip(old.rer, new.rer), (old.hb, new.hb), (old.hr, new.hr), (old.mb, new.mb),
+           (old.mr, new.mr)]  # fmt: skip
+    votes = torch.zeros(new.S, old.S)
+    for o, n in ctx:
+        o, n = o.float().cpu(), n.float().cpu()
+        for j in range(new.S):
+            if torch.isnan(n[j]) or bool(torch.isnan(o).all()):
+                continue
+            d = (torch.log(o) - torch.log(n[j])).abs()
+            d[torch.isnan(d)] = float("inf")
+            votes[j, int(d.argmin())] += 1
+    out = []
+    for j in range(new.S):
+        out.append(int(votes[j].argmax()) if votes[j].sum() > 0 else min(j, old.S - 1))
+    return out
+
+
+def remap_menu(sd, old, new, emb_dim):
+    """A state dict trained on menu old, for a network on menu new (a warm start across menus): the policy's rows and
+    the legal-move and size input columns of each new slot are copied from its nearest old slot (slot_map); fold,
+    call and all-in map to themselves. Where k new slots share an old one, the copies' logits are lowered by log k
+    and their input columns divided by k, so the new network starts where the old one was."""
+    sm = slot_map(old, new)
+    n = torch.zeros(old.S)
+    for k in sm:
+        n[k] += 1
+    amap = [0, 1] + [2 + k for k in sm] + [old.A - 1]
+    mult = torch.tensor([1.0, 1.0] + [float(n[k]) for k in sm] + [1.0])
+    sd = dict(sd)
+    w, b = sd["pi.weight"], sd["pi.bias"]
+    assert w.shape[0] == old.A, (w.shape, old.A)
+    sd["pi.weight"] = w[amap].clone()
+    sd["pi.bias"] = b[amap] - torch.log(mult.to(b.device))
+    iw = sd["inp.weight"]
+    tail = 4 * emb_dim + 1
+    lo = iw.shape[1] - tail - (old.A + old.S)  # the legal moves, then the sizes, then embeddings and strength
+    legal, sizes = iw[:, lo : lo + old.A], iw[:, lo + old.A : lo + old.A + old.S]
+    m = mult.to(iw.device)
+    new_legal = legal[:, amap] / m[None, :]
+    new_sizes = sizes[:, sm] / m[2 : 2 + new.S][None, :]
+    sd["inp.weight"] = torch.cat([iw[:, :lo], new_legal, new_sizes, iw[:, lo + old.A + old.S :]], 1)
+    return sd
+
+
+def policy_menu(pol, menu, dev):
+    """The menu a policy plays at a table whose menu is `menu`: a network's own (menu_name) when it has one and it
+    differs, else the table's."""
+    name = None if isinstance(pol, str) else getattr(pol, "menu_name", None)
+    if name is None or name == menu.name:
+        return menu
+    if (name, str(dev)) not in _MENUS:
+        _MENUS[name, str(dev)] = Menu(name, dev)
+    return _MENUS[name, str(dev)]
 
 
 def end_equity(T, u, ranks):
@@ -873,8 +955,13 @@ def main():
         hands = st["hands"]
     elif args.init:  # warm start: a run's checkpoint (net, magnet, avg) or a snapshot (avg into all three)
         st = torch.load(args.init, map_location=dev, weights_only=True)
+        init_cfg = json.load(open(os.path.join(os.path.dirname(args.init), "config.json")))
+        init_menu = Menu(init_cfg.get("menu", "medium"), dev)
         for mod, k in ((net, "net"), (magnet, "magnet"), (avg, "avg")):
             sd = dict(st[k] if k in st else st["avg"])
+            if init_menu.name != menu.name:  # another menu: its moves mapped onto this one's by nearest size
+                assert args.arch == "mlp", "a menu change is mapped for the mlp network only"
+                sd = remap_menu(sd, init_menu, menu, mod.emb[0].embedding_dim)
             old_w, new_w = sd["inp.weight"], mod.inp.weight
             if old_w.shape[1] < new_w.shape[1]:  # --texture from a run without it: new input columns start at zero
                 pos = old_w.shape[1] - (4 * mod.emb[0].embedding_dim + 1) - (menu.A + menu.S)  # before legal and sizes

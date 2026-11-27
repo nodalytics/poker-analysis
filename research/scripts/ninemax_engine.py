@@ -126,6 +126,7 @@ class Dealer:
 
 class Menu:
     def __init__(self, name, dev):
+        self.name = name
         opens, rer, self.max_pre, hb, hr, mb, mr, self.max_post = MENUS[name]
         self.S = max(len(opens), *(len(x) for x in rer), len(hb), len(hr), len(mb), len(mr))
         pad = lambda x: torch.tensor(list(x) + [float("nan")] * (self.S - len(x)), device=dev)  # noqa: E731
@@ -202,9 +203,11 @@ class Tables:
             self.to_act = torch.where(nxt, torch.where(self.hu, 0, self.P - 1), self.to_act)
 
     # ---- the action menu ----
-    def targets(self, g, i):
+    # A seat may play its own menu (menu=...: a network trained on another one, at a table with others): the table
+    # keeps only chips and betting, so legal moves, raise targets and the step depend on the actor's menu alone.
+    def targets(self, g, i, menu=None):
         """Raise-to totals of the menu sizes for tables g with actor i: [len(g), S] (nan where unused)."""
-        m = self.menu
+        m = menu or self.menu
         bet, pot = self.bet[g], self.contrib[g].sum(1) + self.dead[g]
         to_call = bet - self.contrib[g, i]
         pre = self.street[g] == 0
@@ -225,11 +228,11 @@ class Tables:
         behind = (live & (self.ar[None, :] > i[:, None])).sum(1) + live[:, 0].long() + live[:, 1].long()
         return first & (i >= 2) & (behind >= 6) & (self.avail[g, i] >= int(min_bb * BB)) & can_raise
 
-    def legal(self, g, i):
-        m = self.menu
+    def legal(self, g, i, menu=None):
+        m = menu or self.menu
         bet = self.bet[g]
         to_call = bet - self.contrib[g, i]
-        t = self.targets(g, i)
+        t = self.targets(g, i, m)
         cap = torch.where(self.street[g] == 0, m.max_pre, m.max_post)
         reopened = ~self.acted[g, i]  # False after an incomplete all-in raise: call or fold only
         # no raise when no other player could answer it: every other player has folded, is all in, or has no more
@@ -256,12 +259,13 @@ class Tables:
             call = call & ~(first_in & (ok_size.any(1) | allin))
         return torch.cat([fold[:, None], call[:, None], ok_size, allin[:, None]], 1), torch.nan_to_num(t, nan=0)
 
-    def step(self, g, a):
-        """Tables g (their current actors) take action slots a."""
+    def step(self, g, a, menu=None):
+        """Tables g (their current actors) take action slots a (of menu, the table's unless given)."""
+        m = menu or self.menu
         i = self.actor[g]
-        legal, t = self.legal(g, i)
+        legal, t = self.legal(g, i, m)
         assert bool(legal.gather(1, a[:, None]).all()), "illegal action"
-        S = self.menu.S
+        S = m.S
         bet = self.bet[g]
         fold = a == 0
         call = a == 1

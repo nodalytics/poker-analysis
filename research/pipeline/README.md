@@ -23,6 +23,11 @@ request with the results. Progress shows on the dashboard (https://poker.stbfarm
 
 One run at a time. A run is refused when the lab has less than 25 GB of disk free.
 
+A run may train on another bet menu (`"args": {"menu": "wide"}`, started from nm25: its moves are mapped onto the new
+menu by nearest size, `ninemax_selfplay.remap_menu`). Each network plays its own menu at a shared table, so the
+checks against nm25 and the rule players work unchanged; `consistency` is skipped (its spots are one menu's), and
+`sizes` takes its place.
+
 ### The run file
 
 ```json
@@ -101,6 +106,7 @@ Every check must pass for `adopted`. Each has an `id` (your name for it) and a `
 | `opponents` | the run and `baseline` each against 8 copies of rule players that play nothing like it, on the same deals (`pipeline_opponents.py`) | `against` (some of `reg`, `tag`, `maniac`, `station`, `random`), `baseline`, `hands`, `tolerance`, `rule` (`point`, the default, or `interval`) | against every one, the paired difference (`point`), or the lower end of its 95% interval (`interval`), is no more than `tolerance` bb/100 below the baseline. `interval` rules a gap out instead of merely not seeing it: against a calling station the interval is about ±1.8 bb/100 at 20,000 hands and ±0.8 at 100,000 |
 | `styles` | generated opponents: nm25-like players with their tendencies pushed by random amounts (looser, tighter, more aggressive, folding more or less to bets, shoving, bluffing weak hands), plus five archetypes (nit, station, maniac, shover, loose-passive); the run and `baseline` each against 8 copies of every one, on the same deals | `count` (generated, 0-60), `seed` (the same seed is the same crowd for every run), `hands`, `baseline`, `worst_tolerance`, `mean_tolerance`, `human` (also the human-fitted styles) | it is within `worst_tolerance` of the baseline against its worst style, and within `mean_tolerance` on average |
 | `consistency` | where the run decides differently from `reference` on the same few thousand spots, by street, position, stack, facing a bet and players seated, with the most disputed spots (`ninemax_consistency.py`) | `reference`, `deals` | always: it is a report for the reviewer, not a gate |
+| `sizes` | the bet sizes the run uses, by context (pre-flop opens and re-raises, each street's heads-up and multiway bets and raises), the sizes `baseline` never bets, and how much its sizes say about its hand (eta squared of hand strength by size, among bets and raises), against `baseline` (`ninemax_sizes.py`) | `baseline`, `deals` | always: a report |
 | `bluffers` | scripted bluffers in one seat vs 8 copies of the run (`ninemax_hybrid.py`) | `bluffers` (some of `jam-any`, `jam-40`, `raise-any`), `early`, `unit` (`chips` or `equity`) | every bluffer loses (95% interval below 0) |
 | `patterns` | every pattern people found (`pipeline/patterns/*.json`, written by hand) or mined from the practice tables (`results/exploit_patterns/mined.json`, re-mined first): each played by the run itself except in its spot, against 8 copies of the run (`exploit_patterns.py test`) | `baseline`, `hands`, `limit` (default 0), `mine` (default true) | no pattern wins more than `limit` bb/100 against the run: a pattern found once stays closed |
 | `opponent-model` | does Kestrel's opponent model help? Kestrel itself (the image the lab runs) with the run, against the test platform's bots, which keep their names and styles (calling station, limper, tilter, style-switcher, two allies who soft-play each other, odd sizers): no solver, search, and search with the opponent model (`search-exploit`), each with a fresh opponent database (`kestrel_opponent_check.py`) | `hands` per arm and seed, `seeds`, `samples` | always: a report of what the model adds over search and over the network alone. Slow: search runs about 40 s a hand on the CPU, so 500 hands an arm take ~3 hours and only a large effect shows |

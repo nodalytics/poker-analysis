@@ -76,6 +76,7 @@ class Bluffer(nn.Module):
     def __init__(self, base, slot, thr=0.0):
         super().__init__()
         self.base, self.slot, self.thr = base, slot, thr
+        self.menu_name = getattr(base, "menu_name", None)  # it plays base's menu (play() reads it)
 
     def forward(self, feat, bk, street, st):
         lg, v = self.base(feat, bk, street, st)
@@ -140,6 +141,8 @@ def main():
     }
     pn = os.path.basename(args.post.rstrip("/"))
     defenders = {pn: post, "hybrid-zero": Hybrid(pre, post, P, "zero"), "hybrid-pko": Hybrid(pre, post, P, "pko")}
+    if getattr(pre, "menu_name", None) != getattr(post, "menu_name", None):  # a hybrid needs one menu: post's alone
+        defenders = {pn: post}
     res = {"hands": args.hands, "pre": args.pre, "post": args.post, "head_up": {}, "fold_to_allin": {}}
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
 
@@ -156,7 +159,7 @@ def main():
                 ]
                 print(f"{unit:>6} {bn:>9} vs 8 x {dn:<12} {m:+8.1f} bb/100 [{lo:+.1f}, {hi:+.1f}]", flush=True)
                 save()
-    for dn in ("hybrid-zero", "hybrid-pko"):
+    for dn in [x for x in ("hybrid-zero", "hybrid-pko") if x in defenders]:
         d = defenders[dn]
         for h, v, key in ((d, post, f"{dn} vs 8 x {pn}"), (post, d, f"{pn} vs 8 x {dn}")):
             m, lo, hi = duplicate(dealer, menu, h, v, args.hands, dev)
