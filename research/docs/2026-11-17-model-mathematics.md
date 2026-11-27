@@ -77,6 +77,14 @@ $2P = 18$ inputs just before the legal moves. Every table size reads alike, and 
 first as at a real table. This is the one place the constant $\pi$ enters; elsewhere in this note $\pi$ is the policy
 $\pi_\theta$ or the prize ladder $\pi_k$. A network without them gets them stripped at a shared table (as `texture`).
 
+**History tokens** (`--history H`, 2026-11-27). The hand so far as tokens, for the attention network: the last $H$
+actions, oldest first (empty slots zero), each $e_t = [1,\ r_t/(P-1),\ \mathbb{1}[\text{me}],\ t/3,\ \text{onehot}(\text{fold},
+\text{call}, \text{raise}, \text{all-in}),\ \min(x_t/10, 1)]$ with $r_t$ the actor's place after me (me $P-1$) and $x_t$
+the chips it put in beyond the bet before it over the pot then; then every seat, the others in table order after me
+and me last, $s_j = [\text{seated}, \text{is me}, k/(P-1), \text{live}, \text{all-in}, c_j/STACK, \min(\text{behind}_j/STACK, 3),
+P\,E^0_j, \text{acted}, \text{is the aggressor}, \cos, \sin]$ (the seat angle). $9H + 12P$ inputs (24 actions: 324), just
+before the legal moves; zero for an empty seat.
+
 **The size-head layout** (plan B, `features(..., sizehead=True)`): the public inputs, then fold, call and all-in
 legal, whether any raise is legal, the smallest and largest legal raise $x_{\min}/10$, $x_{\max}/10$, then each
 offered size's pot fraction $x_k/10$ (0 when illegal) and its legal flag $\ell_k$: $F_{base} = 101 - 9 + 6 = 98$
@@ -99,6 +107,20 @@ $$\pi_\theta(a \mid x, b) = \frac{\ell_a\, e^{z_a}}{\sum_{a'} \ell_{a'}\, e^{z_{
 
 Kestrel runs the same arithmetic in C++ (`Net::forward`; `forward_batch` for many positions at once, checked equal
 to it, worst difference 0).
+
+**The attention network** (`--arch attn`, 2026-11-27). The history tokens are read by a small transformer instead of
+entering the trunk directly. Each token is embedded, $u_t = W_e e_t + p_t$ and $u_j = W_s s_j + p_{H+j}$ ($d = 64$, $p$
+learnt positions), and two pre-norm encoder layers (4 heads of 16, feed-forward 128) let every token attend to every
+other valid one, so an action is read with the seat that took it and the rest of the hand:
+
+$$\mathrm{Attn}(U) = \mathrm{softmax}\!\Big(\frac{(UW_Q)(UW_K)^\top}{\sqrt{16}} + \mathrm{mask}\Big)\,UW_V, \qquad
+U' = U + \mathrm{Attn}(\mathrm{LN}(U)), \quad U'' = U' + W_2\,\mathrm{GELU}(W_1 \mathrm{LN}(U'))$$
+
+with the empty action slots and empty seats masked out. The summary that replaces the tokens in the trunk's input is
+the mean over the valid tokens and my own seat's token, $[\bar u;\ u_{me}] \in \mathbb{R}^{128}$. From nm25 the trunk's
+input weights for the summary start at zero, so the network starts as nm25 and the transformer learns what to add.
+A 3-minute run from nm25 played nm25 level (−0.73 bb/100 over 4,000 deals) at 16,000 hands a second (43,000 without)
+and up to 93 GB of GPU memory at a batch of 16,384 tables.
 
 **The size head** (`SizeHeadNet`, plan B, 2026-11-27). The trunk reads the $F_{base}$ inputs only, so it does not
 depend on how many sizes are offered. Four type logits $t = W_\pi \bar h + c_\pi \in \mathbb{R}^4$ (fold, call, raise,

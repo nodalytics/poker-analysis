@@ -403,6 +403,13 @@ Kestrel 0.4.1 deployed on the lab with practice matches between models, with or 
   3. *Knowing what a situation is worth:* a value network over everyone's ranges, so search can stop early
      (DeepStack); the heads-up turn re-solve test (C against D) is measuring whether it pays.
   4. *Seeing the real cards and the whole action history:* blockers, board texture, what a line of bets means.
+     **Started:** `--history 24 --arch attn`, a small transformer over the hand's last 24 actions and every seat
+     (each seat's actions attend to the others'), feeding the trunk; warm-started from nm25 with its summary at zero
+     weight. Built and checked (a 3-minute run plays nm25 level); needs a pre-registered run (`--chunks 8`: memory),
+     and Kestrel's C++ (a transformer encoder) once a run passes.
+- [x] **Search oversampling in Kestrel** (2026-11-27): 8 x the deals, weighted, resampled; move-value error 1.39 to
+      0.66 bb on 363 spots (`results/search_belief/`). Belief guesses cut it to 0.48; their C++ port is next. A paired
+      Kestrel match (oversampling 1 against 8, 1,500 deals) is measuring the gain in play.
 - [ ] **Seat angles** (requested 2026-11-27, the "π" question): seats sit in a circle, so each seat's position among
       the players seated, counted from the button, enters as an angle, $(\cos 2\pi k/n, \sin 2\pi k/n)$ for position
       $k$ of $n$, for me and each other seat. Every table size reads alike and the button sits next to the small blind.

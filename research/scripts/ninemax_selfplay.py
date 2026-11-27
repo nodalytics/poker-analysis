@@ -57,7 +57,7 @@ from ninemax_engine import BB, RULES, STACK, Dealer, Menu, Tables, read_buckets,
 #            heads. Knocking a player out pays half their bounty in cash and adds the other half to your own; the
 #            payouts tensor then carries both, [G, 2P] (split_pay). 0: no bounties.
 FEAT = {"stacks": None, "tourney": False, "depths": None, "short": 0.0, "seats": None, "bounty": 0.0, "texture": False,
-        "early": 0.0, "seat_angles": False}  # fmt: skip
+        "early": 0.0, "seat_angles": False, "history": 0}  # fmt: skip
 PRIORITY = {}  # prioritised scenario sampling: table cell -> weight (ninemax_leaks.py), training tables only
 
 
@@ -173,6 +173,8 @@ def features(T, g, i, menu=None, sizehead=False):
         f.append(board_texture(getattr(T, "board", None), g, T.street[g], g.device))
     if FEAT["seat_angles"]:  # seats in a circle: each player's position from the button as an angle (2026-11-27)
         f.append(seat_angles(T, g, i, rel))
+    if FEAT["history"]:  # the hand as tokens: its last actions, then every seat (the attention network, 2026-11-27)
+        f.append(history_tokens(T, g, i, rel, FEAT["history"]))
     menu = menu or T.menu
     legal, t = T.legal(g, i, menu)
     S = menu.S
@@ -196,6 +198,47 @@ def features(T, g, i, menu=None, sizehead=False):
 
 
 TEXTURE_N = 19  # the texture inputs (12 betting history + 7 board), just before the legal moves and sizes
+
+
+EV_E, SEAT_E = 9, 12  # numbers per action token and per seat token
+
+
+def history_n(P, H):
+    """The history inputs: H action tokens and P seat tokens."""
+    return H * EV_E + P * SEAT_E if H else 0
+
+
+def history_tokens(T, g, i, rel, H):
+    """[len(g), H * EV_E + P * SEAT_E]: the hand's last H actions, oldest first, empty slots first (all zero), each
+    valid, the actor relative to me / (P - 1) (me: 1), is it me, street / 3, fold, check or call, bet or raise,
+    all-in, and its size over the pot (/ 10, at most 1); then every seat, the others in table order after me and me
+    last: seated, is it me, its place in that order / (P - 1), live, all-in, chips in / STACK, chips behind / STACK
+    (at most 3), start equity x P, acted this round, is it the last aggressor, and its seat angle (cos, sin)."""
+    P, dev, m = T.P, g.device, len(g)
+    n = T.nev[g]
+    k = torch.arange(H, device=dev)
+    idx = n[:, None] - H + k[None, :]  # the last H, oldest first
+    ok = idx >= 0
+    e = T.ev[g].gather(1, idx.clamp(min=0)[:, :, None].expand(-1, -1, 4))  # [m, H, 4]
+    seat, st, kind, sz = e[..., 0].long(), e[..., 1], e[..., 2].long(), e[..., 3]
+    r = (seat - i[:, None] - 1) % P  # 0 .. P-2 the others after me, P-1 me
+    ev = torch.cat([ok[..., None].float(), (r.float() / (P - 1))[..., None], (r == P - 1)[..., None].float(),
+                    (st / 3)[..., None], F.one_hot(kind, 4).float(), (sz / 10).clamp(max=1)[..., None]], 2)  # fmt: skip
+    ev = ev * ok[..., None]
+    order = torch.cat([rel, i[:, None]], 1)  # [m, P]: the others after me, then me
+    c = T.contrib[g].float()
+    behind = (T.avail[g].float() - c) / STACK
+    eq = T.eq0[g] * P if hasattr(T, "eq0") else torch.zeros_like(c)
+    ang = seat_angles(T, g, i, rel).view(m, P, 2)  # me first, then the others: reorder to the others, then me
+    ang = torch.cat([ang[:, 1:], ang[:, :1]], 1)
+    pick = lambda x: x.gather(1, order)  # noqa: E731
+    seated = pick(T.stack[g] > 0).float()
+    seats = torch.stack([seated, (order == i[:, None]).float(), (torch.arange(P, device=dev).float() / (P - 1))
+                         .expand(m, -1), pick((~T.folded[g]).float()), pick(T.allin[g].float()), pick(c / STACK),
+                         pick(behind.clamp(0, 3)), pick(eq.float()), pick(T.acted[g].float()),
+                         (order == T.aggressor[g][:, None]).float(), ang[..., 0], ang[..., 1]], 2)  # fmt: skip
+    seats = seats * seated[..., None]
+    return torch.cat([ev.reshape(m, -1), seats.reshape(m, -1)], 1)
 
 
 def angle_n(P):
@@ -253,8 +296,21 @@ class NineNet(nn.Module):
     tables of any size read alike."""
 
     def __init__(self, nfeat, A, buckets, hidden=512, blocks=4, emb=32, arch="mlp", players=9, tok_hidden=128,
-                 belief=False):  # fmt: skip
+                 belief=False, history=0, d_ctx=64):  # fmt: skip
         super().__init__()
+        # arch "attn" (2026-11-27): the history inputs (history_tokens: the last actions and every seat) are read by a
+        # small transformer, whose summary (the mean over the tokens and my own seat's token, 2 x d_ctx) replaces them
+        # in the trunk's input; everything else as "mlp"
+        self.history, self.ctx_w, self.A, self.P = history, history_n(players, history), A, players
+        if arch == "attn":
+            assert history > 0, "arch attn reads the history inputs (--history)"
+            self.ctx_ev = nn.Linear(EV_E, d_ctx)
+            self.ctx_seat = nn.Linear(SEAT_E, d_ctx)
+            self.ctx_pos = nn.Parameter(torch.zeros(history + players, d_ctx))
+            layer = nn.TransformerEncoderLayer(d_ctx, 4, 2 * d_ctx, dropout=0.0, batch_first=True, norm_first=True)
+            self.ctx_enc = nn.TransformerEncoder(layer, 2, enable_nested_tensor=False)
+            self.ctx_norm = nn.LayerNorm(d_ctx)
+            nfeat = nfeat - self.ctx_w + 2 * d_ctx
         per_street = list(buckets) if isinstance(buckets, (list, tuple)) else [buckets] * 3  # flop, turn, river
         self.emb = nn.ModuleList([nn.Embedding(169, emb)] + [nn.Embedding(b, emb) for b in per_street])
         self.arch = arch
@@ -280,10 +336,28 @@ class NineNet(nn.Module):
         self.belief = nn.Linear(hidden, (players - 1) * BELIEF_BINS) if belief else None
         self.last_h = None
 
+    def context(self, feat):
+        """arch attn: the history block of feat read by the transformer, in its place: [n, F - block + 2 d]."""
+        A, P, H = self.A, self.P, self.history
+        cut = feat.shape[1] - A - (A - 3)  # the legal moves and sizes start here; the history block just before
+        blk = feat[:, cut - self.ctx_w : cut]
+        n = len(feat)
+        ev = blk[:, : H * EV_E].view(n, H, EV_E)
+        seats = blk[:, H * EV_E :].view(n, P, SEAT_E)
+        x = torch.cat([self.ctx_ev(ev), self.ctx_seat(seats)], 1) + self.ctx_pos[None]
+        valid = torch.cat([ev[..., 0] > 0.5, seats[..., 0] > 0.5], 1)  # empty action slots, empty seats
+        y = self.ctx_norm(self.ctx_enc(x, src_key_padding_mask=~valid))
+        vf = valid.float()[..., None]
+        mean = (y * vf).sum(1) / vf.sum(1).clamp(min=1)
+        me = y[:, -1]  # my own seat's token (the last)
+        return torch.cat([feat[:, : cut - self.ctx_w], mean, me, feat[:, cut:]], 1)
+
     def forward(self, feat, bk, street, st):
         """bk: [n, 4] this player's buckets per street; streets after the current one are masked out."""
         e = [self.emb[s](bk[:, s].clamp(max=self.emb[s].num_embeddings - 1)) * (street >= s).float()[:, None]
              for s in range(4)]  # fmt: skip
+        if self.arch == "attn":
+            feat = self.context(feat)
         if self.arch == "sets":
             seats = feat[:, self.tok_idx]  # [n, P-1, d]
             pos = self.pos.expand(feat.shape[0], -1, -1)
@@ -629,14 +703,20 @@ def play(dealer, menu, policies, bk, rk, record=False, dev="cuda", learner=None,
                 probs = F.softmax(masked(lg, legal_k), 1)
             else:
                 fm = feat_k
-                cut = fm.shape[1] - pm.A - pm.S  # the legal moves and sizes start here
-                if FEAT["seat_angles"] and getattr(pol, "seat_angles", True) is False:  # trained without them
-                    na = angle_n(T.P)
-                    fm = torch.cat([fm[:, : cut - na], fm[:, cut:]], 1)
-                    cut -= na
-                if FEAT["texture"] and getattr(pol, "texture", True) is False:  # a network trained without them
-                    tc = cut - (angle_n(T.P) if FEAT["seat_angles"] and getattr(pol, "seat_angles", True) else 0)
-                    fm = torch.cat([fm[:, : tc - TEXTURE_N], fm[:, tc:]], 1)
+                # strip the optional input blocks a network was trained without; from the legal moves backwards they
+                # are the history tokens, the seat angles and the texture
+                cut = fm.shape[1] - pm.A - pm.S
+                for on, width, has in (
+                    (FEAT["history"] > 0, history_n(T.P, FEAT["history"]),
+                     getattr(pol, "history", FEAT["history"]) == FEAT["history"]),
+                    (FEAT["seat_angles"], angle_n(T.P), getattr(pol, "seat_angles", True) is not False),
+                    (FEAT["texture"], TEXTURE_N, getattr(pol, "texture", True) is not False),
+                ):  # fmt: skip
+                    if not on:
+                        continue
+                    if not has:
+                        fm = torch.cat([fm[:, : cut - width], fm[:, cut:]], 1)
+                    cut -= width
                 with torch.no_grad():
                     lg, _ = pol(fm, mybk[m], T.street[g][m], s[m])
                 probs = F.softmax(masked(lg, legal_k), 1)
@@ -868,7 +948,7 @@ def duplicate(dealer, menu, hero, villain, n, dev, cv=False, chips=False, per_de
 
 
 def set_mode(stacks="100", tourney=False, depths=None, open_limp=True, ante=0.0, short=0.0, seats=None, bounty=0.0,
-             texture=False, early=0.0, seat_angles=False):  # fmt: skip
+             texture=False, early=0.0, seat_angles=False, history=0):  # fmt: skip
     """Set FEAT from a run's options (also used by the tools that load a run, from its config.json). depths: the
     tournament tables' average-stack ranges, "LO,HI;LO,HI" (None: icm.scenarios' default, 10-60bb)."""
     RULES["open_limp"] = bool(open_limp)
@@ -882,6 +962,7 @@ def set_mode(stacks="100", tourney=False, depths=None, open_limp=True, ante=0.0,
     FEAT["texture"] = bool(texture)
     FEAT["early"] = float(early or 0.0)
     FEAT["seat_angles"] = bool(seat_angles)
+    FEAT["history"] = int(history or 0)
 
 
 def extra_pool(args, avg, nfeat, buckets, dev, dealer=None, menu=None):
@@ -936,7 +1017,7 @@ def main():
     ap.add_argument("--players", type=int, default=9)
     ap.add_argument(
         "--arch",
-        choices=("mlp", "sets"),
+        choices=("mlp", "sets", "attn"),
         default="mlp",
         help="the network: one input vector, or the other seats as a set (Deep Sets)",
     )
@@ -1023,6 +1104,12 @@ def main():
         action="store_true",
         help="also read each seat's position from the button as an angle (cos, sin of 2 pi k / n)",
     )
+    ap.add_argument(
+        "--history",
+        type=int,
+        default=0,
+        help="also read the hand's last N actions and every seat as tokens (arch attn reads them)",
+    )
     ap.add_argument("--priority", help="a leak map (ninemax_leaks.py JSON): training tables drawn by its cell weights")
     ap.add_argument("--max-frozen", type=int, default=0, help="frozen exploiters kept in the pool (0 = all, as before)")
     ap.add_argument("--chunks", type=int, default=4, help="population chunks per batch (one opponent each)")
@@ -1051,7 +1138,7 @@ def main():
     ap.add_argument("--depths", help='tournament average-stack ranges in bb, "LO,HI;LO,HI" (default 10,60)')
     args = ap.parse_args()
     set_mode(args.stacks, args.tourney, args.depths, not args.no_open_limp, args.ante, args.short, args.seats,
-             args.bounty, args.texture, args.early, args.seat_angles)  # fmt: skip
+             args.bounty, args.texture, args.early, args.seat_angles, args.history)  # fmt: skip
     if args.priority:  # the leak map's weights per table cell (ninemax_leaks.py)
         PRIORITY.update({int(k): float(v) for k, v in json.load(open(args.priority))["weights"].items()})
         print(f"prioritised sampling: {len(PRIORITY)} cells weighted, max {max(PRIORITY.values()):.2f}", flush=True)
@@ -1075,9 +1162,8 @@ def main():
         net = SizeHeadNet(nbase, buckets, players=args.players, belief=args.belief_weight > 0).to(dev)
     else:
         nfeat = n_features(args.players, menu, dev)
-        net = NineNet(nfeat, menu.A, buckets, arch=args.arch, players=args.players, belief=args.belief_weight > 0).to(
-            dev
-        )
+        net = NineNet(nfeat, menu.A, buckets, arch=args.arch, players=args.players, belief=args.belief_weight > 0,
+                      history=args.history).to(dev)  # fmt: skip
     magnet, avg = copy.deepcopy(net), copy.deepcopy(net)
     for m in (magnet, avg):
         m.requires_grad_(False)
@@ -1110,7 +1196,9 @@ def main():
                 sd["inp.weight"] = torch.cat([old_w[:, :pos], extra_cols, old_w[:, pos:]], 1)
             missing, extra = mod.load_state_dict(sd, strict=False)
             # a warm start may add a training-only head the source run did not have (--belief-weight); nothing else
-            assert not extra and all(m.startswith("belief.") for m in missing), (missing, extra)
+            # (or the attention network's history reader, --arch attn from an mlp run: it starts from zero weight in
+            # the trunk's input, so the network starts where the source run was)
+            assert not extra and all(m.startswith(("belief.", "ctx_")) for m in missing), (missing, extra)
         hands = st["hands"]
     prev = copy.deepcopy(avg)
     expl = copy.deepcopy(avg).requires_grad_(True) if args.exploit_share > 0 else None

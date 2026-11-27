@@ -60,7 +60,7 @@ from ninemax_belief import load_belief, propose
 from ninemax_selfplay import FEAT, board_of, context, end_equity, features, masked, start_equity
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-FIELDS = ("stack", "contrib", "folded", "allin", "acted", "bet", "last_raise", "raises", "street", "pre_raises", "hist",
+FIELDS = ("stack", "contrib", "folded", "allin", "acted", "bet", "last_raise", "raises", "street", "pre_raises", "hist", "ev", "nev",
           "aggressor", "to_act", "done", "showdown", "actor")  # fmt: skip
 NBOARD = {0: 0, 1: 3, 2: 4, 3: 5}
 

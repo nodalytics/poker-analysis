@@ -68,6 +68,9 @@ MENUS = {
 }
 
 
+EV_MAX = 64  # actions recorded per hand (a 9-max hand rarely has more than 40)
+
+
 def _geom(lo, hi, n):
     return tuple(round(lo * (hi / lo) ** (k / (n - 1)), 4) for k in range(n))
 
@@ -183,6 +186,10 @@ class Tables:
         self.aggressor = g(-1)
         # the betting so far, per street: full raises, calls (of a bet), checks [G, 4, 3] (texture features)
         self.hist = torch.zeros(G, 4, 3, dtype=torch.long, device=dev)
+        # every action of the hand in order (the history inputs, --history): seat, street, kind (0 fold, 1 check or
+        # call, 2 bet or raise, 3 all-in) and its size (chips put in beyond the bet before it, over the pot then)
+        self.ev = torch.zeros(G, EV_MAX, 4, device=dev)
+        self.nev = torch.zeros(G, dtype=torch.long, device=dev)
         self.to_act = g(1)  # the scan for the next actor starts after this seat
         self.done = torch.zeros(G, dtype=torch.bool, device=dev)
         self.showdown = torch.zeros(G, dtype=torch.bool, device=dev)
@@ -312,6 +319,12 @@ class Tables:
         inc = total - bet
         full = ~fold & ~call & (inc >= self.last_raise[g])
         owed = bet > self.contrib[g, i]  # before this move: a call pays, a "call" of nothing is a check
+        pot0 = (self.contrib[g].sum(1) + self.dead[g]).float().clamp(min=1)
+        kind = torch.where(fold, 0, torch.where(call, 1, torch.where(size, 2, 3)))
+        szf = torch.where(fold | call, (bet - self.contrib[g, i]).clamp(min=0), total - bet).float() / pot0
+        k = self.nev[g].clamp(max=EV_MAX - 1)
+        self.ev[g, k] = torch.stack([i.float(), self.street[g].float(), kind.float(), szf], 1)
+        self.nev[g] = (self.nev[g] + 1).clamp(max=EV_MAX)
         st = self.street[g]
         self.hist[g, st, 0] += full.long()
         self.hist[g, st, 1] += (call & owed).long()
