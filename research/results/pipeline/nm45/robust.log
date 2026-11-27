@@ -1,20 +1,20 @@
 
-# 2026-11-24T20:31:45Z /home/steven-reid/research/.venv-gpu/bin/python scripts/ninemax_eval.py exploit blueprint/nm45 --out /home/steven-reid/research/results/pipeline/nm45/robust_exploiter_s7 --minutes 30 --eval-minutes 10 --menu mtt --lib blueprint/libbp7.so --abs blueprint/out --seed 7
+# 2026-11-24T20:31:45Z ~/research/.venv-gpu/bin/python scripts/ninemax_eval.py exploit blueprint/nm45 --out ~/research/results/pipeline/nm45/robust_exploiter_s7 --minutes 30 --eval-minutes 10 --menu mtt --lib blueprint/libbp7.so --abs blueprint/out --seed 7
 10.0 min 29309187 hands 1789 steps entropy 0.067  learner vs 8 x target: +0.6 bb/100 [+0.1, +1.1]
 20.0 min 58995183 hands 3601 steps entropy 0.046  learner vs 8 x target: +0.8 bb/100 [+0.2, +1.4]
 30.0 min 90335862 hands 5514 steps entropy 0.047  learner vs 8 x target: +0.6 bb/100 [+0.0, +1.2]
 
-# 2026-11-24T21:02:15Z /home/steven-reid/research/.venv-gpu/bin/python scripts/ninemax_eval.py exploit blueprint/nm45 --out /home/steven-reid/research/results/pipeline/nm45/robust_exploiter_s8 --minutes 30 --eval-minutes 10 --menu mtt --lib blueprint/libbp7.so --abs blueprint/out --seed 8
+# 2026-11-24T21:02:15Z ~/research/.venv-gpu/bin/python scripts/ninemax_eval.py exploit blueprint/nm45 --out ~/research/results/pipeline/nm45/robust_exploiter_s8 --minutes 30 --eval-minutes 10 --menu mtt --lib blueprint/libbp7.so --abs blueprint/out --seed 8
 10.0 min 33060894 hands 2018 steps entropy 0.083  learner vs 8 x target: +0.5 bb/100 [+0.1, +1.0]
 20.0 min 65106042 hands 3974 steps entropy 0.063  learner vs 8 x target: +0.3 bb/100 [-0.2, +0.8]
 30.0 min 89991819 hands 5493 steps entropy 0.046  learner vs 8 x target: +0.3 bb/100 [-0.2, +0.8]
 
-# 2026-11-24T21:32:45Z /home/steven-reid/research/.venv-gpu/bin/python scripts/ninemax_eval.py exploit blueprint/nm45 --out /home/steven-reid/research/results/pipeline/nm45/robust_exploiter_s9 --minutes 30 --eval-minutes 10 --menu mtt --lib blueprint/libbp7.so --abs blueprint/out --seed 9
+# 2026-11-24T21:32:45Z ~/research/.venv-gpu/bin/python scripts/ninemax_eval.py exploit blueprint/nm45 --out ~/research/results/pipeline/nm45/robust_exploiter_s9 --minutes 30 --eval-minutes 10 --menu mtt --lib blueprint/libbp7.so --abs blueprint/out --seed 9
 10.0 min 24214074 hands 1478 steps entropy 0.100  learner vs 8 x target: +0.6 bb/100 [+0.1, +1.1]
 20.0 min 48264318 hands 2946 steps entropy 0.066  learner vs 8 x target: +0.5 bb/100 [-0.0, +1.0]
 30.0 min 71888604 hands 4388 steps entropy 0.060  learner vs 8 x target: +0.5 bb/100 [-0.0, +1.0]
 
-# 2026-11-24T22:03:15Z /home/steven-reid/research/.venv-gpu/bin/python scripts/ninemax_eval.py exploit blueprint/nm45 --out /home/steven-reid/research/results/pipeline/nm45/robust_exploiter_s10 --minutes 30 --eval-minutes 10 --menu mtt --lib blueprint/libbp7.so --abs blueprint/out --seed 10
+# 2026-11-24T22:03:15Z ~/research/.venv-gpu/bin/python scripts/ninemax_eval.py exploit blueprint/nm45 --out ~/research/results/pipeline/nm45/robust_exploiter_s10 --minutes 30 --eval-minutes 10 --menu mtt --lib blueprint/libbp7.so --abs blueprint/out --seed 10
 10.0 min 23968329 hands 1463 steps entropy 0.100  learner vs 8 x target: +0.4 bb/100 [-0.2, +1.0]
 20.0 min 47789211 hands 2917 steps entropy 0.063  learner vs 8 x target: +0.9 bb/100 [+0.3, +1.5]
 30.0 min 72068817 hands 4399 steps entropy 0.051  learner vs 8 x target: +0.5 bb/100 [-0.1, +1.1]

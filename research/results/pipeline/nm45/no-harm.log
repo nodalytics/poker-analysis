@@ -1,5 +1,5 @@
 
-# 2026-11-24T20:28:44Z /home/steven-reid/research/.venv-gpu/bin/python scripts/seqtest.py match blueprint/nm45 blueprint/nm25 --max 40000 --looks 8 --alpha 0.025 --margin 0.5 --out /home/steven-reid/research/results/pipeline/nm45/no-harm.json --early 0
+# 2026-11-24T20:28:44Z ~/research/.venv-gpu/bin/python scripts/seqtest.py match blueprint/nm45 blueprint/nm25 --max 40000 --looks 8 --alpha 0.025 --margin 0.5 --out ~/research/results/pipeline/nm45/no-harm.json --early 0
 look 1: 5000 deals  -0.40 bb/100  z -0.77 (stop beyond 6.59)
 look 2: 10000 deals  -0.06 bb/100  z -0.15 (stop beyond 4.66)
 look 3: 15000 deals  -0.24 bb/100  z -0.81 (stop beyond 3.80)
