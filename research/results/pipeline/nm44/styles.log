@@ -1,5 +1,5 @@
 
-# 2026-11-22T18:24:19Z /home/steven-reid/research/.venv-gpu/bin/python scripts/pipeline_opponents.py blueprint/nm44 --baseline blueprint/nm25 --no-rules --styles 20 --style-seed 2026 --hands 5000 --out /home/steven-reid/research/results/pipeline/nm44/styles.json
+# 2026-11-22T18:24:19Z ~/research/.venv-gpu/bin/python scripts/pipeline_opponents.py blueprint/nm44 --baseline blueprint/nm25 --no-rules --styles 20 --style-seed 2026 --hands 5000 --out ~/research/results/pipeline/nm44/styles.json
 vs 8 x nit      run    +1.23  baseline    -0.27  difference +1.50 bb/100
 vs 8 x station  run    +0.96  baseline    +0.08  difference +0.88 bb/100
 vs 8 x maniac   run   +30.74  baseline   +30.01  difference +0.73 bb/100

@@ -1,5 +1,5 @@
 
-# 2026-11-22T18:25:19Z /home/steven-reid/research/.venv-gpu/bin/python scripts/ninemax_hybrid.py --post blueprint/nm44 --early 0 --out /home/steven-reid/research/results/pipeline/nm44/bluffs.json
+# 2026-11-22T18:25:19Z ~/research/.venv-gpu/bin/python scripts/ninemax_hybrid.py --post blueprint/nm44 --early 0 --out ~/research/results/pipeline/nm44/bluffs.json
 equity   jam-any vs 8 x nm44            -47.4 bb/100 [-51.0, -43.9]
 equity   jam-any vs 8 x hybrid-zero    -128.2 bb/100 [-132.2, -124.1]
 equity   jam-any vs 8 x hybrid-pko     -133.6 bb/100 [-137.8, -129.5]
