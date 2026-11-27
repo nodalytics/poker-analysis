@@ -75,6 +75,20 @@ def _geom(lo, hi, n):
     return tuple(round(lo * (hi / lo) ** (k / (n - 1)), 4) for k in range(n))
 
 
+# the fixed-size raisers' menus (rule players raise3x, raise5x, raise8x; 2026-11-27): every open N big blinds, every
+# re-raise N times the bet, after the flop the mtt sizes
+for _n in (3, 5, 8):
+    MENUS[f"open{_n}"] = (
+        (float(_n),),
+        ((float(_n),), (float(_n),)),
+        4,
+        (0.33, 0.75, 1.5),
+        (1.0,),
+        (0.5, 1.0),
+        (1.0,),
+        3,
+    )
+
 # the size head's fixed grid (bet sizing, plan B): 16 sizes log-spaced over the whole range, for evaluation and play
 MENUS["grid16"] = (_geom(2.0, 4.0, 16), (_geom(2.0, 4.0, 16), _geom(2.0, 4.0, 16)), 4, _geom(0.2, 3.0, 16),
                    _geom(0.2, 3.0, 16), _geom(0.2, 3.0, 16), _geom(0.2, 3.0, 16), 3)  # fmt: skip
