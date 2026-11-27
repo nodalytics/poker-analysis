@@ -56,6 +56,9 @@ class Table {
     std::vector<uint8_t> needs() const;
     std::vector<float> targets() const;
     const Menu& menu() const { return menu_; }
+    // the actor's moves and sizes come from the menu set here: a table of networks on different menus sets each
+    // actor's own before its decision (the chips and betting do not depend on it)
+    void set_menu(const Menu& m) { menu_ = m; }
     const Rules& rules() const { return rules_; }
     void set_rules(const Rules& r) { rules_ = r; }
 

@@ -40,8 +40,8 @@ struct PracticeSeat {
     const Net* net = nullptr;
 };
 
-// why two networks cannot share a practice table ("" if they can): the same betting menu and rules (one Table plays
-// every seat), both tournament networks, and bounties for both or neither
+// why two networks cannot share a practice table ("" if they can): the same rules (ante, open limps), both tournament
+// networks, and bounties for both or neither. Bet menus may differ: each seat plays its own
 std::string practice_mismatch(const NetInfo& a, const NetInfo& b);
 
 class PracticeTournament {
@@ -63,6 +63,7 @@ class PracticeTournament {
         std::string name;
         std::string model;
         const Net* net = nullptr;
+        Menu menu;  // its network's bet menu, set on the table before each of its decisions
         bool human = false;
         int64_t chips = 0;
         int place = 0;      // 0 while playing
