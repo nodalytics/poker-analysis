@@ -50,7 +50,7 @@ BASE_TRAIN = {
     "kl": 0.3, "keep-hours": 2, "tourney": True, "no-open-limp": True, "menu": "mtt", "depths": "10,25", "ante": 1,
     "short": 0.5, "lib": "blueprint/libbp7.so", "abs": "blueprint/out",
 }  # fmt: skip
-# the fields each check type takes; consistency and opponent-model are reports (they always pass)
+# the fields each check type takes; consistency, opponent-model and sizes are reports (they always pass)
 CHECKS = {
     "seqtest": {"against", "early", "pass", "max", "looks", "alpha", "margin"},
     "exploit": {"minutes", "limit", "seeds"},
@@ -58,6 +58,7 @@ CHECKS = {
     "opponents": {"against", "hands", "baseline", "tolerance", "rule"},
     "styles": {"count", "seed", "hands", "baseline", "worst_tolerance", "mean_tolerance", "human"},
     "consistency": {"reference", "deals"},
+    "sizes": {"baseline", "deals"},
     "exploiters": {"profiles", "minutes", "limit"},
     "patterns": {"baseline", "hands", "limit", "mine"},
     "opponent-model": {"hands", "seeds", "samples"},
@@ -285,6 +286,8 @@ def validate(path, flags=None):
                     errs.append(f"{where}.profiles[{j}]: lr 1e-5 to 1e-2, entropy 0 to 0.1")
         if c["type"] == "consistency" and not NAME.match(str(c.get("reference", "nm25"))):
             errs.append(f"{where}.reference: a run name such as nm25")
+        if c["type"] == "sizes" and not NAME.match(str(c.get("baseline", "nm25"))):
+            errs.append(f"{where}.baseline: a run name such as nm25")
         if c["type"] == "styles":
             if not isinstance(c.get("count", 12), int) or not 0 <= c.get("count", 12) <= 60:
                 errs.append(f"{where}.count: 0 to 60 generated styles (the 5 archetypes are always played)")
@@ -508,7 +511,9 @@ class Run:
             return mean <= c["limit"], (f"exploiters win {mean:+.1f} bb/100 on average over {n} seeds ({each}; "
                                         f"SD {sd:.1f}) (limit {c['limit']:+.1f})")  # fmt: skip
         if typ == "bluffers":
-            cmd = [PY, "scripts/ninemax_hybrid.py", "--post", run, "--early", str(c.get("early", 0)), "--out", out]
+            # the bluffers play the run's own menu
+            cmd = [PY, "scripts/ninemax_hybrid.py", "--post", run, "--early", str(c.get("early", 0)), "--out", out,
+                   "--menu", game_args(run)[1]]  # fmt: skip
             self.sh(cmd, f"{cid}.log", gpu, timeout_min=120)
             res = json.load(open(out))
             table = res["bluffers_chips" if c.get("unit", "chips") == "chips" else "bluffers"]
@@ -588,6 +593,8 @@ class Run:
                                               + f"; the best ({worst}) at most {c['limit']:+.1f}")  # fmt: skip
         if typ == "consistency":  # a report, never a gate: where the run decides differently from the reference
             ref = c.get("reference", "nm25")
+            if game_args(run)[1] != game_args(f"blueprint/{ref}")[1]:  # spots of one menu cannot be put to another
+                return True, f"report skipped: {self.name} and {ref} play different bet menus (see the sizes report)"
             cmd = [PY, "scripts/ninemax_consistency.py", "--reference", f"blueprint/{ref}", "--runs", run,
                    "--deals", str(c.get("deals", 4000)), "--out", out]  # fmt: skip
             self.sh(cmd, f"{cid}.log", gpu, timeout_min=60)
@@ -600,6 +607,19 @@ class Run:
                 True,
                 f"report: distance from {ref} {d:.3f}, a different top action in {flips:.1%} of spots; most in {most}",
             )
+        if typ == "sizes":  # a report, never a gate: the sizes the run bets, where, and what they say about its hand
+            base = c.get("baseline", "nm25")
+            cmd = [PY, "scripts/ninemax_sizes.py", run, "--baseline", f"blueprint/{base}",
+                   "--deals", str(c.get("deals", 20000)), "--out", out]  # fmt: skip
+            self.sh(cmd, f"{cid}.log", gpu, timeout_min=60)
+            res = json.load(open(out))
+            r, b = res["run"], res["baseline"]
+            new = sorted({k for u in r["usage"].values() for k in u} - {k for u in b["usage"].values() for k in u}
+                         - {"decisions"})  # fmt: skip
+            return True, (f"report: what its sizes say about its hand (eta squared, bets and raises) "
+                          f"{r['tells_overall']:.3f} against {base}'s {b['tells_overall']:.3f}; by street "
+                          f"{r['tells_by_street']} against {b['tells_by_street']}; sizes {base} never bets: "
+                          f"{', '.join(new) or 'none'}")  # fmt: skip
         if typ == "styles":  # generated opponents: the baseline with its tendencies pushed, many times over
             base = c.get("baseline", "nm25")
             cmd = [PY, "scripts/pipeline_opponents.py", run, "--baseline", f"blueprint/{base}", "--no-rules",
