@@ -1,0 +1,5 @@
+100 turn spots, 200 CFR+ iterations, 4364s
+blueprint                opponent best response   +660.7 chips per hand pair  (vs blueprint    +0.0, se 0.0)  worst hand gain over blueprint     +0.0  0.0s a spot
+safe re-solve            opponent best response   +539.4 chips per hand pair  (vs blueprint  -121.3, se 23.1)  worst hand gain over blueprint    +42.7  199.1s a spot
+safe, our river fixed    opponent best response   +564.0 chips per hand pair  (vs blueprint   -96.7, se 12.4)  worst hand gain over blueprint    +40.2  133.6s a spot
+our river fixed minus safe re-solve: +24.6 chips per hand pair (se 14.7, paired over 100 spots)

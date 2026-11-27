@@ -1,0 +1,7 @@
+tree: standard, 277406 nodes, 55476071 table entries
+100 turn spots, 200 CFR+ iterations, 12025s
+blueprint                opponent best response   +660.7 chips per hand pair  (vs blueprint    +0.0, se 0.0)  worst hand gain over blueprint     +0.0  0.0s a spot
+unsafe re-solve          opponent best response    +15.7 chips per hand pair  (vs blueprint  -645.0, se 67.4)  worst hand gain over blueprint   +667.4  260.8s a spot
+safe re-solve            opponent best response   +539.4 chips per hand pair  (vs blueprint  -121.3, se 23.1)  worst hand gain over blueprint    +42.7  207.7s a spot
+safe, our river fixed    opponent best response   +564.0 chips per hand pair  (vs blueprint   -96.7, se 12.4)  worst hand gain over blueprint    +40.2  136.8s a spot
+safe, both rivers fixed  opponent best response   +930.3 chips per hand pair  (vs blueprint  +269.6, se 16.8)  worst hand gain over blueprint   +446.2  94.2s a spot
