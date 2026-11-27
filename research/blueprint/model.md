@@ -95,6 +95,10 @@ Post-flop sizes are fractions of the pot after calling. There are two rules:
 
 The tree has 277,406 nodes: 101,568 decision nodes, 87,919 folds and 87,919 showdowns.
 
+**The wide tree** (`BLUEPRINT_TREE=wide`, 2026-11-24, from Slumbot NL's menu): the first bet after the flop may also
+be $\tfrac14$ pot or 4 pots. It has 795,510 nodes and $1.59 \times 10^8$ table entries ($2.9\times$ the standard
+tree's $5.55 \times 10^7$). Every program that builds the tree must use the run's setting.
+
 ### 2.2 Lossless card abstraction
 
 Suits are interchangeable, so hands are first reduced to canonical classes with Waugh's hand-isomorphism indexer.
@@ -244,6 +248,28 @@ $2\times 10^{-4}$.
 - **Zero reach:** a node whose opponent-reach vector is all zero returns 0. External sampling never visits such
   nodes either.
 
+### 3.6 Sampling options (2026-11-24, from Slumbot NL)
+
+**A shuffled flop cycle** (`--flop-cycle`). The $\binom{52}{3} = 22{,}100$ flops are walked in a keyed random order
+shared by all threads through one counter $k$; the turn and river stay random. The order is a permutation $\pi_c$ of
+$\{0, \dots, 22{,}099\}$ for cycle $c = \lfloor k / 22{,}100 \rfloor$, built without a table: a 4-round Feistel network
+on 15 bits ($L, R$ of 7 and 8 bits, $L' = R$, $R' = L \oplus F(R, \kappa_{c,r})$ with a hash $F$ and round keys from the
+seed and $c$) is a bijection on $\{0, \dots, 2^{15} - 1\}$, and walking it until the value falls below 22,100 ("cycle
+walking") gives a bijection on the flops. A run deals a few hundred thousand boards, against about $5.2 \times 10^7$
+ordered boards, so a cycle over whole boards would be indistinguishable from random dealing; over flops a 4-core run
+completes a cycle in about two hours.
+
+**Batched updates** (`--batch-boards B`). Regret increments $\Delta R$ accumulate in a separate table $D$ while the
+strategy stays fixed, and are added in at a barrier every $B$ boards: $R \leftarrow R + D$, $D \leftarrow 0$ (before any
+discount or checkpoint). With $B = 50$, as in Slumbot NL.
+
+**Results** (4 threads, 180 minutes, DCFR, two runs each; exploitability inside the abstraction by `br_vec`,
+bb/100, lower is better): random boards +24.31 and +23.93; flop cycle +24.86 and +32.90; batched +65.06 and +58.00.
+Neither is adopted. Batching gives about 400 strategy updates in a run of 20,000 boards against 20,000 unbatched,
+and the barrier cost 14% of the iterations: it pays only when a run deals billions of boards. Wide against
+standard tree (8 threads, 360 minutes): LBR +78.9 [+61.2, +96.5] against +87.0 [+69.5, +104.5], on 52,926 against
+176,342 iterations: not shown.
+
 ## 4. A neural policy by regularised self-play (`../scripts/mlp_selfplay.py`)
 
 ### 4.1 Model
@@ -384,6 +410,37 @@ node after the opponent's bet, which trusts the blueprint's betting range; LBR m
 The re-solve halved LBR's river all-ins that were answered by folds (328 hands to 159), but LBR's largest wins
 moved to pot-size bets on the flop and turn, which a river subgame cannot reach. Turn re-solving is the next step.
 
+### 5.5 Turn re-solving (`resolve_turn.cpp`, 2026-11-24)
+
+The same gadget and CFR+ from the start of the turn, with every river card exact. The turn's strategies range over
+the 1,128 holdings live on the four-card board $b_4$; each river card $r$ (48 of them) has its own copy of every river
+node below, over its board's 1,081 holdings. A pair of holdings $(h, o)$ disjoint from $b_4$ and from each other leaves
+$52 - 4 - 4 = 44$ river cards that clash with neither, each equally likely, so the value after the river deal is
+
+$$v(h, o) = \frac{1}{44} \sum_{r \notin b_4 \cup h \cup o} v_r(h, o),$$
+
+which puts turn folds and river results on one scale. An all-in before the river is a showdown averaged the same way.
+The walk maps the reach vectors into each river card's holding space (dropping the holdings that contain $r$), recurses,
+and accumulates $\tfrac{1}{44}$ of each river's values back. A turn subgame needs 37 MB at the median and 2.3 GB at the
+largest.
+
+**Measured on turn spots reached by blueprint self-play** (run 2; each strategy scored by the opponent's exact best
+response over turn and river; chips per holding pair, the change against the blueprint with its paired se):
+
+| Arm | 100 spots, 200 iterations | worst hand's gain | 20 spots, 500 iterations | worst hand's gain |
+|---|---|---|---|---|
+| blueprint | +660.7 | 0 | +706.7 | 0 |
+| unsafe re-solve | −645.0 (67.4) | +667.4 | −809.0 (172.0) | +823.2 |
+| **safe re-solve (C)** | **−121.3 (23.1)** | +42.7 | **−172.5 (55.9)** | +28.7 |
+| safe, our river fixed to the blueprint (D) | −96.7 (12.4) | +40.2 | −103.6 (23.1) | +29.1 |
+| safe, both rivers fixed | +269.6 (16.8) | +446.2 | +286.8 (37.5) | +463.6 |
+
+Fixing both rivers to the blueprint makes the turn worse than the blueprint: the solve trusts an opponent who never
+deviates on the river, and the best response does deviate. D, our river fixed while the opponent's is re-solved, is
+the fair test of blueprint values at the leaves. **D minus C, paired:** +24.6 (se 14.7) at 200 iterations, +68.9
+(se 42.0) at 500: both favour exact rivers, neither at 95%. A 200-spot test at 500 iterations (seed 2) decides whether
+a river value network is worth building (`../docs/2026-11-24-slumbot-nl.md`).
+
 ## 6. Hand-reading models (`../scripts/opp_mlp_*.py`, `../scripts/human_clone.py`)
 
 A player's next action is modelled as a categorical over seven classes: fold, check/call, raise $\le 0.4$,
@@ -442,6 +499,23 @@ The table's value against itself in each seat is reported as a control: the two 
 **A calibration point.** The blueprint against an identical copy read $+19.9\ [+0.7, +38.8]$ over 1,500 sessions. A
 rerun with the seat order reversed read $+3.0\ [-16, +22]$. Edges under about 20 bb/100 from that sample size are
 noise.
+
+### 7.4 Card abstraction against action translation (2026-11-27)
+
+LBR with sizes off the blueprint's menu (`LBR_SIZES=0.5,0.75,1.5`: half, three-quarter and 1.5-pot bets, plus all-in)
+against LBR with its usual pot and all-in, on run 2, 30,000 hands each, luck-adjusted, with `br_vec` inside the
+abstraction:
+
+| Measure | bb/100 |
+|---|---|
+| `br_vec`, inside the abstraction | +8.46 [+7.52, +9.39] |
+| LBR, on-menu sizes | +122.1 [+100.0, +144.1] |
+| LBR, off-menu sizes | +248.9 [+224.1, +273.6] |
+
+By the rules set before the run, translation (Section 5.1) is the material leak: off-menu LBR wins 127 bb/100 more,
+with separate intervals, and `br_vec` is far below half of LBR, so the solve itself is not the problem. The largest
+single source is 1.5-pot flop bets the bot calls (+77 bb/100 of LBR's total). Part of the gap is LBR's larger choice of
+sizes; the fold rates (47.3% to off-menu flop bets, 47.0% to on-menu) say most of it is the mapping.
 
 ## 8. Results (2026-11-09)
 
@@ -531,6 +605,9 @@ cd ~/research/blueprint && make -j            # pinned PokerHandEvaluator and ha
 BLUEPRINT_TREE=wide ./mccfr_vec out runwide --threads 8 --minutes 1440 --dcfr                # + 0.25x and 4x pot bets
 ./br_vec out run2 --boards 2000 --eval-boards 1000 --purify 0.05
 ./resolve_turn out run2 --test 100 --iters 200 --threads 6   # safe turn re-solve, every river card exact
+./resolve_turn out run2 --test 200 --iters 500 --threads 8 --seed 2 --skip 1,4   # C against D, paired
+cd .. && LBR_BOT=blueprint LBR_SIZES=0.5,0.75,1.5 BLUEPRINT_RUN=blueprint/run2 .venv/bin/python scripts/lbr.py OUT 30000 12 200
+cd blueprint
 cd .. && .venv-gpu/bin/python scripts/mlp_selfplay.py blueprint/runmlp2 --kl 0.3 --magnet-tau 0.0003 --entropy 0.01
 sh blueprint/lbr_trend.sh blueprint/run6 3000 16
 ```
