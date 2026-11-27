@@ -67,6 +67,16 @@ $p = \sum_j c_j + \text{dead}$, current bet $\beta$, chips $\text{avail}_j$ a pl
 The size slots scale with the menu: `wide` has $A + S = 13$ legal-and-size inputs instead of 9, so $F = 105$ in the
 tournament game.
 
+**Seat angles** (`--seat-angles`, 2026-11-27). Seats sit in a circle. With $n$ players seated and $k_j$ seat $j$'s
+position counted from the button (button 0, small blind 1, big blind 2, ...; heads-up the small blind is the button),
+each seat enters as an angle, for me and then each other seat in table order (an empty seat reads 0, 0):
+
+$$\big(\cos(2\pi k_j / n),\ \sin(2\pi k_j / n)\big)$$
+
+$2P = 18$ inputs just before the legal moves. Every table size reads alike, and the last position wraps round to the
+first as at a real table. This is the one place the constant $\pi$ enters; elsewhere in this note $\pi$ is the policy
+$\pi_\theta$ or the prize ladder $\pi_k$. A network without them gets them stripped at a shared table (as `texture`).
+
 **The size-head layout** (plan B, `features(..., sizehead=True)`): the public inputs, then fold, call and all-in
 legal, whether any raise is legal, the smallest and largest legal raise $x_{\min}/10$, $x_{\max}/10$, then each
 offered size's pot fraction $x_k/10$ (0 when illegal) and its legal flag $\ell_k$: $F_{base} = 101 - 9 + 6 = 98$
@@ -245,6 +255,21 @@ For each legal slot $a$, play every completion out with the network for every se
 the hero's reward $R(a, \omega)$ of section 5:
 
 $$Q(a) = \sum_n w_n\, R(a, \omega^{(n)}), \qquad a^* = \arg\max_a Q(a)$$
+
+**Beliefs as the proposal** (`ninemax_belief.py`, `--proposal belief --over m`, 2026-11-27). The weights above are an
+importance-sampling estimate of the posterior over the hidden cards from a uniform proposal; most uniform guesses get
+almost no weight. A belief network $q_\phi(c_j \mid x)$ over each live opponent's 1,326 combinations, from the public
+state at the hero's decision (trained on the network's self-play by cross-entropy on the opponents' real cards), gives
+a better proposal: draw $mN$ guesses, the live opponents' cards from $q_\phi$ one after another so they never clash
+and the rest uniformly from the cards left (the same count in every guess, a constant), weight
+
+$$w_n \propto \frac{\prod_t \pi_\theta\big(a_t \mid x_t, b_{j_t}(\omega^{(n)})\big)}{\prod_{j\ \text{live}} q_\phi\big(c_j^{(n)}
+\mid x\big)}$$
+
+and resample $N$ of them in proportion to $w$ (systematic resampling) before the rollouts. The estimate is the same
+posterior whatever $q_\phi$; a $q_\phi$ close to it raises the effective sample size, so the $N$ rollouts rest on more
+distinct guesses. `--proposal uniform --over m` is the same with uniform guesses (no learning; the baseline).
+`ninemax_belief_eval.py` compares the move values $Q$ of each version with a search many times larger on the same spots.
 
 **Robust** (after Pluribus): every completion is played four times, the opponents continuing with $\pi_\theta$ or
 with it tilted towards folding, calling or raising, $\tilde\pi_c(a) \propto \pi_\theta(a)\, \rho^{\mathbb{1}[a \in

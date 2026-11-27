@@ -392,6 +392,21 @@ Kestrel 0.4.1 deployed on the lab with practice matches between models, with or 
       (the model pipeline, then a Kestrel redeploy); (3) mining the hands people lost too, and model-against-model
       practice tables. Learning stays offline and gated: a network that updated itself during play could be steered
       into a leak by the person playing it, so nothing reaches Kestrel without passing the checks.
+- [ ] **Playing from depth** (requested 2026-11-27: "the models and Kestrel deeply understand poker, and play from
+      depth"). Today the networks play by reflex, one pass from the spot to a move with the hand reduced to a bucket.
+      The strong systems (DeepStack, Libratus, Pluribus, ReBeL) have four things more, and they map onto items 1 and 2
+      below:
+  1. *Thinking in ranges:* a belief about what each opponent holds, updated with every action. **Started:**
+     `ninemax_belief.py` (a network over each opponent's 1,326 combinations, from the public state), used as search's
+     proposal (`ninemax_search.py --proposal belief --over k`), measured by `ninemax_belief_eval.py`.
+  2. *Looking ahead:* search at each decision under those beliefs (Kestrel's 9-max search, today with uniform guesses).
+  3. *Knowing what a situation is worth:* a value network over everyone's ranges, so search can stop early
+     (DeepStack); the heads-up turn re-solve test (C against D) is measuring whether it pays.
+  4. *Seeing the real cards and the whole action history:* blockers, board texture, what a line of bets means.
+- [ ] **Seat angles** (requested 2026-11-27, the "π" question): seats sit in a circle, so each seat's position among
+      the players seated, counted from the button, enters as an angle, $(\cos 2\pi k/n, \sin 2\pi k/n)$ for position
+      $k$ of $n$, for me and each other seat. Every table size reads alike and the button sits next to the small blind.
+      An input change (`--seat-angles`), warm-started from nm25 with the new inputs at zero, judged by a run.
 - [ ] **Expanding the model** (agreed 2026-11-27), in this order after bet sizing:
   1. **Search with beliefs** (ReBeL-style): search at play time over the opponents' predicted ranges rather than
      random cards, so the network works each spot out afresh; builds on Kestrel's 9-max search (+3.7 to +6.2 bb/100
