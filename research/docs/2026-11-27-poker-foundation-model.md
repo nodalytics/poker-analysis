@@ -140,7 +140,28 @@ Otherwise it is a lost cause for this decision and drops down the list. The neur
 sequences) is held to its own rule: its 20-or-more column must be at least 0.02 bits better than the control's, with an
 interval.
 
-**Then, if kept: deviation from a reference and leak reports.** Replay HandHQ spots into the 6-max cash engine and
+**Result (2026-11-28): kept.** Bb per 100 spots, 95% intervals from 1,000 bootstraps of players
+(`results/foundation_model/opp_exploit/`):
+
+| | spots | players | player minus population | after 1-9 earlier spots | 10-49 | 50 or more | ceiling minus population |
+|---|---|---|---|---|---|---|---|
+| six stakes | 7,260,415 | 177,342 | **+3.78 [+3.45, +4.13]** | +1.19 | +4.12 | +4.55 | +20.3 |
+| six stakes, placebo | same | same | −0.63 [−0.80, −0.46] | −0.41 | −1.58 | −0.22 | +9.2 |
+| PokerStars 25NL | 3,032,194 | 84,344 | +3.87 [+3.44, +4.30] | +0.91 | +3.89 | +5.17 | +21.6 |
+| PokerStars 25NL, placebo | same | same | −0.39 [−0.62, −0.13] | −0.19 | −1.13 | −0.01 | +9.4 |
+
+A player's own history is worth money, and grows with it; the placebo stays at or below 0. The size is modest: the
+bluff decision is worth +164 per 100 spots from the population rate alone, and the player adds about 2% (0.04 bb a
+spot). The ceiling minus its placebo (about +11) is three times what one shrunk offset captures, so a finer profile
+(by street and size) or a better model has room.
+
+**The neural opponent model, first backbone (attention, 26.4M, 300M tokens): fails its rule.** Focus-player bits an
+action at 20 or more earlier hands: 1.417 on the players' own sequences, 1.366 on the control (more than the 0.02
+needed, the wrong way). A caveat: control sequences can exceed the 2,048-token window and the scorer skips those, so
+the control counts fewer actions (18,279 against 47,517); to fix before Mamba and the hybrid are judged. So far
+counting how a player folds is worth money, and the network has not learnt to use the player's history.
+
+**Then: deviation from a reference and leak reports.** Replay HandHQ spots into the 6-max cash engine and
 score each human decision against nm28's policy and values: the deviation (where they differ, and by how much) and its
 cost (the expected value lost against nm28's choice), summed per player by spot type as a leak report.
 
