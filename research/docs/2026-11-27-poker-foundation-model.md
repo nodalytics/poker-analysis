@@ -100,6 +100,22 @@ did not transfer to people: human hands are already most of the data (1.0 B toke
 So m2 is the general-purpose opponent model to carry forward; better prediction of people needs more model, more
 human data, or what the opponent model is for in the end: a player's own earlier hands as context.
 
+## Ideas (2026-11-28), and which are picked
+
+The user's list of ideas to pick from, with an assessment of each:
+
+| Idea | Assessment | Picked |
+|---|---|---|
+| **Long-horizon opponent modelling**: a player's own earlier hands as context | The opponent model's real job (exploiting a player means knowing that player). HandHQ keeps each player's anonymised id across hands, so sequences of one player's consecutive hands can be built; the test is whether the last 10-40 hands lower the bits of that player's next action. Also the natural test of long-context architectures | **1st** |
+| **Token arrangement**: suit-canonical cards (A♠K♠ and A♥K♥ read alike), one fused token per action (position, kind, size) | Cheap; suit isomorphism is a known sample-efficiency gain; fused tokens shorten hands about 3 times, so more hands fit in a context | **2nd** |
+| **Mamba** (a state-space sequence model: linear time, constant memory), and a **hybrid** of Mamba blocks with a few attention layers | Suited to session-long histories (item 1); pure state-space models recall exact facts worse than attention, hence the hybrid for the current hand. The fast kernels (`mamba-ssm`) need a CUDA compiler the lab lacks; a pure PyTorch version runs slower. Built and compared once item 1's data exists | **3rd** |
+| **Self-play RL of the transformer**: a policy head on the pretrained model, trained in the 9-max engine with NeuRD, judged by the pipeline | The largest possible gain and the largest build (the engine must write the token sequence at every decision). The small version exists: `--arch attn` (attention over the hand's actions and seats) trains at nm25's level. Done after 1-3 show which model to train | **4th** |
+| **Different encoders and decoders** | Folded into 2 and 3 (what a token holds; which backbone reads it) | with 2-3 |
+| **RLHF** (preference learning from human feedback) | In poker the result of the game is a stronger, unbiased signal, and self-play RL already optimises it. Human input enters better as training opponents (patterns people find), labels from reviewed hands, and rules (no open-limp). Preference learning on top would mostly pull it towards human play | not picked |
+
+Each picked item is judged like the models above: the same held-out hands and bits an action (and, for item 1, the
+focus player's actions with and without their earlier hands).
+
 ## Next
 
 Stage 1: a decoder-only transformer of about 25 M parameters (Kronos-small's size) pretrained on the shards, scored on

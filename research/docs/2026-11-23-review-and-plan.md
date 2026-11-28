@@ -424,6 +424,10 @@ Kestrel 0.4.1 deployed on the lab with practice matches between models, with or 
       (Libratus, Pluribus, DeepStack, ReBeL, Student of Games), with plain feed-forward networks. Stage 0: tokenizer and
       data; stage 1: a ~25 M model, scored on next-action log-loss against the current opponent models and on hidden
       cards against the belief network; stage 2: into search if it wins either.
+- [ ] **Foundation model, the next steps** (picked 2026-11-28 from the user's ideas; `2026-11-27-poker-foundation-model.md`):
+      (1) long-horizon opponent modelling on HandHQ players' consecutive hands; (2) token arrangement (suit-canonical
+      cards, fused action tokens); (3) Mamba and a Mamba-attention hybrid (a build environment of their own, started);
+      (4) self-play RL of the transformer through the pipeline. RLHF not picked: game results are the better signal.
 - [ ] **Seat angles** (requested 2026-11-27, the "π" question): seats sit in a circle, so each seat's position among
       the players seated, counted from the button, enters as an angle, $(\cos 2\pi k/n, \sin 2\pi k/n)$ for position
       $k$ of $n$, for me and each other seat. Every table size reads alike and the button sits next to the small blind.
