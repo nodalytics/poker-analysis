@@ -160,23 +160,33 @@ def score(model, seq, tab, dev, ctx):
     out = {"tokens": 0, "bits": 0.0, "actions": 0, "action_bits": 0.0, "count_bits": 0.0, "cards": 0,
            "card_bits": 0.0, "uniform_bits": 0.0}  # fmt: skip
     # windows start at hands (BOS) or, in player sequences (SEP between players), at sequence starts
-    if bool((seq == ID["SEP"]).any()):
-        bos = np.concatenate([[0], np.nonzero(seq == ID["SEP"])[0] + 1])
-        bos = bos[bos < len(seq)]
+    focus = {b: [0, 0.0, 0.0] for b in FOCUS_BINS}
+    if bool((seq == ID["SEP"]).any()):  # one window a player sequence, cut at its last whole hand within ctx + 1
+        hb = np.nonzero(seq == ID["BOS"])[0]
+        st = np.concatenate([[0], np.nonzero(seq == ID["SEP"])[0] + 1])
+        en = np.r_[st[1:], len(seq)]
+        windows = []
+        for b0, e0 in zip(st, en):
+            if e0 - b0 > ctx + 1:
+                cut = hb[(hb > b0) & (hb <= b0 + ctx + 1)]
+                e0 = int(cut[-1]) if len(cut) else b0
+            if e0 - b0 >= 2:
+                windows.append((int(b0), int(e0)))
     else:
         bos = np.nonzero(seq == ID["BOS"])[0]
-    focus = {b: [0, 0.0] for b in FOCUS_BINS}
-    k = 0
-    while k < len(bos):  # windows of whole hands, ctx + 1 tokens at most (a longer hand is skipped)
-        b0, e = bos[k], bos[k]
-        while k < len(bos):
-            nxt = bos[k + 1] if k + 1 < len(bos) else len(seq)
-            if nxt - b0 > ctx + 1:
-                break
-            e, k = nxt, k + 1
-        if e - b0 < 2:
-            k += 1
-            continue
+        windows, k = [], 0
+        while k < len(bos):  # windows of whole hands, ctx + 1 tokens at most (a longer hand is skipped)
+            b0, e = bos[k], bos[k]
+            while k < len(bos):
+                nxt = bos[k + 1] if k + 1 < len(bos) else len(seq)
+                if nxt - b0 > ctx + 1:
+                    break
+                e, k = nxt, k + 1
+            if e - b0 < 2:
+                k += 1
+                continue
+            windows.append((int(b0), int(e)))
+    for b0, e in windows:
         w = seq[b0:e]
         x = torch.from_numpy(w[:-1].astype(np.int64))[None].to(dev)
         with torch.autocast("cuda", dtype=torch.bfloat16):
@@ -210,6 +220,7 @@ def score(model, seq, tab, dev, ctx):
                         if b[0] <= hand <= b[1]:
                             focus[b][0] += 1
                             focus[b][1] += float(nll[j - 1])
+                            focus[b][2] += float(nll[j - 1]) ** 2
                 if ACTION[t] and POS[prev]:
                     out["actions"] += 1
                     out["action_bits"] += float(nll[j - 1])
@@ -229,10 +240,12 @@ def score(model, seq, tab, dev, ctx):
         r["reveal_card_bits"] = out["card_bits"] / out["cards"]
         r["uniform_card_bits"] = out["uniform_bits"] / out["cards"]
     r["actions"], r["cards"] = out["actions"], out["cards"]
-    for b, (n, bits) in focus.items():
+    for b, (n, bits, sq) in focus.items():
         if n:
-            r[f"focus_bits_{b[0]}_{b[1] if b[1] < 10**9 else 'more'}"] = bits / n
-            r[f"focus_n_{b[0]}_{b[1] if b[1] < 10**9 else 'more'}"] = n
+            tag = f"{b[0]}_{b[1] if b[1] < 10**9 else 'more'}"
+            r[f"focus_bits_{tag}"] = bits / n
+            r[f"focus_n_{tag}"] = n
+            r[f"focus_se_{tag}"] = math.sqrt(max(sq / n - (bits / n) ** 2, 0.0) / n)
     return r
 
 
@@ -252,6 +265,7 @@ def main():
     ap.add_argument("--lr", type=float, default=3e-4)
     ap.add_argument("--val-tokens", type=int, default=1_000_000)
     ap.add_argument("--eval-every", type=int, default=2000, help="steps")
+    ap.add_argument("--rescore", action="store_true", help="score out/model.pt on the held-out data into rescore.json")
     a = ap.parse_args()
     dev = "cuda"
     torch.manual_seed(1)
@@ -263,6 +277,13 @@ def main():
     else:
         model = MambaLM(len(VOCAB), a.d, a.layers, a.heads, a.attn_every if a.arch == "hybrid" else 0).to(dev)
     nparam = sum(p.numel() for p in model.parameters())
+    if a.rescore:
+        model.load_state_dict(torch.load(os.path.join(a.out, "model.pt"), map_location=dev)["model"])
+        model.eval()
+        with torch.no_grad():
+            res = {n: score(model, v, tab, dev, a.ctx) for n, v in data.val.items()}
+        json.dump({"parameters": nparam, "held_out": res}, open(os.path.join(a.out, "rescore.json"), "w"), indent=1)
+        return
     opt = torch.optim.AdamW(model.parameters(), lr=a.lr, betas=(0.9, 0.95), weight_decay=0.1)
     steps = int(a.tokens // (a.batch * a.ctx))
     sched = torch.optim.lr_scheduler.OneCycleLR(opt, a.lr, total_steps=steps, pct_start=0.02, anneal_strategy="cos")

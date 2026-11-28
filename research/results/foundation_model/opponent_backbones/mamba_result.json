@@ -1,0 +1,49 @@
+{
+ "parameters": 27229184,
+ "tokens": 299991040,
+ "sources": [
+  "players",
+  "control"
+ ],
+ "mix": {
+  "players": 0.5,
+  "control": 0.5
+ },
+ "held_out": {
+  "players": {
+   "bits_a_token": 0.675502000955556,
+   "action_bits": 1.270782041442816,
+   "count_model_action_bits": 2.086119795429954,
+   "reveal_card_bits": 4.802899184921022,
+   "uniform_card_bits": 5.449037463497137,
+   "actions": 670828,
+   "cards": 806,
+   "focus_bits_0_0": 1.3254669414229017,
+   "focus_n_0_0": 3295,
+   "focus_bits_1_4": 1.3027977563229272,
+   "focus_n_1_4": 12082,
+   "focus_bits_5_19": 1.290070962096747,
+   "focus_n_5_19": 44621,
+   "focus_bits_20_more": 1.3216925211500783,
+   "focus_n_20_more": 47517
+  },
+  "control": {
+   "bits_a_token": 0.8385493036281616,
+   "action_bits": 1.2888890250435034,
+   "count_model_action_bits": 2.0928248432879983,
+   "reveal_card_bits": 4.7276273942937,
+   "uniform_card_bits": 5.439656445229774,
+   "actions": 334336,
+   "cards": 436,
+   "focus_bits_0_0": 1.3925373864751813,
+   "focus_n_0_0": 1800,
+   "focus_bits_1_4": 1.2990883664530588,
+   "focus_n_1_4": 6929,
+   "focus_bits_5_19": 1.3337367653682934,
+   "focus_n_5_19": 26156,
+   "focus_bits_20_more": 1.294281241211655,
+   "focus_n_20_more": 18279
+  }
+ },
+ "seconds": 2300
+}

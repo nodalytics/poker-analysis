@@ -161,6 +161,28 @@ needed, the wrong way). A caveat: control sequences can exceed the 2,048-token w
 the control counts fewer actions (18,279 against 47,517); to fix before Mamba and the hybrid are judged. So far
 counting how a player folds is worth money, and the network has not learnt to use the player's history.
 
+**The three backbones, paired (2026-11-28).** The bins above compare different hands (a player's 20th hand in a
+sequence is not a random hand; real sequences reach 20 hands only when the hands are short), so the test was redone
+paired (`scripts/fm_paired.py`): the same target hand, the focus player's actions scored after L of their own earlier
+hands, after L random hands from other sequences, and after none. 2,907-3,039 actions; mean ± standard error, bits an
+action (`results/foundation_model/opponent_backbones/`). Data: 92,450 HandHQ players with 60 or more hands,
+1,789,190 sequences of at most 2,048 tokens; each model 300M tokens on the 3090, a 50:50 mix with the control.
+
+| backbone | parameters | own minus random, L 1 | L 5 | **L 20** | held-out bits a token | an action | a revealed card |
+|---|---|---|---|---|---|---|---|
+| attention (8 layers) | 26.4M | −0.003 ± 0.004 | −0.005 ± 0.005 | −0.019 ± 0.005 | 0.794 | 1.349 | 6.21 |
+| Mamba (16 layers) | 27.2M | −0.004 ± 0.002 | −0.016 ± 0.003 | −0.022 ± 0.004 | 0.676 | 1.271 | 4.80 |
+| **hybrid** (Mamba, attention every 4th of 13) | 26.5M | −0.010 ± 0.003 | −0.017 ± 0.004 | **−0.028 ± 0.004** | **0.624** | 1.271 | **4.71** |
+
+(a revealed card guessed at random: 5.45 bits; the attention model had not yet learnt to read them.)
+
+Against the rule (at least 0.02 bits at 20 hands): attention fails (0.019); Mamba passes on its estimate (0.022,
+interval 0.014 to 0.031); the **hybrid passes** (0.028, interval 0.019 to 0.037). The rule was written for the bins and
+judged on the paired test, which replaced them for the reason above. A player's own history carries information the
+models can read, about 2% of the uncertainty of their next action at 20 hands and still rising; the state-space layers
+use it from the first few hands, and the hybrid's attention adds the exact recall within a hand. **The hybrid is the
+backbone for the next stages** (longer histories, the leak report, and RLGF's DPO stage).
+
 **Then: deviation from a reference and leak reports.** Replay HandHQ spots into the 6-max cash engine and
 score each human decision against nm28's policy and values: the deviation (where they differ, and by how much) and its
 cost (the expected value lost against nm28's choice), summed per player by spot type as a leak report.
