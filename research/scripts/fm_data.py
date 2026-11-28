@@ -205,6 +205,79 @@ def cmd_kestrel(a):
     print(json.dumps({"source": "kestrel", "hands": n, "unreadable": bad}), flush=True)
 
 
+def _player_hands(path):
+    """(player id, time key, the hand encoded with FOCUS on that player's seat) for every player of every readable hand
+    of one PHH file."""
+    import re
+
+    from hand_histories import parse_phh
+
+    text = open(path, errors="replace").read()
+    parts = re.split(r"(?m)^\[\d+\]\s*$", text) if path.endswith(".phhs") else [text]
+    out = []
+    for part in parts:
+        if not part.strip():
+            continue
+        try:
+            d = parse_phh(part)
+            h = from_phh(d, "human")
+        except (KeyError, ValueError, IndexError, TypeError):
+            continue
+        if h is None or not isinstance(d.get("players"), list):
+            continue
+        hand_no = int(d["hand"]) if str(d.get("hand", "")).isdigit() else 0
+        key = (int(d.get("year", 0)), int(d.get("month", 0)), int(d.get("day", 0)), str(d.get("time", "")), hand_no)
+        for p, who in enumerate(d["players"]):
+            out.append((who, key, encode(h, "public", focus=p)))
+    return out
+
+
+def cmd_players(a):
+    """Sequences of one player's consecutive hands (each with FOCUS on that player's seat), players with at least
+    --min-hands, cut into sequences of at most --ctx tokens; and the control: as many hands in each sequence, drawn
+    from anyone (the context is poker, not this player's). A sequence ends with SEP."""
+    import random
+
+    files = []
+    for d in a.dirs:
+        files += sorted(glob.glob(os.path.join(d, "**", "*.phh*"), recursive=True))
+    by = {}
+    with Pool(a.workers) as pool:
+        for rows in pool.imap_unordered(_player_hands, files, chunksize=8):
+            for who, key, ids in rows:
+                by.setdefault(who, []).append((key, ids))
+    keep = {w: sorted(v, key=lambda x: x[0]) for w, v in by.items() if len(v) >= a.min_hands}
+    seqs = []
+    for w in sorted(keep):
+        cur, n = [], 0
+        for _, ids in keep[w]:
+            if n + len(ids) > a.ctx and cur:
+                seqs.append(cur)
+                cur, n = [], 0
+            cur.append(ids)
+            n += len(ids)
+        if len(cur) >= 2:
+            seqs.append(cur)
+    rng = random.Random(1)
+    rng.shuffle(seqs)
+    pool_hands = [h for s in seqs for h in s]
+    rng.shuffle(pool_hands)
+    real, ctrl = Writer(a.out, "players"), Writer(a.out, "control")
+    k = 0
+    for s in seqs:
+        for h in s:
+            real.add(h)
+        for _ in s:
+            ctrl.add(pool_hands[k % len(pool_hands)])
+            k += 1
+        real.add([ID["SEP"]])
+        ctrl.add([ID["SEP"]])
+    real.flush()
+    ctrl.flush()
+    print(json.dumps({"files": len(files), "players": len(keep), "sequences": len(seqs),
+                      "hands": sum(len(s) for s in seqs)}), flush=True)  # fmt: skip
+
+
 def cmd_stats(a):
     res, used = {}, np.zeros(len(VOCAB), np.int64)
     for f in sorted(glob.glob(os.path.join(a.out, "*.npy"))):
@@ -258,12 +331,23 @@ def main():
     k = sub.add_parser("kestrel")
     k.add_argument("dir")
     k.add_argument("out")
+    q = sub.add_parser("players")
+    q.add_argument("dirs", nargs="+")
+    q.add_argument("out")
+    q.add_argument("--min-hands", type=int, default=60)
+    q.add_argument("--ctx", type=int, default=2048)
+    q.add_argument("--workers", type=int, default=16)
     t = sub.add_parser("stats")
     t.add_argument("out")
     a = ap.parse_args()
-    {"selfplay": cmd_selfplay, "phh": cmd_phh, "botsim": cmd_botsim, "kestrel": cmd_kestrel, "stats": cmd_stats}[a.cmd](
-        a
-    )
+    cmds = {
+        "selfplay": cmd_selfplay,
+        "phh": cmd_phh,
+        "botsim": cmd_botsim,
+        "kestrel": cmd_kestrel,
+        "players": cmd_players,
+    }
+    {**cmds, "stats": cmd_stats}[a.cmd](a)
 
 
 if __name__ == "__main__":

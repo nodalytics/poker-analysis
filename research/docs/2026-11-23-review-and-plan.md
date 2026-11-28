@@ -424,6 +424,9 @@ Kestrel 0.4.1 deployed on the lab with practice matches between models, with or 
       (Libratus, Pluribus, DeepStack, ReBeL, Student of Games), with plain feed-forward networks. Stage 0: tokenizer and
       data; stage 1: a ~25 M model, scored on next-action log-loss against the current opponent models and on hidden
       cards against the belief network; stage 2: into search if it wins either.
+- [ ] **RLGF** (requested 2026-11-28; `2026-11-28-rlgf.md`): reinforcement learning from game feedback. Experiments in
+      order: label quality by rollout count; a game reward model; an RLGF fine-tune of nm25 as a pipeline run; DPO of
+      the foundation model on game pairs.
 - [ ] **Foundation model, the next steps** (picked 2026-11-28 from the user's ideas; `2026-11-27-poker-foundation-model.md`):
       (1) long-horizon opponent modelling on HandHQ players' consecutive hands; (2) token arrangement (suit-canonical
       cards, fused action tokens); (3) Mamba and a Mamba-attention hybrid (a build environment of their own, started);

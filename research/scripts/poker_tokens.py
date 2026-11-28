@@ -83,6 +83,8 @@ def _vocab():
     # added 2026-11-27 (appended, so the ids above never change): two more sources, and who sits in each seat when it
     # is known (the simulations' personas, our networks, a person at a Kestrel practice table)
     v += ["SRC_sim", "SRC_kestrel"] + [f"WHO_{w}" for w in WHO]
+    # added 2026-11-28 (appended): the seat whose player a sequence follows across hands (long-horizon opponent model)
+    v += ["FOCUS"]
     return v
 
 
@@ -112,8 +114,9 @@ def _b(edges, x):
     return bisect.bisect_right(edges, x)
 
 
-def encode(h, layout="public"):
-    """The hand's token ids. layout "public" (cards only when shown; self-play adds REVEAL) or "full" (cards first)."""
+def encode(h, layout="public", focus=None):
+    """The hand's token ids. layout "public" (cards only when shown; self-play adds REVEAL) or "full" (cards first).
+    focus: a seat whose player a sequence follows from hand to hand, marked FOCUS after its stack."""
     n = len(h.stacks_bb)
     pos = positions(n)
     t = ["BOS", f"SRC_{h.source}", f"GAME_{h.game}", f"N_{n}", f"ANTE_{1 if h.ante_bb > 0 else 0}"]
@@ -122,6 +125,8 @@ def encode(h, layout="public"):
         t += [f"POS_{pos[p]}", f"STK_{_b(STACK_EDGES, sb)}" if math.isfinite(sb) else "STK_U"]
         if h.players is not None:
             t.append(f"WHO_{h.players[p]}")
+        if focus == p:
+            t.append("FOCUS")
     if layout == "full":
         for p in range(n):
             if h.holes[p] is not None:

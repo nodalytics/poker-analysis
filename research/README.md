@@ -32,6 +32,9 @@ Studies:
 - [2026-11-23 — LLMs that play poker: six outside sources](docs/2026-11-23-llm-poker-literature.md): PokerSkill,
   PokerBench (paper and arena), Husky Hold'em Bench and a screen-reading LLM bot, read against our results; the best
   LLM agent loses 5.7 bb/100 to an equilibrium bot, and solver agreement is not play strength.
+- [2026-11-28 — RLGF: reinforcement learning from game feedback](docs/2026-11-28-rlgf.md): RLHF's three steps
+  with the game as the judge: every action of a decision valued by paired rollouts, a game reward model, a KL-regularised
+  update towards a moving magnet (equilibrium, not best response); the maths, what exists, and the experiments.
 - [2026-11-27 — A poker foundation model, after Kronos](docs/2026-11-27-poker-foundation-model.md): the hand
   language (a 166-token vocabulary for hands from self-play, HandHQ and Pluribus) and the token data; stage 1 a ~25 M
   decoder-only transformer, scored as an opponent model and a belief model.
