@@ -67,6 +67,41 @@ class GPT(nn.Module):
         return self.ln(h) @ self.tok.weight.T  # tied output
 
 
+class MambaBlock(nn.Module):
+    """A pre-norm residual Mamba layer (mamba_ssm: the selective state-space scan, linear in the sequence)."""
+
+    def __init__(self, d):
+        super().__init__()
+        from mamba_ssm import Mamba
+
+        self.ln, self.m = nn.LayerNorm(d), Mamba(d_model=d, d_state=16, d_conv=4, expand=2)
+
+    def forward(self, x):
+        return x + self.m(self.ln(x))
+
+
+class MambaLM(nn.Module):
+    """arch mamba: Mamba layers only (order comes from the recurrence: no position embedding); arch hybrid: every
+    attn_every-th layer a causal attention block instead (exact recall within the context, as Jamba mixes them)."""
+
+    def __init__(self, vocab, d=512, layers=16, heads=8, attn_every=0):
+        super().__init__()
+        self.tok = nn.Embedding(vocab, d)
+        self.blocks = nn.ModuleList(
+            Block(d, heads) if attn_every and (k + 1) % attn_every == 0 else MambaBlock(d) for k in range(layers)
+        )
+        self.ln = nn.LayerNorm(d)
+
+    def forward(self, x):
+        h = self.tok(x)
+        for b in self.blocks:
+            h = b(h)
+        return self.ln(h) @ self.tok.weight.T
+
+
+FOCUS_BINS = ((0, 0), (1, 4), (5, 19), (20, 10**9))  # the focus player's earlier hands in the context
+
+
 class Data:
     """Every source's shards (memory-mapped) and the BOS positions to start windows at; the held-out part apart."""
 
@@ -124,7 +159,13 @@ def score(model, seq, tab, dev, ctx):
     """Bits a token, an action token (and the count model's), and a REVEAL card (and the uniform guess's)."""
     out = {"tokens": 0, "bits": 0.0, "actions": 0, "action_bits": 0.0, "count_bits": 0.0, "cards": 0,
            "card_bits": 0.0, "uniform_bits": 0.0}  # fmt: skip
-    bos = np.nonzero(seq == ID["BOS"])[0]
+    # windows start at hands (BOS) or, in player sequences (SEP between players), at sequence starts
+    if bool((seq == ID["SEP"]).any()):
+        bos = np.concatenate([[0], np.nonzero(seq == ID["SEP"])[0] + 1])
+        bos = bos[bos < len(seq)]
+    else:
+        bos = np.nonzero(seq == ID["BOS"])[0]
+    focus = {b: [0, 0.0] for b in FOCUS_BINS}
     k = 0
     while k < len(bos):  # windows of whole hands, ctx + 1 tokens at most (a longer hand is skipped)
         b0, e = bos[k], bos[k]
@@ -146,9 +187,17 @@ def score(model, seq, tab, dev, ctx):
         out["tokens"] += len(tgt)
         out["bits"] += float(nll.sum())
         st, prev, reveal, seen = 0, -1, False, set()
+        hand, fpos, last_pos = -1, -1, -1  # the hand's index in its player sequence, the focus seat's position token
         for j, t in enumerate(w):
+            if t == ID["SEP"]:
+                hand = -1
             if t == ID["BOS"]:
                 st, reveal, seen = 0, False, set()
+                hand, fpos = hand + 1, -1
+            if POS[t] and st == 0 and fpos == -1:
+                last_pos = t
+            if t == ID["FOCUS"]:
+                fpos = last_pos
             if t in STREET:
                 st = STREET[t]
             if t == ID["REVEAL"]:
@@ -156,6 +205,11 @@ def score(model, seq, tab, dev, ctx):
             if t == ID["END"]:
                 reveal = False
             if j >= 1:
+                if ACTION[t] and POS[prev] and prev == fpos:  # the focus player acts
+                    for b in FOCUS_BINS:
+                        if b[0] <= hand <= b[1]:
+                            focus[b][0] += 1
+                            focus[b][1] += float(nll[j - 1])
                 if ACTION[t] and POS[prev]:
                     out["actions"] += 1
                     out["action_bits"] += float(nll[j - 1])
@@ -175,6 +229,10 @@ def score(model, seq, tab, dev, ctx):
         r["reveal_card_bits"] = out["card_bits"] / out["cards"]
         r["uniform_card_bits"] = out["uniform_bits"] / out["cards"]
     r["actions"], r["cards"] = out["actions"], out["cards"]
+    for b, (n, bits) in focus.items():
+        if n:
+            r[f"focus_bits_{b[0]}_{b[1] if b[1] < 10**9 else 'more'}"] = bits / n
+            r[f"focus_n_{b[0]}_{b[1] if b[1] < 10**9 else 'more'}"] = n
     return r
 
 
@@ -184,6 +242,8 @@ def main():
     ap.add_argument("out")
     ap.add_argument("--tokens", type=float, default=2e9)
     ap.add_argument("--mix", default="self:0.4,human:0.5,pluribus:0.1")
+    ap.add_argument("--arch", choices=("gpt", "mamba", "hybrid"), default="gpt")
+    ap.add_argument("--attn-every", type=int, default=4, help="hybrid: an attention layer every this many layers")
     ap.add_argument("--d", type=int, default=512)
     ap.add_argument("--layers", type=int, default=8)
     ap.add_argument("--heads", type=int, default=8)
@@ -198,7 +258,10 @@ def main():
     mix = {k: float(v) for k, v in (x.split(":") for x in a.mix.split(","))}
     data = Data(a.data, mix, a.ctx, a.val_tokens)
     tab = count_model(data)
-    model = GPT(len(VOCAB), a.d, a.layers, a.heads, a.ctx).to(dev)
+    if a.arch == "gpt":
+        model = GPT(len(VOCAB), a.d, a.layers, a.heads, a.ctx).to(dev)
+    else:
+        model = MambaLM(len(VOCAB), a.d, a.layers, a.heads, a.attn_every if a.arch == "hybrid" else 0).to(dev)
     nparam = sum(p.numel() for p in model.parameters())
     opt = torch.optim.AdamW(model.parameters(), lr=a.lr, betas=(0.9, 0.95), weight_decay=0.1)
     steps = int(a.tokens // (a.batch * a.ctx))
