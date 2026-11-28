@@ -1,0 +1,9 @@
+
+# 2026-11-28T08:40:45Z ~/research/.venv-gpu/bin/python scripts/seqtest.py match blueprint/nm49 blueprint/nm25 --max 40000 --looks 8 --alpha 0.025 --margin 0.5 --out ~/research/results/pipeline/nm49/no-harm.json --early 0
+look 1: 5000 deals  -0.83 bb/100  z -1.62 (stop beyond 6.59)
+look 2: 10000 deals  -0.28 bb/100  z -0.79 (stop beyond 4.66)
+look 3: 15000 deals  -0.06 bb/100  z -0.21 (stop beyond 3.80)
+look 4: 20000 deals  -0.06 bb/100  z -0.25 (stop beyond 3.29)
+look 5: 25000 deals  -0.07 bb/100  z -0.31 (stop beyond 2.95)
+look 6: 30000 deals  -0.03 bb/100  z -0.13 (stop beyond 2.69)
+{"a": "blueprint/nm49", "b": "blueprint/nm25", "early": 0.0, "verdict": "equivalent", "deals": 30000, "n_max": 40000, "C": 2.3283881037202927}

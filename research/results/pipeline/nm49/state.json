@@ -1,0 +1,53 @@
+{
+ "name": "nm49",
+ "question": "Does nm25 re-trained with the partner's aggressive and odd-sized players (2 extreme bluffers, 2 all-in players, 2 raising 3x, 2 raising 5x, 1 raising 8x) added to its usual rule players win more than nm25 against those players without losing to anyone else?",
+ "checks": {
+  "no-harm": {
+   "type": "seqtest",
+   "pass": true,
+   "result": "equivalent after 30,000 deals: -0.03 bb/100 (needs not behind)",
+   "at": "2026-11-28T08:41:15Z"
+  },
+  "the-pool": {
+   "type": "opponents",
+   "pass": true,
+   "result": "vs bluffer +334.3 (nm25 +317.6, difference +16.65 [+15.78, +17.52]), vs jammer +524.0 (nm25 +522.6, difference +1.40 [+1.13, +1.68]), vs raise5x +35.0 (nm25 +34.1, difference +0.95 [+0.70, +1.20]), vs raise8x +41.3 (nm25 +40.6, difference +0.73 [+0.47, +0.99]); each interval within 0.0 of nm25",
+   "at": "2026-11-28T08:41:45Z"
+  },
+  "other-players": {
+   "type": "opponents",
+   "pass": false,
+   "result": "vs reg +26.2 (nm25 +25.8, difference +0.44 [+0.14, +0.74]), vs tag +32.2 (nm25 +32.2, difference +0.01 [-0.32, +0.35]), vs maniac +521.5 (nm25 +520.8, difference +0.65 [+0.30, +1.01]), vs station +112.9 (nm25 +126.2, difference -13.28 [-13.98, -12.57]); each interval within 2.0 of nm25",
+   "at": "2026-11-28T08:42:15Z"
+  },
+  "styles": {
+   "type": "styles",
+   "pass": true,
+   "result": "25 styles: mean +0.15 vs nm25, worst style18 -1.67 (within 2.0 at worst and 0.0 on average)",
+   "at": "2026-11-28T08:43:15Z"
+  },
+  "bluffs": {
+   "type": "bluffers",
+   "pass": true,
+   "result": "jam-any -56.8 [-60.5, -53.1], jam-40 -14.3 [-16.0, -12.7], raise-any -9.1 [-10.1, -8.0]",
+   "at": "2026-11-28T08:44:15Z"
+  },
+  "robust": {
+   "type": "exploit",
+   "pass": true,
+   "result": "exploiters win +0.6 bb/100 on average over 4 seeds (+0.5, +0.4, +1.0, +0.6; SD 0.3) (limit +1.2)",
+   "at": "2026-11-28T10:46:15Z"
+  }
+ },
+ "commit": "c2c57a28d046",
+ "status": "done",
+ "started": "2026-11-28T02:40:14Z",
+ "pid": 1092432,
+ "updated": "2026-11-28T10:46:15Z",
+ "stage": "done",
+ "gpu": "NVIDIA RTX PRO 6000 Blackwell Workstation Edition",
+ "training_started": "2026-11-28T02:40:14Z",
+ "trained": "2026-11-28T08:40:45Z",
+ "verdict": "not adopted",
+ "finished": "2026-11-28T10:46:15Z"
+}

@@ -1,0 +1,6 @@
+
+# 2026-11-28T08:41:15Z ~/research/.venv-gpu/bin/python scripts/pipeline_opponents.py blueprint/nm49 --baseline blueprint/nm25 --against bluffer,jammer,raise5x,raise8x --hands 100000 --out ~/research/results/pipeline/nm49/the-pool.json
+vs 8 x bluffer  run  +334.29  baseline  +317.64  difference +16.65 [15.78, 17.52] bb/100
+vs 8 x jammer   run  +523.98  baseline  +522.58  difference +1.40 [1.13, 1.68] bb/100
+vs 8 x raise5x  run   +35.03  baseline   +34.08  difference +0.95 [0.7, 1.2] bb/100
+vs 8 x raise8x  run   +41.32  baseline   +40.60  difference +0.73 [0.47, 0.99] bb/100
