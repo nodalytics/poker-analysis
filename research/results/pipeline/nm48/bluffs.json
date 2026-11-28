@@ -1,0 +1,46 @@
+{
+ "hands": 20000,
+ "pre": "blueprint/nm30",
+ "post": "blueprint/nm48",
+ "head_up": {},
+ "fold_to_allin": {
+  "nm48": {
+   "with jam-any at the table": 0.86,
+   "defenders only": 0.774
+  }
+ },
+ "bluffers": {
+  "jam-any vs 8 x nm48": [
+   -55.7,
+   -59.4,
+   -52.0
+  ],
+  "jam-40 vs 8 x nm48": [
+   -12.5,
+   -14.1,
+   -10.9
+  ],
+  "raise-any vs 8 x nm48": [
+   -0.2,
+   -0.7,
+   0.3
+  ]
+ },
+ "bluffers_chips": {
+  "jam-any vs 8 x nm48": [
+   5.3,
+   0.5,
+   10.1
+  ],
+  "jam-40 vs 8 x nm48": [
+   11.5,
+   9.2,
+   13.8
+  ],
+  "raise-any vs 8 x nm48": [
+   0.1,
+   -0.8,
+   0.9
+  ]
+ }
+}

@@ -1,0 +1,57 @@
+{
+ "name": "nm48",
+ "registered": "research/pipeline/runs/nm48.json (merge commit 782d1d440599)",
+ "question": "Does nm25 re-trained on the wide bet menu (opens 2, 2.5 or 3.5bb, two 3-bet and 4-bet sizes, heads-up bets of 0.25, 0.5, 0.75, 1.25 and 2 pot, two raise sizes; 8 moves instead of 6), with nm25's recipe otherwise unchanged, play at least as well as nm25 while betting sizes nm25 cannot, and give away no more about its hand through its sizes?",
+ "train": {
+  "init": "nm25",
+  "minutes": 360,
+  "gpu": "any",
+  "args": {
+   "menu": "wide"
+  }
+ },
+ "checks": {
+  "no-harm": {
+   "type": "seqtest",
+   "pass": true,
+   "result": "equivalent after 35,000 deals: +0.10 bb/100 (needs not behind)",
+   "at": "2026-11-28T00:35:09Z"
+  },
+  "other-players": {
+   "type": "opponents",
+   "pass": true,
+   "result": "vs reg +26.2 (nm25 +25.8, difference +0.49 [+0.19, +0.79]), vs tag +32.6 (nm25 +32.2, difference +0.37 [+0.04, +0.70]), vs maniac +520.6 (nm25 +520.8, difference -0.24 [-0.59, +0.11]), vs station +127.1 (nm25 +126.2, difference +0.94 [+0.33, +1.55]); each interval within 2.0 of nm25",
+   "at": "2026-11-28T00:35:39Z"
+  },
+  "styles": {
+   "type": "styles",
+   "pass": false,
+   "result": "25 styles: mean -0.00 vs nm25, worst style11 -2.63 (within 2.0 at worst and 0.0 on average)",
+   "at": "2026-11-28T00:36:39Z"
+  },
+  "bluffs": {
+   "type": "bluffers",
+   "pass": false,
+   "result": "jam-any -55.7 [-59.4, -52.0], jam-40 -12.5 [-14.1, -10.9], raise-any -0.2 [-0.7, +0.3]",
+   "at": "2026-11-28T00:37:09Z"
+  },
+  "robust": {
+   "type": "exploit",
+   "pass": true,
+   "result": "exploiters win +0.9 bb/100 on average over 4 seeds (+0.9, +1.2, +1.3, +0.4; SD 0.4) (limit +1.2)",
+   "at": "2026-11-28T02:39:09Z"
+  },
+  "sizes": {
+   "type": "sizes",
+   "pass": true,
+   "result": "report: what its sizes say about its hand (eta squared, bets and raises) 0.014 against nm25's 0.022; by street {'flop': 0.0136, 'pre-flop': 0.0126, 'river': 0.1085, 'turn': 0.0382} against {'flop': 0.0191, 'pre-flop': 0.0219, 'river': 0.0595, 'turn': 0.0241}; sizes nm25 never bets: 0.25 pot, 1.25 pot, 2 pot, 2.2x, 2.5x, 3.5bb, 3.5x",
+   "at": "2026-11-28T02:39:39Z"
+  }
+ },
+ "verdict": "not adopted",
+ "ran": {
+  "started": "2026-11-27T18:34:09Z",
+  "finished": "2026-11-28T02:39:39Z",
+  "gpu": "NVIDIA RTX PRO 6000 Blackwell Workstation Edition"
+ }
+}

@@ -1,0 +1,10 @@
+
+# 2026-11-28T00:36:39Z ~/research/.venv-gpu/bin/python scripts/ninemax_hybrid.py --post blueprint/nm48 --early 0 --out ~/research/results/pipeline/nm48/bluffs.json --menu wide
+equity   jam-any vs 8 x nm48            -55.7 bb/100 [-59.4, -52.0]
+equity    jam-40 vs 8 x nm48            -12.5 bb/100 [-14.1, -10.9]
+equity raise-any vs 8 x nm48             -0.2 bb/100 [-0.7, +0.3]
+ chips   jam-any vs 8 x nm48             +5.3 bb/100 [+0.5, +10.1]
+ chips    jam-40 vs 8 x nm48            +11.5 bb/100 [+9.2, +13.8]
+ chips raise-any vs 8 x nm48             +0.1 bb/100 [-0.8, +0.9]
+fold to an all-in pre-flop, nm48: {'with jam-any at the table': 0.86, 'defenders only': 0.774}
+done

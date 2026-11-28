@@ -1,0 +1,9 @@
+{
+ "name": "nm48",
+ "question": "Does nm25 re-trained on the wide bet menu (opens 2, 2.5 or 3.5bb, two 3-bet and 4-bet sizes, heads-up bets of 0.25, 0.5, 0.75, 1.25 and 2 pot, two raise sizes; 8 moves instead of 6), with nm25's recipe otherwise unchanged, play at least as well as nm25 while betting sizes nm25 cannot, and give away no more about its hand through its sizes?",
+ "checks": {},
+ "commit": "2daa84706ff5",
+ "status": "failed",
+ "stage": "refused: under 25 GB of disk free",
+ "updated": "2026-11-27T09:11:53Z"
+}
