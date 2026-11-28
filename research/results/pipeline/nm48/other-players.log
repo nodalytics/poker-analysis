@@ -1,0 +1,6 @@
+
+# 2026-11-28T00:35:09Z ~/research/.venv-gpu/bin/python scripts/pipeline_opponents.py blueprint/nm48 --baseline blueprint/nm25 --against reg,tag,maniac,station --hands 100000 --out ~/research/results/pipeline/nm48/other-players.json
+vs 8 x reg      run   +26.25  baseline   +25.76  difference +0.49 [0.19, 0.79] bb/100
+vs 8 x tag      run   +32.61  baseline   +32.24  difference +0.37 [0.04, 0.7] bb/100
+vs 8 x maniac   run  +520.57  baseline  +520.81  difference -0.24 [-0.59, 0.11] bb/100
+vs 8 x station  run  +127.13  baseline  +126.19  difference +0.94 [0.33, 1.55] bb/100

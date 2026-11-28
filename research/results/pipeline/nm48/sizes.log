@@ -1,0 +1,4 @@
+
+# 2026-11-28T02:39:09Z ~/research/.venv-gpu/bin/python scripts/ninemax_sizes.py blueprint/nm48 --baseline blueprint/nm25 --deals 40000 --out ~/research/results/pipeline/nm48/sizes.json
+baseline blueprint/nm25 (mtt): tells overall 0.0222, by street {'flop': 0.0191, 'pre-flop': 0.0219, 'river': 0.0595, 'turn': 0.0241}
+run blueprint/nm48 (wide): tells overall 0.0140, by street {'flop': 0.0136, 'pre-flop': 0.0126, 'river': 0.1085, 'turn': 0.0382}

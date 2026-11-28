@@ -1,0 +1,387 @@
+{
+ "deals": 40000,
+ "baseline": {
+  "run": "blueprint/nm25",
+  "menu": "mtt",
+  "usage": {
+   "flop heads-up bet": {
+    "decisions": 6545,
+    "check/call": 0.5002,
+    "0.33 pot": 0.2492,
+    "all-in": 0.1621,
+    "0.75 pot": 0.0833,
+    "1.5 pot": 0.005,
+    "fold": 0.0002
+   },
+   "flop heads-up raise": {
+    "decisions": 3441,
+    "check/call": 0.5382,
+    "fold": 0.3313,
+    "all-in": 0.1122,
+    "1 pot": 0.0183
+   },
+   "flop multiway bet": {
+    "decisions": 1190,
+    "check/call": 0.6798,
+    "0.5 pot": 0.205,
+    "all-in": 0.0966,
+    "1 pot": 0.016,
+    "fold": 0.0025
+   },
+   "flop multiway raise": {
+    "decisions": 784,
+    "fold": 0.7538,
+    "check/call": 0.1747,
+    "all-in": 0.0612,
+    "1 pot": 0.0102
+   },
+   "pre-flop open": {
+    "decisions": 155599,
+    "fold": 0.7448,
+    "all-in": 0.0963,
+    "2bb": 0.0774,
+    "2.5bb": 0.0495,
+    "3bb": 0.0243,
+    "check/call": 0.0076
+   },
+   "pre-flop re-raise 1": {
+    "decisions": 152462,
+    "fold": 0.8503,
+    "check/call": 0.0743,
+    "all-in": 0.0518,
+    "3x": 0.0236
+   },
+   "pre-flop re-raise 2": {
+    "decisions": 30838,
+    "fold": 0.77,
+    "check/call": 0.1868,
+    "all-in": 0.0312,
+    "2.3x": 0.012
+   },
+   "river heads-up bet": {
+    "decisions": 1344,
+    "check/call": 0.5112,
+    "0.33 pot": 0.1935,
+    "0.75 pot": 0.1458,
+    "all-in": 0.1042,
+    "1.5 pot": 0.0454
+   },
+   "river heads-up raise": {
+    "decisions": 716,
+    "fold": 0.493,
+    "check/call": 0.4246,
+    "all-in": 0.0615,
+    "1 pot": 0.0209
+   },
+   "river multiway bet": {
+    "decisions": 87,
+    "check/call": 0.7011,
+    "all-in": 0.1494,
+    "1 pot": 0.0805,
+    "0.5 pot": 0.0575,
+    "fold": 0.0115
+   },
+   "river multiway raise": {
+    "decisions": 35,
+    "fold": 0.8,
+    "check/call": 0.1429,
+    "all-in": 0.0571
+   },
+   "turn heads-up bet": {
+    "decisions": 2332,
+    "check/call": 0.5086,
+    "0.33 pot": 0.3229,
+    "0.75 pot": 0.1299,
+    "all-in": 0.0326,
+    "1.5 pot": 0.006
+   },
+   "turn heads-up raise": {
+    "decisions": 1325,
+    "check/call": 0.4913,
+    "fold": 0.3909,
+    "all-in": 0.086,
+    "1 pot": 0.0317
+   },
+   "turn multiway bet": {
+    "decisions": 254,
+    "check/call": 0.6614,
+    "0.5 pot": 0.2402,
+    "1 pot": 0.0591,
+    "all-in": 0.0394
+   },
+   "turn multiway raise": {
+    "decisions": 139,
+    "fold": 0.7626,
+    "check/call": 0.1511,
+    "all-in": 0.0791,
+    "1 pot": 0.0072
+   }
+  },
+  "tells": {
+   "flop heads-up bet": {
+    "bets": 3270,
+    "sizes": 4,
+    "eta2": 0.0165
+   },
+   "flop heads-up raise": {
+    "bets": 449,
+    "sizes": 2,
+    "eta2": 0.006
+   },
+   "flop multiway bet": {
+    "bets": 378,
+    "sizes": 3,
+    "eta2": 0.0603
+   },
+   "flop multiway raise": {
+    "bets": 56,
+    "sizes": 2,
+    "eta2": 0.0011
+   },
+   "pre-flop open": {
+    "bets": 38514,
+    "sizes": 4,
+    "eta2": 0.0281
+   },
+   "pre-flop re-raise 1": {
+    "bets": 11501,
+    "sizes": 2,
+    "eta2": 0.0009
+   },
+   "pre-flop re-raise 2": {
+    "bets": 1331,
+    "sizes": 2,
+    "eta2": 0.0252
+   },
+   "river heads-up bet": {
+    "bets": 657,
+    "sizes": 4,
+    "eta2": 0.0582
+   },
+   "river heads-up raise": {
+    "bets": 59,
+    "sizes": 2,
+    "eta2": 0.0729
+   },
+   "turn heads-up bet": {
+    "bets": 1146,
+    "sizes": 4,
+    "eta2": 0.0245
+   },
+   "turn heads-up raise": {
+    "bets": 156,
+    "sizes": 2,
+    "eta2": 0.0247
+   },
+   "turn multiway bet": {
+    "bets": 86,
+    "sizes": 3,
+    "eta2": 0.0184
+   }
+  },
+  "tells_by_street": {
+   "flop": 0.0191,
+   "pre-flop": 0.0219,
+   "river": 0.0595,
+   "turn": 0.0241
+  },
+  "tells_overall": 0.0222
+ },
+ "run": {
+  "run": "blueprint/nm48",
+  "menu": "wide",
+  "usage": {
+   "flop heads-up bet": {
+    "decisions": 5028,
+    "check/call": 0.3848,
+    "0.25 pot": 0.2307,
+    "all-in": 0.2086,
+    "0.5 pot": 0.14,
+    "0.75 pot": 0.0253,
+    "2 pot": 0.0074,
+    "1.25 pot": 0.0032
+   },
+   "flop heads-up raise": {
+    "decisions": 3343,
+    "check/call": 0.5498,
+    "fold": 0.312,
+    "all-in": 0.0903,
+    "0.75 pot": 0.0383,
+    "1.5 pot": 0.0096
+   },
+   "flop multiway bet": {
+    "decisions": 1216,
+    "check/call": 0.6118,
+    "0.33 pot": 0.2574,
+    "all-in": 0.1036,
+    "0.75 pot": 0.0263,
+    "fold": 0.0008
+   },
+   "flop multiway raise": {
+    "decisions": 969,
+    "fold": 0.7038,
+    "check/call": 0.225,
+    "all-in": 0.0537,
+    "1 pot": 0.0175
+   },
+   "pre-flop open": {
+    "decisions": 153977,
+    "fold": 0.7441,
+    "2bb": 0.0848,
+    "all-in": 0.0827,
+    "2.5bb": 0.0591,
+    "3.5bb": 0.0244,
+    "check/call": 0.0049
+   },
+   "pre-flop re-raise 1": {
+    "decisions": 150323,
+    "fold": 0.8413,
+    "check/call": 0.0703,
+    "all-in": 0.05,
+    "3.5x": 0.0211,
+    "2.5x": 0.0173
+   },
+   "pre-flop re-raise 2": {
+    "decisions": 37494,
+    "fold": 0.7592,
+    "check/call": 0.1816,
+    "all-in": 0.0342,
+    "2.2x": 0.0125,
+    "3x": 0.0125
+   },
+   "river heads-up bet": {
+    "decisions": 807,
+    "check/call": 0.4622,
+    "0.25 pot": 0.176,
+    "all-in": 0.1152,
+    "0.5 pot": 0.1016,
+    "0.75 pot": 0.0867,
+    "1.25 pot": 0.0446,
+    "2 pot": 0.0136
+   },
+   "river heads-up raise": {
+    "decisions": 492,
+    "fold": 0.4736,
+    "check/call": 0.4146,
+    "all-in": 0.0589,
+    "0.75 pot": 0.0386,
+    "1.5 pot": 0.0142
+   },
+   "river multiway bet": {
+    "decisions": 86,
+    "check/call": 0.7209,
+    "all-in": 0.1512,
+    "0.33 pot": 0.0814,
+    "0.75 pot": 0.0465
+   },
+   "river multiway raise": {
+    "decisions": 50,
+    "fold": 0.8,
+    "check/call": 0.18,
+    "all-in": 0.02
+   },
+   "turn heads-up bet": {
+    "decisions": 1602,
+    "check/call": 0.4501,
+    "0.25 pot": 0.2815,
+    "0.5 pot": 0.1704,
+    "all-in": 0.0462,
+    "0.75 pot": 0.0387,
+    "1.25 pot": 0.0062,
+    "2 pot": 0.0062,
+    "fold": 0.0006
+   },
+   "turn heads-up raise": {
+    "decisions": 1045,
+    "check/call": 0.4737,
+    "fold": 0.3847,
+    "all-in": 0.0861,
+    "0.75 pot": 0.0507,
+    "1.5 pot": 0.0048
+   },
+   "turn multiway bet": {
+    "decisions": 252,
+    "check/call": 0.6071,
+    "0.33 pot": 0.2659,
+    "0.75 pot": 0.0675,
+    "all-in": 0.0595
+   },
+   "turn multiway raise": {
+    "decisions": 143,
+    "fold": 0.7413,
+    "check/call": 0.1748,
+    "all-in": 0.0629,
+    "1 pot": 0.021
+   }
+  },
+  "tells": {
+   "flop heads-up bet": {
+    "bets": 3093,
+    "sizes": 6,
+    "eta2": 0.0061
+   },
+   "flop heads-up raise": {
+    "bets": 462,
+    "sizes": 3,
+    "eta2": 0.0568
+   },
+   "flop multiway bet": {
+    "bets": 471,
+    "sizes": 3,
+    "eta2": 0.014
+   },
+   "flop multiway raise": {
+    "bets": 69,
+    "sizes": 2,
+    "eta2": 0.0599
+   },
+   "pre-flop open": {
+    "bets": 38642,
+    "sizes": 4,
+    "eta2": 0.0156
+   },
+   "pre-flop re-raise 1": {
+    "bets": 13292,
+    "sizes": 3,
+    "eta2": 0.0003
+   },
+   "pre-flop re-raise 2": {
+    "bets": 2219,
+    "sizes": 3,
+    "eta2": 0.0346
+   },
+   "river heads-up bet": {
+    "bets": 434,
+    "sizes": 6,
+    "eta2": 0.12
+   },
+   "river heads-up raise": {
+    "bets": 55,
+    "sizes": 3,
+    "eta2": 0.0181
+   },
+   "turn heads-up bet": {
+    "bets": 880,
+    "sizes": 6,
+    "eta2": 0.0334
+   },
+   "turn heads-up raise": {
+    "bets": 148,
+    "sizes": 3,
+    "eta2": 0.0822
+   },
+   "turn multiway bet": {
+    "bets": 99,
+    "sizes": 3,
+    "eta2": 0.0145
+   }
+  },
+  "tells_by_street": {
+   "flop": 0.0136,
+   "pre-flop": 0.0126,
+   "river": 0.1085,
+   "turn": 0.0382
+  },
+  "tells_overall": 0.014
+ }
+}
