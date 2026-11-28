@@ -1,0 +1,90 @@
+{
+ "name": "nm51",
+ "question": "Does nm49 re-trained with the calling station restored to its old share of training (nm49's pool plus 2 more stations: 3 of 16 entries, about 19%, against nm25's 1 of 5) win back nm25's result against the station while keeping nm49's gains against the partner's aggressive and odd-sized players, without losing to anyone else?",
+ "why": "nm49 (2026-11-28) passed every check but one: it beat the partner's players by more than nm25 (the bluffer by +16.65 [+15.78, +17.52], the jammer +1.40, raise5x +0.95, raise8x +0.73) but lost -13.28 [-13.98, -12.57] bb/100 of nm25's win against the calling station. Adding nine players cut the station from 1 of 5 pool entries to 1 of 14 (7%), and nm45 lost to the station the same way (-16.5) after its pool changed. The likely cause is dilution: against bluffers it learnt to call down and bluff more, which a player who never folds punishes. This run starts from nm49 (to keep its gains) and restores the station's share; the checks are nm49's, unchanged, all against nm25. Registered on 2026-11-28 to run after nm50.",
+ "train": {
+  "init": "nm49",
+  "minutes": 360,
+  "gpu": "any",
+  "args": {
+   "pool": "reg,reg,tag,maniac,station,station,station,bluffer,bluffer,jammer,jammer,raise3x,raise3x,raise5x,raise5x,raise8x"
+  }
+ },
+ "checks": [
+  {
+   "id": "no-harm",
+   "type": "seqtest",
+   "against": "nm25",
+   "early": 0,
+   "pass": "not_behind",
+   "max": 40000,
+   "looks": 8,
+   "alpha": 0.025,
+   "margin": 0.5,
+   "why": "it must not lose to nm25 in nm25's own game"
+  },
+  {
+   "id": "the-pool",
+   "type": "opponents",
+   "against": [
+    "bluffer",
+    "jammer",
+    "raise5x",
+    "raise8x"
+   ],
+   "baseline": "nm25",
+   "hands": 100000,
+   "tolerance": 0.0,
+   "rule": "interval",
+   "why": "the point of the run: on the same deals as nm25, the 95% interval of the difference must lie above zero against each of the pool's kinds (raise3x left out: its size is nm25's own open, nothing new to learn)"
+  },
+  {
+   "id": "other-players",
+   "type": "opponents",
+   "against": [
+    "reg",
+    "tag",
+    "maniac",
+    "station"
+   ],
+   "baseline": "nm25",
+   "hands": 100000,
+   "tolerance": 2.0,
+   "rule": "interval",
+   "why": "nm49 failed here (station -13.28): with the station at 3 of 16 entries its win must come back to within 2.0 of nm25's (interval above -2.0 against each)"
+  },
+  {
+   "id": "styles",
+   "type": "styles",
+   "count": 20,
+   "seed": 2026,
+   "hands": 5000,
+   "baseline": "nm25",
+   "worst_tolerance": 2.0,
+   "mean_tolerance": 0.0,
+   "why": "at least as good as nm25 on average across 25 generated players, and never far behind"
+  },
+  {
+   "id": "bluffs",
+   "type": "bluffers",
+   "early": 0,
+   "unit": "equity",
+   "bluffers": [
+    "jam-any",
+    "jam-40",
+    "raise-any"
+   ],
+   "pass": "all_lose",
+   "why": "bluff jams and raises must lose prize equity against it, as against nm25"
+  },
+  {
+   "id": "robust",
+   "type": "exploit",
+   "minutes": 30,
+   "seeds": 4,
+   "limit": 1.25,
+   "why": "as nm45 and nm47: the mean of four 30-minute exploiters, limit nm25's +0.75 plus 0.5; a network bent towards calling aggressive players is easier to exploit"
+  }
+ ],
+ "adopt": "all"
+}
