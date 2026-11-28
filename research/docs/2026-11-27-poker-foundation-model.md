@@ -116,6 +116,34 @@ The user's list of ideas to pick from, with an assessment of each:
 Each picked item is judged like the models above: the same held-out hands and bits an action (and, for item 1, the
 focus player's actions with and without their earlier hands).
 
+## Is opponent modelling worth money? (pre-registered 2026-11-28)
+
+The user's reframing: instead of predicting a player's next action, ask whether knowing the player wins money, and
+measure where they deviate from sound play (picked: "deviation" and "leaks"). The first test needs no network.
+
+**The bluff test** (`scripts/opp_exploit.py`). Spots: heads-up after the flop, a player facing a single bet, and what
+they did (fold, or call or raise). A bluffer with nothing betting b into P0 wins +P0 on a fold and loses -b otherwise,
+so a bluff pays when the fold rate is above b / (P0 + b). Decisions scored on what the players actually did:
+
+- *population*: the fold rate at that stake, street and bet size (5 buckets of bet over pot);
+- *player*: plus the player's offset from it over their **earlier hands only** (not earlier streets of the same hand:
+  a flop call informing the turn is reading the hand, not the player), shrunk with 20 pseudo-spots;
+- *ceiling*: plus the player's offset over all their spots, the current one included (an upper bound, inflated for
+  players with few spots);
+- placebo (`--shuffle`): each spot dealt to a random player, same counts. History then holds no player, so player
+  minus population must be at or below 0 there; anything above is the method, not the players.
+
+**Rule, written before the full run** (a 25NL smoke run, with same-hand spots still in the history, read +4.4 bb per
+100 spots [+3.9, +4.8], ceiling +21.6): opponent modelling is **kept** if player minus population is above 0 with its
+95% interval on the six stakes, and the placebo's interval holds 0 or lies below it, after subtracting any placebo gain.
+Otherwise it is a lost cause for this decision and drops down the list. The neural opponent model (the player
+sequences) is held to its own rule: its 20-or-more column must be at least 0.02 bits better than the control's, with an
+interval.
+
+**Then, if kept: deviation from a reference and leak reports.** Replay HandHQ spots into the 6-max cash engine and
+score each human decision against nm28's policy and values: the deviation (where they differ, and by how much) and its
+cost (the expected value lost against nm28's choice), summed per player by spot type as a leak report.
+
 ## Next
 
 Stage 1: a decoder-only transformer of about 25 M parameters (Kronos-small's size) pretrained on the shards, scored on
