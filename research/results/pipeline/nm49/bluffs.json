@@ -1,0 +1,135 @@
+{
+ "hands": 20000,
+ "pre": "blueprint/nm30",
+ "post": "blueprint/nm49",
+ "head_up": {
+  "hybrid-zero vs 8 x nm49": [
+   -3.84,
+   -4.59,
+   -3.08
+  ],
+  "nm49 vs 8 x hybrid-zero": [
+   7.07,
+   6.37,
+   7.77
+  ],
+  "hybrid-pko vs 8 x nm49": [
+   -2.58,
+   -3.29,
+   -1.86
+  ],
+  "nm49 vs 8 x hybrid-pko": [
+   4.34,
+   3.67,
+   5.0
+  ]
+ },
+ "fold_to_allin": {
+  "nm49": {
+   "with jam-any at the table": 0.853,
+   "defenders only": 0.753
+  },
+  "hybrid-zero": {
+   "with jam-any at the table": 0.696,
+   "defenders only": 0.505
+  },
+  "hybrid-pko": {
+   "with jam-any at the table": 0.734,
+   "defenders only": 0.557
+  }
+ },
+ "bluffers": {
+  "jam-any vs 8 x nm49": [
+   -56.8,
+   -60.5,
+   -53.1
+  ],
+  "jam-any vs 8 x hybrid-zero": [
+   -130.6,
+   -134.7,
+   -126.6
+  ],
+  "jam-any vs 8 x hybrid-pko": [
+   -133.8,
+   -138.0,
+   -129.6
+  ],
+  "jam-40 vs 8 x nm49": [
+   -14.3,
+   -16.0,
+   -12.7
+  ],
+  "jam-40 vs 8 x hybrid-zero": [
+   -29.2,
+   -31.0,
+   -27.3
+  ],
+  "jam-40 vs 8 x hybrid-pko": [
+   -32.9,
+   -34.7,
+   -31.0
+  ],
+  "raise-any vs 8 x nm49": [
+   -9.1,
+   -10.1,
+   -8.0
+  ],
+  "raise-any vs 8 x hybrid-zero": [
+   -15.6,
+   -16.8,
+   -14.5
+  ],
+  "raise-any vs 8 x hybrid-pko": [
+   -18.9,
+   -20.1,
+   -17.7
+  ]
+ },
+ "bluffers_chips": {
+  "jam-any vs 8 x nm49": [
+   8.5,
+   3.5,
+   13.4
+  ],
+  "jam-any vs 8 x hybrid-zero": [
+   -102.2,
+   -108.4,
+   -96.0
+  ],
+  "jam-any vs 8 x hybrid-pko": [
+   -100.0,
+   -106.2,
+   -93.8
+  ],
+  "jam-40 vs 8 x nm49": [
+   11.7,
+   9.4,
+   14.0
+  ],
+  "jam-40 vs 8 x hybrid-zero": [
+   -10.4,
+   -13.3,
+   -7.5
+  ],
+  "jam-40 vs 8 x hybrid-pko": [
+   -15.7,
+   -18.5,
+   -12.8
+  ],
+  "raise-any vs 8 x nm49": [
+   -8.1,
+   -9.7,
+   -6.5
+  ],
+  "raise-any vs 8 x hybrid-zero": [
+   -35.1,
+   -36.9,
+   -33.2
+  ],
+  "raise-any vs 8 x hybrid-pko": [
+   -31.8,
+   -33.7,
+   -30.0
+  ]
+ }
+}

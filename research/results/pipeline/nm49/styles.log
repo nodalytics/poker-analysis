@@ -1,0 +1,27 @@
+
+# 2026-11-28T08:42:15Z ~/research/.venv-gpu/bin/python scripts/pipeline_opponents.py blueprint/nm49 --baseline blueprint/nm25 --no-rules --styles 20 --style-seed 2026 --hands 5000 --out ~/research/results/pipeline/nm49/styles.json
+vs 8 x nit      run    -0.76  baseline    -0.27  difference -0.49 [-1.76, 0.78] bb/100
+vs 8 x station  run    +1.49  baseline    +0.08  difference +1.41 [-0.1, 2.91] bb/100
+vs 8 x maniac   run   +30.20  baseline   +30.01  difference +0.18 [-1.84, 2.21] bb/100
+vs 8 x shover   run   +12.01  baseline   +12.39  difference -0.38 [-2.25, 1.49] bb/100
+vs 8 x loose-passive run    +5.45  baseline    +3.75  difference +1.70 [-0.04, 3.44] bb/100
+vs 8 x style01  run    -0.03  baseline    +0.03  difference -0.05 [-1.36, 1.25] bb/100
+vs 8 x style02  run    +6.05  baseline    +6.22  difference -0.17 [-1.93, 1.58] bb/100
+vs 8 x style03  run    +0.64  baseline    +1.15  difference -0.51 [-1.93, 0.91] bb/100
+vs 8 x style04  run    +6.12  baseline    +7.06  difference -0.94 [-2.67, 0.79] bb/100
+vs 8 x style05  run    +1.47  baseline    +1.06  difference +0.41 [-1.07, 1.89] bb/100
+vs 8 x style06  run    +1.61  baseline    +1.20  difference +0.41 [-1.12, 1.95] bb/100
+vs 8 x style07  run    +2.38  baseline    +1.03  difference +1.35 [-0.21, 2.92] bb/100
+vs 8 x style08  run    +1.02  baseline    +0.10  difference +0.92 [-0.38, 2.22] bb/100
+vs 8 x style09  run    +0.75  baseline    +0.05  difference +0.70 [-0.6, 2.01] bb/100
+vs 8 x style10  run    +1.24  baseline    +0.64  difference +0.60 [-0.86, 2.05] bb/100
+vs 8 x style11  run   +30.39  baseline   +31.12  difference -0.73 [-2.67, 1.21] bb/100
+vs 8 x style12  run    -0.59  baseline    -0.28  difference -0.30 [-1.53, 0.93] bb/100
+vs 8 x style13  run    +0.90  baseline    +0.42  difference +0.48 [-0.97, 1.94] bb/100
+vs 8 x style14  run    +2.69  baseline    +3.05  difference -0.36 [-1.93, 1.21] bb/100
+vs 8 x style15  run    +1.97  baseline    +3.06  difference -1.09 [-2.67, 0.49] bb/100
+vs 8 x style16  run   +11.46  baseline   +11.13  difference +0.32 [-1.37, 2.02] bb/100
+vs 8 x style17  run    +1.18  baseline    +0.68  difference +0.49 [-0.9, 1.88] bb/100
+vs 8 x style18  run    +7.99  baseline    +9.66  difference -1.67 [-3.57, 0.23] bb/100
+vs 8 x style19  run    +7.91  baseline    +6.67  difference +1.25 [-0.5, 2.99] bb/100
+vs 8 x style20  run    +5.05  baseline    +4.85  difference +0.20 [-1.46, 1.86] bb/100

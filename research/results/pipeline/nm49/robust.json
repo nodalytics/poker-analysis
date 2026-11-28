@@ -1,0 +1,49 @@
+{
+ "final_bb100": 0.625,
+ "mean_bb100": 0.625,
+ "sd_bb100": 0.26299556396765833,
+ "runs": [
+  {
+   "seed": 7,
+   "final_bb100": 0.5
+  },
+  {
+   "seed": 8,
+   "final_bb100": 0.4
+  },
+  {
+   "seed": 9,
+   "final_bb100": 1.0
+  },
+  {
+   "seed": 10,
+   "final_bb100": 0.6
+  }
+ ],
+ "log": {
+  "7": [
+   "0.0 min 0 hands  learner vs 8 x target: +0.3 bb/100 [-0.1, +0.8]\n",
+   "10.0 min 29063442 hands 1774 steps entropy 0.073  learner vs 8 x target: +0.9 bb/100 [+0.4, +1.5]\n",
+   "20.0 min 53293899 hands 3253 steps entropy 0.062  learner vs 8 x target: +0.6 bb/100 [+0.1, +1.1]\n",
+   "30.0 min 79441167 hands 4849 steps entropy 0.050  learner vs 8 x target: +0.5 bb/100 [-0.1, +1.0]\n"
+  ],
+  "8": [
+   "0.0 min 0 hands  learner vs 8 x target: -0.1 bb/100 [-0.6, +0.3]\n",
+   "10.0 min 29096208 hands 1776 steps entropy 0.078  learner vs 8 x target: +0.4 bb/100 [-0.2, +1.0]\n",
+   "20.0 min 57438798 hands 3506 steps entropy 0.043  learner vs 8 x target: +1.0 bb/100 [+0.4, +1.5]\n",
+   "30.0 min 86354793 hands 5271 steps entropy 0.035  learner vs 8 x target: +0.4 bb/100 [-0.1, +0.9]\n"
+  ],
+  "9": [
+   "0.0 min 0 hands  learner vs 8 x target: -0.0 bb/100 [-0.5, +0.5]\n",
+   "10.0 min 28784931 hands 1757 steps entropy 0.061  learner vs 8 x target: +1.0 bb/100 [+0.5, +1.5]\n",
+   "20.0 min 57586245 hands 3515 steps entropy 0.046  learner vs 8 x target: +0.9 bb/100 [+0.4, +1.5]\n",
+   "30.0 min 85961601 hands 5247 steps entropy 0.039  learner vs 8 x target: +1.0 bb/100 [+0.4, +1.5]\n"
+  ],
+  "10": [
+   "0.0 min 0 hands  learner vs 8 x target: -0.4 bb/100 [-0.8, +0.1]\n",
+   "10.0 min 29292804 hands 1788 steps entropy 0.068  learner vs 8 x target: +1.0 bb/100 [+0.5, +1.5]\n",
+   "20.0 min 58225182 hands 3554 steps entropy 0.075  learner vs 8 x target: +0.6 bb/100 [+0.1, +1.1]\n",
+   "30.0 min 87190326 hands 5322 steps entropy 0.041  learner vs 8 x target: +0.6 bb/100 [+0.1, +1.1]\n"
+  ]
+ }
+}
